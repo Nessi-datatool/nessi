@@ -1,5 +1,5 @@
 numpy==1.24.3
-pandas==2.0.3
+pandas==2.2.3
 pyarrow>=14.0.0
 pyspark==3.4.1
 delta-spark==2.4.0
