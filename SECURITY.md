@@ -12,15 +12,55 @@ If you discover a security vulnerability, please send an email to security@nessi
 
 ## Security Measures
 
+### General Security
 - All code changes require internal review and approval
 - Automated security scanning is performed on all changes
 - Dependencies are regularly audited for security vulnerabilities
 - Access to the codebase is restricted to authorized personnel
 - Regular security audits are conducted
 
+### License System Security
+- Configuration files are encrypted using Fernet symmetric encryption
+- Machine-specific binding using hardware identifiers
+- Tamper detection and automatic recovery mechanisms
+- Protection against clock manipulation
+- Secure trial period tracking
+- Protection against license sharing
+- Automatic recovery from corrupted configurations
+
+### Data Security
+- All sensitive data is encrypted at rest
+- Secure configuration storage
+- Protection against unauthorized access
+- Regular security updates
+
 ## Security Updates
 
 Security updates will be released as patch versions (e.g., 1.0.1) and will be clearly marked in the changelog.
+
+## License Security Features
+
+The license system implements several security measures:
+
+1. **Encryption**
+   - Configuration files are encrypted using Fernet symmetric encryption
+   - Machine-specific encryption keys using PBKDF2HMAC with SHA256
+   - Secure storage of license information
+
+2. **Machine Binding**
+   - Licenses are bound to specific machines
+   - Hardware-based machine identification
+   - Protection against license sharing
+
+3. **Tamper Protection**
+   - Automatic detection of configuration tampering
+   - Self-recovery mechanisms
+   - Protection against trial period manipulation
+
+4. **Access Control**
+   - Feature-level access control through `@require_valid_license` decorator
+   - Granular permission management
+   - Automatic license validation
 
 ## Responsible Disclosure
 

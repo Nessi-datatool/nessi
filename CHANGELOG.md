@@ -5,37 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Added
-- Integrated license key validation system
-- 14-day trial period functionality
-- License status checking via CLI
-- License activation via CLI
-- `@require_valid_license` decorator for protecting features
-- Automatic trial period initialization
-- License expiration handling
-
-### Changed
-- Updated to proprietary license with trial period
-- Improved error handling with custom LicenseError
-- Enhanced CLI with license management commands
-
-### Fixed
-- License validation issues
-- Trial period tracking
-- Configuration file handling
-
 ## [1.0.0] - 2024-05-01
 
 ### Added
-- Initial release of Nessi
-- Basic data processing functionality
-- Table scanning capabilities
-- Sample data generation
-- Delta Lake integration
-- Test suite
-- Documentation
+- Secure license system with encryption and machine binding
+- 14-day trial period with automatic initialization
+- License key validation and activation via CLI
+- `@require_valid_license` decorator for feature protection
+- Delta Lake integration and table scanning
+- Sample data generation capabilities
+- Comprehensive test suite
+- Security features:
+  - Config file encryption using Fernet
+  - Machine-specific binding
+  - Tamper detection and recovery
+  - Protection against license sharing
+  - Clock manipulation protection
+
+### Changed
+- Updated to proprietary license with trial period
+- Enhanced security measures
+- Improved CLI with license management commands
+- Better error handling with custom LicenseError
+
+### Security
+- Implemented secure storage for license information
+- Added encryption for configuration files
+- Added protection against tampering and unauthorized modifications
+- Implemented machine-specific license binding
+- Added automatic recovery from corrupted configurations
+
+### Documentation
+- Added comprehensive API documentation
+- Updated installation and usage guides
+- Added security documentation
+- Added contribution guidelines
+- Added code of conduct
 
 ## [0.1.0] - 2024-05-01
 
