@@ -1,0 +1,35 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly scan
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Run Bandit
+        uses: PyCQA/bandit@master
+        with:
+          args: -r nessi/ -ll -ii
+          
+      - name: Run Safety
+        uses: pyupio/safety@master
+        with:
+          args: check
+          
+      - name: Run TruffleHog
+        uses: trufflesecurity/trufflehog@main
+        with:
+          args: --regex --entropy=False
+          
+      - name: Run Gitleaks
+        uses: zricethezav/gitleaks-action@v1
+        with:
+          config-path: .github/gitleaks.toml 
