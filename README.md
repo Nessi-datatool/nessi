@@ -1,179 +1,128 @@
 # Nessi
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/downloads/)
-[![PyPI Version](https://img.shields.io/pypi/v/nessi.svg)](https://pypi.org/project/nessi/)
+[![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/downloads/)
+[![PyPI](https://img.shields.io/pypi/v/nessi.svg)](https://pypi.org/project/nessi/)
 [![Tests](https://github.com/Nessi-datatool/nessi/actions/workflows/tests.yml/badge.svg)](https://github.com/Nessi-datatool/nessi/actions/workflows/tests.yml)
-[![Code Coverage](https://codecov.io/gh/Nessi-datatool/nessi/branch/main/graph/badge.svg)](https://codecov.io/gh/Nessi-datatool/nessi)
+[![Codecov](https://codecov.io/gh/Nessi-datatool/nessi/branch/main/graph/badge.svg)](https://codecov.io/gh/Nessi-datatool/nessi)
 
-A Python-based data processing and analysis tool built with PySpark and Delta Lake.
+Nessi is a Python-based data processing and analysis tool built with PySpark and Delta Lake. It provides a comprehensive suite of features for data generation, table scanning, and analysis.
 
 ## Features
 
-- Sample data generation with various data patterns
-- Support for multiple file formats (Delta, Parquet, CSV)
-- Table scanning and profiling capabilities
-- Delta Lake integration for versioned data storage
+- **Sample Data Generation**: Create realistic test data with various data types and distributions
+- **Multiple Format Support**: Work with Delta Lake, Parquet, and CSV formats
+- **Table Scanning**: Profile and analyze tables with detailed statistics
+- **Delta Lake Integration**: Full support for Delta Lake features and optimizations
+- **Comprehensive Testing**: Robust test suite with high coverage
 
 ## Prerequisites
 
 - Python 3.8 or higher
-- Java 8 or higher (required for PySpark)
+- Java 8 or higher
 - Git
 
 ## Installation
 
-### 1. Clone the Repository
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Nessi-datatool/nessi.git
+   cd nessi
+   ```
 
-```bash
-git clone https://github.com/Nessi-datatool/nessi.git
-cd nessi
-```
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
 
-### 2. Create and Activate Virtual Environment
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-```bash
-# Create virtual environment
-python -m venv venv
+## Configuration
 
-# Activate virtual environment
-# On macOS/Linux:
-source venv/bin/activate
-# On Windows:
-# venv\Scripts\activate
-```
-
-### 3. Install Dependencies
-
-```bash
-# Install required packages
-pip install -r requirements.txt
-
-# Install the package in development mode
-pip install -e .
-```
-
-### 4. Configure Spark
-
-The project uses PySpark with Delta Lake. The default configuration includes:
+Configure Spark with Delta Lake support:
 
 ```python
 from pyspark.sql import SparkSession
 
 spark = SparkSession.builder \
     .appName("Nessi") \
-    .config("spark.jars.packages", "io.delta:delta-core_2.12:2.4.0,io.delta:delta-storage:2.4.0") \
     .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
     .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
+    .config("spark.jars.packages", "io.delta:delta-core_2.12:2.4.0,io.delta:delta-storage:2.4.0") \
     .getOrCreate()
 ```
 
-### 5. Set Environment Variables (Optional)
-
-You can customize the behavior of the application using environment variables:
-
+Optional environment variables:
 ```bash
-# Set test data directory
-export TEST_DATA_DIR=/path/to/test/data
-
-# Set Spark memory configuration
-export SPARK_DRIVER_MEMORY=2g
-export SPARK_EXECUTOR_MEMORY=2g
+export SPARK_HOME=/path/to/spark
+export PYSPARK_PYTHON=python
+export PYSPARK_DRIVER_PYTHON=python
 ```
 
 ## Usage
 
-### Sample Data Generation
+### Generate Sample Data
 
 ```python
-from src.sample_data_generator import generate_sample_data, save_as_delta
+from src.sample_data_generator import SampleDataGenerator
 
-# Generate sample data with 1000 rows
-data = generate_sample_data(num_rows=1000)
-
-# Save as Delta table
-save_as_delta(data, "path/to/output")
-
-# Save as Parquet
-save_as_parquet(data, "path/to/output.parquet")
-
-# Save as CSV
-save_as_csv(data, "path/to/output.csv")
+generator = SampleDataGenerator()
+df = generator.generate_sample_data(rows=1000)
+df.show()
 ```
 
-### Table Scanning
+### Scan Tables
 
 ```python
 from src.scanner.table_scanner import TableScanner
 
-# Create scanner instance
 scanner = TableScanner()
-
-# Scan a Delta table
-delta_result = scanner.scan_table("path/to/delta/table")
-
-# Scan a Parquet table
-parquet_result = scanner.scan_table("path/to/parquet/table")
-
-# Scan a CSV table
-csv_result = scanner.scan_table("path/to/csv/table")
-
-# Generate a report
-report = scanner.generate_report(delta_result)
+result = scanner.scan_delta_table("path/to/delta/table")
+print(result)
 ```
 
-### Creating Test Tables
+### Create Test Tables
 
 ```python
-from src.create_test_delta_table import create_test_table
+from src.create_test_delta_table import create_test_delta_table
 
-# Create a test Delta table with default settings
-table_path = create_test_table()
-
-# Create a test Delta table with custom schema
-custom_schema = {
-    "id": "integer",
-    "name": "string",
-    "value": "double"
-}
-table_path = create_test_table(schema=custom_schema)
-
-# Create a partitioned table
-table_path = create_test_table(partition_by=["date"])
+create_test_delta_table(
+    path="path/to/table",
+    rows=1000,
+    schema={"id": "int", "name": "string", "value": "double"}
+)
 ```
 
 ## Testing
 
 Run the test suite:
-
 ```bash
 python -m pytest tests/ -v
 ```
 
-For test coverage report:
-
+Generate coverage report:
 ```bash
-python -m pytest tests/ --cov=src --cov-report=html
+python -m pytest tests/ -v --cov=src --cov-report=html
 ```
 
 ## Project Structure
 
 ```
 nessi/
-├── data/              # Sample and test data
-├── src/               # Source code
-│   ├── scanner/       # Table scanning functionality
-│   └── ...           # Other modules
-├── tests/             # Test files
-├── requirements.txt   # Python dependencies
-├── setup.py          # Package setup
-├── pyproject.toml    # Modern Python packaging config
-├── API.md            # API documentation
-├── CHANGELOG.md      # Version history
-├── CONTRIBUTING.md   # Contribution guidelines
-├── CODE_OF_CONDUCT.md # Community guidelines
-├── NOTICE            # Attribution notices
-└── README.md         # Project documentation
+├── src/                    # Source code
+│   ├── scanner/           # Table scanning functionality
+│   ├── sample_data_generator.py
+│   └── create_test_delta_table.py
+├── tests/                 # Test files
+├── data/                  # Data files
+├── venv/                  # Virtual environment
+├── requirements.txt       # Python dependencies
+├── setup.py              # Package configuration
+└── README.md             # Project documentation
 ```
 
 ## Contributing
@@ -182,7 +131,7 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 
 ## Code of Conduct
 
-Please review our [Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
+Please review our [Code of Conduct](CODE_OF_CONDUCT.md) before participating in the project.
 
 ## License
 
@@ -194,4 +143,4 @@ For detailed API documentation, see [API.md](API.md).
 
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) for version history and changes. 
+See [CHANGELOG.md](CHANGELOG.md) for a list of changes. 
