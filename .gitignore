@@ -1,0 +1,89 @@
+# .gitignore for Nessi project
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+venv311/
+env/
+ENV/
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.swp
+*.swo
+*~
+
+# Generated Data
+data/reports/
+data/test_tables/
+data/test_delta/
+
+# Logs
+*.log
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Ignore Jupyter Notebook checkpoints (if any)
+.ipynb_checkpoints/
+
+# Ignore temporary files
+*.tmp
+*.temp
+*.swp
+
+# Ignore Spark local directories
+.metastore_db/
+spark-warehouse/
+derby.log
+
+# Ignore scan outputs
+nessi_report.html
+fake_parquet_table/
+
+# Ignore user-specific configs
+*.env
+*.local
+.env
+.env.local
+.env.*.local
+
+# Test coverage
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
