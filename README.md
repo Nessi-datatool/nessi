@@ -16,6 +16,47 @@ Nessi is a Python-based data processing and analysis tool built with PySpark and
 - **Delta Lake Integration**: Full support for Delta Lake features and optimizations
 - **Comprehensive Testing**: Robust test suite with high coverage
 
+## Getting Started
+
+Here's a quick example to get you started:
+
+```python
+from src.sample_data_generator import SampleDataGenerator
+from src.scanner.table_scanner import TableScanner
+
+# Generate sample data
+generator = SampleDataGenerator()
+df = generator.generate_sample_data(rows=1000)
+
+# Save as Delta table
+df.write.format("delta").save("sample_data.delta")
+
+# Scan the table
+scanner = TableScanner()
+result = scanner.scan_delta_table("sample_data.delta")
+print(result)
+```
+
+## Features in Detail
+
+### Sample Data Generation
+- Generate realistic test data with various distributions
+- Support for multiple data types (int, float, string, date, etc.)
+- Customizable data patterns and null value handling
+- Export to multiple formats (Delta, Parquet, CSV)
+
+### Table Scanning
+- Profile tables with detailed statistics
+- Analyze data quality and patterns
+- Generate comprehensive reports
+- Support for large datasets
+
+### Delta Lake Integration
+- Full support for Delta Lake features
+- Time travel and versioning
+- Schema evolution
+- Optimized performance
+
 ## Prerequisites
 
 - Python 3.8 or higher
@@ -124,6 +165,14 @@ nessi/
 ├── setup.py              # Package configuration
 └── README.md             # Project documentation
 ```
+
+## Roadmap
+
+- [ ] Add support for more data formats
+- [ ] Enhance data generation patterns
+- [ ] Improve performance for large datasets
+- [ ] Add more visualization options
+- [ ] Support for distributed processing
 
 ## Contributing
 
