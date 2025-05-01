@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "@Nessi-datatool/python-reviewers"
+    assignees:
+      - "@Nessi-datatool/owners"
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "pip"
+      include: "scope"
+    ignore:
+      - dependency-name: "pyspark"
+        versions: ["3.5.0"]
+      - dependency-name: "delta-spark"
+        versions: ["3.0.0"] 
