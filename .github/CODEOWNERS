@@ -1,0 +1,16 @@
+# Default owners for everything in the repo
+*       @Nessi-datatool/owners
+
+# Python files
+*.py    @Nessi-datatool/python-reviewers
+
+# Documentation
+*.md    @Nessi-datatool/documentation-reviewers
+
+# Tests
+tests/  @Nessi-datatool/test-reviewers
+
+# Configuration files
+.github/ @Nessi-datatool/owners
+*.yml   @Nessi-datatool/owners
+*.yaml  @Nessi-datatool/owners 
