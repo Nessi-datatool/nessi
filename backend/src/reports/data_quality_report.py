@@ -1,248 +1,124 @@
-"""Data quality report generator for Nessi."""
+"""Data quality report generation module."""
 
+import logging
 from typing import Dict, Any, List
 from .report_generator import ReportGenerator
 
+logger = logging.getLogger(__name__)
+
 class DataQualityReport(ReportGenerator):
-    """Generates data quality reports."""
+    """Generate data quality reports."""
     
-    def __init__(self, output_dir: str = "reports/data_quality"):
-        """Initialize the data quality report generator.
-        
-        Args:
-            output_dir (str): Directory where reports will be saved.
-        """
-        super().__init__(output_dir)
-        
-    def generate(self, data: Dict[str, Any], **kwargs) -> str:
+    def generate(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Generate a data quality report.
         
         Args:
-            data (Dict[str, Any]): Data quality analysis results.
-            **kwargs: Additional arguments:
-                - format (str): Output format (md, json, html)
-                - include_details (bool): Include detailed analysis
-                
+            data: Dictionary containing data quality metrics and rows.
+            
         Returns:
-            str: Path to the generated report.
+            Dict containing the report data.
         """
         try:
-            # Validate required fields
-            required_fields = ['completeness', 'consistency', 'uniqueness']
-            self.validate_data(data, required_fields)
-            
-            # Get format and other options
-            format = kwargs.get('format', 'md')
-            include_details = kwargs.get('include_details', True)
-            
-            # Generate report content
-            if format == 'json':
-                content = self._generate_json_report(data, include_details)
-            elif format == 'html':
-                content = self._generate_html_report(data, include_details)
-            else:  # default to markdown
-                content = self._generate_markdown_report(data, include_details)
-            
-            # Save report
-            timestamp = self.get_timestamp()
-            filename = f"data_quality_{timestamp}"
-            return self.save_report(content, filename, format)
-            
+            report = {
+                "data_quality": {
+                    "metrics": {
+                        "completeness": self._calculate_completeness(data),
+                        "accuracy": self._calculate_accuracy(data),
+                        "consistency": self._calculate_consistency(data)
+                    },
+                    "rows": data.get("rows", [])
+                }
+            }
+            return report
         except Exception as e:
             logger.error(f"Failed to generate data quality report: {str(e)}")
-            raise RuntimeError(f"Failed to generate data quality report: {str(e)}")
+            raise
     
-    def _generate_markdown_report(self, data: Dict[str, Any], include_details: bool) -> str:
-        """Generate markdown report content.
+    def _calculate_completeness(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate completeness metrics.
         
         Args:
-            data: Data quality analysis results.
-            include_details: Whether to include detailed analysis.
+            data: Dictionary containing data quality metrics and rows.
             
         Returns:
-            str: Markdown report content.
+            Dict containing completeness metrics.
         """
-        report = []
+        rows = data.get("rows", [])
+        total_values = sum(len(row) for row in rows)
+        null_values = sum(1 for row in rows for value in row.values() if value is None)
         
-        # Title
-        report.append("# Data Quality Report")
-        report.append("")
-        
-        # Completeness Analysis
-        report.append("## Completeness Analysis")
-        completeness = data['completeness']
-        report.append(f"Overall Completeness Score: {completeness['score']}%")
-        report.append("")
-        
-        if include_details:
-            report.append("### Missing Values by Column")
-            report.append("| Column | Missing Count | Missing Percentage |")
-            report.append("|--------|---------------|-------------------|")
-            for col, stats in completeness['column_stats'].items():
-                report.append(f"| {col} | {stats['missing_count']} | {stats['missing_percentage']}% |")
-            report.append("")
-        
-        # Consistency Analysis
-        report.append("## Consistency Analysis")
-        consistency = data['consistency']
-        report.append(f"Overall Consistency Score: {consistency['score']}%")
-        report.append("")
-        
-        if include_details:
-            report.append("### Data Type Validation")
-            report.append("| Column | Expected Type | Actual Type | Status |")
-            report.append("|--------|---------------|-------------|--------|")
-            for col, stats in consistency['type_validation'].items():
-                report.append(f"| {col} | {stats['expected']} | {stats['actual']} | {'✓' if stats['valid'] else '✗'} |")
-            report.append("")
-            
-            report.append("### Value Range Validation")
-            report.append("| Column | Min Value | Max Value | Out of Range |")
-            report.append("|--------|-----------|-----------|--------------|")
-            for col, stats in consistency['range_validation'].items():
-                report.append(f"| {col} | {stats['min']} | {stats['max']} | {stats['out_of_range']} |")
-            report.append("")
-        
-        # Uniqueness Analysis
-        report.append("## Uniqueness Analysis")
-        uniqueness = data['uniqueness']
-        report.append(f"Overall Uniqueness Score: {uniqueness['score']}%")
-        report.append("")
-        
-        if include_details:
-            report.append("### Duplicate Analysis")
-            report.append("| Column | Total Duplicates | Duplicate Percentage |")
-            report.append("|--------|-----------------|---------------------|")
-            for col, stats in uniqueness['duplicate_stats'].items():
-                report.append(f"| {col} | {stats['duplicate_count']} | {stats['duplicate_percentage']}% |")
-            report.append("")
-            
-            report.append("### Primary Key Validation")
-            report.append("| Column | Status |")
-            report.append("|--------|--------|")
-            for col, status in uniqueness['primary_key_validation'].items():
-                report.append(f"| {col} | {'✓' if status else '✗'} |")
-            report.append("")
-        
-        return '\n'.join(report)
-    
-    def _generate_json_report(self, data: Dict[str, Any], include_details: bool) -> Dict[str, Any]:
-        """Generate JSON report content.
-        
-        Args:
-            data: Data quality analysis results.
-            include_details: Whether to include detailed analysis.
-            
-        Returns:
-            Dict[str, Any]: JSON report content.
-        """
-        report = {
-            "completeness": {
-                "score": data['completeness']['score']
-            },
-            "consistency": {
-                "score": data['consistency']['score']
-            },
-            "uniqueness": {
-                "score": data['uniqueness']['score']
-            }
+        return {
+            "null_values": null_values,
+            "total_values": total_values,
+            "completeness_score": 1 - (null_values / total_values if total_values > 0 else 0)
         }
-        
-        if include_details:
-            report["completeness"]["column_stats"] = data['completeness']['column_stats']
-            report["consistency"]["type_validation"] = data['consistency']['type_validation']
-            report["consistency"]["range_validation"] = data['consistency']['range_validation']
-            report["uniqueness"]["duplicate_stats"] = data['uniqueness']['duplicate_stats']
-            report["uniqueness"]["primary_key_validation"] = data['uniqueness']['primary_key_validation']
-            
-        return report
     
-    def _generate_html_report(self, data: Dict[str, Any], include_details: bool) -> str:
-        """Generate HTML report content.
+    def _calculate_accuracy(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate accuracy metrics.
         
         Args:
-            data: Data quality analysis results.
-            include_details: Whether to include detailed analysis.
+            data: Dictionary containing data quality metrics and rows.
             
         Returns:
-            str: HTML report content.
+            Dict containing accuracy metrics.
         """
-        html = []
-        html.append("<!DOCTYPE html>")
-        html.append("<html>")
-        html.append("<head>")
-        html.append("<title>Data Quality Report</title>")
-        html.append("<style>")
-        html.append("body { font-family: Arial, sans-serif; margin: 20px; }")
-        html.append("table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }")
-        html.append("th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }")
-        html.append("th { background-color: #f2f2f2; }")
-        html.append(".score { font-size: 1.2em; font-weight: bold; }")
-        html.append(".valid { color: green; }")
-        html.append(".invalid { color: red; }")
-        html.append("</style>")
-        html.append("</head>")
-        html.append("<body>")
+        return {
+            "accuracy_score": data.get("metrics", {}).get("accuracy", 1.0)
+        }
+    
+    def _calculate_consistency(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate consistency metrics.
         
-        # Title
-        html.append("<h1>Data Quality Report</h1>")
-        
-        # Completeness Analysis
-        html.append("<h2>Completeness Analysis</h2>")
-        completeness = data['completeness']
-        html.append(f"<p class='score'>Overall Completeness Score: {completeness['score']}%</p>")
-        
-        if include_details:
-            html.append("<h3>Missing Values by Column</h3>")
-            html.append("<table>")
-            html.append("<tr><th>Column</th><th>Missing Count</th><th>Missing Percentage</th></tr>")
-            for col, stats in completeness['column_stats'].items():
-                html.append(f"<tr><td>{col}</td><td>{stats['missing_count']}</td><td>{stats['missing_percentage']}%</td></tr>")
-            html.append("</table>")
-        
-        # Consistency Analysis
-        html.append("<h2>Consistency Analysis</h2>")
-        consistency = data['consistency']
-        html.append(f"<p class='score'>Overall Consistency Score: {consistency['score']}%</p>")
-        
-        if include_details:
-            html.append("<h3>Data Type Validation</h3>")
-            html.append("<table>")
-            html.append("<tr><th>Column</th><th>Expected Type</th><th>Actual Type</th><th>Status</th></tr>")
-            for col, stats in consistency['type_validation'].items():
-                status_class = "valid" if stats['valid'] else "invalid"
-                html.append(f"<tr><td>{col}</td><td>{stats['expected']}</td><td>{stats['actual']}</td><td class='{status_class}'>{'✓' if stats['valid'] else '✗'}</td></tr>")
-            html.append("</table>")
+        Args:
+            data: Dictionary containing data quality metrics and rows.
             
-            html.append("<h3>Value Range Validation</h3>")
-            html.append("<table>")
-            html.append("<tr><th>Column</th><th>Min Value</th><th>Max Value</th><th>Out of Range</th></tr>")
-            for col, stats in consistency['range_validation'].items():
-                html.append(f"<tr><td>{col}</td><td>{stats['min']}</td><td>{stats['max']}</td><td>{stats['out_of_range']}</td></tr>")
-            html.append("</table>")
+        Returns:
+            Dict containing consistency metrics.
+        """
+        return {
+            "consistency_score": data.get("metrics", {}).get("consistency", 1.0)
+        }
+    
+    def _is_valid(self, value):
+        """Check if a value is valid."""
+        if value is None:
+            return False
+        if isinstance(value, str):
+            return len(value.strip()) > 0
+        return True
+
+def generate_report(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Generate a data quality report.
+    
+    Args:
+        data: Dictionary containing data quality metrics and rows.
         
-        # Uniqueness Analysis
-        html.append("<h2>Uniqueness Analysis</h2>")
-        uniqueness = data['uniqueness']
-        html.append(f"<p class='score'>Overall Uniqueness Score: {uniqueness['score']}%</p>")
-        
-        if include_details:
-            html.append("<h3>Duplicate Analysis</h3>")
-            html.append("<table>")
-            html.append("<tr><th>Column</th><th>Total Duplicates</th><th>Duplicate Percentage</th></tr>")
-            for col, stats in uniqueness['duplicate_stats'].items():
-                html.append(f"<tr><td>{col}</td><td>{stats['duplicate_count']}</td><td>{stats['duplicate_percentage']}%</td></tr>")
-            html.append("</table>")
-            
-            html.append("<h3>Primary Key Validation</h3>")
-            html.append("<table>")
-            html.append("<tr><th>Column</th><th>Status</th></tr>")
-            for col, status in uniqueness['primary_key_validation'].items():
-                status_class = "valid" if status else "invalid"
-                html.append(f"<tr><td>{col}</td><td class='{status_class}'>{'✓' if status else '✗'}</td></tr>")
-            html.append("</table>")
-        
-        html.append("</body>")
-        html.append("</html>")
-        
-        return '\n'.join(html) 
+    Returns:
+        Dict containing the report data.
+    """
+    report_generator = DataQualityReport()
+    return report_generator.generate(data)
+
+def generate_report_from_file(file_path: str) -> Dict[str, Any]:
+    """Generate a data quality report from a file."""
+    # Implementation of reading data from file and calling generate_report
+    # This function should return a dictionary representing the data quality report
+    # For example, you can use pandas to read the file and then call generate_report
+    # Here's a placeholder return, as the actual implementation depends on the file type and how data is read
+    return generate_report({})  # Placeholder return, actual implementation needed
+
+def generate_report_from_database(database_connection: str) -> Dict[str, Any]:
+    """Generate a data quality report from a database."""
+    # Implementation of connecting to the database and reading data
+    # This function should return a dictionary representing the data quality report
+    # For example, you can use a database library to fetch data and then call generate_report
+    # Here's a placeholder return, as the actual implementation depends on the database type and how data is fetched
+    return generate_report({})  # Placeholder return, actual implementation needed
+
+def generate_report_from_api(api_url: str) -> Dict[str, Any]:
+    """Generate a data quality report from an API."""
+    # Implementation of calling the API and fetching data
+    # This function should return a dictionary representing the data quality report
+    # For example, you can use a library to make an HTTP request and then call generate_report
+    # Here's a placeholder return, as the actual implementation depends on the API and how data is fetched
+    return generate_report({})  # Placeholder return, actual implementation needed 

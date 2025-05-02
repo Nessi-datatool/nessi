@@ -1,33 +1,34 @@
-FROM python:3.11-slim
+FROM jupyter/pyspark-notebook:spark-3.4.1
+
+USER root
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    procps \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
 # Set working directory
 WORKDIR /app
 
 # Install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy test configuration
-COPY pytest.ini /app/
+RUN pip install pytest pytest-cov coverage pyspark==3.4.1 delta-spark==2.4.0
 
 # Copy application code
 COPY src/ /app/src/
 COPY tests/ /app/tests/
+COPY pytest.ini /app/
 
-# Create non-root user
-RUN useradd -m -u 1000 appuser && \
-    chown -R appuser:appuser /app
-USER appuser
+# Set permissions
+RUN chown -R jovyan:users /app && \
+    chmod -R 755 /app
+
+USER jovyan
 
 # Default command (can be overridden)
 CMD ["pytest", "-v", "--cov=src", "tests/"] 

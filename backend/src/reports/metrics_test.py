@@ -160,8 +160,8 @@ class MetricsHandler(BaseHTTPRequestHandler):
             auth = base64.b64decode(auth_header[6:]).decode()
             username, password = auth.split(':')
             
-            if (username != os.getenv('METRICS_USERNAME', 'metrics_user') or
-                password != os.getenv('METRICS_PASSWORD', 'secure_password')):
+            if (username != os.getenv('METRICS_USERNAME', 'test_user') or
+                password != os.getenv('METRICS_PASSWORD', 'test_pass')):
                 self.send_response(401)
                 self.send_header('WWW-Authenticate', 'Basic realm="Metrics"')
                 self.end_headers()

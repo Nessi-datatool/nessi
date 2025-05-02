@@ -1,63 +1,85 @@
-from pyspark.sql.types import StructType, StructField, IntegerType, StringType, TimestampType
-from pyspark.sql.functions import current_timestamp
+"""Sample data generator for testing and demonstration."""
+
+import logging
+from typing import Dict, List, Optional
+from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, TimestampType
 from .spark_config import get_spark_session
 import os
 from pathlib import Path
 
+logger = logging.getLogger(__name__)
+
 class SampleDataGenerator:
-    def __init__(self):
-        self.spark = get_spark_session("SampleDataGenerator")
-
-    def generate_sample_data(self):
-        # Define schema
-        schema = StructType([
-            StructField("id", IntegerType(), False),
-            StructField("name", StringType(), True),
-            StructField("age", IntegerType(), True),
-            StructField("email", StringType(), True),
-            StructField("created_at", TimestampType(), True)
-        ])
-
-        # Generate sample data
-        data = [
-            (1, "John Doe", 30, "john@example.com", None),
-            (2, "Jane Smith", 25, "jane@example.com", None),
-            (3, "Bob Johnson", 35, "bob@example.com", None),
-            (4, "Alice Brown", 28, "alice@example.com", None),
-            (5, "Charlie Wilson", 32, "charlie@example.com", None)
-        ]
-
-        # Create DataFrame
-        df = self.spark.createDataFrame(data, schema)
+    """Generate sample data for testing and demonstration."""
+    
+    def __init__(self, spark: Optional[SparkSession] = None):
+        """Initialize the sample data generator.
         
-        # Add current timestamp to created_at column
-        df = df.withColumn("created_at", current_timestamp())
+        Args:
+            spark: Optional SparkSession instance.
+        """
+        self.spark = spark or get_spark_session("SampleDataGenerator")
+        logger.info("Initialized SampleDataGenerator with Spark session")
         
-        return df
-
-    def save_as_parquet(self, df, output_path):
-        """Save DataFrame as Parquet format"""
-        # Ensure the directory exists
-        os.makedirs(output_path, exist_ok=True)
+    def generate_sample_data(self, num_rows: int = 5) -> DataFrame:
+        """Generate sample data with predefined schema.
         
-        # Save as Parquet
-        df.write.mode("overwrite").parquet(output_path)
-
-    def save_as_csv(self, df, output_path):
-        """Save DataFrame as CSV format"""
-        # Ensure the directory exists
-        os.makedirs(output_path, exist_ok=True)
+        Args:
+            num_rows: Number of rows to generate.
+            
+        Returns:
+            DataFrame with sample data.
+        """
+        try:
+            # Define schema
+            schema = StructType([
+                StructField("id", IntegerType(), False),
+                StructField("name", StringType(), True),
+                StructField("age", IntegerType(), True),
+                StructField("email", StringType(), True),
+                StructField("created_at", TimestampType(), True)
+            ])
+            
+            # Generate sample data
+            data = [
+                (1, "John Doe", 30, "john@example.com", None),
+                (2, "Jane Smith", 25, "jane@example.com", None),
+                (3, "Bob Johnson", 35, "bob@example.com", None),
+                (4, "Alice Brown", 28, "alice@example.com", None),
+                (5, "Charlie Wilson", 32, "charlie@example.com", None)
+            ]
+            
+            # Create DataFrame
+            df = self.spark.createDataFrame(data, schema)
+            return df
+            
+        except Exception as e:
+            logger.error(f"Failed to generate sample data: {str(e)}")
+            raise
+            
+    def save_as_parquet(self, df: DataFrame, path: str) -> None:
+        """Save DataFrame as Parquet file.
         
-        # Save as CSV with specific options for proper handling
-        df.coalesce(1).write \
-            .mode("overwrite") \
-            .option("header", "true") \
-            .option("escape", '"') \
-            .option("quote", '"') \
-            .option("quoteAll", "true") \
-            .csv(output_path)
-
-    def __del__(self):
-        """Cleanup Spark session"""
-        if hasattr(self, 'spark'):
-            self.spark.stop() 
+        Args:
+            df: DataFrame to save.
+            path: Output path.
+        """
+        try:
+            df.write.parquet(path, mode="overwrite")
+        except Exception as e:
+            logger.error(f"Failed to save Parquet file: {str(e)}")
+            raise
+            
+    def save_as_csv(self, df: DataFrame, path: str) -> None:
+        """Save DataFrame as CSV file.
+        
+        Args:
+            df: DataFrame to save.
+            path: Output path.
+        """
+        try:
+            df.write.csv(path, mode="overwrite", header=True)
+        except Exception as e:
+            logger.error(f"Failed to save CSV file: {str(e)}")
+            raise 
