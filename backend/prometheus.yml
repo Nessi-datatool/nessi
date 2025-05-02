@@ -1,0 +1,113 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+  external_labels:
+    environment: 'development'
+    system: 'nessi'
+
+scrape_configs:
+  - job_name: 'nessi-metrics'
+    scheme: 'https'
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+    scrape_timeout: 5s
+    honor_labels: true
+    honor_timestamps: true
+    tls_config:
+      ca_file: /etc/prometheus/ssl/ca.pem
+      cert_file: /etc/prometheus/ssl/cert.pem
+      key_file: /etc/prometheus/ssl/key.pem
+      insecure_skip_verify: false
+    basic_auth:
+      username: '${METRICS_USERNAME}'
+      password: '${METRICS_PASSWORD}'
+    static_configs:
+      - targets: ['nginx:443']
+        labels:
+          service: 'nessi-metrics'
+          instance: 'metrics-test'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: nginx:443
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+          instance: 'prometheus'
+
+  - job_name: 'nginx'
+    scheme: 'https'
+    metrics_path: '/metrics'
+    tls_config:
+      ca_file: /etc/prometheus/ssl/ca.pem
+      cert_file: /etc/prometheus/ssl/cert.pem
+      key_file: /etc/prometheus/ssl/key.pem
+      insecure_skip_verify: false
+    static_configs:
+      - targets: ['nginx:443']
+        labels:
+          service: 'nginx'
+          instance: 'nginx'
+
+rule_files:
+  - 'rules/*.yml'
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+      scheme: 'https'
+      tls_config:
+        ca_file: /etc/prometheus/ssl/ca.pem
+        cert_file: /etc/prometheus/ssl/cert.pem
+        key_file: /etc/prometheus/ssl/key.pem
+        insecure_skip_verify: false
+      timeout: 10s
+      api_version: 'v2'
+
+remote_write:
+  - url: 'https://remote-storage:8080/write'
+    tls_config:
+      ca_file: /etc/prometheus/ssl/ca.pem
+      cert_file: /etc/prometheus/ssl/cert.pem
+      key_file: /etc/prometheus/ssl/key.pem
+      insecure_skip_verify: false
+    queue_config:
+      capacity: 1000
+      max_samples_per_send: 100
+      batch_send_deadline: 5s
+      max_retries: 3
+      min_backoff: 100ms
+      max_backoff: 1s
+
+remote_read:
+  - url: 'https://remote-storage:8080/read'
+    tls_config:
+      ca_file: /etc/prometheus/ssl/ca.pem
+      cert_file: /etc/prometheus/ssl/cert.pem
+      key_file: /etc/prometheus/ssl/key.pem
+      insecure_skip_verify: false
+    read_recent: true
+    required_matchers:
+      environment: 'development'
+
+# Add relabeling for better metric organization
+relabel_configs:
+  - source_labels: ['__address__']
+    target_label: 'instance'
+    regex: '(.*):.*'
+    replacement: '$1'
+  
+# Add metric relabeling for better organization
+metric_relabel_configs:
+  - source_labels: ['__name__']
+    regex: 'nessi_(.*)'
+    target_label: 'metric_type'
+    replacement: '$1' 

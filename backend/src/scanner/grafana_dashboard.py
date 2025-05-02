@@ -69,8 +69,8 @@ class GrafanaDashboard:
             result = response.json()
             return {
                 "dashboard": {
-                    "uid": result["uid"],
-                    "id": result["id"],
+                    "uid": result.get("dashboard", {}).get("uid"),
+                    "id": result.get("dashboard", {}).get("id"),
                     "title": title,
                     "version": 1,
                     "panels": []
@@ -145,10 +145,10 @@ class GrafanaDashboard:
             response.raise_for_status()
             dashboard = response.json()['dashboard']
             
-            if 'panels' not in dashboard:
-                dashboard['panels'] = []
+            # Add panel to dashboard
             dashboard['panels'].append(panel)
             
+            # Update dashboard
             update_response = requests.post(
                 f"{self.grafana_url}/api/dashboards/db",
                 headers=self.headers,
@@ -156,7 +156,8 @@ class GrafanaDashboard:
                 json={"dashboard": dashboard, "overwrite": True}
             )
             update_response.raise_for_status()
-            return update_response.json()
+            
+            return response.json()
         except requests.exceptions.RequestException as e:
             raise Exception(f"Failed to add table metrics panel: {str(e)}")
     
@@ -226,10 +227,10 @@ class GrafanaDashboard:
             response.raise_for_status()
             dashboard = response.json()['dashboard']
             
-            if 'panels' not in dashboard:
-                dashboard['panels'] = []
+            # Add panel to dashboard
             dashboard['panels'].append(panel)
             
+            # Update dashboard
             update_response = requests.post(
                 f"{self.grafana_url}/api/dashboards/db",
                 headers=self.headers,
@@ -237,9 +238,10 @@ class GrafanaDashboard:
                 json={"dashboard": dashboard, "overwrite": True}
             )
             update_response.raise_for_status()
-            return update_response.json()
+            
+            return response.json()
         except requests.exceptions.RequestException as e:
-            raise Exception(f"Failed to add column stats panel: {str(e)}")
+            raise Exception(f"Failed to add column statistics panel: {str(e)}")
     
     def export_dashboard(self, dashboard_uid: str, output_path: str) -> str:
         """
@@ -261,7 +263,7 @@ class GrafanaDashboard:
             response.raise_for_status()
             dashboard = response.json()['dashboard']
             
-            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            # Save dashboard to file
             with open(output_path, 'w') as f:
                 json.dump(dashboard, f, indent=2)
             
@@ -269,4 +271,4 @@ class GrafanaDashboard:
         except requests.exceptions.RequestException as e:
             raise Exception(f"Failed to export dashboard: {str(e)}")
         except IOError as e:
-            raise Exception(f"Failed to save dashboard file: {str(e)}") 
+            raise Exception(f"Failed to write dashboard to file: {str(e)}") 

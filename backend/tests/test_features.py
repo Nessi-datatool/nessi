@@ -1,100 +1,116 @@
-import unittest
+import pytest
 import os
 import shutil
 from pathlib import Path
-from backend.src.scanner.table_scanner import TableScanner
-from backend.src.scanner.sample_data_generator import SampleDataGenerator
-from backend.src.scanner.spark_config import get_spark_session
+from unittest.mock import patch, MagicMock
+from src.scanner.table_scanner import TableScanner
+from src.scanner.sample_data_generator import SampleDataGenerator
+from src.scanner.spark_config import get_spark_session
 
-class TestFeatures(unittest.TestCase):
-    def setUp(self):
-        self.test_data_dir = Path("data/test")
-        self.test_data_dir.mkdir(parents=True, exist_ok=True)
-        self.parquet_path = self.test_data_dir / "test_parquet"
-        self.csv_path = self.test_data_dir / "test_csv"
-        
-        # Initialize components
-        self.data_generator = SampleDataGenerator()
-        self.table_scanner = TableScanner()
-        
-        # Generate and save sample data
-        df = self.data_generator.generate_sample_data()
-        self.data_generator.save_as_parquet(df, str(self.parquet_path))
-        self.data_generator.save_as_csv(df, str(self.csv_path))
+@pytest.fixture(scope="session")
+def spark():
+    spark = get_spark_session("TestSession")
+    yield spark
+    spark.stop()
 
-    def tearDown(self):
-        # Clean up test data
-        if self.test_data_dir.exists():
-            shutil.rmtree(self.test_data_dir)
-        # Stop Spark sessions
-        if hasattr(self, 'data_generator') and hasattr(self.data_generator, 'spark'):
-            self.data_generator.spark.stop()
-        if hasattr(self, 'table_scanner') and hasattr(self.table_scanner, 'spark'):
-            self.table_scanner.spark.stop()
+@pytest.fixture
+def test_data_dir():
+    test_dir = Path("data/test")
+    test_dir.mkdir(parents=True, exist_ok=True)
+    yield test_dir
+    if test_dir.exists():
+        shutil.rmtree(test_dir)
 
-    def test_sample_data_generation(self):
-        """Test sample data generation"""
-        df = self.data_generator.generate_sample_data()
-        self.assertEqual(df.count(), 5)  # Check number of rows
-        self.assertEqual(len(df.columns), 5)  # Check number of columns
-        
-        # Verify column names
-        expected_columns = {'id', 'name', 'age', 'email', 'created_at'}
-        self.assertEqual(set(df.columns), expected_columns)
+@pytest.fixture
+def data_generator():
+    generator = SampleDataGenerator()
+    yield generator
+    if hasattr(generator, 'spark'):
+        generator.spark.stop()
 
-    def test_parquet_scanning(self):
-        """Test scanning Parquet files"""
-        # Get the actual parquet file path (Spark creates a directory)
-        parquet_file = str(self.parquet_path)
-        
-        # Scan the parquet table
-        result = self.table_scanner.scan_table(parquet_file, "parquet")
-        
-        # Verify the scan results
-        self.assertIn('schema', result)
-        self.assertIn('row_count', result)
-        self.assertIn('column_stats', result)
-        
-        self.assertEqual(result['row_count'], 5)
-        self.assertEqual(len(result['schema']), 5)
-        
-        # Check column statistics
-        stats = result['column_stats']
-        self.assertIn('age', stats)
-        self.assertIn('count', stats['age'])
-        self.assertIn('mean', stats['age'])
+@pytest.fixture
+def table_scanner():
+    scanner = TableScanner()
+    yield scanner
+    if hasattr(scanner, 'spark'):
+        scanner.spark.stop()
 
-    def test_csv_scanning(self):
-        """Test scanning CSV files"""
-        # Get the CSV file path
-        csv_file = str(self.csv_path)
-        
-        # Scan the CSV table
-        result = self.table_scanner.scan_table(csv_file, "csv")
-        
-        # Verify the scan results
-        self.assertIn('schema', result)
-        self.assertIn('row_count', result)
-        self.assertIn('column_stats', result)
-        
-        self.assertEqual(result['row_count'], 5)
-        self.assertEqual(len(result['schema']), 5)
-        
-        # Check column statistics
-        stats = result['column_stats']
-        self.assertIn('age', stats)
-        self.assertIn('count', stats['age'])
-        self.assertIn('mean', stats['age'])
+@pytest.fixture
+def sample_data(test_data_dir, data_generator):
+    parquet_path = test_data_dir / "test_parquet"
+    csv_path = test_data_dir / "test_csv"
+    
+    # Generate and save sample data
+    df = data_generator.generate_sample_data()
+    data_generator.save_as_parquet(df, str(parquet_path))
+    data_generator.save_as_csv(df, str(csv_path))
+    
+    return {
+        "parquet_path": parquet_path,
+        "csv_path": csv_path,
+        "dataframe": df
+    }
 
-    def test_invalid_path(self):
-        """Test handling of invalid file paths"""
-        with self.assertRaises(ValueError):
-            self.table_scanner.scan_table("/nonexistent/path", "parquet")
+def test_sample_data_generation(data_generator):
+    """Test sample data generation"""
+    df = data_generator.generate_sample_data()
+    assert df.count() == 5  # Check number of rows
+    assert len(df.columns) == 5  # Check number of columns
+    
+    # Verify column names
+    expected_columns = {'id', 'name', 'age', 'email', 'created_at'}
+    assert set(df.columns) == expected_columns
 
-    def test_invalid_format(self):
-        """Test handling of invalid format types"""
-        with self.assertRaises(ValueError):
-            self.table_scanner.scan_table(str(self.parquet_path), "invalid_format")
+def test_parquet_scanning(table_scanner, sample_data):
+    """Test scanning Parquet files"""
+    # Get the actual parquet file path (Spark creates a directory)
+    parquet_file = str(sample_data["parquet_path"])
+    
+    # Scan the parquet table
+    result = table_scanner.scan_table(parquet_file, "parquet")
+    
+    # Verify the scan results
+    assert 'schema' in result
+    assert 'row_count' in result
+    assert 'column_stats' in result
+    
+    assert result['row_count'] == 5
+    assert len(result['schema']) == 5
+    
+    # Check column statistics
+    stats = result['column_stats']
+    assert 'age' in stats
+    assert 'count' in stats['age']
+    assert 'mean' in stats['age']
 
-if __name__ == '__main__':
-    unittest.main() 
+def test_csv_scanning(table_scanner, sample_data):
+    """Test scanning CSV files"""
+    # Get the CSV file path
+    csv_file = str(sample_data["csv_path"])
+    
+    # Scan the CSV table
+    result = table_scanner.scan_table(csv_file, "csv")
+    
+    # Verify the scan results
+    assert 'schema' in result
+    assert 'row_count' in result
+    assert 'column_stats' in result
+    
+    assert result['row_count'] == 5
+    assert len(result['schema']) == 5
+    
+    # Check column statistics
+    stats = result['column_stats']
+    assert 'age' in stats
+    assert 'count' in stats['age']
+    assert 'mean' in stats['age']
+
+def test_invalid_path(table_scanner):
+    """Test handling of invalid file paths"""
+    with pytest.raises(ValueError):
+        table_scanner.scan_table("/nonexistent/path", "parquet")
+
+def test_invalid_format(table_scanner, sample_data):
+    """Test handling of invalid format types"""
+    with pytest.raises(ValueError):
+        table_scanner.scan_table(str(sample_data["parquet_path"]), "invalid_format") 

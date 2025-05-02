@@ -1,7 +1,9 @@
+import unittest
+import os
 import pytest
 import json
 from unittest.mock import patch, MagicMock
-from backend.src.scanner.grafana_dashboard import GrafanaDashboard
+from src.scanner.grafana_dashboard import GrafanaDashboard
 
 @pytest.fixture
 def mock_response():
@@ -9,6 +11,9 @@ def mock_response():
     mock.json.return_value = {
         "dashboard": {
             "uid": "test-uid",
+            "id": 1,
+            "title": "Test Dashboard",
+            "version": 1,
             "panels": []
         }
     }
@@ -23,6 +28,10 @@ def test_create_dashboard(grafana_dashboard, mock_response):
     with patch('requests.post', return_value=mock_response):
         response = grafana_dashboard.create_dashboard("Test Dashboard")
         assert response["dashboard"]["uid"] == "test-uid"
+        assert response["dashboard"]["id"] == 1
+        assert response["dashboard"]["title"] == "Test Dashboard"
+        assert response["dashboard"]["version"] == 1
+        assert response["dashboard"]["panels"] == []
 
 def test_add_table_metrics_panel(grafana_dashboard, mock_response):
     scan_results = {
@@ -35,6 +44,9 @@ def test_add_table_metrics_panel(grafana_dashboard, mock_response):
          patch('requests.post', return_value=mock_response):
         response = grafana_dashboard.add_table_metrics_panel("test-uid", scan_results)
         assert response["dashboard"]["uid"] == "test-uid"
+        assert response["dashboard"]["id"] == 1
+        assert response["dashboard"]["title"] == "Test Dashboard"
+        assert response["dashboard"]["version"] == 1
 
 def test_add_column_stats_panel(grafana_dashboard, mock_response):
     column_stats = {
@@ -46,6 +58,9 @@ def test_add_column_stats_panel(grafana_dashboard, mock_response):
          patch('requests.post', return_value=mock_response):
         response = grafana_dashboard.add_column_stats_panel("test-uid", column_stats)
         assert response["dashboard"]["uid"] == "test-uid"
+        assert response["dashboard"]["id"] == 1
+        assert response["dashboard"]["title"] == "Test Dashboard"
+        assert response["dashboard"]["version"] == 1
 
 def test_export_dashboard(grafana_dashboard, mock_response, tmp_path):
     output_path = str(tmp_path / "dashboard.json")
@@ -56,4 +71,7 @@ def test_export_dashboard(grafana_dashboard, mock_response, tmp_path):
         
         with open(output_path) as f:
             dashboard = json.load(f)
-            assert dashboard["uid"] == "test-uid" 
+            assert dashboard["uid"] == "test-uid"
+            assert dashboard["id"] == 1
+            assert dashboard["title"] == "Test Dashboard"
+            assert dashboard["version"] == 1 

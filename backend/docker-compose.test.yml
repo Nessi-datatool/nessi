@@ -1,0 +1,174 @@
+version: '3.8'
+
+services:
+  metrics-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    ports:
+      - "8000:8000"
+    networks:
+      - monitoring
+    environment:
+      - PYTHONUNBUFFERED=1
+      - METRICS_USERNAME=${METRICS_USERNAME:-metrics_user}
+      - METRICS_PASSWORD=${METRICS_PASSWORD:-secure_password}
+      - SCENARIO=normal_operation
+      - METRICS_INTERVAL=5s
+      - LOG_LEVEL=INFO
+      - HTTP_PROTOCOL=HTTP/1.1
+      - RATE_LIMIT=10
+      - AUTH_ENABLED=true
+      - SSL_ENABLED=true
+    volumes:
+      - ./src/reports:/app/src/reports
+      - ./ssl:/app/ssl:ro
+    command: python src/reports/metrics_test.py
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "com.nessi.monitoring=true"
+      - "com.nessi.environment=development"
+      - "com.nessi.protocol=http/1.1"
+      - "com.nessi.security=true"
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+      - ./ssl:/etc/prometheus/ssl:ro
+    networks:
+      - monitoring
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.listen-address=:9090'
+      - '--web.external-url=http://prometheus:9090'
+      - '--web.config.file=/etc/prometheus/web.yml'
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "com.nessi.monitoring=true"
+      - "com.nessi.environment=development"
+      - "com.nessi.protocol=http/1.1"
+      - "com.nessi.security=true"
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./src/reports/grafana_dashboard.json:/etc/grafana/provisioning/dashboards/nessi.json
+      - grafana_data:/var/lib/grafana
+      - ./ssl:/etc/grafana/ssl:ro
+    networks:
+      - monitoring
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-secure_password}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+      - GF_SERVER_ENABLE_GZIP=true
+      - GF_SERVER_HTTP_PORT=3000
+      - GF_SERVER_PROTOCOL=http
+      - GF_SERVER_HTTP_VERSION=1.1
+      - GF_SECURITY_DISABLE_GRAVATAR=true
+      - GF_SECURITY_COOKIE_SECURE=true
+      - GF_SECURITY_ALLOW_EMBEDDING=false
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "com.nessi.monitoring=true"
+      - "com.nessi.environment=development"
+      - "com.nessi.protocol=http/1.1"
+      - "com.nessi.security=true"
+
+  # Add load balancer for metrics endpoint
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8001:80"
+      - "8443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./secrets:/etc/nginx/secrets:ro
+    networks:
+      - monitoring
+    depends_on:
+      - metrics-test
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "com.nessi.monitoring=true"
+      - "com.nessi.environment=development"
+      - "com.nessi.protocol=http/1.1"
+      - "com.nessi.security=true"
+
+networks:
+  monitoring:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local 
