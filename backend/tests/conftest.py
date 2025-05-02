@@ -3,7 +3,7 @@ import os
 import tempfile
 from pathlib import Path
 import pandas as pd
-from src.scanner.spark_config import get_spark_session
+from backend.src.scanner.spark_config import get_spark_session
 
 @pytest.fixture(scope="session")
 def spark_session():

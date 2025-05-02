@@ -21,6 +21,50 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
+.env
+venv/
+.venv/
+ENV/
+
+# Test artifacts
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Project specific
+data/*
+!data/.gitkeep
+metrics/*
+!metrics/.gitkeep
+logs/*
+!logs/.gitkeep
+
+# Docker
+.docker/
+
+# Spark
+spark-warehouse/
+derby.log
+metastore_db/
+
+# Grafana
+grafana-storage/
+
+# Prometheus
+prometheus-storage/
 
 # Virtual Environment
 venv/
@@ -59,11 +103,6 @@ Desktop.ini
 *.tmp
 *.temp
 *.swp
-
-# Ignore Spark local directories
-.metastore_db/
-spark-warehouse/
-derby.log
 
 # Ignore scan outputs
 nessi_report.html

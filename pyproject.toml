@@ -1,11 +1,32 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "nessi"
+version = "1.0.0"
+description = "A Docker-based data quality and profiling tool using PySpark and Delta Lake"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [
+    { name = "Nessi Team", email = "team@nessi-datatool.org" }
+]
+
+[project.urls]
+Homepage = "https://github.com/Nessi-datatool/nessi"
+Documentation = "https://github.com/Nessi-datatool/nessi/tree/main/docs"
+Repository = "https://github.com/Nessi-datatool/nessi.git"
+Issues = "https://github.com/Nessi-datatool/nessi/issues"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = "-v --cov=src --cov-report=html"
+addopts = "-v --cov=src"
+
+[tool.flake8]
+max-line-length = 100
+exclude = [".git", "__pycache__", "build", "dist"]
 
 [tool.coverage.run]
 source = ["src"]

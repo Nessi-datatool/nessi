@@ -1,9 +1,12 @@
-FROM python:3.9-slim-bullseye
+FROM python:3.11-slim-bullseye
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     openjdk-17-jdk \
     procps \
+    wget \
+    gnupg \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Set JAVA_HOME based on architecture
@@ -22,27 +25,29 @@ RUN . $JAVA_HOME_SOURCE && \
 WORKDIR /app
 
 # Copy requirements first to leverage Docker cache
-COPY requirements.txt .
+COPY backend/requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application
-COPY . .
+# Copy the backend application
+COPY backend/ /app/backend/
 
 # Set environment variables
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app/backend
 ENV PYSPARK_PYTHON=/usr/local/bin/python
 ENV PYSPARK_DRIVER_PYTHON=/usr/local/bin/python
 ENV PYSPARK_SUBMIT_ARGS="--driver-java-options=-Xms1024M --driver-java-options=-Xmx2048M --driver-java-options=-Dlog4j.logLevel=info pyspark-shell"
+ENV GRAFANA_URL=http://grafana:3000
+ENV PROMETHEUS_URL=http://prometheus:9090
 
 # Create necessary directories
-RUN mkdir -p /app/data/parquet /app/data/csv /app/data/delta
+RUN mkdir -p /app/data/parquet /app/data/csv /app/data/delta /app/metrics
 
 # Set permissions
-RUN chmod -R 777 /app/data
+RUN chmod -R 777 /app/data /app/metrics
 
 # Source JAVA_HOME at runtime
 SHELL ["/bin/bash", "-c"]
 ENTRYPOINT ["/bin/bash", "-c", "source $JAVA_HOME_SOURCE && exec \"$@\""]
-CMD ["python", "src/main.py"] 
+CMD ["python", "backend/src/main.py"] 

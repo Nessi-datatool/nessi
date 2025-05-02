@@ -1,0 +1,6 @@
+"id","name","age","email","created_at"
+"1","John Doe","30","john@example.com","2025-05-02T12:14:33.546+02:00"
+"2","Jane Smith","25","jane@example.com","2025-05-02T12:14:33.546+02:00"
+"3","Bob Johnson","35","bob@example.com","2025-05-02T12:14:33.546+02:00"
+"4","Alice Brown","28","alice@example.com","2025-05-02T12:14:33.546+02:00"
+"5","Charlie Wilson","32","charlie@example.com","2025-05-02T12:14:33.546+02:00"
