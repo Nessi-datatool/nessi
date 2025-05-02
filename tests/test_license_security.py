@@ -1,11 +1,14 @@
+"""Tests for the license security module."""
+
+import os
 import pytest
 import json
-import os
 import base64
+import stat
 from datetime import datetime, timedelta
 from pathlib import Path
-from src.license import LicenseValidator
-from src.decorators import require_valid_license, LicenseError
+from backend.src.scanner.license import LicenseValidator, LicenseError
+from backend.src.scanner.decorators import require_valid_license
 
 @pytest.fixture
 def temp_config_dir(tmp_path):
@@ -17,7 +20,7 @@ def temp_config_dir(tmp_path):
 @pytest.fixture
 def validator(temp_config_dir, monkeypatch):
     """Create a LicenseValidator with a temporary config directory."""
-    monkeypatch.setattr("src.license.Path.home", lambda: temp_config_dir.parent)
+    monkeypatch.setattr("backend.src.scanner.license.Path.home", lambda: temp_config_dir.parent)
     return LicenseValidator()
 
 def test_config_encryption(validator, temp_config_dir):
@@ -119,7 +122,7 @@ def test_protected_function_security():
         # Try to call protected function
         protected_function()
     
-    assert "License required" in str(exc_info.value)
+    assert "License is invalid or expired" in str(exc_info.value)
 
 def test_multiple_instances(validator, temp_config_dir):
     """Test that multiple validator instances use same config."""

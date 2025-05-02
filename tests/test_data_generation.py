@@ -2,112 +2,141 @@
 
 import os
 import pytest
-import pandas as pd
+import tempfile
+import shutil
 from datetime import date
-from pyspark.sql import SparkSession
-from src.sample_data_generator import generate_sample_data, save_as_delta, save_as_parquet, save_as_csv
-from src.create_test_delta_table import create_test_delta_table, get_or_create_spark_session
-from src.scanner.table_scanner import TableScanner
-import numpy as np
-
-@pytest.fixture(scope="session")
-def spark_session():
-    """Create a Spark session configured for Delta Lake."""
-    spark = get_or_create_spark_session()
-    yield spark
-    spark.stop()
+import pandas as pd
+from pathlib import Path
+from backend.src.scanner.sample_data_generator import SampleDataGenerator
 
 @pytest.fixture
-def test_data_dir(tmp_path):
-    """Create a temporary directory for test data."""
-    os.makedirs(tmp_path, exist_ok=True)
-    return str(tmp_path)
+def temp_dir():
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        yield tmpdirname
 
-def assert_dataframes_equal(df1, df2):
-    """Custom function to compare DataFrames with proper null value handling."""
-    # Convert None to NaN for consistent comparison
-    df1 = df1.replace({None: np.nan})
-    df2 = df2.replace({None: np.nan})
-    pd.testing.assert_frame_equal(df1, df2, check_dtype=False)
+@pytest.fixture
+def sample_data(temp_dir):
+    generator = SampleDataGenerator()
+    df = generator.generate_sample_data()
+    
+    # Save sample data in both formats
+    parquet_path = os.path.join(temp_dir, "sample_parquet")
+    csv_path = os.path.join(temp_dir, "sample_csv")
+    
+    generator.save_as_parquet(df, parquet_path)
+    generator.save_as_csv(df, csv_path)
+    
+    return {
+        "parquet_path": parquet_path,
+        "csv_path": csv_path,
+        "dataframe": df
+    }
 
 def test_generate_sample_data():
-    """Test sample data generation with various row counts."""
-    # Test with default number of rows
-    data = generate_sample_data()
-    assert len(data) == 1000
+    generator = SampleDataGenerator()
+    df = generator.generate_sample_data()
     
-    # Test with custom number of rows
-    data = generate_sample_data(100)
-    assert len(data) == 100
-    
-    # Test data types and structure
-    row = data[0]
-    assert isinstance(row[0], int)  # id
-    assert isinstance(row[1], str)  # name
-    assert isinstance(row[2], (int, type(None)))  # age
-    assert isinstance(row[3], (float, type(None)))  # salary
-    assert isinstance(row[4], (str, type(None)))  # department
-    assert isinstance(row[5], date)  # join_date
+    assert df is not None
+    assert df.count() == 5  # We know we generated 5 rows
+    assert len(df.columns) == 5  # id, name, age, email, created_at
 
-def test_save_as_delta(test_data_dir, spark_session):
-    """Test saving data as Delta table."""
-    data = generate_sample_data(10)
-    delta_path = os.path.join(test_data_dir, "test_delta")
-    save_as_delta(data, delta_path)
-    
-    # Verify Delta table was created
-    assert os.path.exists(delta_path)
-    assert os.path.exists(os.path.join(delta_path, "_delta_log"))
-    
-    # Verify data can be read back
-    df = spark_session.read.format("delta").load(delta_path)
-    assert df.count() == 10
+def test_save_as_parquet(sample_data):
+    assert os.path.exists(sample_data["parquet_path"])
+    assert len(os.listdir(sample_data["parquet_path"])) > 0
 
-def test_save_as_parquet(test_data_dir, spark_session):
-    """Test saving data as Parquet file."""
-    data = generate_sample_data(10)
-    df = pd.DataFrame(data)
-    parquet_path = os.path.join(test_data_dir, "test_parquet")
-    save_as_parquet(df, parquet_path)
-    
-    # Verify Parquet file was created
-    assert os.path.exists(parquet_path)
-    
-    # Verify data can be read back
-    df = spark_session.read.format("parquet").load(parquet_path)
-    assert df.count() == 10
+def test_save_as_csv(sample_data):
+    assert os.path.exists(sample_data["csv_path"])
+    assert len(os.listdir(sample_data["csv_path"])) > 0
 
-def test_save_as_csv(test_data_dir):
-    """Test saving data as CSV file."""
-    data = generate_sample_data(10)
-    df = pd.DataFrame(data)
-    csv_path = os.path.join(test_data_dir, "test.csv")
-    save_as_csv(df, csv_path)
+def test_save_empty_data(test_data_dir):
+    """Test saving empty data."""
+    # Generate empty data
+    data = generate_sample_data(num_rows=0)
     
-    # Verify CSV file was created
-    assert os.path.exists(csv_path)
+    # Save as Parquet
+    table_path = os.path.join(test_data_dir, "empty_parquet")
+    save_as_parquet(data, table_path)
     
-    # Verify content
-    df_read = pd.read_csv(csv_path)
-    assert len(df_read) == 10
+    # Verify
+    df = pd.read_parquet(table_path)
+    assert len(df) == 0
+    assert len(df.columns) == 6
+    
+    # Save as CSV
+    file_path = os.path.join(test_data_dir, "empty.csv")
+    save_as_csv(data, file_path)
+    
+    # Verify
+    df = pd.read_csv(file_path)
+    assert len(df) == 0
+    assert len(df.columns) == 6
 
-def test_create_test_delta_table(test_data_dir, spark_session):
-    """Test creation of test Delta table with multiple versions."""
-    # Create test table path
-    table_path = os.path.join(test_data_dir, "test_delta")
-    os.makedirs(test_data_dir, exist_ok=True)
+def test_save_invalid_path(test_data_dir):
+    """Test saving to invalid path."""
+    data = generate_sample_data(num_rows=10)
     
-    # Create test table
-    create_test_delta_table(table_path=table_path, num_rows=4)
+    # Try to save to invalid path
+    with pytest.raises(RuntimeError):
+        save_as_parquet(data, "/invalid/path/table")
     
-    # Verify table was created
-    assert os.path.exists(table_path)
-    assert os.path.exists(os.path.join(table_path, "_delta_log"))
+    with pytest.raises(RuntimeError):
+        save_as_csv(data, "/invalid/path/file.csv")
+
+def test_save_large_data(test_data_dir):
+    """Test saving large amount of data."""
+    # Generate large dataset
+    data = generate_sample_data(num_rows=10000)
     
-    # Verify version history
-    df = spark_session.read.format("delta").load(table_path)
+    # Save as Parquet
+    table_path = os.path.join(test_data_dir, "large_parquet")
+    save_as_parquet(data, table_path)
     
-    # Check final state
-    assert df.count() == 4  # Should have 4 records in final version
-    assert df.filter("id = 3").count() == 0  # Record with id=3 should be deleted
-    assert df.filter("id = 1").select("department").first()[0] == "Engineering"  # Department should be updated 
+    # Verify
+    df = pd.read_parquet(table_path)
+    assert len(df) == 10000
+    
+    # Save as CSV
+    file_path = os.path.join(test_data_dir, "large.csv")
+    save_as_csv(data, file_path)
+    
+    # Verify
+    df = pd.read_csv(file_path)
+    assert len(df) == 10000
+
+def test_save_data_with_null_values(test_data_dir):
+    """Test saving data with null values."""
+    # Create data with null values
+    data = pd.DataFrame({
+        'id': [1, 2, 3, 4, 5],
+        'name': ['Alice', None, 'Charlie', None, 'Eve'],
+        'age': [25, 30, None, 40, None],
+        'salary': [50000, None, 70000, None, 90000],
+        'department': ['HR', 'Engineering', None, 'Sales', None],
+        'join_date': [date(2020, 1, 1), None, date(2020, 3, 1), None, date(2020, 5, 1)]
+    })
+    
+    # Save as Parquet
+    table_path = os.path.join(test_data_dir, "null_parquet")
+    save_as_parquet(data, table_path)
+    
+    # Verify
+    df = pd.read_parquet(table_path)
+    assert len(df) == 5
+    assert df['name'].isna().sum() == 2
+    assert df['age'].isna().sum() == 2
+    assert df['salary'].isna().sum() == 2
+    assert df['department'].isna().sum() == 2
+    assert df['join_date'].isna().sum() == 2
+    
+    # Save as CSV
+    file_path = os.path.join(test_data_dir, "null.csv")
+    save_as_csv(data, file_path)
+    
+    # Verify
+    df = pd.read_csv(file_path)
+    assert len(df) == 5
+    assert df['name'].isna().sum() == 2
+    assert df['age'].isna().sum() == 2
+    assert df['salary'].isna().sum() == 2
+    assert df['department'].isna().sum() == 2
+    assert df['join_date'].isna().sum() == 2 

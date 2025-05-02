@@ -1,9 +1,15 @@
-import pytest
+"""Pytest configuration file."""
+
 import os
+import tempfile
+import pytest
 import pandas as pd
 import numpy as np
 from pathlib import Path
 from pyspark.sql import SparkSession
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, LongType, DoubleType, DateType, TimestampType
+
+from backend.src.scanner.spark_config import get_spark_session
 
 def assert_dataframes_equal(df1, df2):
     """Custom function to compare DataFrames with proper null value handling."""
@@ -16,7 +22,7 @@ def assert_dataframes_equal(df1, df2):
 def setup_test_environment():
     """Set up test environment and create test data"""
     # Create test data directory
-    test_data_dir = Path(__file__).parent / '..' / 'data' / 'test_tables'
+    test_data_dir = Path("data/test_tables")
     test_data_dir.mkdir(parents=True, exist_ok=True)
     
     # Create sample data
@@ -87,16 +93,34 @@ def setup_test_environment():
 
 @pytest.fixture(scope="session")
 def spark_session():
-    """Create a Spark session for testing."""
-    spark = SparkSession.builder \
-        .appName("test_session") \
-        .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
-        .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
-        .getOrCreate()
+    """Create a Spark session for testing"""
+    spark = get_spark_session("TestSession")
     yield spark
     spark.stop()
 
+@pytest.fixture(scope="function")
+def test_data_dir():
+    """Get the test data directory"""
+    return Path("data/test_tables")
+
+@pytest.fixture(scope="function")
+def sample_schema():
+    """Get a sample schema for testing"""
+    return StructType([
+        StructField("id", IntegerType(), True),
+        StructField("name", StringType(), True),
+        StructField("value", DoubleType(), True),
+        StructField("category", StringType(), True),
+        StructField("date", StringType(), True)
+    ])
+
 @pytest.fixture
-def test_data_dir(tmp_path):
-    """Create a temporary directory for test data."""
-    return str(tmp_path) 
+def custom_schema():
+    """Get a custom schema for testing"""
+    return StructType([
+        StructField("id", LongType(), True),
+        StructField("name", StringType(), True),
+        StructField("value", DoubleType(), True),
+        StructField("category", StringType(), True),
+        StructField("date", DateType(), True)
+    ]) 

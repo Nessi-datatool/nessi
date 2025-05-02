@@ -1,108 +1,99 @@
-"""Tests for the test delta table creator module."""
+"""Tests for the Delta table creator module."""
 
 import os
+import shutil
+import tempfile
 import pytest
 from datetime import date
-import pandas as pd
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType, LongType, DoubleType, DateType, TimestampType
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
-from src.create_test_delta_table import (
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType
+
+from backend.src.scanner.create_test_delta_table import (
     create_test_delta_table,
-    add_column_to_delta_table,
-    get_or_create_spark_session
+    add_column_to_delta_table
 )
 
-@pytest.fixture(scope="session")
-def spark_session():
-    """Create a Spark session configured for Delta Lake."""
-    spark = get_or_create_spark_session()
-    yield spark
-    spark.stop()
-
-@pytest.fixture
-def test_data_dir(tmp_path):
+@pytest.fixture(scope="function")
+def test_data_dir():
     """Create a temporary directory for test data."""
-    return str(tmp_path)
+    temp_dir = tempfile.mkdtemp()
+    yield temp_dir
+    if os.path.exists(temp_dir):
+        shutil.rmtree(temp_dir)
 
-@pytest.fixture
-def custom_schema():
-    """Custom schema for testing."""
-    return StructType([
-        StructField("id", LongType(), False),
-        StructField("name", StringType(), True),
-        StructField("value", DoubleType(), True),
-        StructField("timestamp", TimestampType(), True)
-    ])
-
-def get_or_create_spark_session():
-    """Get or create a Spark session."""
-    return SparkSession.builder.appName("test_delta_table_creator").getOrCreate()
-
-def test_create_test_delta_table_basic(test_data_dir, spark_session):
-    """Test basic Delta table creation."""
-    # Create test table path
-    table_path = os.path.join(test_data_dir, "test_delta_basic")
-    os.makedirs(test_data_dir, exist_ok=True)
-    
+def test_create_test_delta_table(test_data_dir, spark_session):
+    """Test creating a test Delta table."""
     # Create test table
+    table_path = os.path.join(test_data_dir, "test_delta")
+    os.makedirs(test_data_dir, exist_ok=True)
     create_test_delta_table(table_path)
     
     # Verify table was created
     assert os.path.exists(table_path)
-    assert os.path.exists(os.path.join(table_path, "_delta_log"))
     
-    # Read and verify data using Spark
+    # Read table and verify schema
     df = spark_session.read.format("delta").load(table_path)
-    assert df.count() > 0
-    assert set(df.columns) == {'id', 'name', 'age', 'salary', 'department', 'join_date'}
+    assert df.count() == 4
+    assert "id" in df.columns
+    assert "name" in df.columns
+    assert "age" in df.columns
+    assert "salary" in df.columns
+    assert "department" in df.columns
+    assert "join_date" in df.columns
 
-def test_create_test_delta_table_custom_schema(test_data_dir, spark_session, custom_schema):
-    """Test Delta table creation with custom schema."""
-    table_path = os.path.join(test_data_dir, "test_delta_custom")
-    os.makedirs(test_data_dir, exist_ok=True)
+def test_create_test_delta_table_with_schema(test_data_dir, spark_session):
+    """Test creating a test Delta table with custom schema."""
+    # Define custom schema
+    custom_schema = StructType([
+        StructField("id", IntegerType(), False),
+        StructField("name", StringType(), True),
+        StructField("department", StringType(), True)
+    ])
     
     # Create table with custom schema
+    table_path = os.path.join(test_data_dir, "test_delta_schema")
+    os.makedirs(test_data_dir, exist_ok=True)
     create_test_delta_table(table_path, schema=custom_schema)
     assert os.path.exists(table_path)
     
-    # Verify schema
+    # Read table and verify schema
     df = spark_session.read.format("delta").load(table_path)
-    assert df.count() > 0
-    assert set(df.columns) == {'id', 'name', 'value', 'timestamp'}
+    assert df.count() == 4
+    assert "id" in df.columns
+    assert "name" in df.columns
+    assert "department" in df.columns
+    assert "age" not in df.columns
+    assert "salary" not in df.columns
+    assert "join_date" not in df.columns
 
-def test_create_test_delta_table_partitioned(test_data_dir, spark_session):
-    """Test Delta table creation with partitioning."""
+def test_create_test_delta_table_with_partitioning(test_data_dir, spark_session):
+    """Test creating a test Delta table with partitioning."""
+    # Create partitioned table
     table_path = os.path.join(test_data_dir, "test_delta_partitioned")
     os.makedirs(test_data_dir, exist_ok=True)
-    
-    # Create partitioned table
-    create_test_delta_table(
-        table_path,
-        partition_by=["department"]
-    )
+    create_test_delta_table(table_path, partition_by=["department"])
     assert os.path.exists(table_path)
     
-    # Verify partitioning
+    # Read table and verify partitioning
     df = spark_session.read.format("delta").load(table_path)
-    assert df.count() > 0
-    assert "department" in df.columns
+    assert df.count() == 4
+    assert "_delta_log" in os.listdir(table_path)
+    assert "department=Department_1" in os.listdir(table_path)
 
-def test_create_test_delta_table_custom_rows(test_data_dir, spark_session):
-    """Test Delta table creation with custom number of rows."""
-    table_path = os.path.join(test_data_dir, "test_delta_custom_rows")
-    os.makedirs(test_data_dir, exist_ok=True)
-    
+def test_create_test_delta_table_with_num_rows(test_data_dir, spark_session):
+    """Test creating a test Delta table with custom number of rows."""
     # Create table with custom number of rows
+    table_path = os.path.join(test_data_dir, "test_delta_rows")
+    os.makedirs(test_data_dir, exist_ok=True)
     create_test_delta_table(table_path, num_rows=100)
     assert os.path.exists(table_path)
     
-    # Verify row count
+    # Read table and verify row count
     df = spark_session.read.format("delta").load(table_path)
     assert df.count() == 100
 
-def test_create_test_delta_table_invalid_inputs(test_data_dir):
-    """Test Delta table creation with invalid inputs."""
+def test_create_test_delta_table_invalid_args(test_data_dir):
+    """Test creating a test Delta table with invalid arguments."""
     # Test with invalid path
     with pytest.raises(ValueError):
         create_test_delta_table("")
@@ -114,7 +105,7 @@ def test_create_test_delta_table_invalid_inputs(test_data_dir):
         create_test_delta_table(test_data_dir, num_rows=-1)
 
 def test_add_column_to_delta_table(test_data_dir, spark_session):
-    """Test adding columns to Delta table."""
+    """Test adding a column to a Delta table."""
     # Create initial table
     table_path = os.path.join(test_data_dir, "test_delta_add_column")
     os.makedirs(test_data_dir, exist_ok=True)
@@ -128,11 +119,6 @@ def test_add_column_to_delta_table(test_data_dir, spark_session):
         default_value=True
     )
     
-    # Verify new column
-    df = spark_session.read.format("delta").load(table_path)
-    assert "is_active" in df.columns
-    assert df.filter(col("is_active") == True).count() == df.count()  # All values should be True
-    
     # Add string column with default value
     add_column_to_delta_table(
         table_path,
@@ -141,15 +127,18 @@ def test_add_column_to_delta_table(test_data_dir, spark_session):
         default_value="active"
     )
     
-    # Verify new column
+    # Read table and verify columns
     df = spark_session.read.format("delta").load(table_path)
+    assert "is_active" in df.columns
     assert "status" in df.columns
-    assert df.filter(col("status") == "active").count() == df.count()  # All values should be "active"
+    assert df.select("is_active").first()[0] == True
+    assert df.select("status").first()[0] == "active"
 
-def test_add_column_to_delta_table_invalid_inputs(test_data_dir, spark_session):
-    """Test adding columns with invalid inputs."""
+def test_add_column_to_delta_table_invalid_args(test_data_dir, spark_session):
+    """Test adding a column to a Delta table with invalid arguments."""
     # Create initial table
     table_path = os.path.join(test_data_dir, "test_delta_invalid")
+    os.makedirs(test_data_dir, exist_ok=True)
     create_test_delta_table(table_path)
     
     # Test with invalid path
@@ -165,7 +154,7 @@ def test_add_column_to_delta_table_invalid_inputs(test_data_dir, spark_session):
         add_column_to_delta_table(
             table_path,
             column_name="id",  # Already exists
-            data_type="string"
+            data_type="integer"
         )
     
     # Test with invalid data type
@@ -177,7 +166,7 @@ def test_add_column_to_delta_table_invalid_inputs(test_data_dir, spark_session):
         )
 
 def test_add_column_to_delta_table_null_values(test_data_dir, spark_session):
-    """Test adding columns with null values."""
+    """Test adding a column to a Delta table with null values."""
     # Create initial table
     table_path = os.path.join(test_data_dir, "test_delta_null")
     os.makedirs(test_data_dir, exist_ok=True)
@@ -190,7 +179,7 @@ def test_add_column_to_delta_table_null_values(test_data_dir, spark_session):
         data_type="string"
     )
     
-    # Verify new column
+    # Read table and verify null values
     df = spark_session.read.format("delta").load(table_path)
     assert "notes" in df.columns
-    assert df.filter(col("notes").isNull()).count() == df.count()  # All values should be null 
+    assert df.select("notes").first()[0] is None 

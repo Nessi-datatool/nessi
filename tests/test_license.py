@@ -1,8 +1,10 @@
+"""Tests for the license validation module."""
+
+import os
 import pytest
 from datetime import datetime, timedelta
-from src.license import LicenseValidator
-from src.decorators import require_valid_license, LicenseError
-import os
+from backend.src.scanner.license import LicenseValidator, LicenseError
+from backend.src.scanner.decorators import require_valid_license
 import shutil
 
 @pytest.fixture
@@ -15,7 +17,7 @@ def temp_config_dir(tmp_path):
 @pytest.fixture
 def validator(temp_config_dir, monkeypatch):
     """Create a LicenseValidator with a temporary config directory."""
-    monkeypatch.setattr("src.license.Path.home", lambda: temp_config_dir.parent)
+    monkeypatch.setattr("backend.src.scanner.license.Path.home", lambda: temp_config_dir.parent)
     return LicenseValidator()
 
 def test_initial_trial_status(validator):

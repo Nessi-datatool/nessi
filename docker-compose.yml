@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend:/app/backend
+      - ./data:/app/data
+    environment:
+      - PYTHONPATH=/app/backend
+      - JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+      - PYSPARK_PYTHON=/usr/local/bin/python
+      - PYSPARK_DRIVER_PYTHON=/usr/local/bin/python
+    networks:
+      - nessi-network
+
+networks:
+  nessi-network:
+    driver: bridge 

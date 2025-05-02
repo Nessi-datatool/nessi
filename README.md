@@ -1,130 +1,59 @@
-# Nessi Data Tool
+# Nessi - Data Quality and Profiling Tool
 
-[![License](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
+Nessi is a powerful data quality and profiling tool that helps you analyze and understand your data. It supports various data formats including Delta Lake, Parquet, and CSV.
 
-A powerful data processing and analysis tool built with PySpark and Delta Lake.
+## Prerequisites
 
-## Features
+- Docker
+- Docker Compose
 
-- Secure license management system with machine-specific binding
-- Sample data generation for testing and development
-- Support for multiple file formats (Delta Lake, Parquet, CSV)
-- Table scanning and profiling capabilities
-- Comprehensive test suite
-- Easy-to-use CLI interface
+## Quick Start
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/nessi.git
+cd nessi
+```
+
+2. Build and run the Docker container:
+```bash
+docker-compose up --build
+```
+
+This will:
+- Build the Nessi Docker image
+- Start the container
+- Run the test suite
+- Make the service available on port 8080
+
+## Configuration
+
+The following environment variables can be configured in `docker-compose.yml`:
+
+- `SPARK_CONF_DIR`: Directory containing Spark configuration files
+- `SPARK_JARS_DIR`: Directory containing Spark and Delta Lake JARs
+- `PYTHONPATH`: Python path configuration
+
+## Volumes
+
+The following directories are mounted as volumes:
+
+- `/app/data`: Data directory
+- `/app/jars`: JAR files directory
+- `/app/conf`: Configuration files directory
+
+## Development
+
+To run tests:
+```bash
+docker-compose run nessi pytest tests/
+```
+
+To run a specific test:
+```bash
+docker-compose run nessi pytest tests/test_file.py::test_function
+```
 
 ## License
 
-Nessi is provided with a 14-day trial license. During the trial period, you can evaluate all features of the software. After the trial period, you will need to purchase a license to continue using the software.
-
-### Security Features
-
-The license system includes several security measures:
-- Machine-specific license binding
-- Encrypted configuration storage
-- Tamper detection and automatic recovery
-- Protection against clock manipulation
-- Secure trial period tracking
-
-### License Management
-
-The following commands are available for managing your license:
-
-```bash
-# Check current license status
-nessi status
-
-# Activate a license key
-nessi activate <license_key>
-```
-
-### Trial Period
-
-- 14-day trial period starts automatically on first use
-- Full access to all features during trial
-- No registration required
-- Trial status can be checked using `nessi status`
-- Secure trial period tracking prevents manipulation
-
-### License Activation
-
-After purchasing a license, activate it using:
-
-```bash
-nessi activate <your-license-key>
-```
-
-The license will be bound to your specific machine for security.
-
-### Using Licensed Features
-
-All main functions in Nessi require a valid license or active trial period. The license is checked automatically when using any feature. For example:
-
-```python
-from nessi import scan_table, generate_sample_data
-
-# These functions will check for a valid license automatically
-scan_table('path/to/table')
-generate_sample_data('output/path')
-```
-
-If your license is invalid or expired, the functions will raise a `LicenseError` with a descriptive message.
-
-## Installation
-
-```bash
-pip install nessi
-```
-
-### Dependencies
-
-Nessi requires the following main dependencies:
-- Python 3.8 or higher
-- PySpark 3.5.0 or higher
-- Delta Lake 2.4.0 or higher
-- cryptography 41.0.0 or higher
-
-## Usage
-
-### Basic Example
-
-```python
-from nessi import scan_table, generate_sample_data
-
-# Generate sample data
-generate_sample_data('test_table', format='delta', rows=1000)
-
-# Scan the table
-report = scan_table('test_table', format='delta')
-```
-
-### Protected Features
-
-All main features are protected by the license system using the `@require_valid_license` decorator:
-
-```python
-from nessi.decorators import require_valid_license
-
-@require_valid_license
-def my_custom_function():
-    # This function will only run with a valid license
-    pass
-```
-
-## Contributing
-
-Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and development process.
-
-## Security
-
-For security-related information and reporting vulnerabilities, please see [SECURITY.md](SECURITY.md).
-
-## Support
-
-For license inquiries or support:
-- Email: support@nessi-datatool.com
-- Website: https://nessi-datatool.com
-
-## Documentation
-
-For detailed documentation, please visit our [documentation site](https://docs.nessi-datatool.com). 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 
