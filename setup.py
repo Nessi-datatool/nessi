@@ -21,7 +21,7 @@ setup(
         "pytest-cov==6.1.1",
         "jinja2>=3.0.0",
         "fastparquet>=2023.1.0",
-        "cryptography==41.0.5",
+        "cryptography==44.0.1",
         "python-dateutil==2.8.2",
         "pytz==2023.3",
         "typing-extensions==4.8.0",
