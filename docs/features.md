@@ -1,120 +1,120 @@
 # Nessi Features Documentation
 
 ## Overview
-Nessi is a powerful data processing and analysis tool built on Apache Spark, designed for efficient table scanning, data generation, and analysis. It provides a robust set of features for working with various data formats and performing comprehensive data analysis.
+Nessi is a powerful data processing and analysis tool built on Apache Spark and Delta Lake, designed for efficient table scanning, data generation, and comprehensive data analysis. It provides robust features for data quality monitoring, performance analysis, and real-time metrics visualization.
 
 ## Core Features
 
-### 1. Table Scanning
+### 1. Data Quality Monitoring
+Nessi provides comprehensive data quality monitoring capabilities:
+
+#### Quality Metrics
+- **Completeness Analysis**
+  - Null value detection and statistics
+  - Required field validation
+  - Data coverage analysis
+
+- **Accuracy Assessment**
+  - Value range validation
+  - Pattern matching
+  - Data type consistency checks
+
+- **Consistency Verification**
+  - Cross-table validation
+  - Referential integrity checks
+  - Business rule validation
+
+### 2. Performance Analysis
+Advanced performance monitoring and analysis:
+
+#### Performance Metrics
+- **Execution Time Analysis**
+  - Total processing time
+  - Average operation time
+  - Peak performance tracking
+
+- **Resource Utilization**
+  - Memory usage monitoring
+  - CPU utilization tracking
+  - I/O performance analysis
+
+- **Throughput Metrics**
+  - Rows processed per second
+  - Data volume throughput
+  - Processing efficiency scores
+
+### 3. Table Scanning & Analysis
 The `TableScanner` class provides comprehensive table analysis capabilities:
 
 #### Supported Formats
-- **Parquet**: Native support for Parquet file format
-- **CSV**: Full support for CSV files with header and schema inference
+- **Delta Lake**: Native support with versioning and time travel
+- **Parquet**: Optimized columnar storage support
+- **CSV**: Flexible text-based data handling
 
-#### Scanning Capabilities
+#### Analysis Features
 - **Schema Analysis**
   - Automatic schema detection
-  - Detailed type information for each column
-  - Support for complex data types
+  - Complex type support
+  - Schema evolution tracking
 
 - **Statistical Analysis**
   - Row count calculation
-  - Column-level statistics including:
-    - Count
-    - Mean
-    - Standard deviation
-    - Minimum value
-    - Maximum value
+  - Column-level statistics
+  - Distribution analysis
 
-- **Special Character Handling**
-  - Automatic handling of special characters in column names
-  - Conversion of '@' to '_at_'
-  - Conversion of '.' to '_dot_'
+- **Data Profiling**
+  - Value distribution analysis
+  - Pattern recognition
+  - Anomaly detection
 
-### 2. Sample Data Generation
-The `SampleDataGenerator` class provides flexible data generation capabilities:
+### 4. Real-time Monitoring
+Comprehensive monitoring and alerting system:
 
-#### Data Generation Features
-- **Structured Data Creation**
-  - Support for multiple data types:
-    - Integer
-    - String
-    - Timestamp
-  - Customizable schema definition
-  - Automatic timestamp generation
+#### Metrics Collection
+- **System Metrics**
+  - Resource utilization
+  - Performance indicators
+  - Error rates
 
-- **Data Export Options**
-  - **Parquet Export**
-    - Efficient columnar storage
-    - Automatic directory creation
-    - Overwrite mode support
-  
-  - **CSV Export**
-    - Header inclusion
-    - Proper quote handling
-    - Escape character support
-    - Single file output (coalesced)
+- **Data Quality Metrics**
+  - Completeness scores
+  - Accuracy metrics
+  - Consistency checks
 
-### 3. Spark Configuration
-The `spark_config` module provides optimized Spark session management:
+- **Custom Metrics**
+  - User-defined metrics
+  - Business KPIs
+  - Custom thresholds
 
-#### Configuration Features
-- **Resource Management**
-  - Memory configuration for driver and executor
-  - Local execution mode support
-  - Dynamic allocation control
+#### Alerting System
+- **Threshold-based Alerts**
+  - Customizable thresholds
+  - Multi-level severity
+  - Alert aggregation
 
-- **Performance Optimization**
-  - Shuffle partition configuration
-  - Parallelism settings
-  - UI control for reduced overhead
+- **Notification Channels**
+  - Email notifications
+  - Webhook integration
+  - Dashboard alerts
 
-- **Session Management**
-  - Automatic session cleanup
-  - Custom application naming
-  - Local host binding
+### 5. Report Generation
+Comprehensive reporting capabilities:
 
-### 4. Grafana Dashboard Integration
-The `GrafanaDashboard` class provides comprehensive monitoring capabilities:
+#### Report Types
+- **Data Quality Reports**
+  - Quality score analysis
+  - Issue categorization
+  - Trend analysis
 
-#### Dashboard Management
-- **Dashboard Creation**
-  - Customizable dashboard titles
-  - Folder organization
-  - Automatic refresh configuration
-  - Tag-based organization
+- **Performance Reports**
+  - Resource utilization
+  - Processing efficiency
+  - Bottleneck identification
 
-- **Metrics Visualization**
-  - **Table Metrics Panel**
-    - Row count visualization
-    - File information display
-    - Real-time updates
-  
-  - **Column Statistics Panel**
-    - Statistical metrics visualization
-    - Threshold-based coloring
-    - Multi-column support
-    - Time-series data display
-
-- **Dashboard Export**
-  - JSON format export
-  - Version control integration
-  - Backup capabilities
-  - Template sharing
-
-#### Integration Features
-- **Prometheus Integration**
-  - Native Prometheus data source support
-  - Custom metric queries
-  - Alert configuration
-  - Threshold monitoring
-
-- **API Management**
-  - Secure API key authentication
-  - RESTful API integration
-  - Dashboard programmatic management
-  - Panel customization
+- **Custom Reports**
+  - Template-based reports
+  - User-defined metrics
+  - Custom visualizations
 
 ## Technical Specifications
 
@@ -133,112 +133,92 @@ The `GrafanaDashboard` class provides comprehensive monitoring capabilities:
 - pyspark==3.5.0
 - delta-spark==3.0.0
 - requests>=2.31.0
-- Additional utility packages for testing and development
 
 ### Performance Characteristics
-- Optimized for local development
-- Memory-efficient configuration
-- Automatic resource cleanup
-- Efficient data processing
+- Optimized for large-scale data processing
+- Efficient memory management
 - Real-time monitoring capabilities
+- Scalable architecture
+- Automated resource cleanup
 
 ## Usage Examples
 
+### Data Quality Monitoring
+```python
+from src.reports.data_quality_report import generate_report
+
+# Generate data quality report
+report = generate_report({
+    "metrics": {"completeness": 0.95},
+    "rows": [
+        {"id": 1, "name": "test1", "value": None},
+        {"id": 2, "name": "test2", "value": "valid"}
+    ]
+})
+
+# Access quality metrics
+print(f"Data Quality Score: {report['data_quality']['metrics']['completeness']}")
+```
+
+### Performance Analysis
+```python
+from src.reports.performance_report import generate_report
+
+# Generate performance report
+report = generate_report({
+    "total_time": 100,
+    "average_time": 50,
+    "max_time": 150,
+    "peak_memory": 1024,
+    "average_memory": 512
+})
+
+# Access performance metrics
+print(f"Processing Efficiency: {report['performance']['metrics']['throughput']}")
+```
+
 ### Table Scanning
 ```python
-from backend.src.scanner.table_scanner import TableScanner
+from src.scanner.table_scanner import TableScanner
 
 # Initialize scanner
 scanner = TableScanner()
 
-# Scan a Parquet table
-result = scanner.scan_table("path/to/table.parquet", "parquet")
+# Scan Delta table
+result = scanner.scan_table("path/to/table", "delta")
 
-# Access results
-print(f"Row count: {result['row_count']}")
+# Access analysis results
 print(f"Schema: {result['schema']}")
 print(f"Statistics: {result['column_stats']}")
-```
-
-### Sample Data Generation
-```python
-from backend.src.scanner.sample_data_generator import SampleDataGenerator
-
-# Initialize generator
-generator = SampleDataGenerator()
-
-# Generate sample data
-df = generator.generate_sample_data()
-
-# Save as Parquet
-generator.save_as_parquet(df, "output/path")
-
-# Save as CSV
-generator.save_as_csv(df, "output/path")
-```
-
-### Grafana Dashboard Integration
-```python
-from backend.src.scanner.grafana_dashboard import GrafanaDashboard
-
-# Initialize dashboard manager
-dashboard = GrafanaDashboard(
-    grafana_url="http://localhost:3000",
-    api_key="your-api-key"
-)
-
-# Create a new dashboard
-dashboard_response = dashboard.create_dashboard("Nessi Table Metrics")
-
-# Add table metrics panel
-dashboard.add_table_metrics_panel(
-    dashboard_uid=dashboard_response['uid'],
-    scan_results=scan_results
-)
-
-# Add column statistics panel
-dashboard.add_column_stats_panel(
-    dashboard_uid=dashboard_response['uid'],
-    column_stats=column_stats
-)
-
-# Export dashboard
-dashboard.export_dashboard(
-    dashboard_uid=dashboard_response['uid'],
-    output_path="dashboards/nessi_metrics.json"
-)
+print(f"Quality Metrics: {result['quality_checks']}")
 ```
 
 ## Best Practices
 
+### Data Quality Management
+1. Regular quality checks
+2. Automated validation rules
+3. Trend analysis
+4. Proactive issue detection
+5. Quality score monitoring
+
 ### Performance Optimization
-1. Use Parquet format for better performance
-2. Monitor memory usage with large datasets
-3. Clean up Spark sessions when done
-4. Configure appropriate refresh rates for dashboards
-5. Use efficient Prometheus queries
+1. Resource monitoring
+2. Bottleneck identification
+3. Query optimization
+4. Memory management
+5. Parallel processing
 
-### Error Handling
-1. Always check for file existence before scanning
-2. Handle special characters in column names
-3. Validate format types before processing
-4. Implement proper API error handling
-5. Monitor dashboard creation status
-
-### Data Management
-1. Use appropriate data types for columns
-2. Consider data size when choosing format
-3. Implement proper cleanup procedures
-4. Regular dashboard backups
-5. Version control for dashboard configurations
+### Monitoring Strategy
+1. Real-time metrics collection
+2. Custom alert thresholds
+3. Multi-level notifications
+4. Trend analysis
+5. Capacity planning
 
 ## Future Enhancements
-- Delta Lake table support
-- Additional file format support
-- Enhanced statistical analysis
-- Distributed processing capabilities
-- Advanced data validation features
-- Custom dashboard templates
-- Advanced alerting rules
-- Multi-datasource support
-- Dashboard sharing capabilities 
+- Advanced anomaly detection
+- Machine learning integration
+- Distributed processing
+- Enhanced visualization
+- Custom plugin support 
