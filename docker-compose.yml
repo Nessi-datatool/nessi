@@ -2,57 +2,50 @@ version: '3.8'
 
 services:
   backend:
-    build:
-      context: .
+    build: 
+      context: ./backend
       dockerfile: Dockerfile
-    volumes:
-      - ./backend:/app/backend
-      - ./data:/app/data
-      - ./metrics:/app/metrics
-    environment:
-      - PYTHONPATH=/app/backend
-      - JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-      - PYSPARK_PYTHON=/usr/local/bin/python
-      - PYSPARK_DRIVER_PYTHON=/usr/local/bin/python
-      - GRAFANA_URL=http://grafana:3000
-      - PROMETHEUS_URL=http://prometheus:9090
-    networks:
-      - nessi-network
-    depends_on:
-      - grafana
-      - prometheus
-
-  grafana:
-    image: grafana/grafana:latest
     ports:
-      - "3000:3000"
+      - "8000:8000"
     volumes:
-      - grafana-storage:/var/lib/grafana
+      - ./backend:/app
+      - ./ssl:/app/ssl
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
-    networks:
-      - nessi-network
+      - PYTHONPATH=/app
+      - AUTH_ENABLED=true
+      - SSL_ENABLED=true
+      - METRICS_USERNAME=metrics_user
+      - METRICS_PASSWORD=secure_password
+      - SCENARIO=normal_operation
+      - METRICS_INTERVAL=5
+      - LOG_LEVEL=INFO
+    command: python src/reports/metrics_test.py
 
   prometheus:
     image: prom/prometheus:latest
     ports:
       - "9090:9090"
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus-storage:/prometheus
+      - ./prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
-    networks:
-      - nessi-network
 
-networks:
-  nessi-network:
-    driver: bridge
+  tests:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend:/app
+      - ./ssl:/app/ssl
+    environment:
+      - PYTHONPATH=/app
+      - AUTH_ENABLED=true
+      - SSL_ENABLED=true
+    command: pytest -v --cov=src tests/
 
 volumes:
-  grafana-storage:
-  prometheus-storage: 
+  prometheus_data: {} 
