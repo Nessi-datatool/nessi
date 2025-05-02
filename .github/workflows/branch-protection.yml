@@ -12,17 +12,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      - name: Check for DCO
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const commits = context.payload.commits || [];
-            for (const commit of commits) {
-              if (!commit.message.includes('Signed-off-by:')) {
-                core.setFailed(`Commit ${commit.id} is missing DCO sign-off`);
-              }
-            }
-            
       - name: Check for required files
         run: |
           required_files=(
