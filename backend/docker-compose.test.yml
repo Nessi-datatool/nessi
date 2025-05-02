@@ -1,9 +1,30 @@
 version: '3.8'
 
 services:
+  test-runner:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile.test
+    volumes:
+      - ../backend/src:/app/src
+      - ../backend/tests:/app/tests
+    environment:
+      - PYTHONPATH=/app
+      - PYTEST_ADDOPTS=-v --cov=src
+    networks:
+      - monitoring
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
   metrics-test:
     build:
-      context: .
+      context: ../backend
       dockerfile: Dockerfile.test
     ports:
       - "8000:8000"
@@ -21,8 +42,8 @@ services:
       - AUTH_ENABLED=true
       - SSL_ENABLED=true
     volumes:
-      - ./src/reports:/app/src/reports
-      - ./ssl:/app/ssl:ro
+      - ../backend/src/reports:/app/src/reports
+      - ../backend/ssl:/app/ssl:ro
     command: python src/reports/metrics_test.py
     deploy:
       resources:
@@ -48,9 +69,9 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ../backend/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
-      - ./ssl:/etc/prometheus/ssl:ro
+      - ../backend/ssl:/etc/prometheus/ssl:ro
     networks:
       - monitoring
     command:
@@ -86,9 +107,9 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./src/reports/grafana_dashboard.json:/etc/grafana/provisioning/dashboards/nessi.json
+      - ../backend/src/reports/grafana_dashboard.json:/etc/grafana/provisioning/dashboards/nessi.json
       - grafana_data:/var/lib/grafana
-      - ./ssl:/etc/grafana/ssl:ro
+      - ../backend/ssl:/etc/grafana/ssl:ro
     networks:
       - monitoring
     environment:
@@ -98,15 +119,6 @@ services:
       - GF_AUTH_ANONYMOUS_ENABLED=false
       - GF_SERVER_ROOT_URL=http://localhost:3000
       - GF_SERVER_ENABLE_GZIP=true
-      - GF_SERVER_HTTP_PORT=3000
-      - GF_SERVER_PROTOCOL=http
-      - GF_SERVER_HTTP_VERSION=1.1
-      - GF_SECURITY_DISABLE_GRAVATAR=true
-      - GF_SECURITY_COOKIE_SECURE=true
-      - GF_SECURITY_ALLOW_EMBEDDING=false
-    depends_on:
-      prometheus:
-        condition: service_healthy
     deploy:
       resources:
         limits:
