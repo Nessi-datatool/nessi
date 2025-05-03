@@ -19,15 +19,7 @@ git clone https://github.com/nessi-dev/nessi.git
 cd nessi
 ```
 
-### 2. Environment Setup
-
-The project is designed to run entirely in Docker containers, so no local Python installation is required. However, if you want to develop or run tests locally, you'll need:
-
-- Python 3.11 or later
-- Java 17 (for Apache Spark)
-- Apache Spark 3.5.0
-
-### 3. Build and Start Services
+### 2. Build and Start Services
 
 ```bash
 # Build and start all services
@@ -42,7 +34,7 @@ This will start:
 - Grafana for monitoring (accessible at http://localhost:3000)
 - Prometheus for metrics collection
 
-### 4. Verify Installation
+### 3. Verify Installation
 
 To verify that everything is working correctly:
 
@@ -55,6 +47,13 @@ To verify that everything is working correctly:
 ```bash
 docker-compose exec backend python src/demo.py
 ```
+
+## Important Notes
+
+- The application is designed to run exclusively in Docker containers
+- Local Python execution is disabled for security and consistency
+- All development and testing should be done through Docker containers
+- Use `docker-compose exec` to run any Python commands
 
 ## Configuration
 

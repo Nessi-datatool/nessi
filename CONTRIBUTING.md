@@ -32,10 +32,11 @@ Signed-off-by: Your Name <your.email@example.com>
    ```
 3. Set up your development environment:
    ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   pip install -r requirements.txt
-   pip install -e .
+   # Start development containers
+   docker-compose -f docker-compose.dev.yml up -d
+   
+   # Run tests
+   docker-compose -f docker-compose.dev.yml exec backend pytest tests/
    ```
 
 ## Development Workflow
@@ -43,11 +44,11 @@ Signed-off-by: Your Name <your.email@example.com>
 1. Make your changes
 2. Run tests:
    ```bash
-   python -m pytest tests/ -v
+   docker-compose -f docker-compose.dev.yml exec backend pytest tests/ -v
    ```
 3. Ensure code style:
    ```bash
-   flake8 .
+   docker-compose -f docker-compose.dev.yml exec backend flake8 .
    ```
 4. Sign off on your commits:
    ```bash
@@ -72,7 +73,7 @@ Signed-off-by: Your Name <your.email@example.com>
 - Include tests for new features
 - Ensure all tests pass
 - Maintain or improve test coverage
-- Test with multiple Python versions
+- All tests must be run through Docker containers
 
 ## Code Style
 
@@ -84,10 +85,10 @@ Signed-off-by: Your Name <your.email@example.com>
 
 ## Documentation
 
-- Update documentation for significant changes
-- Document new features
-- Update API documentation if needed
-- Keep examples up to date
+- Update documentation for any changes
+- Include examples in Docker context
+- Document Docker-specific configurations
+- Keep troubleshooting guides Docker-focused
 
 ## Security
 

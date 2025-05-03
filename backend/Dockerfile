@@ -22,15 +22,29 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir prometheus-client==0.19.0 pyyaml==6.0.1 requests==2.31.0 jinja2==3.1.2 pyarrow==14.0.1 pandas==2.1.4 numpy==1.26.3
 
-# Copy application code
+# Copy application code and scripts
 COPY src/ src/
 COPY tests/ tests/
+COPY scripts/ scripts/
+
+# Make scripts executable
+RUN chmod +x scripts/check_environment.sh
 
 # Create directory for SSL certificates
 RUN mkdir -p /app/ssl
 
+# Create non-root user
+RUN useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
 # Expose port for metrics
 EXPOSE 8000
 
-# Command to run tests
+# Use the check script as entrypoint
+ENTRYPOINT ["/app/scripts/check_environment.sh"]
+
+# Default command to run tests
 CMD ["pytest", "tests/", "--cov=src", "--cov-report=term-missing"] 
