@@ -1,136 +1,108 @@
-# Nessi Quick Start Guide
+# Quick Start Guide
 
-This guide will help you get started with Nessi quickly. We'll cover the basic operations and show you how to perform common tasks.
+This guide will help you get started with Nessi quickly. Nessi is free for personal use, while enterprise or consulting use requires a paid license.
 
-## Prerequisites
+## Installation
 
-Ensure you have completed the [Installation Guide](installation.md) and have Nessi running in Docker.
+### Prerequisites
 
-## Basic Operations
+- Python 3.8 or higher
+- Docker and Docker Compose (optional, for containerized deployment)
+- Java 8 or higher (for Spark support)
 
-### 1. Generate Sample Data
+### Quick Installation
 
-```python
-from src.scanner.sample_data_generator import SampleDataGenerator
-
-# Initialize generator
-generator = SampleDataGenerator()
-
-# Generate sample data
-df = generator.generate_sample_data()
-
-# Save in different formats
-generator.save_as_parquet(df, "data/sample.parquet")
-generator.save_as_csv(df, "data/sample.csv")
-```
-
-### 2. Scan Tables
-
-```python
-from src.scanner.table_scanner import TableScanner
-
-# Initialize scanner
-scanner = TableScanner()
-
-# Scan Parquet file
-parquet_results = scanner.scan_table("data/sample.parquet", "parquet")
-
-# Print results
-print(f"Row count: {parquet_results['row_count']}")
-print("Columns:", ", ".join(field['name'] for field in parquet_results['schema']))
-
-# Print column statistics
-for col, stats in parquet_results['column_stats'].items():
-    print(f"\n{col} statistics:")
-    for stat_name, value in stats.items():
-        print(f"  {stat_name}: {value}")
-```
-
-### 3. Monitor with Grafana
-
-```python
-from src.scanner.grafana_dashboard import GrafanaDashboard
-
-# Initialize dashboard manager
-dashboard = GrafanaDashboard("http://localhost:3000", "admin")
-
-# Create dashboard
-response = dashboard.create_dashboard("My First Dashboard")
-dashboard_uid = response["dashboard"]["uid"]
-
-# Add panels
-dashboard.add_table_metrics_panel(dashboard_uid, parquet_results)
-dashboard.add_column_stats_panel(dashboard_uid, parquet_results["column_stats"])
-```
-
-## Running the Demo
-
-The easiest way to see everything in action is to run the demo script:
-
+1. Clone the repository:
 ```bash
-docker-compose exec backend python src/demo.py
+git clone https://github.com/Nessi-datatool/nessi.git
+cd nessi
 ```
 
-This will:
-1. Generate sample data
-2. Save it in both Parquet and CSV formats
-3. Scan the tables
-4. Create a Grafana dashboard with metrics
+2. Create and activate a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
 
-## Common Tasks
+3. Install Nessi:
+```bash
+pip install -e .
+```
 
-### Working with Different File Formats
+### Docker Installation (Optional)
 
-Nessi supports multiple file formats:
+If you prefer using Docker:
 
+1. Build and start the services:
+```bash
+docker-compose up -d
+```
+
+2. Access the web interface at `http://localhost:8080`
+
+## Basic Usage
+
+### Command Line Interface
+
+1. Start the Nessi CLI:
+```bash
+nessi
+```
+
+2. Check your usage status:
+```bash
+nessi status
+```
+
+3. Verify personal use:
+```bash
+nessi check
+```
+
+### Data Scanning
+
+1. Scan a Delta Lake table:
 ```python
-# CSV files
-csv_results = scanner.scan_table("data/sample.csv", "csv")
+from nessi.scanner import TableScanner
 
-# Parquet files
-parquet_results = scanner.scan_table("data/sample.parquet", "parquet")
+scanner = TableScanner()
+results = scanner.scan_table("path/to/your/table")
 ```
 
-### Customizing Sample Data
-
-You can customize the sample data generation:
-
+2. Generate a report:
 ```python
-# Generate data with specific size
-df = generator.generate_sample_data(num_rows=1000)
-
-# Add custom columns
-df = df.withColumn("custom_col", ...)
+report = scanner.generate_report(results)
+print(report)
 ```
 
-### Monitoring and Metrics
+### Data Quality Checks
 
-Access your metrics:
-1. Open Grafana at http://localhost:3000
-2. Log in with username: admin, password: admin
-3. Navigate to your dashboard
-4. View real-time metrics and statistics
+1. Run data quality checks:
+```python
+from nessi.scanner import TableScanner
 
-## Best Practices
+scanner = TableScanner()
+quality_metrics = scanner.check_data_quality("path/to/your/table")
+```
 
-1. **Resource Management**
-   - Close Spark sessions when done
-   - Monitor memory usage
-   - Clean up temporary files
-
-2. **Error Handling**
-   - Always check return values
-   - Handle exceptions appropriately
-   - Validate input data
-
-3. **Performance**
-   - Use appropriate file formats (Parquet for large datasets)
-   - Monitor Spark execution
-   - Configure memory settings appropriately
+2. View quality metrics:
+```python
+print(quality_metrics)
+```
 
 ## Next Steps
 
-- Read the [Features Documentation](features.md) for detailed feature information
-- Check the [API Documentation](../API.md) for complete API reference
-- Follow the [Demo Tutorial](demo-tutorial.md) for a comprehensive walkthrough
-- Learn about [Monitoring](monitoring.md) for advanced Grafana usage 
+- Read the [Features Guide](features.md) for detailed feature information
+- Check out the [Reports Guide](reports.md) for report customization
+- Visit the [Troubleshooting Guide](troubleshooting.md) if you encounter any issues
+- Review the [Monitoring Guide](monitoring.md) for performance monitoring
+
+## License Information
+
+Remember:
+- Nessi is free for personal use
+- Enterprise or consulting use requires a paid license
+- This version is free
+- Future versions will require a license for all users
+
+For more details, see [LICENSE](../LICENSE). 
