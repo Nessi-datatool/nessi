@@ -1,14 +1,16 @@
 # Quick Start Guide
 
-This guide will help you get started with nessi.dev quickly. nessi.dev is free for personal use, while enterprise or consulting use requires a paid license.
+This guide will help you get started with nessi-dev quickly. nessi-dev is free for personal use, while enterprise or consulting use requires a paid license.
 
 ## Installation
 
 ### Prerequisites
 
-- Python 3.8 or higher
-- Docker and Docker Compose (optional, for containerized deployment)
-- Java 8 or higher (for Spark support)
+- Docker Engine 20.10.0 or later
+- Docker Compose v2.0.0 or later
+- Git (for cloning the repository)
+- At least 4GB of available RAM
+- At least 10GB of free disk space
 
 ### Quick Installation
 
@@ -18,18 +20,17 @@ git clone https://github.com/nessi-dev/nessi.git
 cd nessi
 ```
 
-2. Create and activate a virtual environment:
+2. Start the services:
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+docker-compose up -d
 ```
 
-3. Install nessi.dev:
-```bash
-pip install -e .
-```
+3. Access the services:
+- Backend API: https://localhost:8000
+- Prometheus: http://localhost:9090
+- Grafana: http://localhost:3000
 
-### Docker Installation (Optional)
+### Docker Installation
 
 If you prefer using Docker:
 
@@ -44,50 +45,58 @@ docker-compose up -d
 
 ### Command Line Interface
 
-1. Start the nessi.dev CLI:
+1. Start the nessi-dev CLI:
 ```bash
-nessi
+docker-compose exec backend nessi
 ```
 
 2. Check your usage status:
 ```bash
-nessi status
+docker-compose exec backend nessi status
 ```
 
 3. Verify personal use:
 ```bash
-nessi check
+docker-compose exec backend nessi check
 ```
 
 ### Data Scanning
 
 1. Scan a Delta Lake table:
-```python
+```bash
+docker-compose exec backend python -c "
 from nessi.scanner import TableScanner
-
 scanner = TableScanner()
-results = scanner.scan_table("path/to/your/table")
+results = scanner.scan_table('path/to/your/table')
+"
 ```
 
 2. Generate a report:
-```python
+```bash
+docker-compose exec backend python -c "
+from nessi.scanner import TableScanner
+scanner = TableScanner()
 report = scanner.generate_report(results)
 print(report)
+"
 ```
 
 ### Data Quality Checks
 
 1. Run data quality checks:
-```python
+```bash
+docker-compose exec backend python -c "
 from nessi.scanner import TableScanner
-
 scanner = TableScanner()
-quality_metrics = scanner.check_data_quality("path/to/your/table")
+quality_metrics = scanner.check_data_quality('path/to/your/table')
+"
 ```
 
 2. View quality metrics:
-```python
+```bash
+docker-compose exec backend python -c "
 print(quality_metrics)
+"
 ```
 
 ## Next Steps
@@ -100,9 +109,8 @@ print(quality_metrics)
 ## License Information
 
 Remember:
-- nessi.dev is free for personal use
+- nessi-dev is free for personal use
 - Enterprise or consulting use requires a paid license
-- This version is free
 - Future versions will require a license for all users
 
 For more details, see [LICENSE](../LICENSE). 

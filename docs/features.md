@@ -1,92 +1,101 @@
-# Features Guide
-
-nessi.dev provides a comprehensive set of features for data analysis and processing. All features are available for personal use, while enterprise users may require additional licenses for certain advanced features.
+# nessi-dev Features
 
 ## Core Features
 
-### Data Scanning and Analysis
-- Table scanning for Delta Lake, Parquet, and CSV formats
-- Schema analysis and validation
-- Data quality metrics calculation
-- Statistical analysis of data distributions
-- Null value detection and analysis
-- Data type inference and validation
+1. **Data Quality Monitoring**
+   - Real-time data quality metrics
+   - Automated quality checks
+   - Custom quality rules
+   - Quality score tracking
 
-### Reporting
-- Custom report generation
-- Data quality reports
-- Performance analysis reports
-- Schema evolution tracking
-- Data lineage visualization
-- Export reports in multiple formats (HTML, PDF, JSON)
+2. **Data Profiling**
+   - Column statistics
+   - Data type detection
+   - Value distribution analysis
+   - Pattern recognition
 
-### Monitoring
-- Real-time metrics collection
-- Performance monitoring
-- Resource usage tracking
-- Custom alert configuration
-- Grafana dashboard integration
-- Prometheus metrics export
+3. **Performance Monitoring**
+   - Query performance tracking
+   - Resource utilization metrics
+   - Bottleneck identification
+   - Optimization recommendations
 
-## Advanced Features
-
-### Data Quality
-- Automated data quality checks
-- Custom quality rules definition
-- Quality score calculation
-- Trend analysis
-- Anomaly detection
-- Data drift monitoring
-
-### Performance Optimization
-- Query optimization suggestions
-- Resource usage recommendations
-- Cache management
-- Partition optimization
-- Index suggestions
-- Storage format recommendations
-
-### Security
-- Data masking
-- Access control
-- Audit logging
-- Encryption support
-- Compliance reporting
-- Security policy enforcement
-
-## Personal Use Features
-
-All core features are available for personal use, including:
-- Basic data scanning and analysis
-- Standard report generation
-- Basic monitoring capabilities
-- Essential data quality checks
-- Basic performance metrics
-- Standard security features
+4. **Security Features**
+   - Role-based access control
+   - SSL/TLS encryption
+   - Audit logging
+   - Compliance reporting
 
 ## Enterprise Features
 
-Enterprise users have access to additional features:
-- Advanced analytics
-- Custom integrations
-- Priority support
-- SLA guarantees
-- Custom development
-- Team collaboration tools
+1. **Advanced Analytics**
+   - Machine learning integration
+   - Predictive analytics
+   - Anomaly detection
+   - Trend analysis
+
+2. **Custom Integrations**
+   - API customization
+   - Plugin system
+   - Third-party integrations
+   - Custom dashboards
+
+3. **Support & Training**
+   - Priority support
+   - Custom training
+   - On-site assistance
+   - SLA guarantees
+
+4. **For enterprise features, contact nessi.datatool@gmail.com**
+
+## Technical Features
+
+1. **Docker-Based Deployment**
+   - Containerized services
+   - Easy scaling
+   - Consistent environments
+   - Simplified maintenance
+
+2. **Monitoring Stack**
+   - Prometheus metrics
+   - Grafana dashboards
+   - Custom alerts
+   - Performance tracking
+
+3. **Security**
+   - Non-root containers
+   - Resource limits
+   - Network isolation
+   - Secure defaults
+
+4. **Development Tools**
+   - Hot-reloading
+   - Debugging support
+   - Test automation
+   - CI/CD integration
 
 ## Getting Started
 
-1. Install nessi.dev following the [Quick Start Guide](quickstart.md)
-2. Choose the features you need based on your use case
-3. For personal use, all core features are available immediately
-4. For enterprise features, contact nessi.datatool@gmail.com
+1. **Installation**
+   ```bash
+   git clone https://github.com/nessi-dev/nessi.git
+   cd nessi
+   docker-compose up -d
+   ```
 
-## License Information
+2. **Access Services**
+   - Backend API: https://localhost:8000
+   - Prometheus: http://localhost:9090
+   - Grafana: http://localhost:3000
 
-Remember:
-- nessi.dev is free for personal use
-- Enterprise or consulting use requires a paid license
-- This version is free
-- Future versions will require a license for all users
+3. **Run Commands**
+   ```bash
+   docker-compose exec backend nessi
+   ```
 
-For more details, see [LICENSE](../LICENSE). 
+## Support
+
+For support and questions:
+- Documentation: https://github.com/nessi-dev/nessi/tree/main/docs
+- Issues: https://github.com/nessi-dev/nessi/issues
+- Email: nessi.datatool@gmail.com 

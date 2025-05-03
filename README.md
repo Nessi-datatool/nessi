@@ -1,4 +1,4 @@
-# nessi.dev
+# nessi-dev
 
 A modern data tool for data quality monitoring and reporting.
 
@@ -12,13 +12,13 @@ A modern data tool for data quality monitoring and reporting.
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/nessi.git
+   git clone https://github.com/nessi-dev/nessi.git
    cd nessi
    ```
 
 2. Start the development environment:
    ```bash
-   ./scripts/dev.sh
+   docker-compose -f docker-compose.dev.yml up -d
    ```
 
 3. Access the services:
@@ -41,7 +41,7 @@ docker-compose -f docker-compose.test.yml up --build
 We use Black for Python code formatting. The code style is enforced through Docker:
 
 ```bash
-docker-compose -f docker-compose.dev.yml run backend black .
+docker-compose -f docker-compose.dev.yml exec backend black .
 ```
 
 ### Documentation
@@ -49,7 +49,7 @@ docker-compose -f docker-compose.dev.yml run backend black .
 Documentation is built and served through Docker:
 
 ```bash
-docker-compose -f docker-compose.dev.yml run backend mkdocs serve
+docker-compose -f docker-compose.dev.yml exec backend mkdocs serve
 ```
 
 ## Important Notes

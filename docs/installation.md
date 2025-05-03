@@ -1,8 +1,8 @@
-# nessi.dev Installation Guide
+# nessi-dev Installation Guide
 
 ## Prerequisites
 
-Before installing nessi.dev, ensure you have the following prerequisites:
+Before installing nessi-dev, ensure you have the following prerequisites:
 
 - Docker Engine 20.10.0 or later
 - Docker Compose v2.0.0 or later
@@ -30,7 +30,7 @@ docker-compose ps
 ```
 
 This will start:
-- nessi.dev backend service
+- nessi-dev backend service
 - Grafana for monitoring (accessible at http://localhost:3000)
 - Prometheus for metrics collection
 
@@ -86,18 +86,19 @@ volumes:
 
 ### Common Issues
 
-1. **Container fails to start**
+1. **Container startup issues**
    - Check Docker logs: `docker-compose logs`
-   - Ensure all ports (3000, 9090) are available
-   - Verify sufficient system resources
+   - Verify container status: `docker-compose ps`
+   - Check resource limits: `docker stats`
 
-2. **Permission Issues**
-   - Ensure proper permissions on mounted volumes
-   - Check container logs for permission errors
+2. **Port conflicts**
+   - Ensure ports 8000, 9090, and 3000 are available
+   - Use `docker-compose down` to stop all containers
 
-3. **Memory Issues**
-   - Increase Docker memory limit
-   - Check Spark memory configuration
+3. **Permission issues**
+   - Check container user permissions
+   - Verify volume mount permissions
+   - Ensure proper SELinux/AppArmor settings
 
 ### Getting Help
 
