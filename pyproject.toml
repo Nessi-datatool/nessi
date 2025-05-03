@@ -14,10 +14,10 @@ authors = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Nessi-datatool/nessi"
-Documentation = "https://github.com/Nessi-datatool/nessi/tree/main/docs"
-Repository = "https://github.com/Nessi-datatool/nessi.git"
-Issues = "https://github.com/Nessi-datatool/nessi/issues"
+Homepage = "https://github.com/nessi-dev/nessi"
+Documentation = "https://github.com/nessi-dev/nessi/tree/main/docs"
+Repository = "https://github.com/nessi-dev/nessi.git"
+Issues = "https://github.com/nessi-dev/nessi/issues"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

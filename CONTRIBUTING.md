@@ -23,7 +23,7 @@ Signed-off-by: Your Name <your.email@example.com>
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/Nessi-datatool/nessi.git
+   git clone https://github.com/nessi-dev/nessi.git
    cd nessi
    ```
 2. Create a new branch:

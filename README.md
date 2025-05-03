@@ -4,7 +4,7 @@ Nessi is a powerful data analysis and processing tool, free for personal use. It
 
 ## License
 
-Nessi is free for personal use. A paid license is required for enterprise or consulting use. This version is free, while future versions will require a license for all users.
+nessi.dev is free for personal use. A paid license is required for enterprise or consulting use. This version is free, while future versions will require a license for all users.
 
 For more details, see [LICENSE](LICENSE).
 
@@ -20,7 +20,7 @@ For more details, see [LICENSE](LICENSE).
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/Nessi-datatool/nessi.git
+git clone https://github.com/nessi-dev/nessi.git
 cd nessi
 ```
 

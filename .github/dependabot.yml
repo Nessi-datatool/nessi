@@ -9,9 +9,9 @@ updates:
       timezone: "UTC"
     open-pull-requests-limit: 10
     reviewers:
-      - "@Nessi-datatool/python-reviewers"
+      - "@nessi-dev/python-reviewers"
     assignees:
-      - "@Nessi-datatool/owners"
+      - "@nessi-dev/owners"
     labels:
       - "dependencies"
       - "python"

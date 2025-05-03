@@ -31,7 +31,7 @@ Nessi is a powerful data processing and analysis tool built on Apache Spark, des
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/Nessi-datatool/nessi.git
+git clone https://github.com/nessi-dev/nessi.git
 cd nessi
 ```
 

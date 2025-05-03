@@ -84,7 +84,7 @@ Enterprise users have access to additional features:
 ## License Information
 
 Remember:
-- Nessi is free for personal use
+- nessi.dev is free for personal use
 - Enterprise or consulting use requires a paid license
 - This version is free
 - Future versions will require a license for all users

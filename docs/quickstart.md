@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-This guide will help you get started with Nessi quickly. Nessi is free for personal use, while enterprise or consulting use requires a paid license.
+This guide will help you get started with Nessi quickly. nessi.dev is free for personal use, while enterprise or consulting use requires a paid license.
 
 ## Installation
 
@@ -14,7 +14,7 @@ This guide will help you get started with Nessi quickly. Nessi is free for perso
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/Nessi-datatool/nessi.git
+git clone https://github.com/nessi-dev/nessi.git
 cd nessi
 ```
 
@@ -100,7 +100,7 @@ print(quality_metrics)
 ## License Information
 
 Remember:
-- Nessi is free for personal use
+- nessi.dev is free for personal use
 - Enterprise or consulting use requires a paid license
 - This version is free
 - Future versions will require a license for all users

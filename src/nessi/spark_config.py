@@ -1,13 +1,13 @@
 """
 NESSI - FREE FOR PERSONAL USE LICENSE
 
-Copyright (c) 2025 Nessi. All rights reserved.
+Copyright (c) 2025 nessi.dev. All rights reserved.
 
-Nessi is free for personal use.
+nessi.dev is free for personal use.
 
 A paid license is required for enterprise or consulting use.
 
-This version is free. Future versions of Nessi will require a license for all users.
+This version is free. Future versions of nessi.dev will require a license for all users.
 
 1. PERSONAL USE LICENSE
    a) The Software is provided free of charge for personal use
@@ -26,7 +26,7 @@ This version is free. Future versions of Nessi will require a license for all us
    e) Use the Software for enterprise or consulting purposes without a valid paid license
 
 3. OWNERSHIP
-   The Software is licensed, not sold. Nessi retains all right, title, and interest in and to the Software, including all intellectual property rights.
+   The Software is licensed, not sold. nessi.dev retains all right, title, and interest in and to the Software, including all intellectual property rights.
 
 4. DISCLAIMER OF WARRANTY
    THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
@@ -53,7 +53,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def get_spark_session(app_name: str = "Nessi") -> SparkSession:
+def get_spark_session(app_name: str = "nessi.dev") -> SparkSession:
     """Get a configured Spark session.
     
     Args:
