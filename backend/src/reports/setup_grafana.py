@@ -155,7 +155,7 @@ class GrafanaSetup:
                 "name": "Email Alerts",
                 "type": "email",
                 "settings": {
-                    "addresses": "admin@example.com"
+                    "addresses": "nessi.datatool@gmail.com"
                 }
             }
             

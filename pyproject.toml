@@ -10,14 +10,14 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 authors = [
-    { name = "nessi.dev Team", email = "team@nessi.dev" }
+    { name = "Nessi Team", email = "team@nessi-datatool.org" }
 ]
 
 [project.urls]
-Homepage = "https://github.com/nessi-dev/nessi"
-Documentation = "https://github.com/nessi-dev/nessi/tree/main/docs"
-Repository = "https://github.com/nessi-dev/nessi.git"
-Issues = "https://github.com/nessi-dev/nessi/issues"
+Homepage = "https://github.com/Nessi-datatool/nessi"
+Documentation = "https://github.com/Nessi-datatool/nessi/tree/main/docs"
+Repository = "https://github.com/Nessi-datatool/nessi.git"
+Issues = "https://github.com/Nessi-datatool/nessi/issues"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

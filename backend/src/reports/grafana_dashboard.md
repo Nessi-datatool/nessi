@@ -114,7 +114,7 @@ The nessi.dev Reports Dashboard provides a comprehensive view of system metrics 
 ### Alerting
 - **Alert Rules**: Configured in Prometheus
 - **Notification Channels**: Email
-- **Default Recipient**: admin@example.com
+- **Default Recipient**: nessi.datatool@gmail.com
 
 ## Customization
 
