@@ -6,30 +6,37 @@ on:
   pull_request:
     branches: [ main ]
   schedule:
-    - cron: '0 0 * * 0'  # Weekly scan
+    - cron: "0 0 * * 0"  # Weekly scan
 
 jobs:
   security:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
       
-      - name: Run Bandit
-        uses: PyCQA/bandit@master
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          args: -r nessi/ -ll -ii
+          python-version: "3.11"
+          
+      - name: Install security tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit safety trufflehog gitleaks
+          
+      - name: Run Bandit
+        run: |
+          bandit -r nessi/ -ll -ii
           
       - name: Run Safety
-        uses: pyupio/safety@master
-        with:
-          args: check
+        run: |
+          safety check
           
       - name: Run TruffleHog
-        uses: trufflesecurity/trufflehog@main
-        with:
-          args: --regex --entropy=False
+        run: |
+          trufflehog --regex --entropy=False .
           
       - name: Run Gitleaks
-        uses: zricethezav/gitleaks-action@v1
-        with:
-          config-path: .github/gitleaks.toml 
+        run: |
+          gitleaks detect --config-path .github/gitleaks.toml
