@@ -1,4 +1,4 @@
-# Nessi Data Tool
+# Nessi
 
 Nessi is a powerful data analysis and processing tool, free for personal use. It provides comprehensive data scanning, reporting, and visualization capabilities.
 
@@ -82,7 +82,7 @@ nessi check
 
 For personal use support, please open an issue in the GitHub repository.
 
-For enterprise support, please contact us at support@nessi-datatool.com
+For enterprise support, please contact us at support@nessi.dev
 
 ## Contributing
 
@@ -90,4 +90,4 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ## Security
 
-Please report any security issues to security@nessi-datatool.com. See our [Security Policy](SECURITY.md) for more information. 
+Please report any security issues to security@nessi.dev. See our [Security Policy](SECURITY.md) for more information. 

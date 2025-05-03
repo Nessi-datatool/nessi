@@ -79,7 +79,7 @@ Enterprise users have access to additional features:
 1. Install Nessi following the [Quick Start Guide](quickstart.md)
 2. Choose the features you need based on your use case
 3. For personal use, all core features are available immediately
-4. For enterprise features, contact sales@nessi-datatool.com
+4. For enterprise features, contact sales@nessi.dev
 
 ## License Information
 
