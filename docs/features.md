@@ -1,101 +1,312 @@
-# nessi-dev Features
+# Features Overview
 
 ## Core Features
 
-1. **Data Quality Monitoring**
-   - Real-time data quality metrics
-   - Automated quality checks
-   - Custom quality rules
-   - Quality score tracking
+### 1. Data Format Support
 
-2. **Data Profiling**
-   - Column statistics
-   - Data type detection
-   - Value distribution analysis
-   - Pattern recognition
+#### Delta Lake
+- Schema evolution tracking
+- ACID transactions
+- Time travel queries
+- Optimized storage
+- Metadata management
+- Version control
+- Data skipping
+- Z-ordering
 
-3. **Performance Monitoring**
-   - Query performance tracking
-   - Resource utilization metrics
-   - Bottleneck identification
-   - Optimization recommendations
+#### Parquet
+- Columnar storage
+- Compression algorithms
+- Schema evolution
+- Predicate pushdown
+- Statistics collection
+- Partition pruning
+- Data skipping
+- Advanced encoding
 
-4. **Security Features**
-   - Role-based access control
-   - SSL/TLS encryption
-   - Audit logging
-   - Compliance reporting
+#### CSV
+- Smart schema inference
+- Memory-efficient parsing
+- Encoding detection
+- Delimiter detection
+- Header handling
+- Type inference
+- Data validation
+- Streaming support
 
-## Enterprise Features
+### 2. Table Scanning
 
-1. **Advanced Analytics**
-   - Machine learning integration
-   - Predictive analytics
-   - Anomaly detection
-   - Trend analysis
+#### Delta Scanner
+- Version history tracking
+- Schema evolution analysis
+- Metadata extraction
+- Statistics collection
+- Performance profiling
+- Data quality checks
+- Partition analysis
+- Optimization recommendations
 
-2. **Custom Integrations**
-   - API customization
-   - Plugin system
-   - Third-party integrations
-   - Custom dashboards
+#### Parquet Scanner
+- Compression analysis
+- Schema validation
+- Statistics collection
+- Performance profiling
+- Data quality checks
+- Partition analysis
+- Optimization recommendations
+- Advanced metrics
 
-3. **Support & Training**
-   - Priority support
-   - Custom training
-   - On-site assistance
-   - SLA guarantees
+#### CSV Scanner
+- Encoding detection
+- Delimiter detection
+- Schema inference
+- Type detection
+- Data validation
+- Performance profiling
+- Memory optimization
+- Streaming support
 
-4. **For enterprise features, contact nessi.datatool@gmail.com**
+### 3. Report Generation
 
-## Technical Features
+#### PDF Reports
+- Customizable templates
+- Dynamic content
+- Advanced formatting
+- Chart generation
+- Table formatting
+- Watermarking
+- Digital signatures
+- Metadata management
 
-1. **Docker-Based Deployment**
-   - Containerized services
-   - Easy scaling
-   - Consistent environments
-   - Simplified maintenance
+#### Performance Reports
+- Query analysis
+- Resource usage
+- System metrics
+- I/O operations
+- Cache efficiency
+- Bottleneck detection
+- Optimization recommendations
+- Trend analysis
 
-2. **Monitoring Stack**
-   - Prometheus metrics
-   - Grafana dashboards
-   - Custom alerts
-   - Performance tracking
+#### Table Scan Reports
+- Schema analysis
+- Statistics summary
+- Data quality metrics
+- Performance metrics
+- Optimization suggestions
+- Version history
+- Partition analysis
+- Custom metrics
 
-3. **Security**
-   - Non-root containers
-   - Resource limits
-   - Network isolation
-   - Secure defaults
+### 4. Monitoring
 
-4. **Development Tools**
-   - Hot-reloading
-   - Debugging support
-   - Test automation
-   - CI/CD integration
+#### Metrics Collection
+- Data quality metrics
+- Performance metrics
+- Resource metrics
+- System metrics
+- Custom metrics
+- Historical trends
+- Real-time monitoring
+- Predictive analytics
 
-## Getting Started
+#### Grafana Integration
+- Custom dashboards
+- Alert management
+- Notification channels
+- Data source integration
+- Panel customization
+- Template variables
+- Annotations
+- Dashboard sharing
 
-1. **Installation**
-   ```bash
-   git clone https://github.com/nessi-dev/nessi.git
-   cd nessi
-   docker-compose up -d
-   ```
+#### Prometheus Integration
+- Metric collection
+- Alert rules
+- Query language
+- Storage management
+- Data retention
+- High availability
+- Federation
+- Remote storage
 
-2. **Access Services**
-   - Backend API: https://localhost:8000
-   - Prometheus: http://localhost:9090
-   - Grafana: http://localhost:3000
+### 5. Integration Features
 
-3. **Run Commands**
-   ```bash
-   docker-compose exec backend nessi
-   ```
+#### API Support
+- REST API
+- GraphQL API
+- WebSocket API
+- Batch API
+- Streaming API
+- Async API
+- Webhook API
+- Event API
 
-## Support
+#### Cloud Integration
+- AWS S3
+- Azure Blob Storage
+- Google Cloud Storage
+- Snowflake
+- Databricks
+- Redshift
+- BigQuery
+- Synapse
 
-For support and questions:
-- Documentation: https://github.com/nessi-dev/nessi/tree/main/docs
-- Issues: https://github.com/nessi-dev/nessi/issues
-- Email: nessi.datatool@gmail.com 
+#### Security Integration
+- LDAP
+- OAuth
+- SAML
+- Kerberos
+- SSL/TLS
+- Encryption
+- Key management
+- Audit logging
+
+## Advanced Features
+
+### 1. Data Quality Analysis
+
+#### Quality Metrics
+- Completeness
+- Accuracy
+- Consistency
+- Timeliness
+- Validity
+- Uniqueness
+- Integrity
+- Lineage
+
+#### Analysis Tools
+- Automated checks
+- Custom rules
+- Statistical analysis
+- Pattern detection
+- Anomaly detection
+- Trend analysis
+- Root cause analysis
+- Impact assessment
+
+#### Reporting
+- Quality scorecards
+- Trend reports
+- Issue tracking
+- Recommendations
+- Action items
+- Compliance reports
+- Audit trails
+- Custom reports
+
+### 2. Performance Optimization
+
+#### Query Optimization
+- Query planning
+- Execution optimization
+- Resource allocation
+- Cache management
+- Index optimization
+- Partition pruning
+- Data skipping
+- Parallel processing
+
+#### Resource Optimization
+- Memory management
+- CPU utilization
+- Disk I/O
+- Network I/O
+- Connection pooling
+- Thread management
+- Process scheduling
+- Resource scaling
+
+#### System Optimization
+- Configuration tuning
+- Hardware optimization
+- Network optimization
+- Storage optimization
+- Security optimization
+- Monitoring optimization
+- Backup optimization
+- Recovery optimization
+
+### 3. Security Features
+
+#### Authentication
+- Basic authentication for metrics endpoints
+- SSL/TLS encryption for external communication
+- Rate limiting for API endpoints
+
+#### Access Control
+- Basic role-based access for metrics
+- IP-based access control (optional)
+- Session management
+
+### 4. API Features
+
+#### REST API
+- CRUD operations
+- Batch operations
+- Search operations
+- Filter operations
+- Sort operations
+- Pagination
+- Versioning
+- Documentation
+
+#### GraphQL API
+- Schema definition
+- Query operations
+- Mutation operations
+- Subscription operations
+- Type system
+- Resolvers
+- Directives
+- Fragments
+
+#### WebSocket API
+- Real-time updates
+- Bi-directional communication
+- Event streaming
+- Message queuing
+- Connection management
+- Error handling
+- Heartbeat
+- Reconnection
+
+### 5. Development Features
+
+#### Testing Support
+- Unit testing
+- Integration testing
+- Performance testing
+- Security testing
+- Data testing
+- API testing
+- UI testing
+- End-to-end testing
+
+#### Documentation
+- API documentation
+- User guides
+- Developer guides
+- Architecture docs
+- Deployment docs
+- Security docs
+- Troubleshooting docs
+- Release notes
+
+#### Development Tools
+- CLI tools
+- SDK tools
+- Debug tools
+- Profiling tools
+- Monitoring tools
+- Testing tools
+- Deployment tools
+- CI/CD tools
+
+## Next Steps
+
+- [Installation Guide](installation.md)
+- [Quick Start Guide](quickstart.md)
+- [API Documentation](../API.md)
+- [Troubleshooting Guide](troubleshooting.md) 
