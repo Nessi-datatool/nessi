@@ -5,7 +5,7 @@
   <ul>
     <li>✅ <strong>Free for personal use</strong></li>
     <li>💼 <strong>Paid for enterprise use or consulting</strong></li>
-    <li>🕐 Free only for this version — future versions will require a license</li>
+    <li>🕐 <strong>Free only for this version — future versions will require a license</strong></li>
   </ul>
 </div>
 

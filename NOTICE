@@ -1,5 +1,18 @@
 nessi.dev
-Copyright 2024 nessi.dev. All Rights Reserved.
+Copyright (c) 2024 nessi-dev
+
+This product includes software developed by:
+- The Python Software Foundation (https://www.python.org/)
+- The Apache Software Foundation (https://www.apache.org/)
+- The Prometheus Authors (https://prometheus.io/)
+- Grafana Labs (https://grafana.com/)
+
+This product includes third-party components with separate copyright notices and license terms. Your use of these components is subject to the terms and conditions of the following licenses:
+
+- Python: PSF License
+- Apache Spark: Apache License 2.0
+- Prometheus: Apache License 2.0
+- Grafana: AGPLv3
 
 This is a proprietary software product. Unauthorized copying, modification, distribution, or use is strictly prohibited.
 
