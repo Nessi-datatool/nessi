@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-NESSI DATA TOOL - FREE FOR PERSONAL USE LICENSE
+NESSI - FREE FOR PERSONAL USE LICENSE
 
-Copyright (c) 2025 Nessi Data Tool. All rights reserved.
+Copyright (c) 2025 Nessi. All rights reserved.
 
 Nessi is free for personal use.
 
@@ -27,13 +27,13 @@ This version is free. Future versions of Nessi will require a license for all us
    e) Use the Software for enterprise or consulting purposes without a valid paid license
 
 3. OWNERSHIP
-   The Software is licensed, not sold. Nessi Data Tool retains all right, title, and interest in and to the Software, including all intellectual property rights.
+   The Software is licensed, not sold. Nessi retains all right, title, and interest in and to the Software, including all intellectual property rights.
 
 4. DISCLAIMER OF WARRANTY
    THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
 
 5. LIMITATION OF LIABILITY
-   IN NO EVENT SHALL NESSI DATA TOOL BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+   IN NO EVENT SHALL NESSI BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
 """Table scanner module.
@@ -51,6 +51,8 @@ import numpy as np
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DoubleType, DateType
 from ..spark_config import get_spark_session
+from ..decorators import requires_personal_use
+from .models import ScanResult, ColumnStats
 
 # Configure logging
 logging.basicConfig(
@@ -143,6 +145,7 @@ class TableScanner:
             logger.error(f"Failed to read table: {str(e)}")
             raise ValueError(f"Failed to read table: {str(e)}")
     
+    @requires_personal_use
     def scan_table(self, table_path: str) -> Dict[str, Any]:
         """Scan a table and generate profile information.
         
@@ -218,6 +221,7 @@ class TableScanner:
             logger.error(f"Failed to scan table: {str(e)}")
             raise ValueError(f"Failed to scan table: {str(e)}")
     
+    @requires_personal_use
     def generate_report(self, scan_result: Dict[str, Any], output_path: str) -> str:
         """Generate a human-readable report from scan results.
         
@@ -282,3 +286,9 @@ class TableScanner:
         except Exception as e:
             logger.error(f"Failed to generate report: {str(e)}")
             raise ValueError(f"Failed to generate report: {str(e)}")
+
+    @requires_personal_use
+    def check_data_quality(self, path: str) -> dict:
+        """Check data quality metrics."""
+        # Implementation here
+        pass
