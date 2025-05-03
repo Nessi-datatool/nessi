@@ -1,21 +1,22 @@
-# Nessi - Data Quality and Profiling Tool
+# Nessi Data Tool
 
-> **Licensing & Usage**
->
-> - Free for personal use
-> - Paid for enterprise use or consulting
-> - Free only for this version — future versions will require a license
+Nessi is a powerful data analysis and processing tool, free for personal use. It provides comprehensive data scanning, reporting, and visualization capabilities.
 
-Nessi is a powerful data quality and profiling tool that helps you analyze and understand your data. It supports various data formats including Delta Lake, Parquet, and CSV.
+## License
 
-## Prerequisites
+Nessi is free for personal use. A paid license is required for enterprise or consulting use. This version is free, while future versions will require a license for all users.
 
-- Docker Engine 20.10.0 or later
-- Docker Compose v2.0.0 or later
-- At least 4GB of available RAM
-- At least 10GB of free disk space
+For more details, see [LICENSE](LICENSE).
 
 ## Quick Start
+
+### Prerequisites
+
+- Python 3.8 or higher
+- Docker and Docker Compose (for running with containers)
+- Java 8 or higher (for Spark support)
+
+### Installation
 
 1. Clone the repository:
 ```bash
@@ -23,84 +24,70 @@ git clone https://github.com/Nessi-datatool/nessi.git
 cd nessi
 ```
 
-2. Build and start the services:
+2. Create and activate a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+3. Install dependencies:
+```bash
+pip install -e .
+```
+
+### Running with Docker
+
+1. Build and start the services:
 ```bash
 docker-compose up -d
 ```
 
-This will start:
-- Nessi backend service
-- Grafana for monitoring (http://localhost:3000)
-- Prometheus for metrics collection
+2. Access the web interface at `http://localhost:8080`
 
-3. Verify the installation:
+### Basic Usage
+
+1. Start the Nessi CLI:
 ```bash
-docker-compose exec backend python src/demo.py
+nessi
 ```
 
-## Services
-
-The following services are available:
-
-- **Nessi Backend**: Data processing and analysis
-- **Grafana**: Monitoring and visualization (http://localhost:3000)
-- **Prometheus**: Metrics collection
-
-## Configuration
-
-The following environment variables can be configured in `docker-compose.yml`:
-
-```yaml
-environment:
-  - PYTHONPATH=/app/backend
-  - JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-  - PYSPARK_PYTHON=/usr/local/bin/python
-  - PYSPARK_DRIVER_PYTHON=/usr/local/bin/python
-  - GRAFANA_URL=http://grafana:3000
-  - PROMETHEUS_URL=http://prometheus:9090
-```
-
-## Volumes
-
-The following directories are mounted as volumes:
-
-- `/app/backend`: Backend code
-- `/app/data`: Data directory
-- `/app/metrics`: Metrics storage
-- `/app/conf`: Configuration files
-
-## Development
-
-All development and testing should be done within Docker containers:
-
-1. Run tests:
+2. Check your usage status:
 ```bash
-docker-compose exec backend pytest tests/
+nessi status
 ```
 
-2. Run a specific test:
+3. Verify personal use:
 ```bash
-docker-compose exec backend pytest tests/test_file.py::test_function
+nessi check
 ```
 
-3. Access logs:
-```bash
-docker-compose logs -f backend
-```
+## Features
+
+- Data scanning and analysis
+- Custom report generation
+- Data quality metrics
+- Performance monitoring
+- Grafana dashboard integration
+- Delta Lake support
+- Parquet and CSV file handling
 
 ## Documentation
 
-For detailed documentation, see the [docs](docs/) directory:
-- [Installation Guide](docs/installation.md)
-- [Quick Start Guide](docs/quickstart.md)
-- [Demo Tutorial](docs/demo-tutorial.md)
-- [Monitoring Guide](docs/monitoring.md)
+- [API Documentation](API.md)
+- [Security Guidelines](SECURITY.md)
+- [Contributing Guide](CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
 
-## License
+## Support
 
-This project is:
-- Free for personal use
-- Paid for enterprise use or consulting
-- Free only for this version — future versions will require a license
+For personal use support, please open an issue in the GitHub repository.
 
-See the [LICENSE](LICENSE) file for details. 
+For enterprise support, please contact us at support@nessi-datatool.com
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+## Security
+
+Please report any security issues to security@nessi-datatool.com. See our [Security Policy](SECURITY.md) for more information. 
