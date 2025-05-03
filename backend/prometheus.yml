@@ -83,7 +83,6 @@ remote_write:
       capacity: 1000
       max_samples_per_send: 100
       batch_send_deadline: 5s
-      max_retries: 3
       min_backoff: 100ms
       max_backoff: 1s
 
@@ -96,18 +95,4 @@ remote_read:
       insecure_skip_verify: false
     read_recent: true
     required_matchers:
-      environment: 'development'
-
-# Add relabeling for better metric organization
-relabel_configs:
-  - source_labels: ['__address__']
-    target_label: 'instance'
-    regex: '(.*):.*'
-    replacement: '$1'
-  
-# Add metric relabeling for better organization
-metric_relabel_configs:
-  - source_labels: ['__name__']
-    regex: 'nessi_(.*)'
-    target_label: 'metric_type'
-    replacement: '$1' 
+      environment: 'development' 

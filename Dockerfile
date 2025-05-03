@@ -1,4 +1,4 @@
-FROM python:3.11-slim-bullseye
+FROM python:3.11-slim-bookworm
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -24,6 +24,9 @@ RUN . $JAVA_HOME_SOURCE && \
 # Set working directory
 WORKDIR /app
 
+# Create a non-root user
+RUN groupadd -r nessi && useradd -r -g nessi nessi
+
 # Copy requirements first to leverage Docker cache
 COPY backend/requirements.txt .
 
@@ -41,11 +44,13 @@ ENV PYSPARK_SUBMIT_ARGS="--driver-java-options=-Xms1024M --driver-java-options=-
 ENV GRAFANA_URL=http://grafana:3000
 ENV PROMETHEUS_URL=http://prometheus:9090
 
-# Create necessary directories
-RUN mkdir -p /app/data/parquet /app/data/csv /app/data/delta /app/metrics
+# Create necessary directories with proper permissions
+RUN mkdir -p /app/data/parquet /app/data/csv /app/data/delta /app/metrics && \
+    chown -R nessi:nessi /app && \
+    chmod -R 755 /app/data /app/metrics
 
-# Set permissions
-RUN chmod -R 777 /app/data /app/metrics
+# Switch to non-root user
+USER nessi
 
 # Source JAVA_HOME at runtime
 SHELL ["/bin/bash", "-c"]

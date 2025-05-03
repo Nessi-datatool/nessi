@@ -1,5 +1,14 @@
 # Nessi Monitoring System
 
+<div style="margin: 1em 0; padding: 1em; border: 1px solid #ccc; border-radius: 8px; background: #f9f9f9;">
+  <h3>Licensing & Usage</h3>
+  <ul>
+    <li>✅ <strong>Free for personal use</strong></li>
+    <li>💼 <strong>Paid for enterprise use or consulting</strong></li>
+    <li>🕐 <strong>Free only for this version — future versions will require a license</strong></li>
+  </ul>
+</div>
+
 A comprehensive monitoring system for Nessi that provides real-time insights into data processing, quality, and performance metrics.
 
 ## Features
@@ -198,7 +207,12 @@ The system includes threshold-based alerts for:
 
 ## License
 
-This software is provided under a 14-day trial period. After the trial period, a license is required to continue using the software.
+This project is:
+- ✅ Free for personal use
+- 💼 Paid for enterprise use or consulting
+- 🕐 Free only for this version — future versions will require a license
+
+[License information]
 
 ## Support
 

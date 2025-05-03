@@ -121,10 +121,10 @@ Nessi supports custom report generation through:
   - Dynamic content
 
 - **Export Formats**
-  - Markdown
-  - HTML
-  - JSON
-  - CSV
+  - Markdown: For documentation and sharing
+  - HTML: For web-based viewing
+  - JSON: For programmatic access
+  - CSV: For data analysis
 
 ## Report Generation Process
 

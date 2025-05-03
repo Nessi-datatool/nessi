@@ -1,3 +1,40 @@
+"""
+NESSI DATA TOOL - FREE FOR PERSONAL USE LICENSE
+
+Copyright (c) 2025 Nessi Data Tool. All rights reserved.
+
+Nessi is free for personal use.
+
+A paid license is required for enterprise or consulting use.
+
+This version is free. Future versions of Nessi will require a license for all users.
+
+1. PERSONAL USE LICENSE
+   a) The Software is provided free of charge for personal use
+   b) Personal use includes:
+      - Individual data analysis and processing
+      - Educational purposes
+      - Non-commercial research
+   c) Enterprise or consulting use requires a paid license
+
+2. RESTRICTIONS
+   You shall not:
+   a) Copy, modify, adapt, translate, reverse engineer, decompile, or disassemble the Software
+   b) Create derivative works based on the Software
+   c) Rent, lease, loan, sell, sublicense, distribute, transmit, or otherwise transfer the Software
+   d) Remove or alter any proprietary notices or labels on the Software
+   e) Use the Software for enterprise or consulting purposes without a valid paid license
+
+3. OWNERSHIP
+   The Software is licensed, not sold. Nessi Data Tool retains all right, title, and interest in and to the Software, including all intellectual property rights.
+
+4. DISCLAIMER OF WARRANTY
+   THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+
+5. LIMITATION OF LIABILITY
+   IN NO EVENT SHALL NESSI DATA TOOL BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+
 import os
 import json
 import base64
@@ -6,7 +43,7 @@ import time
 import logging
 import platform
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, Any, Optional
 from functools import wraps
 from cryptography.fernet import Fernet
@@ -58,11 +95,7 @@ class LicenseValidator:
             dict: Default configuration.
         """
         config = {
-            "is_licensed": False,
-            "trial_start": datetime.now().isoformat(),
-            "trial_days": 14,
-            "expiry_date": None,
-            "license_key": None,
+            "is_personal_use": True,
             "machine_id": self._get_machine_id()
         }
         self._save_config(config)
@@ -82,7 +115,7 @@ class LicenseValidator:
                 json.dump(config, f, indent=2)
         except Exception as e:
             logger.error(f"Failed to save config: {str(e)}")
-            raise LicenseError(f"Failed to save license configuration: {str(e)}")
+            raise LicenseError(f"Failed to save configuration: {str(e)}")
     
     def _get_machine_id(self) -> str:
         """Get a unique machine identifier.
@@ -104,41 +137,6 @@ class LicenseValidator:
             logger.error(f"Failed to get machine ID: {str(e)}")
             return None
     
-    def validate_license_key(self, license_key: str) -> bool:
-        """Validate a license key.
-        
-        Args:
-            license_key (str): License key to validate.
-            
-        Returns:
-            bool: True if license key is valid.
-            
-        Raises:
-            LicenseError: If license key is invalid.
-        """
-        if not license_key:
-            raise LicenseError("Invalid license key: Invalid license key format")
-        
-        try:
-            # Verify machine ID
-            current_machine_id = self._get_machine_id()
-            if self.config.get("machine_id") and self.config["machine_id"] != current_machine_id:
-                raise LicenseError("License not valid for this machine")
-            
-            # Update config
-            self.config.update({
-                "is_licensed": True,
-                "expiry_date": (datetime.now() + timedelta(days=365)).isoformat(),
-                "license_key": license_key,
-                "machine_id": current_machine_id
-            })
-            self._save_config()
-            
-            return True
-        except Exception as e:
-            logger.error(f"License validation failed: {str(e)}")
-            raise LicenseError(f"License validation failed: {str(e)}")
-    
     def get_status(self) -> dict:
         """Get current license status.
         
@@ -146,79 +144,33 @@ class LicenseValidator:
             dict: License status information.
         """
         try:
-            # Check if licensed
-            if self.config["is_licensed"] and self.config["expiry_date"]:
-                expiry_date = datetime.fromisoformat(self.config["expiry_date"])
-                is_expired = datetime.now() > expiry_date
-                
-                if is_expired:
-                    return {
-                        "status": "expired",
-                        "is_licensed": False,
-                        "message": "License has expired",
-                        "expiry_date": self.config["expiry_date"],
-                        "days_remaining": 0
-                    }
-                else:
-                    return {
-                        "status": "licensed",
-                        "is_licensed": True,
-                        "message": "License is valid",
-                        "expiry_date": self.config["expiry_date"],
-                        "days_remaining": (expiry_date - datetime.now()).days
-                    }
-            
-            # Check trial period
-            trial_start = datetime.fromisoformat(self.config["trial_start"])
-            trial_days = self.config["trial_days"]
-            trial_end = trial_start + timedelta(days=trial_days)
-            days_remaining = (trial_end - datetime.now()).days
-            
-            if days_remaining > 0:
-                return {
-                    "status": "trial",
-                    "is_licensed": True,
-                    "message": f"Trial period active ({days_remaining} days remaining)",
-                    "expiry_date": trial_end.isoformat(),
-                    "days_remaining": days_remaining
-                }
-            else:
-                return {
-                    "status": "trial_expired",
-                    "is_licensed": False,
-                    "message": "Trial period has expired",
-                    "expiry_date": trial_end.isoformat(),
-                    "days_remaining": 0
-                }
-        except Exception as e:
-            logger.error(f"Failed to get license status: {str(e)}")
             return {
-                "status": "error",
-                "is_licensed": False,
-                "message": f"Error checking license status: {str(e)}",
-                "expiry_date": None,
-                "days_remaining": 0
+                "status": "active",
+                "type": "personal" if self.config["is_personal_use"] else "enterprise",
+                "message": "Free for personal use" if self.config["is_personal_use"] else "Enterprise license required"
             }
+        except Exception as e:
+            logger.error(f"Failed to get status: {str(e)}")
+            raise LicenseError(f"Failed to get status: {str(e)}")
     
     def check_license(self) -> bool:
-        """Check if license is valid.
+        """Check if the current usage is allowed.
         
         Returns:
-            bool: True if license is valid.
-            
-        Raises:
-            LicenseError: If license is invalid.
+            bool: True if usage is allowed.
         """
-        status = self.get_status()
-        if not status["is_licensed"]:
-            raise LicenseError("License is invalid or expired")
-        return True
+        try:
+            return self.config["is_personal_use"]
+        except Exception as e:
+            logger.error(f"Failed to check license: {str(e)}")
+            return False
 
-def requires_license(func):
-    """Decorator to check for valid license or trial."""
+def requires_personal_use(func):
+    """Decorator to check if the usage is personal use."""
     @wraps(func)
     def wrapper(*args, **kwargs):
         validator = LicenseValidator()
-        validator.check_license()
+        if not validator.check_license():
+            raise LicenseError("This feature requires personal use only. Enterprise use requires a paid license.")
         return func(*args, **kwargs)
-    return wrapper 
+    return wrapper

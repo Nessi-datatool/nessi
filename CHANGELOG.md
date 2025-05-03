@@ -5,13 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2024-05-01
+## [1.0.0] - 2025-01-01
 
 ### Added
-- Secure license system with encryption and machine binding
-- 14-day trial period with automatic initialization
-- License key validation and activation via CLI
-- `@require_valid_license` decorator for feature protection
 - Delta Lake integration and table scanning
 - Sample data generation capabilities
 - Comprehensive test suite
@@ -19,20 +15,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Config file encryption using Fernet
   - Machine-specific binding
   - Tamper detection and recovery
-  - Protection against license sharing
-  - Clock manipulation protection
+  - Protection against unauthorized use
 
 ### Changed
-- Updated to proprietary license with trial period
+- Updated to free for personal use license
 - Enhanced security measures
-- Improved CLI with license management commands
-- Better error handling with custom LicenseError
+- Improved CLI with configuration management
+- Better error handling with custom exceptions
 
 ### Security
-- Implemented secure storage for license information
+- Implemented secure storage for configuration
 - Added encryption for configuration files
 - Added protection against tampering and unauthorized modifications
-- Implemented machine-specific license binding
 - Added automatic recovery from corrupted configurations
 
 ### Documentation
@@ -42,33 +36,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added contribution guidelines
 - Added code of conduct
 
-## [0.1.0] - 2024-05-01
+## [0.1.0] - 2024-12-15
 
 ### Added
-- Initial release with trial and license system
-- 14-day trial period
-- License key generation and validation
-- License management CLI
-- Trial status checking
-- License activation
-- Security features for license protection
-
-### Changed
-- Updated to proprietary license
-- Enhanced security measures
-- Improved documentation
-
-### Fixed
-- Security vulnerabilities
-- License validation issues
-
-## [0.0.1] - 2024-04-30
-
-### Added
-- Initial project structure
-- Basic data processing capabilities
+- Initial release
 - Delta Lake integration
 - Table scanning functionality
 - Sample data generation
 - Test suite
-- Documentation 
+- Documentation
+
+### Changed
+- Free for personal use license
+- Enhanced security measures
+- Improved documentation 

@@ -1,3 +1,40 @@
+"""
+NESSI DATA TOOL - FREE FOR PERSONAL USE LICENSE
+
+Copyright (c) 2025 Nessi Data Tool. All rights reserved.
+
+Nessi is free for personal use.
+
+A paid license is required for enterprise or consulting use.
+
+This version is free. Future versions of Nessi will require a license for all users.
+
+1. PERSONAL USE LICENSE
+   a) The Software is provided free of charge for personal use
+   b) Personal use includes:
+      - Individual data analysis and processing
+      - Educational purposes
+      - Non-commercial research
+   c) Enterprise or consulting use requires a paid license
+
+2. RESTRICTIONS
+   You shall not:
+   a) Copy, modify, adapt, translate, reverse engineer, decompile, or disassemble the Software
+   b) Create derivative works based on the Software
+   c) Rent, lease, loan, sell, sublicense, distribute, transmit, or otherwise transfer the Software
+   d) Remove or alter any proprietary notices or labels on the Software
+   e) Use the Software for enterprise or consulting purposes without a valid paid license
+
+3. OWNERSHIP
+   The Software is licensed, not sold. Nessi Data Tool retains all right, title, and interest in and to the Software, including all intellectual property rights.
+
+4. DISCLAIMER OF WARRANTY
+   THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+
+5. LIMITATION OF LIABILITY
+   IN NO EVENT SHALL NESSI DATA TOOL BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+
 """Script to set up Grafana with example dashboard and data sources."""
 
 import requests
@@ -5,13 +42,18 @@ import json
 import time
 from pathlib import Path
 from typing import Dict, Any
+import os
+from requests.exceptions import ConnectionError
 
 class GrafanaSetup:
     """Sets up Grafana with example dashboard and data sources."""
     
-    def __init__(self):
-        self.base_url = "http://localhost:3000"
-        self.auth = ("admin", "admin")
+    def __init__(self, base_url: str = "http://localhost:3000", api_key: str = None):
+        self.base_url = base_url
+        self.api_key = api_key
+        self.headers = {"Content-Type": "application/json"}
+        if api_key:
+            self.headers["Authorization"] = f"Bearer {api_key}"
         self.base_dir = Path(__file__).parent
         self.dashboard_path = self.base_dir / "grafana_dashboard.json"
         
@@ -19,6 +61,7 @@ class GrafanaSetup:
         """Wait for Grafana to be ready."""
         print("Waiting for Grafana to be ready...")
         start_time = time.time()
+        retry_count = 0
         
         while time.time() - start_time < timeout:
             try:
@@ -26,11 +69,18 @@ class GrafanaSetup:
                 if response.status_code == 200:
                     print("Grafana is ready!")
                     return True
-            except requests.exceptions.ConnectionError:
-                pass
-            time.sleep(5)
-            
-        print("Timeout waiting for Grafana")
+            except ConnectionError:
+                retry_count += 1
+                print(f"Connection error, retrying... (attempt {retry_count})")
+                time.sleep(0.1)
+                continue
+            except Exception as e:
+                retry_count += 1
+                print(f"Error checking Grafana health: {e} (attempt {retry_count})")
+                time.sleep(0.1)
+                continue
+        
+        print("Timeout waiting for Grafana to be ready")
         return False
         
     def setup_prometheus_datasource(self) -> bool:
@@ -48,7 +98,7 @@ class GrafanaSetup:
             response = requests.post(
                 f"{self.base_url}/api/datasources",
                 json=datasource,
-                auth=self.auth
+                headers=self.headers
             )
             
             if response.status_code in [200, 409]:  # 409 means already exists
@@ -81,7 +131,7 @@ class GrafanaSetup:
             response = requests.post(
                 f"{self.base_url}/api/dashboards/db",
                 json=dashboard,
-                auth=self.auth
+                headers=self.headers
             )
             
             if response.status_code == 200:
@@ -112,7 +162,7 @@ class GrafanaSetup:
             response = requests.post(
                 f"{self.base_url}/api/alert-notifications",
                 json=email_channel,
-                auth=self.auth
+                headers=self.headers
             )
             
             if response.status_code in [200, 409]:  # 409 means already exists
@@ -150,4 +200,4 @@ def main():
     setup.run()
     
 if __name__ == "__main__":
-    main() 
+    main()

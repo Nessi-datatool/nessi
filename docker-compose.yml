@@ -14,12 +14,19 @@ services:
       - PYTHONPATH=/app
       - AUTH_ENABLED=true
       - SSL_ENABLED=true
-      - METRICS_USERNAME=metrics_user
-      - METRICS_PASSWORD=secure_password
+      - METRICS_USERNAME=${METRICS_USERNAME:-metrics_user}
+      - METRICS_PASSWORD=${METRICS_PASSWORD:-secure_password}
       - SCENARIO=normal_operation
       - METRICS_INTERVAL=5
       - LOG_LEVEL=INFO
     command: python src/reports/metrics_test.py
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
 
   prometheus:
     image: prom/prometheus:latest
@@ -33,6 +40,13 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
 
   tests:
     build: 
@@ -46,6 +60,15 @@ services:
       - AUTH_ENABLED=true
       - SSL_ENABLED=true
     command: pytest -v --cov=src tests/
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
 
 volumes:
-  prometheus_data: {} 
+  prometheus_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /tmp/prometheus_data
+      o: bind 

@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  test-runner:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.test
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/tests:/app/tests
+      - ./backend/pytest.ini:/app/pytest.ini
+    environment:
+      - PYTHONPATH=/app
+      - PYTEST_ADDOPTS=-v --cov=src
+    networks:
+      - monitoring
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+networks:
+  monitoring:
+    driver: bridge 

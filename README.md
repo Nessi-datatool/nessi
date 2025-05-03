@@ -1,13 +1,10 @@
 # Nessi - Data Quality and Profiling Tool
 
-<div style="margin: 1em 0; padding: 1em; border: 1px solid #ccc; border-radius: 8px; background: #f9f9f9;">
-  <h3>Licensing & Usage</h3>
-  <ul>
-    <li>✅ <strong>Free for personal use</strong></li>
-    <li>💼 <strong>Paid for enterprise use or consulting</strong></li>
-    <li>🕐 <strong>Free only for this version — future versions will require a license</strong></li>
-  </ul>
-</div>
+> **Licensing & Usage**
+>
+> - Free for personal use
+> - Paid for enterprise use or consulting
+> - Free only for this version — future versions will require a license
 
 Nessi is a powerful data quality and profiling tool that helps you analyze and understand your data. It supports various data formats including Delta Lake, Parquet, and CSV.
 
@@ -102,8 +99,8 @@ For detailed documentation, see the [docs](docs/) directory:
 ## License
 
 This project is:
-- ✅ Free for personal use
-- 💼 Paid for enterprise use or consulting
-- 🕐 Free only for this version — future versions will require a license
+- Free for personal use
+- Paid for enterprise use or consulting
+- Free only for this version — future versions will require a license
 
 See the [LICENSE](LICENSE) file for details. 

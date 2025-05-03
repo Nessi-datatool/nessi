@@ -82,7 +82,6 @@ services:
       - '--web.enable-lifecycle'
       - '--web.listen-address=:9090'
       - '--web.external-url=http://prometheus:9090'
-      - '--web.config.file=/etc/prometheus/web.yml'
     deploy:
       resources:
         limits:

@@ -35,14 +35,50 @@ This version is free. Future versions of Nessi will require a license for all us
    IN NO EVENT SHALL NESSI DATA TOOL BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-"""Nessi package."""
-
+import os
+import shutil
+from datetime import date
+from typing import Optional, Union, List
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DoubleType, DateType
+from pyspark.sql.functions import lit
 from .spark_config import get_spark_session
-from .decorators import requires_personal_use
-from .license import LicenseValidator, LicenseError
-from .sample_data_generator import generate_sample_data, save_as_parquet, save_as_csv
-from .create_test_delta_table import create_test_delta_table, add_column_to_delta_table
-from .scanner import TableScanner
 
-__version__ = "0.1.0"
-__all__ = ['scanner', 'LicenseValidator', 'requires_personal_use', 'LicenseError']
+def create_test_delta_table(
+    table_path: str,
+    schema: Optional[StructType] = None,
+    num_rows: int = 4,
+    partition_by: Optional[Union[str, List[str]]] = None
+) -> None:
+    """Create a test Delta table with sample data."""
+    if not table_path:
+        raise ValueError("Table path cannot be empty")
+    try:
+        spark = get_spark_session()
+        if not schema:
+            schema = StructType([
+                StructField("id", IntegerType(), False),
+                StructField("name", StringType(), True),
+                StructField("age", IntegerType(), True),
+                StructField("salary", DoubleType(), True),
+                StructField("department", StringType(), True),
+                StructField("join_date", StringType(), True)
+            ])
+        data = []
+        for i in range(1, num_rows + 1):
+            data.append((
+                i,
+                f"User_{i}",
+                25 + i,
+                50000.0 + i * 5000.0,
+                f"Department_{i}",
+                f"2020-{i if i <= 12 else 12}-01"
+            ))
+        df = spark.createDataFrame(data, schema)
+        if partition_by:
+            df.write.format("delta").partitionBy(partition_by).mode("overwrite").save(table_path)
+        else:
+            df.write.format("delta").mode("overwrite").save(table_path)
+    except Exception as e:
+        if os.path.exists(table_path):
+            shutil.rmtree(table_path, ignore_errors=True)
+        raise RuntimeError(f"Failed to create test table: {str(e)}")
