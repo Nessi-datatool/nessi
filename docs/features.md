@@ -1,5 +1,14 @@
 # Nessi Features Documentation
 
+<div style="margin: 1em 0; padding: 1em; border: 1px solid #ccc; border-radius: 8px; background: #f9f9f9;">
+  <h3>Licensing & Usage</h3>
+  <ul>
+    <li>✅ <strong>Free for personal use</strong></li>
+    <li>💼 <strong>Paid for enterprise use or consulting</strong></li>
+    <li>🕐 <strong>Free only for this version — future versions will require a license</strong></li>
+  </ul>
+</div>
+
 ## Overview
 Nessi is a powerful data processing and analysis tool built on Apache Spark and Delta Lake, designed for efficient table scanning, data generation, and comprehensive data analysis. It provides robust features for data quality monitoring, performance analysis, and real-time metrics visualization.
 
@@ -115,6 +124,12 @@ Comprehensive reporting capabilities:
   - Template-based reports
   - User-defined metrics
   - Custom visualizations
+
+#### Supported Formats
+- **Markdown**: For documentation and sharing
+- **HTML**: For web-based viewing
+- **JSON**: For programmatic access
+- **CSV**: For data analysis
 
 ## Technical Specifications
 

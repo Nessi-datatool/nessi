@@ -198,7 +198,7 @@ The system includes threshold-based alerts for:
 
 ## License
 
-[License information]
+This software is provided under a 14-day trial period. After the trial period, a license is required to continue using the software.
 
 ## Support
 

@@ -1,4 +1,13 @@
-# Quick Start Guide
+# Nessi Quickstart Guide
+
+<div style="margin: 1em 0; padding: 1em; border: 1px solid #ccc; border-radius: 8px; background: #f9f9f9;">
+  <h3>Licensing & Usage</h3>
+  <ul>
+    <li>✅ <strong>Free for personal use</strong></li>
+    <li>💼 <strong>Paid for enterprise use or consulting</strong></li>
+    <li>🕐 <strong>Free only for this version — future versions will require a license</strong></li>
+  </ul>
+</div>
 
 ## Prerequisites
 
@@ -6,16 +15,6 @@ Before you begin, ensure you have:
 - Docker installed
 - Docker Compose installed
 - Git installed (for cloning the repository)
-
-## Important: License Information
-
-The system includes a 14-day trial period. After 14 days, you will need a license key to continue using the system:
-1. The trial period starts from first activation
-2. After 14 days, you must obtain a license key
-3. Without a valid license key, the system will continue to operate but may have limited functionality
-4. Contact support at support@nessi.com to obtain a license key
-
-For detailed license information, see [LICENSE.md](../LICENSE.md).
 
 ## Installation Steps
 
