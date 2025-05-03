@@ -37,8 +37,66 @@ This version is free. Future versions of nessi.dev will require a license for al
 
 """Performance report generator for nessi.dev."""
 
-from typing import Dict, Any
+import logging
+import json
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, Any, List
+
 from .report_generator import ReportGenerator
+
+# Configure logger
+logger = logging.getLogger(__name__)
+
+def validate_data(data: Dict[str, Any], required_fields: List[str]) -> None:
+    """Validate that data contains all required fields.
+    
+    Args:
+        data: Data to validate.
+        required_fields: List of required field names.
+        
+    Raises:
+        RuntimeError: If any required field is missing.
+    """
+    missing_fields = [field for field in required_fields if field not in data]
+    if missing_fields:
+        raise RuntimeError(f"Missing required fields: {', '.join(missing_fields)}")
+
+def get_timestamp() -> str:
+    """Get current timestamp in YYYYMMDD_HHMMSS format."""
+    return datetime.now().strftime("%Y%m%d_%H%M%S")
+
+def save_report(content: Any, filename: str, format: str) -> str:
+    """Save report content to a file.
+    
+    Args:
+        content: Report content to save.
+        filename: Base filename without extension.
+        format: File format (md, json, html).
+        
+    Returns:
+        str: Path to the saved file.
+    """
+    # Create reports directory if it doesn't exist
+    reports_dir = Path("reports")
+    reports_dir.mkdir(exist_ok=True)
+    
+    # Determine file extension and content type
+    if format == "json":
+        extension = "json"
+        if isinstance(content, dict):
+            content = json.dumps(content, indent=2)
+    elif format == "html":
+        extension = "html"
+    else:  # markdown
+        extension = "md"
+    
+    # Save file
+    filepath = reports_dir / f"{filename}.{extension}"
+    with open(filepath, "w") as f:
+        f.write(content)
+    
+    return str(filepath)
 
 class PerformanceReport(ReportGenerator):
     """Generate performance reports."""
@@ -207,21 +265,41 @@ def _generate_json_report(data: Dict[str, Any], include_details: bool) -> Dict[s
         Dict[str, Any]: JSON report content.
     """
     report = {
-        "processing_metrics": {
-            "score": data['processing_metrics']['score']
+        "performance": {
+            "processing_metrics": {
+                "score": data['processing_metrics']['score']
+            },
+            "resource_utilization": {
+                "efficiency_score": data['resource_utilization']['efficiency_score']
+            }
         },
-        "resource_utilization": {
-            "efficiency_score": data['resource_utilization']['efficiency_score']
+        "metrics": {
+            "processing_metrics": {
+                "score": data['processing_metrics']['score']
+            },
+            "resource_utilization": {
+                "efficiency_score": data['resource_utilization']['efficiency_score']
+            }
         }
     }
     
     if include_details:
-        report["processing_metrics"].update({
+        report["performance"]["processing_metrics"].update({
             "execution_time": data['processing_metrics']['execution_time'],
             "memory_usage": data['processing_metrics']['memory_usage'],
             "cpu_usage": data['processing_metrics']['cpu_usage']
         })
-        report["resource_utilization"].update({
+        report["performance"]["resource_utilization"].update({
+            "disk_io": data['resource_utilization']['disk_io'],
+            "network_traffic": data['resource_utilization']['network_traffic'],
+            "cache_performance": data['resource_utilization']['cache_performance']
+        })
+        report["metrics"]["processing_metrics"].update({
+            "execution_time": data['processing_metrics']['execution_time'],
+            "memory_usage": data['processing_metrics']['memory_usage'],
+            "cpu_usage": data['processing_metrics']['cpu_usage']
+        })
+        report["metrics"]["resource_utilization"].update({
             "disk_io": data['resource_utilization']['disk_io'],
             "network_traffic": data['resource_utilization']['network_traffic'],
             "cache_performance": data['resource_utilization']['cache_performance']
