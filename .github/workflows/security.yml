@@ -10,33 +10,22 @@ on:
 
 jobs:
   security:
-    runs-on: ubuntu-latest
+    name: Security Scan with Docker
+    runs-on: ubuntu-22.04
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-          
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install bandit safety trufflehog gi
-          
-      - name: Run Bandit
-        run: |
-          bandit -r nessi/ -ll -ii
-          
-      - name: Run Safety
-        run: |
-          safety check
-          
-      - name: Run TruffleHog
-        run: |
-          trufflehog --regex --entropy=False .
-          
-      - name: Run Gitleaks
-        run: |
-          gitleaks detect --config-path .github/gitleaks.toml
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Build and run security scan
+      run: |
+        # Build the security scan image
+        docker-compose -f docker-compose.test.yml build test-runner
+        
+        # Run security tools in Docker container
+        docker-compose -f docker-compose.test.yml run --rm test-runner bash -c "
+          bandit -r src/ -ll -ii && \n          bandit -r tests/ -ll -ii && \n          safety check && \n          trufflehog --regex --entropy=False . && \n          gitleaks detect --config-path .github/gitleaks.toml
+        "
