@@ -1,8 +1,8 @@
-# Nessi Monitoring System Communication Protocols
+# nessi.dev Monitoring System Communication Protocols
 
 ## Overview
 
-This document details the communication protocols and interfaces between different components of the Nessi Monitoring System. Each component communicates using specific protocols and data formats to ensure reliable and secure data exchange.
+This document details the communication protocols and interfaces between different components of the nessi.dev Monitoring System. Each component communicates using specific protocols and data formats to ensure reliable and secure data exchange.
 
 ## Component Communication Map
 
@@ -212,7 +212,7 @@ groups:
 ```json
 {
     "dashboard": {
-        "title": "Nessi Monitoring",
+        "title": "nessi.dev Monitoring",
         "panels": [
             {
                 "title": "Error Rate",

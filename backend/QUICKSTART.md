@@ -1,4 +1,4 @@
-# Nessi Quickstart Guide
+# nessi.dev Quickstart Guide
 
 > **Licensing & Usage**
 >
@@ -40,7 +40,7 @@ docker-compose -f docker-compose.test.yml up
 1. **Access the Dashboard**
    - Open http://localhost:3000
    - Log in with admin/admin
-   - Navigate to "Nessi Reports Dashboard"
+   - Navigate to "nessi.dev Reports Dashboard"
 
 2. **Monitor Key Metrics**
    - Table Scan Reports: View row counts and efficiency
@@ -194,7 +194,7 @@ max(nessi_processing_time_seconds)
 ### Example 5: Grafana Dashboard
 ```json
 {
-  "title": "Nessi Dashboard",
+  "title": "nessi.dev Dashboard",
   "panels": [
     {
       "title": "Table Scan Reports",

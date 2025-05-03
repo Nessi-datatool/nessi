@@ -35,7 +35,7 @@ This version is free. Future versions of nessi.dev will require a license for al
    IN NO EVENT SHALL NESSI BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-"""Nessi Report Generation Module.
+"""nessi.dev Report Generation Module.
 
 This module provides comprehensive report generation capabilities for data analysis
 and monitoring. It supports multiple report types and formats.

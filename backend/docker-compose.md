@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the Docker Compose configuration for the Nessi monitoring system. The configuration sets up a containerized environment with all necessary services for metrics collection, visualization, and testing.
+This document describes the Docker Compose configuration for the nessi.dev monitoring system. The configuration sets up a containerized environment with all necessary services for metrics collection, visualization, and testing.
 
 ## Configuration File
 

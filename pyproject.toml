@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 authors = [
-    { name = "Nessi Team", email = "team@nessi-datatool.org" }
+    { name = "nessi.dev Team", email = "team@nessi.dev" }
 ]
 
 [project.urls]

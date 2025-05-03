@@ -1,6 +1,6 @@
-# Nessi
+# nessi.dev
 
-Nessi is a powerful data analysis and processing tool, free for personal use. It provides comprehensive data scanning, reporting, and visualization capabilities.
+nessi.dev is a powerful data analysis and processing tool, free for personal use. It provides comprehensive data scanning, reporting, and visualization capabilities.
 
 ## License
 
@@ -46,7 +46,7 @@ docker-compose up -d
 
 ### Basic Usage
 
-1. Start the Nessi CLI:
+1. Start the nessi.dev CLI:
 ```bash
 nessi
 ```

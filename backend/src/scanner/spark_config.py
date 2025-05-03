@@ -51,7 +51,7 @@ class SparkSessionManager:
             cls._instance = super(SparkSessionManager, cls).__new__(cls)
         return cls._instance
     
-    def get_session(self, app_name="NessiApp"):
+    def get_session(self, app_name="nessi.dev"):
         """
         Get or create a Spark session with the specified configuration.
         
@@ -109,7 +109,7 @@ class SparkSessionManager:
 # Global instance
 spark_manager = SparkSessionManager()
 
-def get_spark_session(app_name="NessiApp"):
+def get_spark_session(app_name="nessi.dev"):
     """Get the Spark session from the manager."""
     return spark_manager.get_session(app_name)
 

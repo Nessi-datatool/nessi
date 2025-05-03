@@ -1,6 +1,6 @@
 # Features Guide
 
-Nessi provides a comprehensive set of features for data analysis and processing. All features are available for personal use, while enterprise users may require additional licenses for certain advanced features.
+nessi.dev provides a comprehensive set of features for data analysis and processing. All features are available for personal use, while enterprise users may require additional licenses for certain advanced features.
 
 ## Core Features
 
@@ -76,7 +76,7 @@ Enterprise users have access to additional features:
 
 ## Getting Started
 
-1. Install Nessi following the [Quick Start Guide](quickstart.md)
+1. Install nessi.dev following the [Quick Start Guide](quickstart.md)
 2. Choose the features you need based on your use case
 3. For personal use, all core features are available immediately
 4. For enterprise features, contact sales@nessi.dev

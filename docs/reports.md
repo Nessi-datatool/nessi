@@ -1,8 +1,8 @@
-# Nessi Report Generation
+# nessi.dev Report Generation
 
 ## Overview
 
-Nessi provides comprehensive report generation capabilities for data analysis and monitoring. Reports can be generated in multiple formats and include various types of analysis.
+nessi.dev provides comprehensive report generation capabilities for data analysis and monitoring. Reports can be generated in multiple formats and include various types of analysis.
 
 ## Report Types
 
@@ -41,7 +41,7 @@ report = scanner.generate_report(result, output_path="reports/table_analysis.md"
 
 ### 2. Grafana Dashboard Reports
 
-Nessi can generate interactive Grafana dashboards for real-time monitoring:
+nessi.dev can generate interactive Grafana dashboards for real-time monitoring:
 
 - **Table Metrics Panel**
   - Row count trends
@@ -63,7 +63,7 @@ dashboard = GrafanaDashboard(
 )
 
 # Create dashboard
-dashboard_response = dashboard.create_dashboard("Nessi Table Metrics")
+dashboard_response = dashboard.create_dashboard("nessi.dev Table Metrics")
 
 # Add panels
 dashboard.add_table_metrics_panel(
@@ -80,7 +80,7 @@ dashboard.export_dashboard(
 
 ### 3. Data Quality Reports
 
-Nessi generates data quality reports that include:
+nessi.dev generates data quality reports that include:
 
 - **Completeness Analysis**
   - Missing value detection
@@ -113,7 +113,7 @@ Performance reports provide insights into:
 
 ### 5. Custom Reports
 
-Nessi supports custom report generation through:
+nessi.dev supports custom report generation through:
 
 - **Template System**
   - Jinja2 template support

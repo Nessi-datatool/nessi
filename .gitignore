@@ -1,4 +1,4 @@
-# .gitignore for Nessi project
+# .gitignore for nessi.dev project
 
 # Python
 __pycache__/

@@ -36,7 +36,7 @@ This version is free. Future versions of nessi.dev will require a license for al
 """
 
 """
-Demo script to showcase Nessi features.
+Demo script to showcase nessi.dev features.
 Generates sample data, scans tables, and creates a Grafana dashboard.
 """
 
@@ -67,7 +67,7 @@ def main():
     demo_dir.mkdir(parents=True, exist_ok=True)
 
     # Initialize Spark session
-    spark = get_spark_session("NessiDemo")
+    spark = get_spark_session("nessi.dev-demo")
 
     try:
         # Generate sample data
@@ -113,7 +113,7 @@ def main():
             # Create dashboard
             print("Creating Grafana dashboard...")
             dashboard = GrafanaDashboard(grafana_url, grafana_admin_password)
-            dashboard_response = dashboard.create_dashboard("Nessi Demo Dashboard")
+            dashboard_response = dashboard.create_dashboard("nessi.dev Demo Dashboard")
             dashboard_uid = dashboard_response["dashboard"]["uid"]
 
             # Add panels

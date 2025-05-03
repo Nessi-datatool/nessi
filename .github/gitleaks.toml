@@ -1,4 +1,4 @@
-title = "Nessi Gitleaks Configuration"
+title = "nessi.dev Gitleaks Configuration"
 
 [[rules]]
 description = "AWS Access Key"

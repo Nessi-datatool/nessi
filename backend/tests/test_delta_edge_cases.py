@@ -55,7 +55,7 @@ def test_data_dir():
 
 @pytest.fixture(scope="session")
 def spark_session():
-    return SparkSession.builder.master("local[*]").appName("NessiTest").getOrCreate()
+    return SparkSession.builder.master("local[*]").appName("nessi.dev-test").getOrCreate()
 
 def test_delta_table_time_travel(spark_session, test_data_dir):
     table_path = os.path.join(test_data_dir, "test_delta_time_travel")

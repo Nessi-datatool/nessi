@@ -1,4 +1,4 @@
-# Nessi Monitoring System
+# nessi.dev Monitoring System
 
 <div style="margin: 1em 0; padding: 1em; border: 1px solid #ccc; border-radius: 8px; background: #f9f9f9;">
   <h3>Licensing & Usage</h3>
@@ -9,7 +9,7 @@
   </ul>
 </div>
 
-A comprehensive monitoring system for Nessi that provides real-time insights into data processing, quality, and performance metrics.
+A comprehensive monitoring system for nessi.dev that provides real-time insights into data processing, quality, and performance metrics.
 
 ## Features
 

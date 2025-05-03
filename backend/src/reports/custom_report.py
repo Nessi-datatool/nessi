@@ -35,7 +35,7 @@ This version is free. Future versions of nessi.dev will require a license for al
    IN NO EVENT SHALL NESSI BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-"""Custom report generator for Nessi."""
+"""Custom report generator for nessi.dev."""
 
 import os
 from typing import Dict, Any, Optional

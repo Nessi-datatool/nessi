@@ -124,7 +124,7 @@ class GrafanaSetup:
             # Set dashboard properties
             dashboard["dashboard"]["id"] = None
             dashboard["dashboard"]["uid"] = "nessi-reports"
-            dashboard["dashboard"]["title"] = "Nessi Reports Dashboard"
+            dashboard["dashboard"]["title"] = "nessi.dev Reports Dashboard"
             dashboard["overwrite"] = True
             
             # Create dashboard

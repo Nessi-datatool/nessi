@@ -1,6 +1,6 @@
-# Nessi Demo Tutorial
+# nessi.dev Demo Tutorial
 
-This tutorial provides a comprehensive walkthrough of Nessi's features using the demo script. We'll explain each component and show you how to customize the demo for your needs.
+This tutorial provides a comprehensive walkthrough of nessi.dev's features using the demo script. We'll explain each component and show you how to customize the demo for your needs.
 
 ## Overview
 
@@ -24,7 +24,7 @@ The demo script is located at `backend/src/demo.py`. Let's break down its compon
 
 ```python
 """
-Demo script to showcase Nessi features.
+Demo script to showcase nessi.dev features.
 Generates sample data, scans tables, and creates a Grafana dashboard.
 """
 
@@ -104,7 +104,7 @@ try:
     # Create dashboard
     print("Creating Grafana dashboard...")
     dashboard = GrafanaDashboard(grafana_url, grafana_admin_password)
-    dashboard_response = dashboard.create_dashboard("Nessi Demo Dashboard")
+    dashboard_response = dashboard.create_dashboard("nessi.dev Demo Dashboard")
     dashboard_uid = dashboard_response["dashboard"]["uid"]
 
     # Add panels
@@ -179,7 +179,7 @@ docker-compose exec backend python src/demo.py
 3. Access the dashboard:
 - Open http://localhost:3000 in your browser
 - Log in with username: admin, password: admin
-- Navigate to "Nessi Demo Dashboard"
+- Navigate to "nessi.dev Demo Dashboard"
 
 ## Expected Output
 

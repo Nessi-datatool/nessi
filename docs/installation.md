@@ -1,8 +1,8 @@
-# Nessi Installation Guide
+# nessi.dev Installation Guide
 
 ## Prerequisites
 
-Before installing Nessi, ensure you have the following prerequisites:
+Before installing nessi.dev, ensure you have the following prerequisites:
 
 - Docker Engine 20.10.0 or later
 - Docker Compose v2.0.0 or later
@@ -38,7 +38,7 @@ docker-compose ps
 ```
 
 This will start:
-- Nessi backend service
+- nessi.dev backend service
 - Grafana for monitoring (accessible at http://localhost:3000)
 - Prometheus for metrics collection
 

@@ -140,7 +140,7 @@ def test_setup_dashboard_success(setup, mock_requests):
     mock_requests.post.assert_called_once()
     call_args = mock_requests.post.call_args[1]
     assert call_args['json']['dashboard']['uid'] == "nessi-reports"
-    assert call_args['json']['dashboard']['title'] == "Nessi Reports Dashboard"
+    assert call_args['json']['dashboard']['title'] == "nessi.dev Reports Dashboard"
 
 def test_setup_dashboard_failure(setup, mock_requests):
     """Test failed dashboard setup."""

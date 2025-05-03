@@ -1,8 +1,8 @@
-# Nessi API Documentation
+# nessi.dev API Documentation
 
 ## Overview
 
-Nessi is a Python-based data processing and analysis tool built with PySpark and Delta Lake. This document provides detailed API documentation for all major components.
+nessi.dev is a Python-based data processing and analysis tool built with PySpark and Delta Lake. This document provides detailed API documentation for all major components.
 
 ## Table of Contents
 

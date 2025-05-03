@@ -1,6 +1,6 @@
-# Nessi Features
+# nessi.dev Features
 
-Nessi is a powerful data processing and analysis tool built on Apache Spark, designed for efficient table scanning, data generation, and analysis. It runs entirely in Docker containers for easy deployment and management.
+nessi.dev is a powerful data processing and analysis tool built on Apache Spark, designed for efficient table scanning, data generation, and analysis. It runs entirely in Docker containers for easy deployment and management.
 
 ## Key Features
 
@@ -48,7 +48,7 @@ docker-compose exec backend python src/demo.py
 4. Access the dashboard:
 - Open http://localhost:3000
 - Log in with username: admin, password: admin
-- Navigate to "Nessi Demo Dashboard"
+- Navigate to "nessi.dev Demo Dashboard"
 
 ## System Requirements
 - Docker Engine 20.10.0+

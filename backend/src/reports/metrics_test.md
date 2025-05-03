@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `metrics_test.py` script generates test metrics for the Nessi monitoring system. It simulates various operational scenarios and provides real-time metrics for demonstration and testing purposes.
+The `metrics_test.py` script generates test metrics for the nessi.dev monitoring system. It simulates various operational scenarios and provides real-time metrics for demonstration and testing purposes.
 
 ## Metrics
 

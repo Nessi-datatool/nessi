@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Nessi Reports Dashboard provides a comprehensive view of system metrics and performance indicators. It's designed to help monitor and analyze various aspects of the Nessi system in real-time.
+The nessi.dev Reports Dashboard provides a comprehensive view of system metrics and performance indicators. It's designed to help monitor and analyze various aspects of the nessi.dev system in real-time.
 
 ## Dashboard Structure
 

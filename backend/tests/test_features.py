@@ -57,7 +57,7 @@ def spark():
     
     # Create new SparkSession
     spark = SparkSession.builder \
-        .appName("NessiTest") \
+        .appName("nessi.dev-test") \
         .master("local[*]") \
         .config("spark.driver.host", "localhost") \
         .config("spark.driver.bindAddress", "localhost") \

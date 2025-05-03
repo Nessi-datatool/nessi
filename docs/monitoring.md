@@ -1,10 +1,10 @@
-# Nessi Monitoring Guide
+# nessi.dev Monitoring Guide
 
-This guide explains how to use Nessi's monitoring capabilities with Grafana and Prometheus.
+This guide explains how to use nessi.dev's monitoring capabilities with Grafana and Prometheus.
 
 ## Overview
 
-Nessi provides comprehensive monitoring through:
+nessi.dev provides comprehensive monitoring through:
 - Grafana dashboards for visualization
 - Prometheus for metrics collection
 - Custom metrics for table statistics
@@ -13,7 +13,7 @@ Nessi provides comprehensive monitoring through:
 
 ```
 ┌──────────┐    ┌──────────┐    ┌──────────┐
-│  Nessi   │───▶│Prometheus│───▶│ Grafana  │
+│ nessi.dev │───▶│Prometheus│───▶│ Grafana  │
 └──────────┘    └──────────┘    └──────────┘
      │               │               │
      └───────────────┴───────────────┘

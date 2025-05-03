@@ -26,7 +26,7 @@ If applicable, add screenshots to help explain your problem.
 **Environment:**
  - OS: [e.g. macOS, Windows, Linux]
  - Python Version: [e.g. 3.8, 3.9, 3.10]
- - Nessi Version: [e.g. 0.1.0]
+ - nessi.dev Version: [e.g. 0.1.0]
  - Spark Version: [e.g. 3.5.0]
 
 **Additional context**

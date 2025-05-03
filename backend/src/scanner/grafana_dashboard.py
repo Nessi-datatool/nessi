@@ -39,7 +39,7 @@ This version is free. Future versions of nessi.dev will require a license for al
 Grafana Dashboard Integration Module
 
 This module provides functionality to create and manage Grafana dashboards
-for monitoring Nessi's data processing operations.
+for monitoring nessi.dev's data processing operations.
 """
 
 import json

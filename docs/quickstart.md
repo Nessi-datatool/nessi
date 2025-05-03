@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-This guide will help you get started with Nessi quickly. nessi.dev is free for personal use, while enterprise or consulting use requires a paid license.
+This guide will help you get started with nessi.dev quickly. nessi.dev is free for personal use, while enterprise or consulting use requires a paid license.
 
 ## Installation
 
@@ -24,7 +24,7 @@ python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-3. Install Nessi:
+3. Install nessi.dev:
 ```bash
 pip install -e .
 ```
@@ -44,7 +44,7 @@ docker-compose up -d
 
 ### Command Line Interface
 
-1. Start the Nessi CLI:
+1. Start the nessi.dev CLI:
 ```bash
 nessi
 ```

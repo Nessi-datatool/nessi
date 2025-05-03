@@ -1,6 +1,6 @@
 # Docker Troubleshooting Guide
 
-This guide helps you troubleshoot common issues when running Nessi in Docker containers.
+This guide helps you troubleshoot common issues when running nessi.dev in Docker containers.
 
 ## Quick Checks
 

@@ -1,6 +1,6 @@
-# Contributing to Nessi
+# Contributing to nessi.dev
 
-This document provides guidelines and instructions for internal development of the Nessi software.
+This document provides guidelines and instructions for internal development of the nessi.dev software.
 
 ## Code of Conduct
 

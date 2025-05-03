@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the Prometheus configuration for the Nessi monitoring system. Prometheus is used to collect, store, and query time series data from various metrics endpoints.
+This document describes the Prometheus configuration for the nessi.dev monitoring system. Prometheus is used to collect, store, and query time series data from various metrics endpoints.
 
 ## Configuration File
 
@@ -20,7 +20,7 @@ global:
 
 ### Scrape Configurations
 
-#### Nessi Metrics Job
+#### nessi.dev Metrics Job
 ```yaml
 scrape_configs:
   - job_name: 'nessi-metrics'

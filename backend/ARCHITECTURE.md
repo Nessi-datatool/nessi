@@ -1,8 +1,8 @@
-# Nessi Monitoring System Architecture
+# nessi.dev Monitoring System Architecture
 
 ## System Overview
 
-The Nessi Monitoring System is a comprehensive solution for monitoring and analyzing database performance, data quality, and system health. The system consists of several components working together to provide real-time insights and alerts.
+The nessi.dev Monitoring System is a comprehensive solution for monitoring and analyzing database performance, data quality, and system health. The system consists of several components working together to provide real-time insights and alerts.
 
 ## Component Architecture
 
