@@ -1,31 +1,44 @@
-name: Security Scan
+name: Security
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
   schedule:
-    - cron: '0 0 * * 0'  # Weekly scan
+    - cron: '0 0 * * *'  # Run daily at midnight
 
 jobs:
   security:
-    name: Security Scan with Docker
-    runs-on: ubuntu-22.04
-
+    runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
     
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-    
-    - name: Build and run security scan
-      run: |
-        # Build the security scan image
-        docker-compose -f docker-compose.test.yml build test-runner
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
         
-        # Run security tools in Docker container
-        docker-compose -f docker-compose.test.yml run --rm test-runner bash -c "
-          bandit -r src/ -ll -ii && \n          bandit -r tests/ -ll -ii && \n          safety check && \n          trufflehog --regex --entropy=False . && \n          gitleaks detect --config-path .github/gitleaks.toml
-        "
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install safety bandit
+        
+    - name: Run security checks
+      run: |
+        safety check
+        bandit -r src/
+        
+    - name: Run Gitleaks
+      uses: gitleaks/gitleaks-action@v2
+      with:
+        config-path: .github/gitleaks.toml
+        
+    - name: Run Trivy
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'table'
+        exit-code: '1'
+        ignore-unfixed: true
