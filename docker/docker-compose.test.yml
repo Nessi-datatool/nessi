@@ -10,8 +10,7 @@ services:
       - ../tests:/app/tests
       - ../config:/app/config
       - ../data:/app/data
-      - ../logs:/app/logs
-      - ../test-results:/app/test-results
+      - test-results:/app/test-results
       - ../.benchmarks:/app/.benchmarks
     environment:
       - PYTHONPATH=/app:/app/src:/opt/spark/python:/opt/spark/python/lib/py4j-0.10.9.7-src.zip
@@ -88,6 +87,7 @@ volumes:
   elasticsearch-data:
   grafana-data:
   prometheus-data:
+  test-results:
 
 networks:
   default:
