@@ -1,0 +1,122 @@
+version: '3.8'
+
+services:
+  nessi:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    volumes:
+      - ../src:/app/src
+      - ../config:/app/config
+      - ../data:/app/data
+      - ../logs:/app/logs
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - JWT_SECRET=${JWT_SECRET}
+      - SSL_CERT_PATH=/app/config/ssl/cert.pem
+      - SSL_KEY_PATH=/app/config/ssl/key.pem
+      - NESSI_ENV=development
+      - NESSI_LOG_LEVEL=DEBUG
+      - NESSI_LOG_FORMAT=json
+      - PYTHONPATH=/app/src
+    ports:
+      - "8443:8443"
+    depends_on:
+      - redis
+      - prometheus
+      - grafana
+    networks:
+      - nessi-network
+
+  nessi-test:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.test
+    volumes:
+      - ../src:/app/src
+      - ../tests:/app/tests
+      - ../config:/app/config
+      - ../data:/app/data
+      - ../logs:/app/logs
+      - ../test-results:/app/test-results
+    environment:
+      - NESSI_ENV=test
+      - NESSI_LOG_LEVEL=DEBUG
+      - NESSI_LOG_FORMAT=json
+      - PYTHONPATH=/app/src
+    networks:
+      - nessi-network
+
+  redis:
+    image: redis:latest
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - nessi-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ../config/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - "9090:9090"
+    networks:
+      - nessi-network
+
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - ../config/grafana/provisioning:/etc/grafana/provisioning
+      - ../config/grafana/dashboards:/var/lib/grafana/dashboards
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - nessi-network
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    volumes:
+      - ../config/alertmanager:/etc/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+    ports:
+      - "9093:9093"
+    networks:
+      - nessi-network
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ../config/nginx:/etc/nginx/conf.d
+      - ../config/ssl:/etc/nginx/ssl
+    ports:
+      - "443:443"
+    depends_on:
+      - nessi
+    networks:
+      - nessi-network
+
+volumes:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+  test-results:
+
+networks:
+  nessi-network:
+    driver: bridge 

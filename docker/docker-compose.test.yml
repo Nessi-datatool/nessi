@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  test-runner:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.test
+    volumes:
+      - ../src:/app/src
+      - ../tests:/app/tests
+      - ../config:/app/config
+      - ../data:/app/data
+      - ../logs:/app/logs
+      - ../test-results:/app/test-results
+      - ../.benchmarks:/app/.benchmarks
+    environment:
+      - PYTHONPATH=/app:/app/src:/opt/spark/python:/opt/spark/python/lib/py4j-0.10.9.7-src.zip
+      - ENVIRONMENT=test
+      - SPARK_HOME=/opt/spark
+      - PYSPARK_PYTHON=/usr/local/bin/python
+      - PYSPARK_DRIVER_PYTHON=/usr/local/bin/python
+      - JAVA_HOME=/usr/lib/jvm/default-java
+      - DOCKER_TESTING=1
+      - DOCKER_ENV=true
+      - PYTEST_DOCKER_ONLY=true
+      - REDIS_URL=redis://redis:6379
+      - MONGODB_URL=mongodb://mongodb:27017
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - GRAFANA_URL=http://grafana:3000
+      - PROMETHEUS_URL=http://prometheus:9090
+    depends_on:
+      - redis
+      - mongodb
+      - elasticsearch
+      - grafana
+      - prometheus
+    command: >
+      bash -c "
+        mkdir -p /app/test-results /app/.benchmarks &&
+        python -m pytest -v --cov=nessi --cov-report=term-missing --cov-report=html:coverage.html --cov-report=xml:coverage.xml --junitxml=junit.xml --html=report.html --self-contained-html --benchmark-autosave --benchmark-save=benchmark.json --benchmark-json=benchmark.json --benchmark-min-rounds=5 --benchmark-warmup=on --benchmark-disable-gc --benchmark-sort=name --durations=10 --tb=short tests/ &&
+        mv coverage.html coverage.xml junit.xml report.html benchmark.json /app/test-results/"
+
+  redis:
+    image: redis:7.2
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  mongodb:
+    image: mongo:7.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+
+  elasticsearch:
+    image: elasticsearch:8.12.1
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+
+  grafana:
+    image: grafana/grafana:10.2.0
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus-data:/prometheus
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+volumes:
+  redis-data:
+  mongodb-data:
+  elasticsearch-data:
+  grafana-data:
+  prometheus-data:
+
+networks:
+  default:
+    driver: bridge 

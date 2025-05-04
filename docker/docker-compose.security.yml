@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  nessi-security:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+      - ./ssl:/app/ssl:ro
+      - ./config:/app/config:ro
+    environment:
+      - PYTHONPATH=/app
+      - NESSI_SECURITY_CONFIG=/app/config/security.json
+      - NESSI_SSL_CERT=/app/ssl/cert.pem
+      - NESSI_SSL_KEY=/app/ssl/key.pem
+      - NESSI_SSL_CA=/app/ssl/ca.pem
+    ports:
+      - "8443:8443"
+    restart: unless-stopped
+    networks:
+      - nessi-network
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    ports:
+      - "443:443"
+    depends_on:
+      - nessi-security
+    restart: unless-stopped
+    networks:
+      - nessi-network
+
+networks:
+  nessi-network:
+    driver: bridge 
