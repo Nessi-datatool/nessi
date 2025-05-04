@@ -1,0 +1,37 @@
+global:
+  resolve_timeout: 5m
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'nessi-alerts@example.com'
+  smtp_auth_username: 'nessi-alerts@example.com'
+  smtp_auth_password: 'your-password'
+  smtp_require_tls: true
+
+route:
+  group_by: ['alertname', 'table_name']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: 'email-notifications'
+
+receivers:
+  - name: 'email-notifications'
+    email_configs:
+      - to: 'admin@example.com'
+        send_resolved: true
+        html: |
+          <html>
+            <body>
+              <h2>{{ .Status | toUpper }}</h2>
+              <p><strong>Alert:</strong> {{ .CommonLabels.alertname }}</p>
+              <p><strong>Table:</strong> {{ .CommonLabels.table_name }}</p>
+              <p><strong>Description:</strong> {{ .CommonAnnotations.description }}</p>
+              <p><strong>Time:</strong> {{ .StartsAt }}</p>
+            </body>
+          </html>
+
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'table_name'] 

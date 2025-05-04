@@ -1,8 +1,149 @@
-# nessi.dev API Documentation
+# NESSI API Documentation
 
 ## Overview
 
-nessi.dev is a Python-based data processing and analysis tool built with PySpark and Delta Lake. This document provides detailed API documentation for all major components.
+NESSI provides a RESTful API for data quality scanning and monitoring. The API is designed to run in Docker containers and uses FastAPI for the web framework.
+
+## Deployment
+
+### Docker Deployment
+
+```bash
+# Build and run the API container
+docker-compose build nessi-api
+docker-compose up -d nessi-api
+```
+
+The API will be available at `http://localhost:8000`.
+
+## API Endpoints
+
+### Scanner Endpoints
+
+#### POST /api/v1/scanner/delta/scan
+Scan a Delta table for data quality issues.
+
+**Request Body:**
+```json
+{
+    "table_path": "path/to/delta/table",
+    "options": {
+        "validate_schema": true,
+        "check_constraints": true
+    }
+}
+```
+
+**Response:**
+```json
+{
+    "status": "success",
+    "data": {
+        "table_name": "example_table",
+        "row_count": 1000,
+        "schema": {
+            "fields": [...]
+        },
+        "quality_metrics": {
+            "completeness": 0.99,
+            "accuracy": 0.98,
+            "consistency": 0.97
+        }
+    }
+}
+```
+
+### Monitoring Endpoints
+
+#### GET /api/v1/monitoring/metrics
+Get current system metrics.
+
+**Response:**
+```json
+{
+    "status": "success",
+    "data": {
+        "cpu_usage": 45.2,
+        "memory_usage": 60.1,
+        "disk_usage": 30.5,
+        "network_io": {
+            "bytes_in": 1024,
+            "bytes_out": 2048
+        }
+    }
+}
+```
+
+## Authentication
+
+All API endpoints require authentication using JWT tokens. Include the token in the Authorization header:
+
+```
+Authorization: Bearer <token>
+```
+
+## Error Handling
+
+The API uses standard HTTP status codes and returns error messages in the following format:
+
+```json
+{
+    "status": "error",
+    "error": {
+        "code": "ERROR_CODE",
+        "message": "Error description"
+    }
+}
+```
+
+## Rate Limiting
+
+API requests are rate-limited to prevent abuse. The current limits are:
+- 100 requests per minute per IP
+- 1000 requests per hour per API key
+
+## WebSocket Endpoints
+
+### /ws/v1/monitoring/stream
+Stream real-time monitoring data.
+
+**Message Format:**
+```json
+{
+    "type": "metric_update",
+    "data": {
+        "metric_name": "cpu_usage",
+        "value": 45.2,
+        "timestamp": "2024-01-01T00:00:00Z"
+    }
+}
+```
+
+## Docker Health Checks
+
+The API container includes health check endpoints:
+
+### GET /health
+Check API health status.
+
+**Response:**
+```json
+{
+    "status": "healthy",
+    "version": "1.0.0",
+    "timestamp": "2024-01-01T00:00:00Z"
+}
+```
+
+## Development
+
+To run the API in development mode:
+
+```bash
+docker-compose -f docker-compose.dev.yml up -d nessi-api
+```
+
+The development API will be available at `http://localhost:8001` with additional debugging features enabled.
 
 ## Table of Contents
 
@@ -131,128 +272,39 @@ Generates a report from scan results.
 report = scanner.generate_report(result, template="detailed")
 ```
 
+### `generate_pdf_report`
+
+```python
+def generate_pdf_report(
+    self,
+    scan_result: Dict[str, Any],
+    output_path: Optional[str] = None
+) -> str
+```
+
+Generates a PDF report from scan results.
+
+**Parameters:**
+- `scan_result`: Results from scan_table
+- `output_path`: Path to save the PDF report (optional)
+
+**Returns:**
+- Path to the generated PDF report
+
+**Example:**
+```python
+pdf_path = scanner.generate_pdf_report(result)
+```
+
+The PDF report includes:
+- Data quality metrics with visual indicators
+- Performance statistics
+- Table scan results
+- Schema information
+- Timestamp and copyright information
+
 ## Report Generation
 
 ### `ReportGenerator`
 
-```python
-class ReportGenerator:
-    def __init__(
-        self,
-        template_dir: str = "templates",
-        default_template: str = "default.html"
-    )
 ```
-
-Generates reports from scan results using Jinja2 templates.
-
-**Parameters:**
-- `template_dir`: Directory containing report templates
-- `default_template`: Default template file name
-
-**Methods:**
-- `render(template_name: str, data: Dict[str, Any]) -> str`
-- `save_report(content: str, output_path: str) -> None`
-
-**Example:**
-```python
-from src.scanner.report_generator import ReportGenerator
-
-generator = ReportGenerator()
-report = generator.render("detailed.html", scan_result)
-generator.save_report(report, "output/report.html")
-```
-
-## Data Format Support
-
-### Delta Lake
-
-```python
-def read_delta_table(
-    path: str,
-    version: Optional[int] = None,
-    timestamp: Optional[str] = None
-) -> DataFrame
-```
-
-Reads a Delta table with optional version or timestamp.
-
-**Parameters:**
-- `path`: Path to Delta table
-- `version`: Specific version to read
-- `timestamp`: Timestamp to read at
-
-**Example:**
-```python
-from src.scanner.delta_scanner import read_delta_table
-
-# Read latest version
-df = read_delta_table("path/to/delta/table")
-
-# Read specific version
-df = read_delta_table("path/to/delta/table", version=1)
-```
-
-### Parquet
-
-```python
-def read_parquet_table(
-    path: str,
-    options: Optional[Dict[str, str]] = None
-) -> DataFrame
-```
-
-Reads a Parquet table.
-
-**Parameters:**
-- `path`: Path to Parquet table
-- `options`: Additional read options
-
-**Example:**
-```python
-from src.scanner.parquet_scanner import read_parquet_table
-
-df = read_parquet_table("path/to/parquet/table")
-```
-
-### CSV
-
-```python
-def read_csv_table(
-    path: str,
-    options: Optional[Dict[str, str]] = None
-) -> DataFrame
-```
-
-Reads a CSV table.
-
-**Parameters:**
-- `path`: Path to CSV file
-- `options`: Additional read options
-
-**Example:**
-```python
-from src.scanner.csv_scanner import read_csv_table
-
-df = read_csv_table("path/to/csv/table")
-```
-
-## Error Handling
-
-All functions raise appropriate exceptions:
-
-- `FileNotFoundError`: When input file/directory doesn't exist
-- `ValueError`: For invalid parameters
-- `RuntimeError`: For processing errors
-
-## Configuration
-
-Configuration can be set through environment variables:
-
-- `TEST_DATA_DIR`: Directory for test data
-- `SPARK_DRIVER_MEMORY`: Spark driver memory
-- `SPARK_EXECUTOR_MEMORY`: Spark executor memory
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on contributing to the API documentation. 

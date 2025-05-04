@@ -35,14 +35,6 @@ This version is free. Future versions of nessi.dev will require a license for al
    IN NO EVENT SHALL NESSI BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-"""nessi.dev package."""
-
-from .spark_config import get_spark_session
-from .decorators import requires_personal_use
-from .license import LicenseValidator, LicenseError
-from .sample_data_generator import generate_sample_data, save_as_parquet, save_as_csv
-from .create_test_delta_table import create_test_delta_table, add_column_to_delta_table
-from .scanner import TableScanner
-
-__version__ = "0.1.0"
-__all__ = ['scanner', 'LicenseValidator', 'requires_personal_use', 'LicenseError']
+"""
+NESSI - Scanner module initialization
+"""

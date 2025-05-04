@@ -2,242 +2,167 @@
 
 ## Prerequisites
 
-- Docker (version 20.10.0 or higher)
-- Docker Compose (version 2.0.0 or higher)
+- Docker Engine (version 20.10.0 or later)
+- Docker Compose (version 2.0.0 or later)
 - Git
-- Minimum 4GB RAM
+- 4GB RAM minimum (8GB recommended)
 - 10GB free disk space
-- Python 3.8 or higher (for development installation)
-- Virtual environment (recommended for development)
 
-## Installation Methods
+## Quick Installation
 
-### 1. Docker Installation (Recommended)
-
-1. **Clone the Repository**:
+1. Clone the repository:
    ```bash
-   git clone https://github.com/your-org/nessi-dev.git
-   cd nessi-dev
+   git clone https://github.com/Nessi-datatool/nessi.git
+   cd nessi
    ```
 
-2. **Configure Environment**:
+2. Build and start the containers:
+   ```bash
+   docker-compose build
+   docker-compose up -d
+   ```
+
+3. Verify the installation:
+   ```bash
+   docker-compose ps
+   ```
+
+## Detailed Installation
+
+### 1. System Requirements
+
+- Operating System: Linux, macOS, or Windows (with WSL2)
+- CPU: 2 cores minimum (4 cores recommended)
+- Memory: 4GB minimum (8GB recommended)
+- Storage: 10GB free space
+- Network: Internet access for downloading images
+
+### 2. Docker Setup
+
+1. Install Docker Engine:
+   - [Linux](https://docs.docker.com/engine/install/)
+   - [macOS](https://docs.docker.com/desktop/install/mac-install/)
+   - [Windows](https://docs.docker.com/desktop/install/windows-install/)
+
+2. Install Docker Compose:
+   ```bash
+   # Linux
+   sudo apt-get install docker-compose-plugin
+
+   # macOS/Windows (included with Docker Desktop)
+   ```
+
+3. Verify Docker installation:
+   ```bash
+   docker --version
+   docker-compose --version
+   ```
+
+### 3. Project Setup
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Nessi-datatool/nessi.git
+   cd nessi
+   ```
+
+2. Configure environment (optional):
    ```bash
    cp .env.example .env
-   # Edit .env with your configuration
+   # Edit .env file with your settings
    ```
 
-3. **Start Services**:
+3. Build the containers:
+   ```bash
+   docker-compose build
+   ```
+
+4. Start the services:
    ```bash
    docker-compose up -d
    ```
 
-4. **Verify Installation**:
+### 4. Verification
+
+1. Check container status:
    ```bash
    docker-compose ps
+   ```
+
+2. Check logs:
+   ```bash
    docker-compose logs -f
    ```
 
-### 2. Development Installation
-
-1. **Clone the Repository**:
+3. Test the API:
    ```bash
-   git clone https://github.com/your-org/nessi-dev.git
-   cd nessi-dev
+   curl http://localhost:8000/health
    ```
 
-2. **Create Virtual Environment**:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+## Development Setup
 
-3. **Install Dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   pip install -r requirements-dev.txt  # For development
-   ```
-
-4. **Configure Environment**:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
-
-5. **Initialize Database**:
-   ```bash
-   python scripts/init_db.py
-   ```
-
-6. **Start Services**:
-   ```bash
-   python scripts/start_services.py
-   ```
-
-## Configuration
-
-### 1. Environment Variables
+For development purposes, use the development configuration:
 
 ```bash
-# Spark Configuration
-SPARK_MASTER=local[*]
-SPARK_DRIVER_MEMORY=2g
-SPARK_EXECUTOR_MEMORY=2g
-SPARK_EXECUTOR_CORES=2
-
-# Monitoring Configuration
-PROMETHEUS_PORT=9090
-GRAFANA_PORT=3000
-GRAFANA_ADMIN_USER=admin
-GRAFANA_ADMIN_PASSWORD=admin
-
-# Security Configuration
-AUTH_ENABLED=true
-SSL_ENABLED=true
-METRICS_USERNAME=admin
-METRICS_PASSWORD=admin
-
-# Storage Configuration
-STORAGE_TYPE=s3  # Options: s3, local, hdfs
-S3_BUCKET=your-bucket
-S3_REGION=us-east-1
-S3_ACCESS_KEY=your-access-key
-S3_SECRET_KEY=your-secret-key
-
-# Logging Configuration
-LOG_LEVEL=INFO
-LOG_FORMAT=json
-LOG_PATH=/var/log/nessi
+docker-compose -f docker-compose.dev.yml up -d
 ```
 
-### 2. SSL Configuration
+This will:
+- Mount the source code as a volume
+- Enable hot-reloading
+- Provide additional debugging tools
+- Run tests automatically
 
-1. **Generate SSL Certificates**:
-   ```bash
-   openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-     -keyout private.key -out certificate.crt
-   ```
+## Testing
 
-2. **Update Docker Configuration**:
-   ```yaml
-   # docker-compose.yml
-   services:
-     nginx:
-       volumes:
-         - ./ssl/private.key:/etc/nginx/ssl/private.key
-         - ./ssl/certificate.crt:/etc/nginx/ssl/certificate.crt
-   ```
-
-3. **Configure Nginx**:
-   ```nginx
-   server {
-       listen 443 ssl;
-       ssl_certificate /etc/nginx/ssl/certificate.crt;
-       ssl_certificate_key /etc/nginx/ssl/private.key;
-       # ... other configuration
-   }
-   ```
-
-### 3. Security Configuration
-
-1. **Basic Authentication Setup**:
-   ```bash
-   # Configure basic authentication for metrics
-   python scripts/configure_auth.py --type basic \
-     --username admin \
-     --password admin
-   ```
-
-2. **Rate Limiting Setup**:
-   ```bash
-   # Configure rate limiting
-   python scripts/configure_rate_limit.py \
-     --rate 10 \
-     --burst 20
-   ```
-
-## Post-Installation Steps
-
-### 1. Access Services
-
-- **Web Interface**: https://localhost:8443
-- **API Documentation**: https://localhost:8443/api/docs
-- **Grafana Dashboard**: https://localhost:3000
-- **Prometheus**: https://localhost:9090
-
-### 2. Grafana Configuration
-
-1. **Import Dashboards**:
-   ```bash
-   # Copy dashboard JSON files
-   cp grafana/dashboards/*.json /path/to/grafana/provisioning/dashboards/
-   ```
-
-2. **Configure Data Sources**:
-   - Add Prometheus as a data source
-   - Configure alert rules
-   - Set up notification channels
-
-### 3. Verification Script
+All tests are run in Docker containers. Use the provided script:
 
 ```bash
-# Run verification script
-python scripts/verify_installation.py
+# Make the script executable
+chmod +x docker/run-tests.sh
 
-# Expected output:
-# ✓ Docker containers running
-# ✓ Services accessible
-# ✓ Database initialized
-# ✓ SSL configured
-# ✓ Authentication working
-# ✓ Authorization configured
-# ✓ Encryption enabled
-# ✓ Monitoring setup
+# Run all tests
+./docker/run-tests.sh
+```
+
+Test results will be available in the `test-results` directory.
+
+## Updating
+
+To update to the latest version:
+
+```bash
+git pull
+docker-compose down
+docker-compose build --no-cache
+docker-compose up -d
 ```
 
 ## Troubleshooting
 
-### Common Issues
+Common issues and solutions:
 
-1. **Port Conflicts**:
-   - Check running services: `netstat -tuln`
-   - Update port configurations in `.env`
-   - Restart services
+1. **Port Conflicts**
+   - Check if ports 8000, 3000, 9090 are available
+   - Modify ports in docker-compose.yml if needed
 
-2. **Memory Issues**:
-   - Increase Docker memory limit
-   - Adjust Spark memory settings
-   - Monitor resource usage
+2. **Build Failures**
+   - Clear Docker cache: `docker system prune -a`
+   - Check network connectivity
+   - Verify Docker daemon is running
 
-3. **SSL Certificate Problems**:
-   - Verify certificate paths
-   - Check file permissions
-   - Validate certificate chain
+3. **Container Issues**
+   - Check logs: `docker-compose logs -f`
+   - Restart containers: `docker-compose restart`
+   - Rebuild containers: `docker-compose build --no-cache`
 
-4. **Authentication Issues**:
-   - Check LDAP/OAuth configuration
-   - Verify user credentials
-   - Review authentication logs
-
-5. **Authorization Issues**:
-   - Verify role assignments
-   - Check permission settings
-   - Review access logs
-
-6. **Encryption Issues**:
-   - Verify key configuration
-   - Check key rotation settings
-   - Review encryption logs
-
-## Getting Help
-
-- **Documentation**: https://docs.nessi.dev
-- **Issue Tracker**: https://github.com/your-org/nessi-dev/issues
-- **Community Forum**: https://community.nessi.dev
-- **Support Email**: support@nessi.dev
+4. **Test Issues**
+   - Check test-results directory for detailed reports
+   - Verify service connectivity in Docker network
+   - Ensure sufficient resources for Spark
 
 ## Next Steps
 
 - [Quick Start Guide](quickstart.md)
-- [Features Overview](features.md)
-- [API Documentation](../API.md)
-- [Troubleshooting Guide](troubleshooting.md) 
+- [Configuration Guide](configuration.md)
+- [API Reference](api-reference.md) 

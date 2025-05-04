@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivysettings>
-    <settings defaultResolver="chain-resolver"/>
+    <settings defaultResolver="chain"/>
     <resolvers>
-        <chain name="chain-resolver" returnFirst="true">
-            <ibiblio name="central" m2compatible="true"/>
-            <ibiblio name="spark-packages" m2compatible="true" root="https://dl.bintray.com/spark-packages/maven/"/>
+        <chain name="chain">
+            <ibiblio name="maven-central" m2compatible="true"/>
+            <ibiblio name="maven-local" m2compatible="true" root="file:${user.home}/.m2/repository"/>
+            <ibiblio name="apache-snapshots" m2compatible="true" root="https://repository.apache.org/content/repositories/snapshots/"/>
+            <ibiblio name="apache-releases" m2compatible="true" root="https://repository.apache.org/content/repositories/releases/"/>
         </chain>
     </resolvers>
 </ivysettings> 

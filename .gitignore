@@ -21,108 +21,74 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
-.env
-venv/
-.venv/
-ENV/
-
-# Test artifacts
-.coverage
-htmlcov/
-.pytest_cache/
-.tox/
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-.DS_Store
-
-# Project specific
-data/*
-!data/.gitkeep
-metrics/*
-!metrics/.gitkeep
-logs/*
-!logs/.gitkeep
-
-# Docker
-.docker/
-
-# Spark
-spark-warehouse/
-derby.log
-metastore_db/
-
-# Grafana
-grafana-storage/
-
-# Prometheus
-prometheus-storage/
 
 # Virtual Environment
 venv/
-venv311/
 env/
 ENV/
+.env
 
 # IDE
 .idea/
-*.iml
-*.iws
-*.ipr
 .vscode/
 *.swp
 *.swo
-*~
-
-# Generated Data
-data/reports/
-data/test_tables/
-data/test_delta/
-
-# Logs
-*.log
 .DS_Store
-.AppleDouble
-.LSOverride
-Thumbs.db
-ehthumbs.db
-Desktop.ini
 
-# Ignore Jupyter Notebook checkpoints (if any)
-.ipynb_checkpoints/
-
-# Ignore temporary files
-*.tmp
-*.temp
-*.swp
-
-# Ignore scan outputs
-nessi_report.html
-fake_parquet_table/
-
-# Ignore user-specific configs
-*.env
-*.local
-.env
-.env.local
-.env.*.local
-
-# Test coverage
+# Testing
 .coverage
-.coverage.*
 htmlcov/
 .tox/
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
 .pytest_cache/
+.mypy_cache/
+test-results/
+test-report.html
+test-results.xml
+.benchmarks/
+
+# Project specific
+data/
+logs/
+*.log
+*.parquet
+*.delta/
+metastore_db/
+spark-warehouse/
+derby.log
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Documentation
+docs/_build/
+docs/api/
+
+# Monitoring
+prometheus_data/
+grafana_data/
+
+# Security
+*.pem
+*.key
+*.crt
+*.csr
+*.srl
+*.p12
+*.pfx
+
+# Temporary files
+*.bak
+*.tmp
+*~
+.*.sw[po]
+
+# Node (for documentation)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Misc
+.directory
+.nfs*
+*.orig

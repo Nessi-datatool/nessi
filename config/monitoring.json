@@ -1,0 +1,56 @@
+{
+  "metrics_port": 9090,
+  "alert_log_path": "logs/alerts.log",
+  "grafana": {
+    "host": "localhost",
+    "port": 3000,
+    "datasource": {
+      "name": "Prometheus",
+      "type": "prometheus",
+      "url": "http://localhost:9090"
+    }
+  },
+  "prometheus": {
+    "scrape_interval": "15s",
+    "evaluation_interval": "15s",
+    "rules": [
+      {
+        "name": "high_error_rate",
+        "expr": "rate(nessi_errors_total[5m]) > 0.1",
+        "for": "5m",
+        "labels": {
+          "severity": "warning"
+        },
+        "annotations": {
+          "summary": "High error rate detected",
+          "description": "Error rate has exceeded threshold of 0.1 errors/second"
+        }
+      },
+      {
+        "name": "low_quality_score",
+        "expr": "nessi_data_quality_score < 0.8",
+        "for": "15m",
+        "labels": {
+          "severity": "warning"
+        },
+        "annotations": {
+          "summary": "Low data quality score",
+          "description": "Data quality score has fallen below 0.8"
+        }
+      }
+    ]
+  },
+  "alerts": {
+    "email": {
+      "enabled": true,
+      "smtp_host": "smtp.gmail.com",
+      "smtp_port": 587,
+      "from_address": "alerts@nessi.dev",
+      "recipients": ["admin@nessi.dev"]
+    },
+    "slack": {
+      "enabled": true,
+      "webhook_url": "https://hooks.slack.com/services/your/webhook/url"
+    }
+  }
+} 

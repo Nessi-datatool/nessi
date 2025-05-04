@@ -1,312 +1,374 @@
-# Features Overview
+# Nessi Features Documentation
 
-## Core Features
+## Delta Lake Superpowers
 
-### 1. Data Format Support
+### Native Delta Lake Support
+- **Schema Evolution**: Automatically handle schema changes with `evolve_schema`
+  ```python
+  delta_manager.evolve_schema(path, {
+      "column_name": {
+          "type": "new_type",
+          "nullable": True,
+          "comment": "Updated column description"
+      }
+  })
+  ```
+- **Version Control**: Track and access historical versions
+  ```python
+  # Get version history
+  history = delta_manager.get_history(path)
+  
+  # Time travel to specific version
+  df = delta_manager.time_travel(path, version=2)
+  # Or to specific timestamp
+  df = delta_manager.time_travel(path, timestamp="2024-01-01")
+  ```
+- **Time Travel**: Access data at any point in time
+  ```python
+  # Access data as of specific version
+  df = delta_manager.time_travel(path, version=5)
+  ```
 
-#### Delta Lake
-- Schema evolution tracking
-- ACID transactions
-- Time travel queries
-- Optimized storage
-- Metadata management
-- Version control
-- Data skipping
-- Z-ordering
+### Partition Intelligence
+- **Automatic Partition Detection**
+  ```python
+  # Get partition candidates
+  candidates = delta_manager._get_partition_candidates(path)
+  ```
+- **Z-Ordering Optimization**
+  ```python
+  # Optimize table with Z-ordering
+  delta_manager.optimize_table(path, z_order_by=["column1", "column2"])
+  ```
 
-#### Parquet
-- Columnar storage
-- Compression algorithms
-- Schema evolution
-- Predicate pushdown
-- Statistics collection
-- Partition pruning
-- Data skipping
-- Advanced encoding
+### Metadata and Optimization
+- **Detailed Metadata Inspection**
+  ```python
+  # Get comprehensive table metadata
+  metadata = delta_manager.get_metadata(path)
+  ```
+- **Optimization Hints**
+  ```python
+  # Get optimization recommendations
+  analysis = delta_manager.analyze_table(path)
+  ```
 
-#### CSV
-- Smart schema inference
-- Memory-efficient parsing
-- Encoding detection
-- Delimiter detection
-- Header handling
-- Type inference
-- Data validation
-- Streaming support
+## Deep Data Quality Intelligence
 
-### 2. Table Scanning
+### Quality Scoring
+- **Completeness Score**: Measure data completeness
+  ```python
+  analyzer = QualityAnalyzer()
+  results = analyzer.analyze_dataframe(df)
+  completeness = results["completeness"]
+  ```
+- **Consistency Score**: Evaluate data consistency
+  ```python
+  consistency = results["consistency"]
+  ```
+- **Overall Quality Score**: Combined quality metric
+  ```python
+  quality = results["overall_quality"]
+  ```
 
-#### Delta Scanner
-- Version history tracking
-- Schema evolution analysis
-- Metadata extraction
-- Statistics collection
-- Performance profiling
-- Data quality checks
-- Partition analysis
-- Optimization recommendations
+### Column Profiling
+- **Basic Statistics**
+  ```python
+  # Get column statistics
+  stats = analyzer._analyze_column(df["column"])
+  print(f"Min: {stats['min']}, Max: {stats['max']}")
+  print(f"Unique %: {stats['unique_percentage']}")
+  print(f"Null %: {stats['null_percentage']}")
+  ```
 
-#### Parquet Scanner
-- Compression analysis
-- Schema validation
-- Statistics collection
-- Performance profiling
-- Data quality checks
-- Partition analysis
-- Optimization recommendations
-- Advanced metrics
+### Anomaly Detection
+- **Outlier Detection**
+  ```python
+  # Get detected anomalies
+  anomalies = results["anomalies"]
+  ```
+- **Pattern Recognition**
+  ```python
+  # Get detected patterns
+  patterns = results["patterns"]
+  ```
 
-#### CSV Scanner
-- Encoding detection
-- Delimiter detection
-- Schema inference
-- Type detection
-- Data validation
-- Performance profiling
-- Memory optimization
-- Streaming support
+### Rule Validation
+- **Custom Rule Validation**
+  ```python
+  rules = [
+      {
+          "name": "age_check",
+          "condition": "age >= 0 and age <= 120",
+          "description": "Age must be between 0 and 120"
+      }
+  ]
+  validation_results = analyzer.validate_rules(df, rules)
+  ```
 
-### 3. Report Generation
+## Real-Time Monitoring
 
-#### PDF Reports
-- Customizable templates
-- Dynamic content
-- Advanced formatting
-- Chart generation
-- Table formatting
-- Watermarking
-- Digital signatures
-- Metadata management
+### Metrics Collection
+- **Table Health Metrics**
+  ```python
+  monitor = Monitor()
+  monitor.start_scan()
+  monitor.end_scan()
+  ```
+- **Ingestion Metrics**
+  ```python
+  monitor.start_validation()
+  monitor.end_validation()
+  ```
 
-#### Performance Reports
-- Query analysis
-- Resource usage
-- System metrics
-- I/O operations
-- Cache efficiency
-- Bottleneck detection
-- Optimization recommendations
-- Trend analysis
+### Grafana Integration
+- **Pre-configured Dashboards**
+  - Table health dashboard
+  - Data quality dashboard
+  - Performance metrics dashboard
 
-#### Table Scan Reports
-- Schema analysis
-- Statistics summary
-- Data quality metrics
-- Performance metrics
-- Optimization suggestions
-- Version history
-- Partition analysis
-- Custom metrics
+### Alerting
+- **Threshold-based Alerts**
+  ```yaml
+  # alertmanager.yml
+  routes:
+    - match:
+        severity: critical
+      receiver: email
+  ```
+- **Multiple Notification Channels**
+  - Email
+  - Slack
+  - Webhook
 
-### 4. Monitoring
+## Interactive Report Generation
 
-#### Metrics Collection
-- Data quality metrics
-- Performance metrics
-- Resource metrics
-- System metrics
-- Custom metrics
-- Historical trends
-- Real-time monitoring
-- Predictive analytics
+### Report Types
+- **HTML Reports**
+  ```python
+  generator = ReportGenerator()
+  html_report = generator.generate_report(data, format="html")
+  ```
+- **PDF Reports**
+  ```python
+  pdf_report = generator.generate_report(data, format="pdf")
+  ```
+- **JSON/CSV Export**
+  ```python
+  json_report = generator.generate_report(data, format="json")
+  ```
 
-#### Grafana Integration
-- Custom dashboards
-- Alert management
-- Notification channels
-- Data source integration
-- Panel customization
-- Template variables
-- Annotations
-- Dashboard sharing
+### Visualizations
+- **Summary Cards**
+  - Overall quality score
+  - Completeness metrics
+  - Consistency metrics
+- **Distribution Charts**
+  - Value distributions
+  - Pattern distributions
+- **Heatmaps**
+  - Anomaly distribution
+  - Partition distribution
 
-#### Prometheus Integration
-- Metric collection
-- Alert rules
-- Query language
-- Storage management
-- Data retention
-- High availability
-- Federation
-- Remote storage
+## Enterprise-Grade Security
 
-### 5. Integration Features
+### Authentication & Authorization
+- **JWT-based Authentication**
+  ```python
+  token = security.create_token(user_id, roles)
+  ```
+- **Role-Based Access Control**
+  ```python
+  @security.check_role(["admin"])
+  def admin_function():
+      pass
+  ```
 
-#### API Support
-- REST API
-- GraphQL API
-- WebSocket API
-- Batch API
-- Streaming API
-- Async API
-- Webhook API
-- Event API
+### Rate Limiting
+- **API Rate Limiting**
+  ```python
+  @security.rate_limit_middleware(limit=100, window=60)
+  def rate_limited_function():
+      pass
+  ```
 
-#### Cloud Integration
-- AWS S3
-- Azure Blob Storage
-- Google Cloud Storage
-- Snowflake
-- Databricks
-- Redshift
-- BigQuery
-- Synapse
+### Network Security
+- **SSL/TLS Encryption**
+  ```python
+  @security.ssl_middleware()
+  def secure_endpoint():
+      pass
+  ```
+- **IP Whitelisting**
+  ```python
+  @security.ip_whitelist_middleware()
+  def restricted_endpoint():
+      pass
+  ```
 
-#### Security Integration
-- LDAP
-- OAuth
-- SAML
-- Kerberos
-- SSL/TLS
-- Encryption
-- Key management
-- Audit logging
+## Containerized Simplicity
 
-## Advanced Features
+### Docker Deployment
+```bash
+# Start all services
+docker-compose up -d
 
-### 1. Data Quality Analysis
+# View logs
+docker-compose logs -f
+```
 
-#### Quality Metrics
-- Completeness
-- Accuracy
-- Consistency
-- Timeliness
-- Validity
-- Uniqueness
-- Integrity
-- Lineage
+### Service Configuration
+- **Nessi Service**
+  - Port: 8443
+  - Volumes: /app/data, /app/logs, /app/config
+- **Redis Service**
+  - Port: 6379
+  - Persistent storage
+- **Prometheus Service**
+  - Port: 9090
+  - Metrics collection
+- **Grafana Service**
+  - Port: 3000
+  - Dashboard visualization
+- **Alertmanager Service**
+  - Port: 9093
+  - Alert handling
+- **Nginx Service**
+  - Port: 443
+  - SSL termination
 
-#### Analysis Tools
-- Automated checks
-- Custom rules
-- Statistical analysis
-- Pattern detection
-- Anomaly detection
-- Trend analysis
-- Root cause analysis
-- Impact assessment
+## Data Format Versatility
 
-#### Reporting
-- Quality scorecards
-- Trend reports
-- Issue tracking
-- Recommendations
-- Action items
-- Compliance reports
-- Audit trails
-- Custom reports
+### Supported Formats
+- **Delta Lake**
+  ```python
+  df = spark.read.format("delta").load(path)
+  ```
+- **Parquet**
+  ```python
+  df = spark.read.parquet(path)
+  ```
+- **CSV**
+  ```python
+  df = spark.read.csv(path)
+  ```
 
-### 2. Performance Optimization
+### Schema Handling
+- **Auto Schema Inference**
+  ```python
+  df = spark.read.format("delta").load(path)
+  schema = df.schema
+  ```
+- **Nested Schema Support**
+  ```python
+  # Handle complex nested structures
+  df = spark.read.format("delta").load(path)
+  ```
 
-#### Query Optimization
-- Query planning
-- Execution optimization
-- Resource allocation
-- Cache management
-- Index optimization
-- Partition pruning
-- Data skipping
-- Parallel processing
+## Developer Focused
 
-#### Resource Optimization
-- Memory management
-- CPU utilization
-- Disk I/O
-- Network I/O
-- Connection pooling
-- Thread management
-- Process scheduling
-- Resource scaling
+### CLI Interface
+```bash
+# Run data quality analysis
+nessi analyze --format delta --path /data/table
 
-#### System Optimization
-- Configuration tuning
-- Hardware optimization
-- Network optimization
-- Storage optimization
-- Security optimization
-- Monitoring optimization
-- Backup optimization
-- Recovery optimization
+# Generate report
+nessi report --format html --output report.html
 
-### 3. Security Features
+# Monitor table
+nessi monitor --table my_table
+```
 
-#### Authentication
-- Basic authentication for metrics endpoints
-- SSL/TLS encryption for external communication
-- Rate limiting for API endpoints
+### Python API
+```python
+from nessi import DeltaManager, QualityAnalyzer, ReportGenerator
 
-#### Access Control
-- Basic role-based access for metrics
-- IP-based access control (optional)
-- Session management
+# Initialize components
+delta_manager = DeltaManager(spark)
+analyzer = QualityAnalyzer()
+generator = ReportGenerator()
 
-### 4. API Features
+# Use features
+df = delta_manager.time_travel(path, version=2)
+results = analyzer.analyze_dataframe(df)
+report = generator.generate_report(results)
+```
 
-#### REST API
-- CRUD operations
-- Batch operations
-- Search operations
-- Filter operations
-- Sort operations
-- Pagination
-- Versioning
-- Documentation
+### Integration Examples
+- **Airflow Integration**
+  ```python
+  from airflow import DAG
+  from nessi.operators import NessiOperator
+  
+  with DAG('nessi_pipeline') as dag:
+      analyze = NessiOperator(
+          task_id='analyze',
+          command='analyze',
+          params={'path': '/data/table'}
+      )
+  ```
+- **GitHub Actions**
+  ```yaml
+  - name: Run Nessi Analysis
+    uses: nessi/action@v1
+    with:
+      command: analyze
+      path: data/table
+  ```
 
-#### GraphQL API
-- Schema definition
-- Query operations
-- Mutation operations
-- Subscription operations
-- Type system
-- Resolvers
-- Directives
-- Fragments
+## Configuration
 
-#### WebSocket API
-- Real-time updates
-- Bi-directional communication
-- Event streaming
-- Message queuing
-- Connection management
-- Error handling
-- Heartbeat
-- Reconnection
+### Security Configuration
+```json
+{
+  "jwt_secret": "your-secret",
+  "token_expiry_hours": 24,
+  "rate_limit": {
+    "requests": 100,
+    "window": 60
+  },
+  "ip_whitelist": ["192.168.1.0/24"]
+}
+```
 
-### 5. Development Features
+### Monitoring Configuration
+```json
+{
+  "metrics_port": 9090,
+  "alert_log_path": "logs/alerts.log",
+  "grafana": {
+    "host": "localhost",
+    "port": 3000
+  },
+  "prometheus": {
+    "scrape_interval": "15s",
+    "evaluation_interval": "15s"
+  }
+}
+```
 
-#### Testing Support
-- Unit testing
-- Integration testing
-- Performance testing
-- Security testing
-- Data testing
-- API testing
-- UI testing
-- End-to-end testing
+## Best Practices
 
-#### Documentation
-- API documentation
-- User guides
-- Developer guides
-- Architecture docs
-- Deployment docs
-- Security docs
-- Troubleshooting docs
-- Release notes
+### Data Quality
+1. Run regular quality checks
+2. Set up automated alerts
+3. Monitor data completeness
+4. Track consistency metrics
 
-#### Development Tools
-- CLI tools
-- SDK tools
-- Debug tools
-- Profiling tools
-- Monitoring tools
-- Testing tools
-- Deployment tools
-- CI/CD tools
+### Security
+1. Use strong JWT secrets
+2. Implement proper role hierarchy
+3. Monitor rate limits
+4. Regular security audits
 
-## Next Steps
+### Performance
+1. Use appropriate partitioning
+2. Implement Z-ordering for frequent queries
+3. Regular table optimization
+4. Monitor query performance
 
-- [Installation Guide](installation.md)
-- [Quick Start Guide](quickstart.md)
-- [API Documentation](../API.md)
-- [Troubleshooting Guide](troubleshooting.md) 
+### Maintenance
+1. Regular backups
+2. Monitor disk usage
+3. Update dependencies
+4. Review logs regularly 

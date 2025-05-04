@@ -1,0 +1,31 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+rule_files:
+  - "rules/*.yml"
+
+scrape_configs:
+  - job_name: 'nessi'
+    static_configs:
+      - targets: ['nessi-security:8443']
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/ssl/ca.pem
+      cert_file: /etc/prometheus/ssl/cert.pem
+      key_file: /etc/prometheus/ssl/key.pem
+      insecure_skip_verify: false
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000'] 

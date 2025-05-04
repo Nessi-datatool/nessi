@@ -1,11 +1,36 @@
-nessi.dev
-Copyright (c) 2024 nessi-dev
+NESSI - Network and System Scanner for Infrastructure
+Copyright 2024 NESSI Team
 
-This product includes software developed by:
-- The Python Software Foundation (https://www.python.org/)
-- The Apache Software Foundation (https://www.apache.org/)
-- The Prometheus Authors (https://prometheus.io/)
-- Grafana Labs (https://grafana.com/)
+This product includes software developed by the NESSI Team (https://nessi.dev).
+
+This product includes software developed by the following third parties:
+
+- Apache Spark (https://spark.apache.org/)
+  Copyright 2014-2024 The Apache Software Foundation
+  Licensed under the Apache License, Version 2.0
+
+- Delta Lake (https://delta.io/)
+  Copyright 2019-2024 The Delta Lake Project Authors
+  Licensed under the Apache License, Version 2.0
+
+- PySpark (https://spark.apache.org/docs/latest/api/python/)
+  Copyright 2014-2024 The Apache Software Foundation
+  Licensed under the Apache License, Version 2.0
+
+- FastAPI (https://fastapi.tiangolo.com/)
+  Copyright 2018-2024 Sebastián Ramírez
+  Licensed under the MIT License
+
+- Prometheus (https://prometheus.io/)
+  Copyright 2012-2024 The Prometheus Authors
+  Licensed under the Apache License, Version 2.0
+
+- Grafana (https://grafana.com/)
+  Copyright 2014-2024 Grafana Labs
+  Licensed under the AGPL-3.0 License
+
+This product may include other third-party components with their own licenses.
+Please refer to the individual component documentation for more information.
 
 This product includes third-party components with separate copyright notices and license terms. Your use of these components is subject to the terms and conditions of the following licenses:
 

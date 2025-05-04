@@ -1,0 +1,50 @@
+groups:
+  - name: data_quality
+    rules:
+      - alert: HighNullPercentage
+        expr: column_null_percentage > 0.2
+        for: 5m
+        labels:
+          severity: critical
+          table_name: "{{ $labels.table_name }}"
+          column_name: "{{ $labels.column_name }}"
+        annotations:
+          description: "Column {{ $labels.column_name }} in table {{ $labels.table_name }} has more than 20% null values"
+
+      - alert: LowQualityScore
+        expr: table_quality_score < 0.6
+        for: 5m
+        labels:
+          severity: critical
+          table_name: "{{ $labels.table_name }}"
+        annotations:
+          description: "Table {{ $labels.table_name }} has a quality score below 60%"
+
+      - alert: HighProcessingTime
+        expr: rate(processing_time_sum[5m]) / rate(processing_time_count[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          table_name: "{{ $labels.table_name }}"
+          operation: "{{ $labels.operation }}"
+        annotations:
+          description: "Operation {{ $labels.operation }} on table {{ $labels.table_name }} is taking more than 10 seconds on average"
+
+      - alert: DataDriftDetected
+        expr: data_drift_score > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          table_name: "{{ $labels.table_name }}"
+          column_name: "{{ $labels.column_name }}"
+        annotations:
+          description: "Significant data drift detected in column {{ $labels.column_name }} of table {{ $labels.table_name }}"
+
+      - alert: SchemaChangeDetected
+        expr: schema_change_count > 0
+        for: 1m
+        labels:
+          severity: warning
+          table_name: "{{ $labels.table_name }}"
+        annotations:
+          description: "Schema changes detected in table {{ $labels.table_name }}" 

@@ -1,67 +1,40 @@
-"""
-NESSI - FREE FOR PERSONAL USE LICENSE
-
-Copyright (c) 2025 nessi.dev. All rights reserved.
-
-nessi.dev is free for personal use.
-
-A paid license is required for enterprise or consulting use.
-
-This version is free. Future versions of nessi.dev will require a license for all users.
-
-1. PERSONAL USE LICENSE
-   a) The Software is provided free of charge for personal use
-   b) Personal use includes:
-      - Individual data analysis and processing
-      - Educational purposes
-      - Non-commercial research
-   c) Enterprise or consulting use requires a paid license
-
-2. RESTRICTIONS
-   You shall not:
-   a) Copy, modify, adapt, translate, reverse engineer, decompile, or disassemble the Software
-   b) Create derivative works based on the Software
-   c) Rent, lease, loan, sell, sublicense, distribute, transmit, or otherwise transfer the Software
-   d) Remove or alter any proprietary notices or labels on the Software
-   e) Use the Software for enterprise or consulting purposes without a valid paid license
-
-3. OWNERSHIP
-   The Software is licensed, not sold. nessi.dev retains all right, title, and interest in and to the Software, including all intellectual property rights.
-
-4. DISCLAIMER OF WARRANTY
-   THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
-
-5. LIMITATION OF LIABILITY
-   IN NO EVENT SHALL NESSI BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
-
+"""Models for the scanner module."""
 from dataclasses import dataclass
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Optional
+
+from pyspark.sql.types import StructType
+
 
 @dataclass
-class ColumnStats:
-    """Statistics for a column"""
-    null_count: int
-    distinct_count: int
-    min_value: Any
-    max_value: Any
-    avg_value: Optional[float] = None
-    std_value: Optional[float] = None
+class SchemaValidationResult:
+    """Result of schema validation."""
+    is_valid: bool
+    missing_fields: List[str]
+    extra_fields: List[str]
+    type_mismatches: Dict[str, str]
+    schema: StructType
+
 
 @dataclass
-class ColumnMetadata:
-    """Metadata for a column"""
-    name: str
-    type: str
-    stats: Optional[ColumnStats] = None
-
-@dataclass
-class TableScanResult:
-    """Result of scanning a table"""
-    format: str
-    columns: List[ColumnMetadata]
+class ScanResult:
+    """Result of scanning a table."""
+    table_name: str
     row_count: int
-    size: int
-    compression: Optional[str] = None
-    partition_columns: List[str] = None
-    quality_checks: Dict[str, Any] = None
+    column_count: int
+    schema: StructType
+    column_stats: Dict[str, Dict[str, float]]
+    data_quality_score: Optional[float] = None
+    anomalies: Optional[Dict[str, List[int]]] = None
+    schema_validation: Optional[SchemaValidationResult] = None
+
+
+@dataclass
+class QualityCheckResult:
+    """Result of a quality check."""
+    check_name: str
+    passed: bool
+    score: float
+    details: Dict[str, any]
+    column: Optional[str] = None
+    threshold: Optional[float] = None
+    actual_value: Optional[float] = None 

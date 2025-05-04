@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        .summary, .metrics, .visualizations {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .metric {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 3px;
+        }
+        .key {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .value {
+            color: #3498db;
+        }
+        .visualization {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .timestamp {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .status-passed {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .status-failed {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .status-warning {
+            background-color: #f39c12;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>{{ title }}</h1>
+    <p class="timestamp">Generated on {{ now().strftime('%Y-%m-%d %H:%M:%S') }}</p>
+    
+    {% if status %}
+    <div class="status status-{{ status|lower }}">
+        Overall Status: {{ status }}
+    </div>
+    {% endif %}
+    
+    {% if summary %}
+    <div class="summary">
+        <h2>Summary</h2>
+        {% for key, value in summary.items() %}
+        <div class="metric">
+            <span class="key">{{ key }}</span>: <span class="value">{{ value }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% if metrics %}
+    <div class="metrics">
+        <h2>Metrics</h2>
+        {% for category, category_metrics in metrics.items() %}
+        <h3>{{ category }}</h3>
+        {% for key, value in category_metrics.items() %}
+        <div class="metric">
+            <span class="key">{{ key }}</span>: <span class="value">{{ value }}</span>
+        </div>
+        {% endfor %}
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% if quality_checks %}
+    <div class="quality-checks">
+        <h2>Quality Checks</h2>
+        {% for check in quality_checks %}
+        <div class="metric">
+            <span class="key">{{ check.column }}</span> - 
+            <span class="key">{{ check.rule }}</span>:
+            <span class="status status-{{ 'passed' if check.passed else 'failed' }}">
+                {{ 'PASSED' if check.passed else 'FAILED' }}
+            </span>
+            {% if check.details %}
+            <div class="details">
+                {% for key, value in check.details.items() %}
+                <div class="detail">
+                    <span class="key">{{ key }}</span>: <span class="value">{{ value }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% if performance %}
+    <div class="performance">
+        <h2>Performance Metrics</h2>
+        {% for key, value in performance.items() %}
+        <div class="metric">
+            <span class="key">{{ key }}</span>: <span class="value">{{ value }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% if visualizations %}
+    <div class="visualizations">
+        <h2>Visualizations</h2>
+        {% for name, viz in visualizations.items() %}
+        <div class="visualization">
+            <h3>{{ name }}</h3>
+            {{ viz|safe }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% if recommendations %}
+    <div class="recommendations">
+        <h2>Recommendations</h2>
+        <ul>
+            {% for rec in recommendations %}
+            <li>{{ rec }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</body>
+</html> 
