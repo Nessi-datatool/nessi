@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 
 	"github.com/gin-gonic/gin"
-	"github.com/meisi/nessi-dev/internal/quality/profile"
-	"github.com/meisi/nessi-dev/pkg"
+	"github.com/nessi-dev/nessi-dev/internal/quality/profile"
+	"github.com/nessi-dev/nessi-dev/pkg"
 )
 
 // TableHandler handles Delta table operations

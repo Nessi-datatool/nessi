@@ -41,7 +41,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/meisi/nessi-dev/pkg"
+	"github.com/nessi-dev/nessi-dev/pkg"
 )
 
 // Profile represents a complete data profile

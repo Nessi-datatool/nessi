@@ -14,9 +14,10 @@ import (
 	"github.com/apache/arrow/go/v12/arrow"
 	"github.com/apache/arrow/go/v12/arrow/array"
 	"github.com/apache/arrow/go/v12/arrow/memory"
-	"github.com/apache/arrow/go/v12/arrow/pqarrow"
+	"github.com/apache/arrow/go/v12/parquet"
+	"github.com/apache/arrow/go/v12/parquet/file"
+	"github.com/apache/arrow/go/v12/parquet/pqarrow"
 	"github.com/google/uuid"
-	"github.com/parquet-go/parquet"
 )
 
 // MergeCondition represents a condition for the merge operation

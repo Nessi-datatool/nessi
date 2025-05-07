@@ -51,7 +51,7 @@ Nessi.dev is a powerful data quality and Delta Lake management tool that helps o
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/meisi/nessi-dev.git
+   git clone https://github.com/nessi-dev/nessi-dev.git
    cd nessi-dev
    ```
 

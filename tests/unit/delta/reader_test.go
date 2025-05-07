@@ -29,7 +29,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/meisi/nessi-dev/pkg"
+	"github.com/nessi-dev/nessi-dev/pkg"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

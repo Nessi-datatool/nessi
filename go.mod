@@ -1,9 +1,9 @@
-module github.com/meisi/nessi-dev
+module github.com/nessi-dev/nessi-dev
 
 go 1.21
 
 require (
-	github.com/apache/arrow/go/v14 v14.0.2
+	github.com/apache/arrow/go/v12 v12.0.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/prometheus/client_golang v1.18.0

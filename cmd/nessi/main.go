@@ -35,14 +35,14 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/meisi/nessi-dev/internal/config"
-	"github.com/meisi/nessi-dev/internal/delta"
-	"github.com/meisi/nessi-dev/internal/monitor"
-	"github.com/meisi/nessi-dev/internal/quality"
-	"github.com/meisi/nessi-dev/internal/report"
-	"github.com/meisi/nessi-dev/internal/security"
-	"github.com/meisi/nessi-dev/internal/server"
-	"github.com/meisi/nessi-dev/pkg"
+	"github.com/nessi-dev/nessi-dev/internal/config"
+	"github.com/nessi-dev/nessi-dev/internal/delta"
+	"github.com/nessi-dev/nessi-dev/internal/monitor"
+	"github.com/nessi-dev/nessi-dev/internal/quality"
+	"github.com/nessi-dev/nessi-dev/internal/report"
+	"github.com/nessi-dev/nessi-dev/internal/security"
+	"github.com/nessi-dev/nessi-dev/internal/server"
+	"github.com/nessi-dev/nessi-dev/pkg"
 )
 
 var (
