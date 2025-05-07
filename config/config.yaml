@@ -1,0 +1,208 @@
+# Nessi.dev Configuration
+
+# Server Configuration
+server:
+  host: "0.0.0.0"
+  port: 8080
+  read_timeout: 30s
+  write_timeout: 30s
+  idle_timeout: 120s
+  max_connections: 1000
+  cors:
+    allowed_origins: ["*"]
+    allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    allowed_headers: ["Content-Type", "Authorization"]
+    exposed_headers: ["Content-Length"]
+    max_age: 86400
+
+# Security Configuration
+security:
+  jwt:
+    secret: "your-secret-key"  # Change this in production
+    expiration: 24h
+  tls:
+    enabled: false
+    cert_file: "certs/server.crt"
+    key_file: "certs/server.key"
+    min_version: "1.2"
+  rate_limit:
+    requests_per_minute: 60
+    burst: 10
+  ip_allowlist:
+    enabled: true
+    ips:
+      - "127.0.0.1"
+      - "::1"
+      - "192.168.1.0/24"
+  roles:
+    admin:
+      permissions:
+        - "table:read"
+        - "table:write"
+        - "table:delete"
+        - "extension:install"
+        - "extension:uninstall"
+        - "report:generate"
+        - "report:delete"
+    user:
+      permissions:
+        - "table:read"
+        - "table:write"
+        - "report:generate"
+    viewer:
+      permissions:
+        - "table:read"
+        - "report:generate"
+  default_role: "viewer"
+  headers:
+    hsts:
+      enabled: true
+      max_age: 31536000
+      include_subdomains: true
+      preload: true
+    content_security_policy:
+      enabled: true
+      policy: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';"
+    x_content_type_options: "nosniff"
+    x_frame_options: "DENY"
+    x_xss_protection: "1; mode=block"
+
+# Delta Lake Configuration
+delta:
+  base_path: "data/delta"
+  table_path: "data/delta/tables"
+  log_path: "data/delta/logs"
+  checkpoint_interval: 10
+  min_reader_version: 1
+  min_writer_version: 2
+  partition_columns: []
+  properties:
+    delta.enableChangeDataFeed: "true"
+    delta.columnMapping.mode: "name"
+    delta.minReaderVersion: "1"
+    delta.minWriterVersion: "2"
+
+# Data Quality Configuration
+quality:
+  rules:
+    - name: "completeness"
+      description: "Check for null values"
+      type: "completeness"
+      column: "*"
+      threshold: 0.95
+      severity: "warning"
+    - name: "uniqueness"
+      description: "Check for duplicate values"
+      type: "uniqueness"
+      column: "id"
+      threshold: 1.0
+      severity: "error"
+    - name: "consistency"
+      description: "Check data consistency"
+      type: "consistency"
+      column: "status"
+      condition: "status IN ('active', 'inactive', 'pending')"
+      threshold: 1.0
+      severity: "error"
+  reports:
+    output_dir: "data/quality/reports"
+    retention_days: 30
+    formats:
+      - "pdf"
+      - "csv"
+      - "html"
+      - "json"
+
+# Monitoring Configuration
+monitoring:
+  prometheus:
+    enabled: true
+    push_gateway: "http://localhost:9091"
+    job_name: "nessi"
+    interval: 15s
+  metrics:
+    - name: "table_operations_total"
+      type: "counter"
+      description: "Total number of table operations"
+      labels: ["operation", "table"]
+    - name: "table_size_bytes"
+      type: "gauge"
+      description: "Size of tables in bytes"
+      labels: ["table"]
+    - name: "operation_duration_seconds"
+      type: "histogram"
+      description: "Duration of operations in seconds"
+      labels: ["operation"]
+  alerts:
+    - name: "high_error_rate"
+      description: "High error rate in operations"
+      severity: "critical"
+      condition: "rate(table_operations_total{status='error'}[5m]) > 0.1"
+      threshold: 0.1
+    - name: "large_table_size"
+      description: "Table size exceeds threshold"
+      severity: "warning"
+      condition: "table_size_bytes > 1e9"
+      threshold: 1e9
+
+# Report Generation Configuration
+reports:
+  output_dir: "data/reports"
+  templates:
+    - id: "table_summary"
+      name: "Table Summary Report"
+      description: "Summary of table statistics and quality metrics"
+      format: "pdf"
+      template: "templates/table_summary.html"
+      parameters:
+        - "table_name"
+        - "start_date"
+        - "end_date"
+    - id: "quality_report"
+      name: "Data Quality Report"
+      description: "Detailed data quality metrics and issues"
+      format: "html"
+      template: "templates/quality_report.html"
+      parameters:
+        - "table_name"
+        - "rule_name"
+  retention:
+    days: 90
+    max_reports: 1000
+
+# Logging Configuration
+logging:
+  level: "info"
+  format: "json"
+  output: "stdout"
+  file:
+    enabled: false
+    path: "logs/nessi.log"
+    max_size: 100
+    max_backups: 3
+    max_age: 28
+    compress: true
+  fields:
+    service: "nessi"
+    environment: "development"
+
+# Development Configuration
+development:
+  hot_reload: true
+  debug: true
+  test_coverage: true
+  lint:
+    go:
+      enabled: true
+      tools:
+        - "golangci-lint"
+    python:
+      enabled: true
+      tools:
+        - "pylint"
+        - "black"
+        - "isort"
+  docker:
+    enabled: true
+    registry: "localhost:5000"
+    tag: "latest" 

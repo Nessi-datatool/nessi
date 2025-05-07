@@ -1,0 +1,156 @@
+# Create a Docker Compose file for Nessi.dev with these services:
+# 1. nessi-api: The main Go service
+#    - Build from docker/go/Dockerfile
+#    - Environment variables for configuration
+#    - Ports: 8080:8080
+#    - Volumes for data and config
+#    - Healthcheck configuration
+#    - Restart policy: unless-stopped
+# 2. prometheus: Monitoring system
+#    - Image: prom/prometheus:latest
+#    - Configuration to scrape nessi metrics
+#    - Ports: 9090:9090
+#    - Volumes for prometheus data
+# 3. grafana: Dashboard visualization
+#    - Image: grafana/grafana:latest
+#    - Depends on prometheus
+#    - Ports: 3000:3000
+#    - Pre-configured datasource for prometheus
+#    - Volumes for dashboard storage
+# 4. nessi-python (optional): Python extensions container
+#    - Build from docker/python/Dockerfile
+#    - Environment variables to connect to nessi-api
+#    - Shared volume with nessi-api for data exchange
+#    - Healthcheck configuration
+# Add appropriate networks, volumes, and dependencies
+# Include helpful comments about configuration options
+# Set up logging configuration
+
+version: '3.8'
+
+services:
+  nessi-api:
+    build:
+      context: ..
+      dockerfile: docker/go/Dockerfile
+    image: nessi-dev/api:latest
+    container_name: nessi-api
+    environment:
+      - NESSI_CONFIG_PATH=/config
+      - NESSI_DATA_PATH=/data
+      - NESSI_EXTENSIONS_PATH=/config/extensions
+      - NESSI_LOG_LEVEL=info
+      - NESSI_METRICS_ENABLED=true
+      - NESSI_METRICS_PORT=9091
+    ports:
+      - "8080:8080"  # API port
+      - "9091:9091"  # Metrics port
+    volumes:
+      - nessi-data:/data
+      - nessi-config:/config
+    networks:
+      - nessi-net
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: nessi-prometheus
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - "9090:9090"
+    networks:
+      - nessi-net
+    restart: unless-stopped
+    depends_on:
+      - nessi-api
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: nessi-grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    ports:
+      - "3000:3000"
+    networks:
+      - nessi-net
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  nessi-python:
+    build:
+      context: ..
+      dockerfile: docker/python/Dockerfile
+    image: nessi-dev/python:latest
+    container_name: nessi-python
+    environment:
+      - NESSI_API_URL=http://nessi-api:8080
+      - NESSI_DATA_PATH=/data
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - nessi-data:/data
+    networks:
+      - nessi-net
+    depends_on:
+      - nessi-api
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://nessi-api:8080/health')"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  nessi-net:
+    driver: bridge
+
+volumes:
+  nessi-data:
+    driver: local
+  nessi-config:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local

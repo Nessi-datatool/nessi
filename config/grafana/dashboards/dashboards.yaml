@@ -1,0 +1,13 @@
+apiVersion: 1
+
+providers:
+  - name: 'Nessi Dashboards'
+    orgId: 1
+    folder: 'Nessi'
+    type: file
+    disableDeletion: false
+    editable: true
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: true 
