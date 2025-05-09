@@ -1,11 +1,13 @@
 package pkg
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -53,6 +55,7 @@ type Checkpoint struct {
 type Reader struct {
 	table *DeltaTable
 	files []*os.File
+	closed bool
 }
 
 // NewReader creates a new Delta table reader
@@ -90,14 +93,14 @@ func (r *Reader) initialize() error {
 		return fmt.Errorf("failed to read log directory: %w", err)
 	}
 
+	// Read latest log file first to catch any corrupted logs
+	if err := r.readLatestLog(); err != nil {
+		return fmt.Errorf("failed to read latest log: %w", err)
+	}
+
 	// Read latest checkpoint
 	if err := r.readLatestCheckpoint(); err != nil {
 		return fmt.Errorf("failed to read checkpoint: %w", err)
-	}
-
-	// Read latest log file
-	if err := r.readLatestLog(); err != nil {
-		return fmt.Errorf("failed to read latest log: %w", err)
 	}
 
 	// Update table metadata
@@ -118,12 +121,15 @@ func (r *Reader) initialize() error {
 func (r *Reader) readLogDirectory(logDir string) error {
 	entries, err := os.ReadDir(logDir)
 	if err != nil {
-		return fmt.Errorf("failed to read log directory: %w", err)
+		return fmt.Errorf("invalid Delta table: %w", err)
 	}
 
 	for _, entry := range entries {
-		if !entry.IsDir() && filepath.Ext(entry.Name()) == ".json" {
-			r.table.LogFiles = append(r.table.LogFiles, entry.Name())
+		if !entry.IsDir() {
+			// Collect both JSON log files and checkpoint parquet files
+			if filepath.Ext(entry.Name()) == ".json" || strings.HasSuffix(entry.Name(), ".checkpoint.parquet") {
+				r.table.LogFiles = append(r.table.LogFiles, entry.Name())
+			}
 		}
 	}
 
@@ -135,7 +141,7 @@ func (r *Reader) readLatestCheckpoint() error {
 	// Find latest checkpoint file
 	var checkpointFile string
 	for _, file := range r.table.LogFiles {
-		if filepath.Base(file) == "00000000000000000000.checkpoint.parquet" {
+		if strings.HasSuffix(filepath.Base(file), ".checkpoint.parquet") {
 			checkpointFile = file
 			break
 		}
@@ -186,7 +192,7 @@ func (r *Reader) readLatestLog() error {
 	// Parse log data
 	var logData map[string]interface{}
 	if err := json.NewDecoder(file).Decode(&logData); err != nil {
-		return fmt.Errorf("failed to parse log file: %w", err)
+		return fmt.Errorf("invalid log entry: %w", err)
 	}
 
 	// Update table metadata from log
@@ -261,6 +267,16 @@ func (r *Reader) GetStats() *TableStats {
 
 // GetVersion returns the current table version
 func (r *Reader) GetVersion() int64 {
+	if r.closed {
+		// Instead of panicking, we'll return 0, but in a real implementation
+		// you might want to return an error or properly handle this case
+		return 0
+	}
+
+	if r.table == nil {
+		return 0
+	}
+
 	return r.table.Version
 }
 
@@ -269,8 +285,20 @@ func (r *Reader) GetLastModified() time.Time {
 	return r.table.LastModified
 }
 
+// GetTablePath returns the path of the table being read.
+func (r *Reader) GetTablePath() string {
+	// Ensure table is not nil before accessing Path, though in normal operation it shouldn't be.
+	if r.table != nil {
+		return r.table.Path
+	}
+	return ""
+}
+
 // ReadPartition reads data from a specific partition
 func (r *Reader) ReadPartition(partition string) (io.ReadCloser, error) {
+	if r.closed {
+		return nil, fmt.Errorf("reader closed")
+	}
 	// Find files in partition
 	var partitionFiles []string
 	for _, filePath := range r.table.Checkpoint.FilePaths {
@@ -280,7 +308,7 @@ func (r *Reader) ReadPartition(partition string) (io.ReadCloser, error) {
 	}
 
 	if len(partitionFiles) == 0 {
-		return nil, fmt.Errorf("no files found in partition %s", partition)
+		return nil, fmt.Errorf("partition not found: %s", partition)
 	}
 
 	// Create multi-reader for partition files
@@ -303,6 +331,9 @@ func (r *Reader) ReadPartition(partition string) (io.ReadCloser, error) {
 
 // ReadAll reads all data from the table
 func (r *Reader) ReadAll() (io.ReadCloser, error) {
+	if r.closed {
+		return nil, fmt.Errorf("reader closed")
+	}
 	// Create multi-reader for all files
 	readers := make([]io.Reader, 0, len(r.table.Checkpoint.FilePaths))
 	for _, filePath := range r.table.Checkpoint.FilePaths {
@@ -339,8 +370,45 @@ func (r *Reader) GetPartitionStats(partition string) (int64, error) {
 	return count, nil
 }
 
+// ReadAllParsed reads all data from the table and parses it into a structured format
+func (r *Reader) ReadAllParsed() ([]map[string]interface{}, error) {
+	rawData, err := r.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read data: %w", err)
+	}
+	defer rawData.Close()
+
+	// Parse the data into structured records
+	records := make([]map[string]interface{}, 0)
+	scanner := bufio.NewScanner(rawData)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+
+		// Parse the line as JSON
+		var record map[string]interface{}
+		if err := json.Unmarshal([]byte(line), &record); err != nil {
+			return nil, fmt.Errorf("failed to parse line as JSON: %w", err)
+		}
+
+		records = append(records, record)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("error reading data: %w", err)
+	}
+
+	return records, nil
+}
+
 // Close closes the reader and releases resources
 func (r *Reader) Close() error {
+	if r.closed {
+		return nil // Already closed
+	}
+
 	var lastErr error
 	for _, file := range r.files {
 		if err := file.Close(); err != nil {
@@ -348,5 +416,6 @@ func (r *Reader) Close() error {
 		}
 	}
 	r.files = nil
+	r.closed = true
 	return lastErr
-} 
+}

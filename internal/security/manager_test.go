@@ -5,6 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 	"time"
+	
+	"golang.org/x/time/rate"
 )
 
 func TestSecurityManager(t *testing.T) {
@@ -64,10 +66,10 @@ func TestSecurityManager(t *testing.T) {
 
 	// Test rate limiting
 	t.Run("Rate Limiting", func(t *testing.T) {
-		// Set rate limit
-		manager.SetRateLimit("test-ip", 2, 1)
+		// Set rate limit to allow exactly 3 requests (burst size of 3)
+		manager.SetRateLimit("test-ip", rate.Limit(0.1), 3)
 
-		// Test rate limit
+		// Test rate limit - these should be allowed because of the burst size
 		if !manager.AllowRequest("test-ip") {
 			t.Error("First request should be allowed")
 		}
@@ -76,8 +78,13 @@ func TestSecurityManager(t *testing.T) {
 			t.Error("Second request should be allowed")
 		}
 
+		if !manager.AllowRequest("test-ip") {
+			t.Error("Third request should be allowed")
+		}
+
+		// Fourth request should be limited as we've used our burst limit
 		if manager.AllowRequest("test-ip") {
-			t.Error("Third request should be rate limited")
+			t.Error("Fourth request should be rate limited")
 		}
 	})
 
@@ -115,16 +122,16 @@ func TestSecurityManager(t *testing.T) {
 		// Create test request
 		req := httptest.NewRequest("GET", "/", nil)
 		req.RemoteAddr = "192.168.1.1:12345"
-
-		// Test without token
+		
+		// Ensure the IP is allowed for this test
+		manager.AddToAllowlist("192.168.1.1")
+		
+		// Test without token - should fail with Unauthorized
 		w := httptest.NewRecorder()
 		manager.Middleware(handler).ServeHTTP(w, req)
 		if w.Code != http.StatusUnauthorized {
-			t.Error("Should return unauthorized without token")
+			t.Errorf("Should return unauthorized without token, got %d", w.Code)
 		}
-
-		// Add IP to allowlist
-		manager.AddToAllowlist("192.168.1.1")
 
 		// Generate token
 		user := &User{

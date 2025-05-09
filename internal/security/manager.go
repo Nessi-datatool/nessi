@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net"
+	"net/http"
 	"sync"
 	"time"
 
@@ -26,36 +27,49 @@ type User struct {
 	APIKey   string   `json:"api_key,omitempty"`
 }
 
+// Claims represents the JWT claims for a user
+type Claims struct {
+	ID       string   `json:"id"`
+	Username string   `json:"username"`
+	Roles    []string `json:"roles"`
+	jwt.RegisteredClaims
+}
+
 // SecurityManager handles authentication, authorization, and rate limiting
 type SecurityManager struct {
 	// JWT configuration
-	jwtSecret     []byte
+	jwtSecret     string
 	jwtExpiration time.Duration
-
-	// Rate limiting
-	rateLimiters map[string]*rate.Limiter
-	rateMu       sync.RWMutex
 
 	// Role definitions
 	roles map[string]*Role
 	roleMu sync.RWMutex
 
+	// IP allowlist
+	allowlist         map[string]bool
+	allowlistEnabled  bool
+	allowMu           sync.RWMutex
+
+	// Rate limiting
+	rateLimiters map[string]*rate.Limiter
+	rateMu       sync.RWMutex
+
 	// TLS configuration
 	tlsConfig *tls.Config
 
-	// IP allowlist
-	allowlist map[string]bool
-	allowMu   sync.RWMutex
+	// Applied configuration
+	config *SecurityConfig
 }
 
-// NewSecurityManager creates a new security manager
-func NewSecurityManager(jwtSecret string, jwtExpiration time.Duration) *SecurityManager {
+// NewSecurityManager creates a new SecurityManager instance
+func NewSecurityManager(secret string, expiration time.Duration) *SecurityManager {
 	return &SecurityManager{
-		jwtSecret:     []byte(jwtSecret),
-		jwtExpiration: jwtExpiration,
-		rateLimiters:  make(map[string]*rate.Limiter),
-		roles:         make(map[string]*Role),
-		allowlist:     make(map[string]bool),
+		jwtSecret:        secret,
+		jwtExpiration:    expiration,
+		roles:            make(map[string]*Role),
+		allowlist:        make(map[string]bool),
+		allowlistEnabled: false, // Start with allowlist disabled
+		rateLimiters:     make(map[string]*rate.Limiter),
 	}
 }
 
@@ -109,51 +123,56 @@ func (m *SecurityManager) HasPermission(user *User, permission string) bool {
 
 // GenerateToken generates a JWT token for a user
 func (m *SecurityManager) GenerateToken(user *User) (string, error) {
-	claims := jwt.MapClaims{
-		"sub":      user.ID,
-		"username": user.Username,
-		"roles":    user.Roles,
-		"exp":      time.Now().Add(m.jwtExpiration).Unix(),
+	claims := &Claims{
+		ID:       user.ID,
+		Username: user.Username,
+		Roles:    user.Roles,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.jwtExpiration)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(m.jwtSecret)
+	tokenString, err := token.SignedString([]byte(m.jwtSecret))
+	return tokenString, err
 }
 
 // ValidateToken validates a JWT token and returns the user
 func (m *SecurityManager) ValidateToken(tokenString string) (*User, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	claims := &Claims{}
+
+	// Parse the token
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		// Validate the signing method
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return m.jwtSecret, nil
+		return []byte(m.jwtSecret), nil
 	})
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse token: %w", err)
 	}
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		roles, _ := claims["roles"].([]interface{})
-		userRoles := make([]string, len(roles))
-		for i, r := range roles {
-			userRoles[i] = r.(string)
-		}
-
+	if token.Valid {
 		return &User{
-			ID:       claims["sub"].(string),
-			Username: claims["username"].(string),
-			Roles:    userRoles,
+			ID:       claims.ID,
+			Username: claims.Username,
+			Roles:    claims.Roles,
 		}, nil
 	}
 
 	return nil, fmt.Errorf("invalid token")
 }
 
-// SetRateLimit sets a rate limit for a specific user or IP
+// SetRateLimit sets the rate limit for a key
+// r is requests per second as rate.Limit, b is burst size
 func (m *SecurityManager) SetRateLimit(key string, r rate.Limit, b int) {
 	m.rateMu.Lock()
 	defer m.rateMu.Unlock()
+	
+	// Create a new limiter with the specified rate and burst
 	m.rateLimiters[key] = rate.NewLimiter(r, b)
 }
 
@@ -174,6 +193,8 @@ func (m *SecurityManager) AllowRequest(key string) bool {
 func (m *SecurityManager) AddToAllowlist(ip string) {
 	m.allowMu.Lock()
 	defer m.allowMu.Unlock()
+	// Enable allowlist mode when first IP is added
+	m.allowlistEnabled = true
 	m.allowlist[ip] = true
 }
 
@@ -182,13 +203,26 @@ func (m *SecurityManager) RemoveFromAllowlist(ip string) {
 	m.allowMu.Lock()
 	defer m.allowMu.Unlock()
 	delete(m.allowlist, ip)
+	
+	// Check if this was the last IP - if we still want to enforce the allowlist
+	// keep allowlistEnabled true even if empty
 }
 
-// IsIPAllowed checks if an IP is in the allowlist
+// IsIPAllowed checks if an IP is allowed
 func (m *SecurityManager) IsIPAllowed(ip string) bool {
 	m.allowMu.RLock()
 	defer m.allowMu.RUnlock()
-	return m.allowlist[ip]
+	
+	// If allowlist is not enabled, allow all IPs
+	if !m.allowlistEnabled {
+		return true
+	}
+	
+	// Check if the IP is explicitly allowed in the allowlist
+	allowed, exists := m.allowlist[ip]
+	// If the IP exists in the map and is set to true, it's allowed
+	// If it doesn't exist in the map, it's not allowed when allowlist is enabled
+	return exists && allowed
 }
 
 // GetTLSConfig returns the TLS configuration
@@ -234,4 +268,4 @@ func (m *SecurityManager) Middleware(next http.Handler) http.Handler {
 		ctx := context.WithValue(r.Context(), "user", user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
-} 
+}

@@ -7,16 +7,16 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/apache/arrow/go/v12/arrow"
-	"github.com/apache/arrow/go/v12/arrow/array"
-	"github.com/apache/arrow/go/v12/arrow/memory"
-	"github.com/apache/arrow/go/v12/parquet"
-	"github.com/apache/arrow/go/v12/parquet/file"
-	"github.com/apache/arrow/go/v12/parquet/pqarrow"
+	"github.com/apache/arrow/go/v15/arrow"
+	"github.com/apache/arrow/go/v15/arrow/array"
+	"github.com/apache/arrow/go/v15/arrow/memory"
+	"github.com/apache/arrow/go/v15/parquet"
+	"github.com/apache/arrow/go/v15/parquet/pqarrow"
 	"github.com/google/uuid"
 )
 
@@ -55,6 +55,8 @@ type MergeStats struct {
 	DurationSeconds  float64
 }
 
+
+
 // Merge performs a merge operation on the Delta table
 func (c *DeltaConnector) Merge(ctx context.Context, options MergeOptions) (*MergeStats, error) {
 	stats := &MergeStats{}
@@ -92,18 +94,49 @@ func (c *DeltaConnector) Merge(ctx context.Context, options MergeOptions) (*Merg
 
 // getSourceSchema gets the schema of the source table
 func (c *DeltaConnector) getSourceSchema(sourceTable string) (*arrow.Schema, error) {
-	// TODO: Implement source schema retrieval
-	return nil, fmt.Errorf("not implemented")
+	// Create a new connector for the source table
+	sourceConnector := &DeltaConnector{
+		TablePath: sourceTable,
+		Config:    c.Config,
+	}
+
+	// Initialize the source connector
+	if err := sourceConnector.Initialize(); err != nil {
+		return nil, fmt.Errorf("failed to initialize source connector: %w", err)
+	}
+
+	// Get the schema from the source table
+	schema := sourceConnector.GetSchema()
+	if schema == nil {
+		return nil, fmt.Errorf("failed to get source schema")
+	}
+
+	return schema, nil
 }
 
 // validateMergeSchemas validates the source and target schemas for a merge
 func (c *DeltaConnector) validateMergeSchemas(source, target *arrow.Schema) error {
+	// Safety check for nil schemas
+	if source == nil {
+		return fmt.Errorf("source schema is nil")
+	}
+	if target == nil {
+		return fmt.Errorf("target schema is nil")
+	}
+
+	// Safety check for empty fields
+	if len(source.Fields()) == 0 {
+		return fmt.Errorf("source schema has no fields")
+	}
+	if len(target.Fields()) == 0 {
+		return fmt.Errorf("target schema has no fields")
+	}
+
 	// Check if all source columns exist in target
-	for i := 0; i < source.NumFields(); i++ {
-		sourceField := source.Field(i)
+	for _, sourceField := range source.Fields() {
 		found := false
-		for j := 0; j < target.NumFields(); j++ {
-			if target.Field(j).Name == sourceField.Name {
+		for _, targetField := range target.Fields() {
+			if targetField.Name == sourceField.Name {
 				found = true
 				break
 			}
@@ -113,12 +146,22 @@ func (c *DeltaConnector) validateMergeSchemas(source, target *arrow.Schema) erro
 		}
 	}
 
-	// Check if all target columns referenced in actions exist
-	for _, action := range c.mergeActions {
+	// Check if MergeOptions is initialized
+	if c.MergeOptions == nil {
+		// Not all operations might need this validation
+		return nil
+	}
+
+	// First check matched actions
+	for _, action := range append(c.MergeOptions.WhenMatched, c.MergeOptions.WhenNotMatched...) {
+		if action.Values == nil {
+			continue // Skip if no values to check
+		}
+
 		for col := range action.Values {
 			found := false
-			for i := 0; i < target.NumFields(); i++ {
-				if target.Field(i).Name == col {
+			for _, field := range target.Fields() {
+				if field.Name == col {
 					found = true
 					break
 				}
@@ -176,15 +219,15 @@ func (c *DeltaConnector) validateMergeCondition(condition MergeCondition, source
 	sourceFound := false
 	targetFound := false
 
-	for i := 0; i < sourceSchema.NumFields(); i++ {
-		if sourceSchema.Field(i).Name == condition.LeftColumn {
+	for _, field := range sourceSchema.Fields() {
+		if field.Name == condition.LeftColumn {
 			sourceFound = true
 			break
 		}
 	}
 
-	for i := 0; i < targetSchema.NumFields(); i++ {
-		if targetSchema.Field(i).Name == condition.RightColumn {
+	for _, field := range targetSchema.Fields() {
+		if field.Name == condition.RightColumn {
 			targetFound = true
 			break
 		}
@@ -229,8 +272,8 @@ func (c *DeltaConnector) validateMergeAction(action MergeAction, sourceSchema, t
 	if action.Type == "update" || action.Type == "insert" {
 		for col := range action.Values {
 			found := false
-			for i := 0; i < targetSchema.NumFields(); i++ {
-				if targetSchema.Field(i).Name == col {
+			for _, field := range targetSchema.Fields() {
+				if field.Name == col {
 					found = true
 					break
 				}
@@ -248,6 +291,12 @@ func (c *DeltaConnector) validateMergeAction(action MergeAction, sourceSchema, t
 func (c *DeltaConnector) executeMergePlan(ctx context.Context, plan *MergePlan, stats *MergeStats) error {
 	startTime := time.Now()
 
+	// Reset merge stats to avoid double counting
+	stats.NumMatchedRows = 0
+	stats.NumNotMatchedRows = 0
+	stats.NumUpdatedRows = 0
+	stats.NumInsertedRows = 0
+
 	// Read source data
 	sourceData, err := c.readSourceData(ctx, plan.SourceSchema)
 	if err != nil {
@@ -263,43 +312,76 @@ func (c *DeltaConnector) executeMergePlan(ctx context.Context, plan *MergePlan, 
 	stats.NumTargetRows = targetData.NumRows()
 
 	// Create result builders
-	resultBuilders := make([]array.Builder, plan.TargetSchema.NumFields())
+	resultBuilders := make([]array.Builder, len(plan.TargetSchema.Fields()))
 	for i, field := range plan.TargetSchema.Fields() {
 		resultBuilders[i] = array.NewBuilder(memory.DefaultAllocator, field.Type)
 		defer resultBuilders[i].Release()
 	}
 
-	// Process matched rows
-	matchedRows := make(map[int64]bool)
+	// Track which source rows are matched to avoid double counting
+	matchedSourceRows := make(map[int64]bool)
+	// Track which target rows are matched to avoid double counting 
+	matchedTargetRows := make(map[int64]bool)
+
+	// First, identify all matches based on the conditions
+	matches := make(map[int64]int64) // sourceRow -> targetRow
 	for i := int64(0); i < sourceData.NumRows(); i++ {
 		sourceRow := sourceData.NewSlice(i, i+1)
 		defer sourceRow.Release()
 
 		for j := int64(0); j < targetData.NumRows(); j++ {
-			if matchedRows[j] {
+			if matchedTargetRows[j] {
 				continue
 			}
 
 			targetRow := targetData.NewSlice(j, j+1)
 			defer targetRow.Release()
 
-			// Check if rows match based on conditions
 			if c.rowsMatch(sourceRow, targetRow, plan.Conditions) {
-				matchedRows[j] = true
+				// Record that we matched these rows
+				matches[i] = j
+				matchedSourceRows[i] = true
+				matchedTargetRows[j] = true
 				stats.NumMatchedRows++
-
-				// Apply matched actions
-				if err := c.applyMatchedActions(sourceRow, targetRow, plan.WhenMatched, resultBuilders); err != nil {
-					return fmt.Errorf("failed to apply matched actions: %w", err)
-				}
 				break
 			}
 		}
 	}
 
-	// Process unmatched target rows
+	// Process all matched rows first
+	for srcIdx, tgtIdx := range matches {
+		sourceRow := sourceData.NewSlice(srcIdx, srcIdx+1)
+		defer sourceRow.Release()
+		targetRow := targetData.NewSlice(tgtIdx, tgtIdx+1)
+		defer targetRow.Release()
+
+		// Apply all matched actions (typically updates)
+		updated := false
+		for _, action := range plan.WhenMatched {
+			if action.Type == "update" {
+				// Apply the update action
+				if err := c.applyUpdateAction(sourceRow, targetRow, action, resultBuilders); err != nil {
+					return fmt.Errorf("failed to apply update action for match (%d,%d): %w", srcIdx, tgtIdx, err)
+				}
+				updated = true
+			}
+		}
+
+		if updated {
+			stats.NumUpdatedRows++
+		} else {
+			// No update action found, just copy the target row
+			for i, builder := range resultBuilders {
+				if err := c.copyValue(builder, targetRow.Column(i), 0); err != nil {
+					return fmt.Errorf("failed to copy matched target row: %w", err)
+				}
+			}
+		}
+	}
+
+	// Process unmatched target rows (keep them)
 	for j := int64(0); j < targetData.NumRows(); j++ {
-		if !matchedRows[j] {
+		if !matchedTargetRows[j] {
 			targetRow := targetData.NewSlice(j, j+1)
 			defer targetRow.Release()
 
@@ -312,31 +394,79 @@ func (c *DeltaConnector) executeMergePlan(ctx context.Context, plan *MergePlan, 
 		}
 	}
 
-	// Process unmatched source rows
+	// Process unmatched source rows (insert them if specified)
 	for i := int64(0); i < sourceData.NumRows(); i++ {
-		sourceRow := sourceData.NewSlice(i, i+1)
-		defer sourceRow.Release()
-
-		matched := false
-		for j := int64(0); j < targetData.NumRows(); j++ {
-			if matchedRows[j] {
-				continue
-			}
-
-			targetRow := targetData.NewSlice(j, j+1)
-			defer targetRow.Release()
-
-			if c.rowsMatch(sourceRow, targetRow, plan.Conditions) {
-				matched = true
-				break
-			}
-		}
-
-		if !matched {
+		if !matchedSourceRows[i] {
 			stats.NumNotMatchedRows++
-			// Apply not matched actions
-			if err := c.applyNotMatchedActions(sourceRow, plan.WhenNotMatched, resultBuilders); err != nil {
-				return fmt.Errorf("failed to apply not matched actions: %w", err)
+			sourceRow := sourceData.NewSlice(i, i+1)
+			defer sourceRow.Release()
+
+			// Do we have any WhenNotMatched actions?
+			if len(plan.WhenNotMatched) > 0 {
+				// Apply the relevant action (typically insert)
+				inserted := false
+				for _, action := range plan.WhenNotMatched {
+					if action.Type == "insert" {
+						// Basic insert action - copy all values from source
+						if action.Values == nil || len(action.Values) == 0 {
+							for fieldIdx, field := range sourceRow.Schema().Fields() {
+								// Find the corresponding target field
+								targetFieldIdx := -1
+								for idx, tgtField := range plan.TargetSchema.Fields() {
+									if tgtField.Name == field.Name {
+										targetFieldIdx = idx
+										break
+									}
+								}
+
+								if targetFieldIdx >= 0 {
+									// Copy the value from source
+									if err := c.copyValue(resultBuilders[targetFieldIdx], sourceRow.Column(fieldIdx), 0); err != nil {
+										return fmt.Errorf("failed to copy source value for insert: %w", err)
+									}
+								} else {
+									// Field not found in target, skip it
+									continue
+								}
+							}
+						} else {
+							// Insert with specific values
+							for fieldIdx, field := range plan.TargetSchema.Fields() {
+								if value, ok := action.Values[field.Name]; ok {
+									// Use the specified value
+									if err := c.setValue(resultBuilders[fieldIdx], value, sourceRow, nil); err != nil {
+										return fmt.Errorf("failed to set value for insert: %w", err)
+									}
+								} else {
+									// Find the field in source to copy
+									sourceFieldIdx := -1
+									for idx, srcField := range sourceRow.Schema().Fields() {
+										if srcField.Name == field.Name {
+											sourceFieldIdx = idx
+											break
+										}
+									}
+
+									if sourceFieldIdx >= 0 {
+										// Copy the value from source
+										if err := c.copyValue(resultBuilders[fieldIdx], sourceRow.Column(sourceFieldIdx), 0); err != nil {
+											return fmt.Errorf("failed to copy source value for insert: %w", err)
+										}
+									} else {
+										// Field not found in source, use null
+										resultBuilders[fieldIdx].AppendNull()
+									}
+								}
+							}
+						}
+						inserted = true
+						break // Only apply the first insert action
+					}
+				}
+
+				if inserted {
+					stats.NumInsertedRows++
+				}
 			}
 		}
 	}
@@ -348,7 +478,7 @@ func (c *DeltaConnector) executeMergePlan(ctx context.Context, plan *MergePlan, 
 		defer fields[i].Release()
 	}
 
-	result := array.NewRecord(plan.TargetSchema, fields, fields[0].Len())
+	result := array.NewRecord(plan.TargetSchema, fields, int64(fields[0].Len()))
 	defer result.Release()
 
 	// Write result to target table
@@ -377,7 +507,7 @@ func (c *DeltaConnector) readSourceData(ctx context.Context, schema *arrow.Schem
 
 	// Read and combine data from all files
 	for _, file := range files {
-		record, err := c.readParquetFile(file, schema)
+		record, err := readParquetFile(file)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read Parquet file %s: %w", file, err)
 		}
@@ -408,7 +538,7 @@ func (c *DeltaConnector) readTargetData(ctx context.Context, schema *arrow.Schem
 	defer builder.Release()
 
 	for _, file := range files {
-		record, err := c.readParquetFile(file, schema)
+		record, err := readParquetFile(file)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read Parquet file %s: %w", file, err)
 		}
@@ -426,61 +556,191 @@ func (c *DeltaConnector) readTargetData(ctx context.Context, schema *arrow.Schem
 
 // rowsMatch checks if source and target rows match based on conditions
 func (c *DeltaConnector) rowsMatch(source, target arrow.Record, conditions []MergeCondition) bool {
-	for _, condition := range conditions {
-		sourceCol := source.ColumnByName(condition.LeftColumn)
-		targetCol := target.ColumnByName(condition.RightColumn)
+	// If no conditions are specified, no rows match
+	if len(conditions) == 0 {
+		return false
+	}
 
-		if sourceCol == nil || targetCol == nil {
+	for _, condition := range conditions {
+		// Get the column indices
+		sourceIdx := -1
+		targetIdx := -1
+		for i := 0; i < int(source.NumCols()); i++ {
+			if source.ColumnName(i) == condition.LeftColumn {
+				sourceIdx = i
+				break // Found the match, stop searching
+			}
+		}
+		for i := 0; i < int(target.NumCols()); i++ {
+			if target.ColumnName(i) == condition.RightColumn {
+				targetIdx = i
+				break // Found the match, stop searching
+			}
+		}
+
+		if sourceIdx == -1 || targetIdx == -1 {
+			// If any column is not found, no match
 			return false
 		}
 
-		if !c.compareValues(sourceCol, targetCol, condition.Operator) {
-			return false
+		// Debug the comparison
+		leftArray := source.Column(sourceIdx)
+		rightArray := target.Column(targetIdx)
+		
+		// For INT64 columns (like ID), directly compare values
+		if leftArray.DataType().ID() == arrow.INT64 && rightArray.DataType().ID() == arrow.INT64 {
+			// Special handling for ID comparisons to make exact matches
+			leftInt := leftArray.(*array.Int64).Value(0)
+			rightInt := rightArray.(*array.Int64).Value(0)
+
+			switch condition.Operator {
+			case "=", "==":
+				if leftInt != rightInt {
+					return false
+				}
+			case "!=", "<>":
+				if leftInt == rightInt {
+					return false
+				}
+			case "<":
+				if leftInt >= rightInt {
+					return false
+				}
+			case "<=":
+				if leftInt > rightInt {
+					return false
+				}
+			case ">":
+				if leftInt <= rightInt {
+					return false
+				}
+			case ">=":
+				if leftInt < rightInt {
+					return false
+				}
+			default:
+				// Unsupported operator
+				return false
+			}
+		} else {
+			// For other types, use the generic comparison function
+			if !c.compareValues(leftArray, rightArray, condition.Operator) {
+				return false
+			}
 		}
 	}
+
+	// All conditions matched
 	return true
 }
 
 // compareValues compares two values based on the operator
-func (c *DeltaConnector) compareValues(source, target arrow.Array, operator string) bool {
-	if source.Len() == 0 || target.Len() == 0 {
+func (c *DeltaConnector) compareValues(left, right arrow.Array, operator string) bool {
+	if left.Len() == 0 || right.Len() == 0 {
 		return false
 	}
 
 	// Handle null values
-	if source.IsNull(0) || target.IsNull(0) {
-		return false
+	if left.IsNull(0) && right.IsNull(0) {
+		return operator == "=" || operator == "=="
+	} else if left.IsNull(0) || right.IsNull(0) {
+		return operator == "!=" || operator == "<>"
 	}
 
-	switch source.DataType().ID() {
+	// Compare based on type
+	switch left.DataType().ID() {
 	case arrow.STRING:
-		sourceStr := source.(*array.String).Value(0)
-		targetStr := target.(*array.String).Value(0)
-		return c.compareStrings(sourceStr, targetStr, operator)
-	
+		leftStr := left.(*array.String).Value(0)
+		rightStr := right.(*array.String).Value(0)
+		switch operator {
+		case "=", "==":
+			return leftStr == rightStr
+		case "!=", "<>":
+			return leftStr != rightStr
+		case "<":
+			return leftStr < rightStr
+		case "<=":
+			return leftStr <= rightStr
+		case ">":
+			return leftStr > rightStr
+		case ">=":
+			return leftStr >= rightStr
+		}
+
 	case arrow.INT64:
-		sourceInt := source.(*array.Int64).Value(0)
-		targetInt := target.(*array.Int64).Value(0)
-		return c.compareInts(sourceInt, targetInt, operator)
-	
+		leftInt := left.(*array.Int64).Value(0)
+		rightInt := right.(*array.Int64).Value(0)
+		switch operator {
+		case "=", "==":
+			return leftInt == rightInt
+		case "!=", "<>":
+			return leftInt != rightInt
+		case "<":
+			return leftInt < rightInt
+		case "<=":
+			return leftInt <= rightInt
+		case ">":
+			return leftInt > rightInt
+		case ">=":
+			return leftInt >= rightInt
+		}
+
 	case arrow.FLOAT64:
-		sourceFloat := source.(*array.Float64).Value(0)
-		targetFloat := target.(*array.Float64).Value(0)
-		return c.compareFloats(sourceFloat, targetFloat, operator)
-	
+		leftFloat := left.(*array.Float64).Value(0)
+		rightFloat := right.(*array.Float64).Value(0)
+		switch operator {
+		case "=", "==":
+			return leftFloat == rightFloat
+		case "!=", "<>":
+			return leftFloat != rightFloat
+		case "<":
+			return leftFloat < rightFloat
+		case "<=":
+			return leftFloat <= rightFloat
+		case ">":
+			return leftFloat > rightFloat
+		case ">=":
+			return leftFloat >= rightFloat
+		}
+
 	case arrow.BOOL:
-		sourceBool := source.(*array.Boolean).Value(0)
-		targetBool := target.(*array.Boolean).Value(0)
-		return c.compareBools(sourceBool, targetBool, operator)
-	
+		leftBool := left.(*array.Boolean).Value(0)
+		rightBool := right.(*array.Boolean).Value(0)
+		switch operator {
+		case "=", "==":
+			return leftBool == rightBool
+		case "!=", "<>":
+			return leftBool != rightBool
+		}
+
 	case arrow.TIMESTAMP:
-		sourceTs := source.(*array.Timestamp).Value(0)
-		targetTs := target.(*array.Timestamp).Value(0)
-		return c.compareTimestamps(sourceTs, targetTs, operator)
-	
-	default:
-		return false
+		leftTs := left.(*array.Timestamp).Value(0)
+		rightTs := right.(*array.Timestamp).Value(0)
+		switch operator {
+		case "=", "==":
+			return leftTs == rightTs
+		case "!=", "<>":
+			return leftTs != rightTs
+		case "<":
+			return leftTs < rightTs
+		case "<=":
+			return leftTs <= rightTs
+		case ">":
+			return leftTs > rightTs
+		case ">=":
+			return leftTs >= rightTs
+		}
 	}
+
+	// Default: use reflect.DeepEqual for unsupported types or operators
+	switch operator {
+	case "=", "==":
+		return reflect.DeepEqual(left, right)
+	case "!=", "<>":
+		return !reflect.DeepEqual(left, right)
+	}
+
+	return false
 }
 
 // copyValue copies a value from one array to a builder
@@ -492,39 +752,148 @@ func (c *DeltaConnector) copyValue(builder array.Builder, arr arrow.Array, index
 
 	switch builder := builder.(type) {
 	case *array.StringBuilder:
-		str := arr.(*array.String).Value(int(index))
-		builder.Append(str)
+		// Handle string data
+		switch arr := arr.(type) {
+		case *array.String:
+			str := arr.Value(int(index))
+			builder.Append(str)
+		case *array.Int64:
+			// Convert int64 to string
+			val := arr.Value(int(index))
+			builder.Append(fmt.Sprintf("%d", val))
+		case *array.Float64:
+			// Convert float64 to string
+			val := arr.Value(int(index))
+			builder.Append(fmt.Sprintf("%g", val))
+		case *array.Boolean:
+			// Convert boolean to string
+			val := arr.Value(int(index))
+			builder.Append(fmt.Sprintf("%t", val))
+		default:
+			return fmt.Errorf("cannot convert %T to string", arr)
+		}
 	
 	case *array.Int64Builder:
-		val := arr.(*array.Int64).Value(int(index))
-		builder.Append(val)
+		switch arr := arr.(type) {
+		case *array.Int64:
+			val := arr.Value(int(index))
+			builder.Append(val)
+		case *array.String:
+			// Try to parse string to int64
+			str := arr.Value(int(index))
+			val, err := strconv.ParseInt(str, 10, 64)
+			if err != nil {
+				return fmt.Errorf("cannot convert string '%s' to int64: %w", str, err)
+			}
+			builder.Append(val)
+		default:
+			return fmt.Errorf("cannot convert %T to int64", arr)
+		}
 	
 	case *array.Float64Builder:
-		val := arr.(*array.Float64).Value(int(index))
-		builder.Append(val)
+		switch arr := arr.(type) {
+		case *array.Float64:
+			val := arr.Value(int(index))
+			builder.Append(val)
+		case *array.String:
+			// Try to parse string to float64
+			str := arr.Value(int(index))
+			val, err := strconv.ParseFloat(str, 64)
+			if err != nil {
+				return fmt.Errorf("cannot convert string '%s' to float64: %w", str, err)
+			}
+			builder.Append(val)
+		default:
+			return fmt.Errorf("cannot convert %T to float64", arr)
+		}
 	
 	case *array.BooleanBuilder:
-		val := arr.(*array.Boolean).Value(int(index))
-		builder.Append(val)
+		switch arr := arr.(type) {
+		case *array.Boolean:
+			val := arr.Value(int(index))
+			builder.Append(val)
+		case *array.String:
+			// Try to parse string to boolean
+			str := arr.Value(int(index))
+			val, err := strconv.ParseBool(str)
+			if err != nil {
+				return fmt.Errorf("cannot convert string '%s' to boolean: %w", str, err)
+			}
+			builder.Append(val)
+		default:
+			return fmt.Errorf("cannot convert %T to boolean", arr)
+		}
 	
 	case *array.TimestampBuilder:
-		val := arr.(*array.Timestamp).Value(int(index))
-		builder.Append(val)
+		switch arr := arr.(type) {
+		case *array.Timestamp:
+			val := arr.Value(int(index))
+			builder.Append(val)
+		default:
+			return fmt.Errorf("cannot convert %T to timestamp", arr)
+		}
 	
 	default:
-		return fmt.Errorf("unsupported type: %s", builder.Type())
+		return fmt.Errorf("unsupported builder type: %s", builder.Type())
 	}
 
 	return nil
 }
 
 // setValue sets a value in a builder
-func (c *DeltaConnector) setValue(builder array.Builder, value string) error {
+func (c *DeltaConnector) setValue(builder array.Builder, value string, sourceRecord, targetRecord arrow.Record) error {
 	if value == "null" {
 		builder.AppendNull()
 		return nil
 	}
 
+	// Handle column references (e.g., "source.value" or "target.value")
+	// This should be done before trying to parse as literals
+	if strings.HasPrefix(value, "source.") || strings.HasPrefix(value, "target.") {
+		// Extract the column name from the reference
+		parts := strings.SplitN(value, ".", 2)
+		if len(parts) != 2 {
+			return fmt.Errorf("invalid column reference format: %s", value)
+		}
+		
+		tableRef := parts[0] // "source" or "target"
+		colName := parts[1] // The column name
+		
+		// Get the value from the appropriate record based on the reference
+		var record arrow.Record
+		switch tableRef {
+		case "source":
+			if sourceRecord == nil {
+				return fmt.Errorf("source record not available for column reference: %s", value)
+			}
+			record = sourceRecord
+		case "target":
+			if targetRecord == nil {
+				return fmt.Errorf("target record not available for column reference: %s", value)
+			}
+			record = targetRecord
+		default:
+			return fmt.Errorf("unknown table reference: %s", tableRef)
+		}
+		
+		// Find the column index in the record
+		colIdx := -1
+		for i, field := range record.Schema().Fields() {
+			if field.Name == colName {
+				colIdx = i
+				break
+			}
+		}
+		
+		if colIdx == -1 {
+			return fmt.Errorf("column not found in %s: %s", tableRef, colName)
+		}
+		
+		// Copy the value from the reference to the builder
+		return c.copyValue(builder, record.Column(colIdx), 0)
+	}
+
+	// If not a column reference, parse as a literal value
 	switch builder := builder.(type) {
 	case *array.StringBuilder:
 		builder.Append(value)
@@ -553,9 +922,15 @@ func (c *DeltaConnector) setValue(builder array.Builder, value string) error {
 	case *array.TimestampBuilder:
 		t, err := time.Parse(time.RFC3339, value)
 		if err != nil {
-			return fmt.Errorf("failed to parse timestamp: %w", err)
+			// Try parsing as Unix timestamp (milliseconds)
+			milliseconds, err2 := strconv.ParseInt(value, 10, 64)
+			if err2 != nil {
+				return fmt.Errorf("failed to parse timestamp (not RFC3339 or Unix timestamp): %w", err)
+			}
+			builder.Append(arrow.Timestamp(milliseconds * 1000000)) // Convert ms to ns
+		} else {
+			builder.Append(arrow.Timestamp(t.UnixNano()))
 		}
-		builder.Append(arrow.Timestamp(t.UnixNano()))
 	
 	default:
 		return fmt.Errorf("unsupported type: %s", builder.Type())
@@ -665,7 +1040,7 @@ func (c *DeltaConnector) appendArray(builder array.Builder, arr arrow.Array) err
 // getParquetFiles returns all Parquet files for a given version
 func (c *DeltaConnector) getParquetFiles(version int64) ([]string, error) {
 	// Read the transaction log for this version
-	logPath := filepath.Join(c.tablePath, "_delta_log", fmt.Sprintf("%020d.json", version))
+	logPath := filepath.Join(c.TablePath, "_delta_log", fmt.Sprintf("%020d.json", version))
 	data, err := os.ReadFile(logPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read log file: %w", err)
@@ -680,7 +1055,7 @@ func (c *DeltaConnector) getParquetFiles(version int64) ([]string, error) {
 	var files []string
 	for _, action := range actions {
 		if action.Add != nil {
-			files = append(files, filepath.Join(c.tablePath, action.Add.Path))
+			files = append(files, filepath.Join(c.TablePath, action.Add.Path))
 		}
 	}
 
@@ -688,29 +1063,15 @@ func (c *DeltaConnector) getParquetFiles(version int64) ([]string, error) {
 }
 
 // readParquetFile reads a Parquet file and returns an Arrow record
-func (c *DeltaConnector) readParquetFile(path string, schema *arrow.Schema) (arrow.Record, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open file: %w", err)
-	}
-	defer file.Close()
 
-	reader, err := pqarrow.NewFileReader(file, pqarrow.ArrowReadProperties{}, memory.DefaultAllocator)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create reader: %w", err)
-	}
-	defer reader.Close()
 
-	record, err := reader.ReadRowGroup(0)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read row group: %w", err)
-	}
+// writeParquetFile writes an Arrow record to a Parquet file
 
-	return record, nil
-}
 
 // applyMatchedActions applies actions for matched rows
 func (c *DeltaConnector) applyMatchedActions(source, target arrow.Record, actions []MergeAction, builders []array.Builder) error {
+	applied := false
+
 	for _, action := range actions {
 		if action.Condition != nil && !c.rowsMatch(source, target, []MergeCondition{*action.Condition}) {
 			continue
@@ -721,6 +1082,9 @@ func (c *DeltaConnector) applyMatchedActions(source, target arrow.Record, action
 			if err := c.applyUpdateAction(source, target, action, builders); err != nil {
 				return fmt.Errorf("failed to apply update action: %w", err)
 			}
+			// We'll track updates in the executeMergePlan method
+			applied = true
+			
 		case "delete":
 			// Skip this row
 			return nil
@@ -728,9 +1092,11 @@ func (c *DeltaConnector) applyMatchedActions(source, target arrow.Record, action
 	}
 
 	// If no actions were applied, copy target row
-	for i, builder := range builders {
-		if err := c.copyValue(builder, target.Column(i), 0); err != nil {
-			return fmt.Errorf("failed to copy target row: %w", err)
+	if !applied {
+		for i, builder := range builders {
+			if err := c.copyValue(builder, target.Column(i), 0); err != nil {
+				return fmt.Errorf("failed to copy target row: %w", err)
+			}
 		}
 	}
 
@@ -739,15 +1105,47 @@ func (c *DeltaConnector) applyMatchedActions(source, target arrow.Record, action
 
 // applyNotMatchedActions applies actions for unmatched rows
 func (c *DeltaConnector) applyNotMatchedActions(source arrow.Record, actions []MergeAction, builders []array.Builder) error {
+	if len(actions) == 0 {
+		// If no actions are specified, do nothing for unmatched rows
+		return nil
+	}
+	
 	for _, action := range actions {
-		if action.Condition != nil && !c.rowsMatch(source, source, []MergeCondition{*action.Condition}) {
-			continue
-		}
-
 		switch strings.ToLower(action.Type) {
 		case "insert":
-			if err := c.applyInsertAction(source, action, builders); err != nil {
-				return fmt.Errorf("failed to apply insert action: %w", err)
+			if action.Values == nil || len(action.Values) == 0 {
+				// Insert all source columns without specifying values
+				for i, field := range source.Schema().Fields() {
+					name := field.Name
+					// Find the field in the target schema
+					found := false
+					targetIdx := -1
+					for j, targetField := range c.Schema.Fields() {
+						if targetField.Name == name {
+							found = true
+							targetIdx = j
+							break
+						}
+					}
+					if found {
+						if err := c.copyValue(builders[targetIdx], source.Column(i), 0); err != nil {
+							return fmt.Errorf("failed to copy value for %s: %w", name, err)
+						}
+					}
+				}
+			} else {
+				// Insert specified values
+				for i, field := range c.Schema.Fields() {
+					if value, ok := action.Values[field.Name]; ok {
+						// Use value from action
+						if err := c.setValue(builders[i], value, source, nil); err != nil {
+							return fmt.Errorf("failed to set value for %s: %w", field.Name, err)
+						}
+					} else {
+						// Use default value (null)
+						builders[i].AppendNull()
+					}
+				}
 			}
 		}
 	}
@@ -760,7 +1158,7 @@ func (c *DeltaConnector) applyUpdateAction(source, target arrow.Record, action M
 	for i, field := range target.Schema().Fields() {
 		if value, ok := action.Values[field.Name]; ok {
 			// Use value from action
-			if err := c.setValue(builders[i], value); err != nil {
+			if err := c.setValue(builders[i], value, source, target); err != nil {
 				return fmt.Errorf("failed to set value for %s: %w", field.Name, err)
 			}
 		} else {
@@ -778,7 +1176,7 @@ func (c *DeltaConnector) applyInsertAction(source arrow.Record, action MergeActi
 	for i, field := range source.Schema().Fields() {
 		if value, ok := action.Values[field.Name]; ok {
 			// Use value from action
-			if err := c.setValue(builders[i], value); err != nil {
+			if err := c.setValue(builders[i], value, source, nil); err != nil {
 				return fmt.Errorf("failed to set value for %s: %w", field.Name, err)
 			}
 		} else {
@@ -793,14 +1191,23 @@ func (c *DeltaConnector) applyInsertAction(source arrow.Record, action MergeActi
 
 // writeResult writes the result record to the target table
 func (c *DeltaConnector) writeResult(ctx context.Context, result arrow.Record) error {
-	// Create a new transaction
-	txn := NewTransaction()
-	txn.ReadVersion = c.GetVersion()
+	// Create a new transaction using the connector's transaction log
+	txn := c.log.BeginTransaction() 
+	if txn.CommitInfo == nil { // Should be initialized by BeginTransaction, but good practice to check
+		txn.CommitInfo = &CommitInfo{}
+	}
+	txn.CommitInfo.Operation = "MERGE"
+	// ReadVersion and Timestamp are typically set by BeginTransaction and Commit
+	// txn.CommitInfo.ReadVersion = c.GetVersion() // This is set by BeginTransaction from t.log.version
+	// txn.CommitInfo.Timestamp = time.Now().UnixMilli() // This is set by BeginTransaction
+	// Ensure other necessary CommitInfo fields are set if not covered by BeginTransaction
+	txn.CommitInfo.IsolationLevel = "Serializable" // Or whatever is appropriate
+	txn.CommitInfo.IsBlindAppend = false
 
 	// Generate a unique file path for the new data
-	timestamp := time.Now().UnixNano() / 1000000 // milliseconds
-	fileName := fmt.Sprintf("part-%d-%s.parquet", timestamp, uuid.New().String())
-	filePath := filepath.Join(c.tablePath, "data", fileName)
+	// timestamp := time.Now().UnixNano() / 1000000 // milliseconds - Use commit timestamp
+	fileName := fmt.Sprintf("part-%d-%s.parquet", txn.CommitInfo.Timestamp, uuid.New().String())
+	filePath := filepath.Join(c.TablePath, "data", fileName)
 
 	// Ensure the data directory exists
 	if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
@@ -812,41 +1219,38 @@ func (c *DeltaConnector) writeResult(ctx context.Context, result arrow.Record) e
 		return fmt.Errorf("failed to write Parquet file: %w", err)
 	}
 
-	// Calculate statistics for the new file
-	stats, err := c.calculateStats(result)
-	if err != nil {
-		return fmt.Errorf("failed to calculate statistics: %w", err)
-	}
-
-	// Create add action for the new file
-	addAction := &AddAction{
-		Path:            filepath.Join("data", fileName),
-		Size:            getFileSize(filePath),
-		ModificationTime: timestamp,
-		DataChange:      true,
-		Stats:           stats,
-		Tags:            map[string]string{"merge": "true"},
+	// Add add action for the new file
+	addAction := Action{
+		Add: &AddAction{
+			Path:            fileName, // Store relative path for AddAction
+			Size:            getFileSize(filePath),
+			ModificationTime: txn.CommitInfo.Timestamp, // Use commit timestamp
+			DataChange:      true,
+			PartitionValues: map[string]string{},
+		},
 	}
 
 	// Add partition values if table is partitioned
-	if len(c.partitionColumns) > 0 {
-		addAction.PartitionValues = c.getPartitionValues(result)
+	if len(c.PartitionColumns) > 0 {
+		for _, col := range c.PartitionColumns {
+			if colIdx := result.Schema().FieldIndices(col); len(colIdx) > 0 {
+				arr := result.Column(colIdx[0])
+				if arr.Len() > 0 && !arr.IsNull(0) {
+					addAction.Add.PartitionValues[col] = c.getStringValue(arr, 0)
+				}
+			}
+		}
 	}
 
 	// Add the action to the transaction
-	txn.Add(addAction)
-
-	// Remove old files
-	removeActions, err := c.createRemoveActions()
-	if err != nil {
-		return fmt.Errorf("failed to create remove actions: %w", err)
-	}
-	for _, action := range removeActions {
-		txn.Add(action)
+	if err := txn.AddAction(addAction); err != nil {
+		// Potentially rollback or clean up filePath if AddAction fails
+		return fmt.Errorf("failed to add action to transaction: %w", err)
 	}
 
 	// Commit the transaction
 	if err := c.CommitTransaction(ctx, txn); err != nil {
+		// Potentially rollback or clean up filePath if commit fails
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
@@ -855,39 +1259,24 @@ func (c *DeltaConnector) writeResult(ctx context.Context, result arrow.Record) e
 
 // writeParquetFile writes an Arrow record to a Parquet file
 func (c *DeltaConnector) writeParquetFile(path string, record arrow.Record) error {
-	file, err := os.Create(path)
+	f, err := os.Create(path)
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}
-	defer file.Close()
+	defer f.Close()
 
-	// Create Parquet writer properties
-	writerProps := parquet.NewWriterProperties(
-		parquet.WithCompression(parquet.CompressionCodec_SNAPPY),
-		parquet.WithDictionaryEnabled(true),
-	)
-
-	// Create Arrow writer properties
-	arrowProps := pqarrow.NewArrowWriterProperties(
-		pqarrow.WithStoreSchema(),
-		pqarrow.WithCompliantNestedTypes(),
-	)
-
-	// Create Parquet writer
-	writer, err := pqarrow.NewFileWriter(
-		record.Schema(),
-		file,
-		writerProps,
-		arrowProps,
-	)
+	writer, err := pqarrow.NewFileWriter(record.Schema(), f, parquet.NewWriterProperties(), pqarrow.NewArrowWriterProperties())
 	if err != nil {
-		return fmt.Errorf("failed to create writer: %w", err)
+		return fmt.Errorf("failed to create parquet writer: %w", err)
 	}
 	defer writer.Close()
 
-	// Write the record
 	if err := writer.Write(record); err != nil {
 		return fmt.Errorf("failed to write record: %w", err)
+	}
+
+	if err := writer.Close(); err != nil {
+		return fmt.Errorf("failed to close writer: %w", err)
 	}
 
 	return nil
@@ -1065,7 +1454,7 @@ func (c *DeltaConnector) countBooleans(arr *array.Boolean, value bool) int64 {
 // getPartitionValues extracts partition values from a record
 func (c *DeltaConnector) getPartitionValues(record arrow.Record) map[string]string {
 	values := make(map[string]string)
-	for _, col := range c.partitionColumns {
+	for _, col := range c.PartitionColumns {
 		if colIdx := record.Schema().FieldIndices(col); len(colIdx) > 0 {
 			arr := record.Column(colIdx[0])
 			if arr.Len() > 0 && !arr.IsNull(0) {
@@ -1105,7 +1494,7 @@ func (c *DeltaConnector) createRemoveActions() ([]*RemoveAction, error) {
 	var actions []*RemoveAction
 	for _, file := range files {
 		action := &RemoveAction{
-			Path:            strings.TrimPrefix(file, c.tablePath+"/"),
+			Path:            strings.TrimPrefix(file, c.TablePath+"/"),
 			DeletionTime:    time.Now().UnixNano() / 1000000,
 			DataChange:      true,
 		}
@@ -1114,6 +1503,3 @@ func (c *DeltaConnector) createRemoveActions() ([]*RemoveAction, error) {
 
 	return actions, nil
 }
-
-// mergeActions is a helper variable for schema validation
-var mergeActions []MergeAction 
