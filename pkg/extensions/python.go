@@ -27,6 +27,7 @@
 package extensions
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -41,6 +42,14 @@ import (
 	"syscall"
 	"time"
 )
+
+// BaseExtension provides common fields for extensions.
+// It is intended to be embedded in specific extension types.
+type BaseExtension struct {
+	Name        string
+	Version     string
+	Description string
+}
 
 // PythonExtension represents a Python-based extension
 type PythonExtension struct {

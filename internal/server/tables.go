@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/nessi-dev/nessi-dev/internal/quality/profile"
 	"github.com/nessi-dev/nessi-dev/pkg"
+	"go.uber.org/zap"
 )
 
 // TableHandler handles Delta table operations
@@ -56,7 +57,7 @@ func (h *TableHandler) handleGenerateProfile(c *gin.Context) {
 	defer profiler.Close()
 
 	// Generate profile
-	qualityProfile, err := profiler.GenerateProfile()
+	qualityProfile, err := profiler.ProfileTable()
 	if err != nil {
 		h.logger.Error("failed to generate profile",
 			zap.String("path", absPath),
@@ -172,7 +173,7 @@ func (h *TableHandler) handleGetPartitions(c *gin.Context) {
 	defer reader.Close()
 
 	// Get table partitions
-	partitions, err := reader.GetPartitions()
+	partitions, err := reader.ListPartitions()
 	if err != nil {
 		h.logger.Error("failed to get partitions",
 			zap.String("path", absPath),

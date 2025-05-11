@@ -28,6 +28,7 @@ type ServerConfig struct {
 	ReadTimeout    time.Duration `yaml:"read_timeout"`
 	WriteTimeout   time.Duration `yaml:"write_timeout"`
 	IdleTimeout    time.Duration `yaml:"idle_timeout"`
+	ShutdownTimeout time.Duration `yaml:"shutdown_timeout"`
 	MaxConnections int           `yaml:"max_connections"`
 	CORS           CORSConfig    `yaml:"cors"`
 }
@@ -358,6 +359,7 @@ func GetDefaultConfig() *Config {
 			ReadTimeout:    30 * time.Second,
 			WriteTimeout:   30 * time.Second,
 			IdleTimeout:    120 * time.Second,
+			ShutdownTimeout: 10 * time.Second,
 			MaxConnections: 1000,
 			CORS: CORSConfig{
 				AllowedOrigins: []string{"*"},

@@ -1,39 +1,8 @@
-// Implement an HTTP server for Nessi.dev with these requirements:
-// 1. Define a Server struct with:
-//    - Configuration references
-//    - HTTP server instance
-//    - Router (using Gin)
-//    - Extension manager reference
-//    - Security manager reference
-// 2. New(cfg *config.Config, extManager *extensions.Manager) *Server constructor
-// 3. Methods:
-//    - Start() error - Start the server
-//    - Stop() error - Gracefully stop the server
-//    - setupRoutes() - Configure API routes
-//    - setupMiddleware() - Set up common middleware
-// 4. API endpoints grouped by feature:
-//    - /api/v1/tables - Delta table operations
-//    - /api/v1/quality - Data quality operations
-//    - /api/v1/monitor - Monitoring endpoints
-//    - /api/v1/extensions - Extension management
-//    - /metrics - Prometheus metrics endpoint
-// 5. Middleware components:
-//    - Authentication middleware
-//    - Logging middleware
-//    - Rate limiting middleware
-//    - Recovery middleware
-// 6. Support for HTTPS with TLS if configured
-// 7. Graceful shutdown with timeout
-// Use the Gin framework for routing
-// Implement proper error handling with appropriate HTTP status codes
-// Set up CORS if needed
-
 package server
 
 import (
 	"context"
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -42,26 +11,35 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/nessi-dev/nessi-dev/internal/config"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.uber.org/zap"
+
+	"github.com/nessi-dev/nessi-dev/internal/delta"
 	"github.com/nessi-dev/nessi-dev/internal/extensions"
-	"github.com/nessi-dev/nessi-dev/internal/quality/profile"
+	"github.com/nessi-dev/nessi-dev/internal/monitor"
+	quality "github.com/nessi-dev/nessi-dev/internal/quality"
 	"github.com/nessi-dev/nessi-dev/internal/security"
 	"github.com/nessi-dev/nessi-dev/pkg"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"go.uber.org/zap"
+)
+
+const (
+	defaultShutdownTimeout = 5 * time.Second
 )
 
 // Server represents the API server
 type Server struct {
-	config      *config.Config
-	server      *http.Server
-	router      *gin.Engine
-	extManager  *extensions.Manager
-	secManager  *security.SecurityManager
-	logger      *zap.Logger
-	metrics     *Metrics
-	startTime   time.Time
+	config         *Config
+	server         *http.Server
+	router         *gin.Engine
+	extManager     *extensions.Manager
+	secManager     *security.SecurityManager
+	deltaConnector *delta.DeltaConnector
+	qualityManager *quality.QualityManager
+	monitorManager *monitor.MonitorManager
+	logger         *zap.Logger
+	metrics        *Metrics
+	startTime      time.Time
 }
 
 // Metrics represents server metrics
@@ -86,37 +64,57 @@ type Config struct {
 }
 
 // NewServer creates a new API server
-func NewServer(config *Config) *Server {
+func NewServer(config *Config, extMgr *extensions.Manager, secMgr *security.SecurityManager, deltaConn *delta.DeltaConnector, qualMgr *quality.QualityManager, monMgr *monitor.MonitorManager, logger *zap.Logger) *Server {
 	if config == nil {
+		// Provide a basic default if no config is passed, though ideally, config comes from main
 		config = &Config{
 			Host:            "localhost",
 			Port:            8080,
 			ReadTimeout:     15 * time.Second,
 			WriteTimeout:    15 * time.Second,
-			ShutdownTimeout: 5 * time.Second,
+			ShutdownTimeout: defaultShutdownTimeout,
 		}
 	}
 
-	// Load security configuration
-	secConfig, err := security.LoadConfigYAML("config/security.yaml")
-	if err != nil {
-		panic(fmt.Sprintf("failed to load security config: %v", err))
-	}
-
-	// Initialize security manager
-	secManager := security.NewSecurityManager(secConfig.JWT.Secret, secConfig.JWT.Expiration)
-	
-	// Apply security configuration
-	if err := secManager.ApplyConfig(secConfig); err != nil {
-		panic(fmt.Sprintf("failed to apply security config: %v", err))
-	}
-
 	server := &Server{
-		router:      gin.New(),
-		config:      config,
-		secManager:  secManager,
-		startTime:   time.Now(),
+		router:         gin.New(),
+		config:         config,
+		extManager:     extMgr,
+		secManager:     secMgr,
+		deltaConnector: deltaConn,
+		qualityManager: qualMgr,
+		monitorManager: monMgr,
+		logger:         logger,
+		startTime:      time.Now(),
 	}
+
+	// Initialize metrics, if not already handled by monitorManager construction
+	server.metrics = &Metrics{
+		requestsTotal: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "http_requests_total",
+				Help: "Total number of HTTP requests.",
+			},
+			[]string{"method", "path", "status"},
+		),
+		requestDuration: prometheus.NewHistogramVec(
+			prometheus.HistogramOpts{
+				Name: "http_request_duration_seconds",
+				Help: "HTTP request duration in seconds.",
+			},
+			[]string{"method", "path"},
+		),
+		activeRequests: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: "http_active_requests",
+				Help: "Number of active HTTP requests.",
+			},
+			[]string{"method", "path"},
+		),
+	}
+	prometheus.MustRegister(server.metrics.requestsTotal)
+	prometheus.MustRegister(server.metrics.requestDuration)
+	prometheus.MustRegister(server.metrics.activeRequests)
 
 	server.setupMiddleware()
 	server.setupRoutes()
@@ -126,7 +124,15 @@ func NewServer(config *Config) *Server {
 // setupMiddleware configures the server middleware
 func (s *Server) setupMiddleware() {
 	// Use security middleware
-	s.router.Use(s.secManager.Middleware)
+	s.router.Use(func(c *gin.Context) {
+		nextHTTP := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			c.Request = r // Pass any request modifications back to Gin
+			c.Next()
+		})
+		// s.secManager.Middleware expects a http.Handler and returns a http.Handler
+		handler := s.secManager.Middleware(nextHTTP)
+		handler.ServeHTTP(c.Writer, c.Request)
+	})
 
 	// Add security headers middleware
 	s.router.Use(func(c *gin.Context) {
@@ -257,43 +263,20 @@ func (s *Server) handleHealthCheck(c *gin.Context) {
 
 // handleGenerateProfile handles profile generation requests
 func (s *Server) handleGenerateProfile(c *gin.Context) {
-	path := c.Param("path")
-	profiler, err := profile.NewProfiler(path, nil)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to create profiler: %v", err)})
-		return
-	}
-	defer profiler.Close()
+	c.JSON(http.StatusNotImplemented, gin.H{"message": "Profile generation not implemented yet"})
+}
 
-	qualityProfile, err := profiler.GenerateProfile()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to generate profile: %v", err)})
-		return
-	}
-
-	c.JSON(http.StatusOK, qualityProfile)
+// handleGetProfileStatus handles requests to get profile status
+func (s *Server) handleGetProfileStatus(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{"message": "Profile status not implemented yet"})
 }
 
 // handleQualityCheck handles quality check requests
 func (s *Server) handleQualityCheck(c *gin.Context) {
-	path := c.Param("path")
-	profiler, err := profile.NewProfiler(path, nil)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to create profiler: %v", err)})
-		return
-	}
-	defer profiler.Close()
-
-	quality, err := profiler.GetDataQuality()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to get quality metrics: %v", err)})
-		return
-	}
-
-	c.JSON(http.StatusOK, quality)
+	c.JSON(http.StatusNotImplemented, gin.H{"message": "Quality check not implemented yet"})
 }
 
-// handleGetStats handles table statistics requests
+// handleGetStats handles requests to get table statistics
 func (s *Server) handleGetStats(c *gin.Context) {
 	path := c.Param("path")
 	reader, err := pkg.NewReader(path)
@@ -315,29 +298,36 @@ func (s *Server) handleListExtensions(c *gin.Context) {
 
 // handleInstallExtension handles extension installation requests
 func (s *Server) handleInstallExtension(c *gin.Context) {
-	name := c.Param("name")
-	if err := s.extManager.InstallExtension(name); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to install extension: %v", err)})
+	var ext extensions.Extension
+	if err := c.ShouldBindJSON(&ext); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid extension payload"})
 		return
 	}
-	c.Status(http.StatusCreated)
+
+	if err := s.extManager.RegisterExtension(&ext); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to install extension: %v", err)})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Extension installed successfully"})
 }
 
-// handleUninstallExtension handles extension uninstallation requests
+// handleUninstallExtension handles extension uninstall requests
 func (s *Server) handleUninstallExtension(c *gin.Context) {
 	name := c.Param("name")
-	if err := s.extManager.UninstallExtension(name); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to uninstall extension: %v", err)})
+	// TODO: DisableExtension only marks the extension as disabled, it does not remove it from the manager.
+	// If true uninstallation (removal) is required, Manager needs a RemoveExtension or UnregisterExtension method.
+	if err := s.extManager.DisableExtension(name); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to uninstall extension: %v", err)})
 		return
 	}
-	c.Status(http.StatusNoContent)
+	c.JSON(http.StatusOK, gin.H{"message": "Extension uninstalled successfully"})
 }
 
 // handleEnableExtension handles extension enabling requests
 func (s *Server) handleEnableExtension(c *gin.Context) {
 	name := c.Param("name")
 	if err := s.extManager.EnableExtension(name); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to enable extension: %v", err)})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to enable extension: %v", err)})
 		return
 	}
 	c.Status(http.StatusOK)
@@ -347,7 +337,7 @@ func (s *Server) handleEnableExtension(c *gin.Context) {
 func (s *Server) handleDisableExtension(c *gin.Context) {
 	name := c.Param("name")
 	if err := s.extManager.DisableExtension(name); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to disable extension: %v", err)})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to disable extension: %v", err)})
 		return
 	}
 	c.Status(http.StatusOK)

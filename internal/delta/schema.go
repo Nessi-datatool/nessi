@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/apache/arrow/go/v12/arrow"
-	"github.com/apache/arrow/go/v12/arrow/array"
+	"github.com/apache/arrow/go/v15/arrow"
+	"github.com/apache/arrow/go/v15/arrow/array"
+	memory "github.com/apache/arrow/go/v15/arrow/memory"
 )
 
 // SchemaManager manages Delta Lake schemas
@@ -33,12 +34,12 @@ func (s *SchemaManager) ValidateSchema(schema *arrow.Schema) error {
 	}
 
 	// Check if all required fields are present
-	for i := 0; i < s.schema.NumFields(); i++ {
-		field := s.schema.Field(i)
+	for i := 0; i < len(s.schema.Fields()); i++ {
+		field := s.schema.Fields()[i]
 		if !field.Nullable {
 			found := false
-			for j := 0; j < schema.NumFields(); j++ {
-				if schema.Field(j).Name == field.Name {
+			for j := 0; j < len(schema.Fields()); j++ {
+				if schema.Fields()[j].Name == field.Name {
 					found = true
 					break
 				}
@@ -50,13 +51,13 @@ func (s *SchemaManager) ValidateSchema(schema *arrow.Schema) error {
 	}
 
 	// Check if field types are compatible
-	for i := 0; i < schema.NumFields(); i++ {
-		field := schema.Field(i)
-		for j := 0; j < s.schema.NumFields(); j++ {
-			if s.schema.Field(j).Name == field.Name {
-				if !isTypeCompatible(s.schema.Field(j).Type, field.Type) {
+	for i := 0; i < len(schema.Fields()); i++ {
+		field := schema.Fields()[i]
+		for j := 0; j < len(s.schema.Fields()); j++ {
+			if s.schema.Fields()[j].Name == field.Name {
+				if !isTypeCompatible(s.schema.Fields()[j].Type, field.Type) {
 					return fmt.Errorf("incompatible type for field %s: expected %s, got %s",
-						field.Name, s.schema.Field(j).Type, field.Type)
+						field.Name, s.schema.Fields()[j].Type, field.Type)
 				}
 				break
 			}
@@ -102,14 +103,14 @@ func (s *SchemaManager) MergeSchemas(schema *arrow.Schema) (*arrow.Schema, error
 
 	// Create a map of existing fields
 	fieldMap := make(map[string]arrow.Field)
-	for i := 0; i < s.schema.NumFields(); i++ {
-		field := s.schema.Field(i)
+	for i := 0; i < len(s.schema.Fields()); i++ {
+		field := s.schema.Fields()[i]
 		fieldMap[field.Name] = field
 	}
 
 	// Add new fields
-	for i := 0; i < schema.NumFields(); i++ {
-		field := schema.Field(i)
+	for i := 0; i < len(schema.Fields()); i++ {
+		field := schema.Fields()[i]
 		if existing, exists := fieldMap[field.Name]; exists {
 			// Check type compatibility
 			if !isTypeCompatible(existing.Type, field.Type) {
@@ -151,10 +152,10 @@ func (s *SchemaManager) SchemaToJSON() (string, error) {
 	}
 
 	schema := Schema{
-		Fields: make([]Field, s.schema.NumFields()),
+		Fields: make([]Field, len(s.schema.Fields())),
 	}
 
-	for i := 0; i < s.schema.NumFields(); i++ {
+	for i := 0; i < len(s.schema.Fields()); i++ {
 		field := s.schema.Field(i)
 		schema.Fields[i] = Field{
 			Name:     field.Name,
@@ -251,13 +252,13 @@ func (s *SchemaManager) ValidateRecord(record arrow.Record) error {
 		return nil
 	}
 
-	if record.NumCols() != s.schema.NumFields() {
+	if int(record.NumCols()) != len(s.schema.Fields()) {
 		return fmt.Errorf("record has %d columns, schema has %d fields",
-			record.NumCols(), s.schema.NumFields())
+			record.NumCols(), len(s.schema.Fields()))
 	}
 
-	for i := 0; i < record.NumCols(); i++ {
-		field := s.schema.Field(i)
+	for i := 0; i < len(s.schema.Fields()); i++ {
+		field := s.schema.Fields()[i]
 		col := record.Column(i)
 
 		// Check if the column type matches the field type
@@ -287,12 +288,12 @@ func (s *SchemaManager) CreateEmptyRecord() arrow.Record {
 	}
 
 	// Create empty arrays for each field
-	arrays := make([]arrow.Array, s.schema.NumFields())
-	for i := 0; i < s.schema.NumFields(); i++ {
+	arrays := make([]arrow.Array, len(s.schema.Fields()))
+	for i := 0; i < len(s.schema.Fields()); i++ {
 		field := s.schema.Field(i)
 		builder := array.NewBuilder(memory.DefaultAllocator, field.Type)
 		arrays[i] = builder.NewArray()
 	}
 
 	return array.NewRecord(s.schema, arrays, 0)
-} 
+}

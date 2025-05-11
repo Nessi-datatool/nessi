@@ -267,7 +267,7 @@ func StartExtension(name string) error {
 		if err != nil {
 			return fmt.Errorf("dependency %s not found: %w", dep, err)
 		}
-		if !depExt.IsRunning() {
+		if !depExt.Interface.IsRunning() {
 			return fmt.Errorf("dependency %s is not running", dep)
 		}
 	}

@@ -7,16 +7,12 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
-	"github.com/apache/arrow/go/v12/arrow"
-	"github.com/apache/arrow/go/v12/arrow/array"
-	"github.com/apache/arrow/go/v12/arrow/memory"
-	"github.com/apache/arrow/go/v12/parquet"
-	"github.com/apache/arrow/go/v12/parquet/file"
-	"github.com/apache/arrow/go/v12/parquet/pqarrow"
+	"github.com/apache/arrow/go/v15/arrow"
+	"github.com/apache/arrow/go/v15/arrow/array"
+	"github.com/apache/arrow/go/v15/arrow/memory"
 )
 
 // MaintenanceManager handles Delta Lake maintenance operations
@@ -47,7 +43,7 @@ func (m *MaintenanceManager) CreateCheckpoint(ctx context.Context, options Check
 	}
 
 	// Check if checkpoint already exists
-	checkpointPath := filepath.Join(m.connector.tablePath, "_delta_log", fmt.Sprintf("%d.checkpoint.parquet", version))
+	checkpointPath := filepath.Join(m.connector.TablePath, "_delta_log", fmt.Sprintf("%d.checkpoint.parquet", version))
 	if _, err := os.Stat(checkpointPath); err == nil && !options.Force {
 		return fmt.Errorf("checkpoint already exists for version %d", version)
 	}
@@ -55,7 +51,7 @@ func (m *MaintenanceManager) CreateCheckpoint(ctx context.Context, options Check
 	// Read all actions up to the target version
 	var actions []Action
 	for v := int64(0); v <= version; v++ {
-		filePath := filepath.Join(m.connector.tablePath, "_delta_log", fmt.Sprintf("%d.json", v))
+		filePath := filepath.Join(m.connector.TablePath, "_delta_log", fmt.Sprintf("%d.json", v))
 		data, err := os.ReadFile(filePath)
 		if err != nil {
 			return fmt.Errorf("failed to read log file: %w", err)
@@ -90,7 +86,7 @@ func (m *MaintenanceManager) CreateCheckpoint(ctx context.Context, options Check
 	defer record.Release()
 
 	// Write checkpoint file
-	if err := writeParquetFile(checkpointPath, record); err != nil {
+	if err := WriteRecordToParquet(checkpointPath, record); err != nil {
 		return fmt.Errorf("failed to write checkpoint file: %w", err)
 	}
 
@@ -108,7 +104,7 @@ func (m *MaintenanceManager) CreateCheckpoint(ctx context.Context, options Check
 	}
 
 	// Write metadata
-	metadataPath := filepath.Join(m.connector.tablePath, "_delta_log", fmt.Sprintf("%d.checkpoint.metadata.json", version))
+	metadataPath := filepath.Join(m.connector.TablePath, "_delta_log", fmt.Sprintf("%d.checkpoint.metadata.json", version))
 	metadataData, err := json.Marshal(metadata)
 	if err != nil {
 		return fmt.Errorf("failed to marshal metadata: %w", err)
@@ -191,7 +187,7 @@ func (m *MaintenanceManager) Vacuum(ctx context.Context, options VacuumOptions) 
 // getAllFiles returns all files in the Delta table
 func (m *MaintenanceManager) getAllFiles() ([]string, error) {
 	var files []string
-	err := filepath.Walk(m.connector.tablePath, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(m.connector.TablePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -211,7 +207,7 @@ func (m *MaintenanceManager) getAllFiles() ([]string, error) {
 
 // ListCheckpoints lists all checkpoints in the Delta table
 func (m *MaintenanceManager) ListCheckpoints(ctx context.Context) ([]CheckpointInfo, error) {
-	logPath := filepath.Join(m.connector.tablePath, "_delta_log")
+	logPath := filepath.Join(m.connector.TablePath, "_delta_log")
 	files, err := os.ReadDir(logPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read log directory: %w", err)
@@ -271,8 +267,8 @@ type CheckpointInfo struct {
 
 // DeleteCheckpoint deletes a checkpoint
 func (m *MaintenanceManager) DeleteCheckpoint(ctx context.Context, version int64) error {
-	checkpointPath := filepath.Join(m.connector.tablePath, "_delta_log", fmt.Sprintf("%d.checkpoint.parquet", version))
-	metadataPath := filepath.Join(m.connector.tablePath, "_delta_log", fmt.Sprintf("%d.checkpoint.metadata.json", version))
+	checkpointPath := filepath.Join(m.connector.TablePath, "_delta_log", fmt.Sprintf("%d.checkpoint.parquet", version))
+	metadataPath := filepath.Join(m.connector.TablePath, "_delta_log", fmt.Sprintf("%d.checkpoint.metadata.json", version))
 
 	// Delete checkpoint file
 	if err := os.Remove(checkpointPath); err != nil {
@@ -287,32 +283,4 @@ func (m *MaintenanceManager) DeleteCheckpoint(ctx context.Context, version int64
 	return nil
 }
 
-// writeParquetFile writes an Arrow record to a Parquet file
-func writeParquetFile(path string, record arrow.Record) error {
-	file, err := os.Create(path)
-	if err != nil {
-		return fmt.Errorf("failed to create file: %w", err)
-	}
-	defer file.Close()
-
-	writer, err := pqarrow.NewFileWriter(record.Schema(), file, parquet.NewWriterProperties(), pqarrow.DefaultWriterProps())
-	if err != nil {
-		return fmt.Errorf("failed to create parquet writer: %w", err)
-	}
-	defer writer.Close()
-
-	if err := writer.Write(record); err != nil {
-		return fmt.Errorf("failed to write record: %w", err)
-	}
-
-	return nil
-}
-
-// getFileSize returns the size of a file in bytes
-func getFileSize(path string) int64 {
-	info, err := os.Stat(path)
-	if err != nil {
-		return 0
-	}
-	return info.Size()
-} 
+// Utility function to check if a file exists

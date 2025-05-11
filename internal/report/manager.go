@@ -9,7 +9,6 @@ import (
 
 	"github.com/apache/arrow/go/v12/arrow"
 	"github.com/jung-kurt/gofpdf"
-	"github.com/olekukonko/tablewriter"
 )
 
 // ReportFormat represents the format of a report
@@ -242,19 +241,19 @@ func (m *ReportManager) GenerateTableReport(ctx context.Context, templateID stri
 	}
 
 	// Convert record to table data
-	table := make([][]string, record.NumRows()+1)
+	table := make([][]string, int(record.NumRows())+1)
 	
 	// Add headers
-	headers := make([]string, record.NumCols())
-	for i := 0; i < record.NumCols(); i++ {
+	headers := make([]string, int(record.NumCols()))
+	for i := 0; i < int(record.NumCols()); i++ {
 		headers[i] = record.ColumnName(i)
 	}
 	table[0] = headers
 
 	// Add data
-	for i := 0; i < record.NumRows(); i++ {
-		row := make([]string, record.NumCols())
-		for j := 0; j < record.NumCols(); j++ {
+	for i := 0; i < int(record.NumRows()); i++ {
+		row := make([]string, int(record.NumCols()))
+		for j := 0; j < int(record.NumCols()); j++ {
 			col := record.Column(j)
 			if col.IsNull(i) {
 				row[j] = "NULL"

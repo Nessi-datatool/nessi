@@ -43,7 +43,7 @@ type TransactionLog struct {
 func NewTransactionLog(tablePath string) *TransactionLog {
 	return &TransactionLog{
 		tablePath: tablePath,
-		version:   0,
+		version:   -1,
 	}
 }
 
@@ -78,12 +78,15 @@ func (t *TransactionLog) Commit(ctx context.Context, tx *Transaction) error {
 	defer t.mu.Unlock()
 
 	// Check if the read version is still valid
+	// If t.version is -1 (no commits yet) and tx.ReadVersion is also -1, it's a valid first commit.
 	if tx.ReadVersion != t.version {
 		return fmt.Errorf("concurrent modification detected: expected version %d, got %d", t.version, tx.ReadVersion)
 	}
 
-	// Create the commit file
-	commitPath := filepath.Join(t.tablePath, "_delta_log", fmt.Sprintf("%d.json", t.version+1))
+	nextVersion := t.version + 1
+
+	// Create the commit file path with 20-digit padding
+	commitPath := filepath.Join(t.tablePath, "_delta_log", fmt.Sprintf("%020d.json", nextVersion))
 	
 	// Write the transaction to the log
 	data, err := json.Marshal(tx.Actions)
@@ -95,10 +98,12 @@ func (t *TransactionLog) Commit(ctx context.Context, tx *Transaction) error {
 		return fmt.Errorf("failed to write transaction log: %w", err)
 	}
 
-	// Write the commit info
-	commitInfoPath := filepath.Join(t.tablePath, "_delta_log", fmt.Sprintf("%d.commit.json", t.version+1))
+	// Write the commit info path with 20-digit padding
+	commitInfoPath := filepath.Join(t.tablePath, "_delta_log", fmt.Sprintf("%020d.commit.json", nextVersion))
 	commitInfoData, err := json.Marshal(tx.CommitInfo)
 	if err != nil {
+		// Clean up the commit file if writing commit info fails
+		os.Remove(commitPath)
 		return fmt.Errorf("failed to marshal commit info: %w", err)
 	}
 
@@ -109,7 +114,7 @@ func (t *TransactionLog) Commit(ctx context.Context, tx *Transaction) error {
 	}
 
 	// Update the version
-	t.version++
+	t.version = nextVersion
 
 	return nil
 }
@@ -132,7 +137,7 @@ func (t *TransactionLog) GetActions(version int64) ([]Action, error) {
 
 	var actions []Action
 	for v := int64(0); v <= version; v++ {
-		filePath := filepath.Join(t.tablePath, "_delta_log", fmt.Sprintf("%d.json", v))
+		filePath := filepath.Join(t.tablePath, "_delta_log", fmt.Sprintf("%020d.json", v))
 		data, err := os.ReadFile(filePath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read log file: %w", err)
@@ -157,7 +162,7 @@ func (t *TransactionLog) GetCommitInfo(version int64) (*CommitInfo, error) {
 		return nil, fmt.Errorf("invalid version: %d", version)
 	}
 
-	filePath := filepath.Join(t.tablePath, "_delta_log", fmt.Sprintf("%d.commit.json", version))
+	filePath := filepath.Join(t.tablePath, "_delta_log", fmt.Sprintf("%020d.commit.json", version))
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read commit info: %w", err)

@@ -278,6 +278,8 @@ security:
 			name: "TLS enabled without certificates",
 			content: `
 security:
+  jwt:
+    secret: "test-dummy-secret"
   tls:
     enabled: true
 `,
@@ -286,6 +288,9 @@ security:
 		{
 			name: "missing Delta Lake base path",
 			content: `
+security:
+  jwt:
+    secret: "test-dummy-secret"
 delta:
   base_path: ""
 `,
@@ -294,6 +299,11 @@ delta:
 		{
 			name: "invalid quality rule",
 			content: `
+security:
+  jwt:
+    secret: "test-dummy-secret"
+delta:
+  base_path: "/tmp/dummy-delta-path"
 quality:
   rules:
     - name: ""
@@ -304,16 +314,25 @@ quality:
 		{
 			name: "Prometheus enabled without push gateway",
 			content: `
+security:
+  jwt:
+    secret: "test-dummy-secret"
+delta:
+  base_path: "/tmp/dummy-delta-path"
 monitoring:
   prometheus:
     enabled: true
-    push_gateway: ""
 `,
 			errMsg: "Prometheus push gateway URL is required when monitoring is enabled",
 		},
 		{
 			name: "missing report output directory",
 			content: `
+security:
+  jwt:
+    secret: "test-dummy-secret"
+delta:
+  base_path: "/tmp/dummy-delta-path"
 reports:
   output_dir: ""
 `,
@@ -322,6 +341,13 @@ reports:
 		{
 			name: "missing logging level",
 			content: `
+security:
+  jwt:
+    secret: "test-dummy-secret"
+delta:
+  base_path: "/tmp/dummy-delta-path"
+reports:
+  output_dir: "/tmp/dummy-reports"
 logging:
   level: ""
 `,
@@ -332,6 +358,11 @@ logging:
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			configPath := filepath.Join(tmpDir, "invalid_config.yaml")
+			// Prepend a valid server port for most tests, unless the test is specifically about port or empty config.
+			if tc.name != "invalid port" && tc.name != "empty_config" {
+				tc.content = "server:\n  port: 8080\n" + tc.content
+			}
+
 			err := os.WriteFile(configPath, []byte(tc.content), 0644)
 			require.NoError(t, err)
 

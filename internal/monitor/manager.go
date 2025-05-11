@@ -3,6 +3,7 @@ package monitor
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -31,8 +32,8 @@ type Metric struct {
 	LabelsMap   map[string]string `json:"labels_map"`
 }
 
-// Alert represents a monitoring alert
-type Alert struct {
+// MonitoringAlert represents a monitoring alert
+type MonitoringAlert struct {
 	Name        string            `json:"name"`
 	Description string            `json:"description"`
 	Severity    string            `json:"severity"`
@@ -47,7 +48,7 @@ type Alert struct {
 type MonitorManager struct {
 	mu      sync.RWMutex
 	metrics map[string]prometheus.Collector
-	alerts  map[string]Alert
+	alerts  map[string]MonitoringAlert
 	pusher  *push.Pusher
 }
 
@@ -55,8 +56,8 @@ type MonitorManager struct {
 func NewManager(pushGatewayURL string) *MonitorManager {
 	return &MonitorManager{
 		metrics: make(map[string]prometheus.Collector),
-		alerts:  make(map[string]Alert),
-		pusher:  push.New(pushGatewayURL, "nessi"),
+		alerts:  make(map[string]MonitoringAlert),
+		pusher:  push.New(pushGatewayURL, "nessi_monitoring").Gatherer(prometheus.DefaultGatherer),
 	}
 }
 
@@ -144,7 +145,7 @@ func (m *MonitorManager) UpdateMetric(name string, value float64, labels map[str
 // GetMetric returns the current value of a metric
 func (m *MonitorManager) GetMetric(name string, labels map[string]string) (float64, error) {
 	m.mu.RLock()
-	collector, exists := m.metrics[name]
+	_, exists := m.metrics[name]
 	m.mu.RUnlock()
 
 	if !exists {
@@ -157,7 +158,7 @@ func (m *MonitorManager) GetMetric(name string, labels map[string]string) (float
 }
 
 // AddAlert adds a new alert
-func (m *MonitorManager) AddAlert(alert Alert) error {
+func (m *MonitorManager) AddAlert(alert MonitoringAlert) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -183,27 +184,29 @@ func (m *MonitorManager) RemoveAlert(name string) error {
 }
 
 // GetAlerts returns all alerts
-func (m *MonitorManager) GetAlerts() []Alert {
+func (m *MonitorManager) GetAlerts() ([]MonitoringAlert, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	alerts := make([]Alert, 0, len(m.alerts))
+	firingAlerts := make([]MonitoringAlert, 0, len(m.alerts))
 	for _, alert := range m.alerts {
-		alerts = append(alerts, alert)
+		if m.checkAlertCondition(alert) {
+			firingAlerts = append(firingAlerts, alert)
+		}
 	}
-	return alerts
+	return firingAlerts, nil
 }
 
 // CheckAlerts checks all alerts and returns any that are firing
-func (m *MonitorManager) CheckAlerts() ([]Alert, error) {
+func (m *MonitorManager) CheckAlerts() ([]MonitoringAlert, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	var firingAlerts []Alert
+	var firingAlerts []MonitoringAlert
 	for _, alert := range m.alerts {
 		// TODO: Implement alert condition evaluation
 		// This would involve parsing the condition string and evaluating it against the current metric values
-		if false { // Placeholder for condition evaluation
+		if m.checkAlertCondition(alert) {
 			alert.Status = "FIRING"
 			alert.LastFired = time.Now()
 			firingAlerts = append(firingAlerts, alert)
@@ -211,6 +214,12 @@ func (m *MonitorManager) CheckAlerts() ([]Alert, error) {
 	}
 
 	return firingAlerts, nil
+}
+
+func (m *MonitorManager) checkAlertCondition(alert MonitoringAlert) bool {
+	// TODO: Implement alert condition evaluation
+	// This would involve parsing the condition string and evaluating it against the current metric values
+	return false // Placeholder for condition evaluation
 }
 
 // PushMetrics pushes metrics to the Prometheus push gateway
@@ -237,19 +246,23 @@ func (m *MonitorManager) StartPeriodicPush(ctx context.Context, interval time.Du
 }
 
 // StartPeriodicAlertCheck starts periodic alert checking
-func (m *MonitorManager) StartPeriodicAlertCheck(ctx context.Context, interval time.Duration, handler func([]Alert)) {
-	ticker := time.NewTicker(interval)
+func (m *MonitorManager) StartPeriodicAlertCheck(ctx context.Context, interval time.Duration, handler func([]MonitoringAlert)) {
 	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+
 		for {
 			select {
 			case <-ctx.Done():
-				ticker.Stop()
 				return
 			case <-ticker.C:
-				if alerts, err := m.CheckAlerts(); err == nil && len(alerts) > 0 {
-					handler(alerts)
+				alerts, err := m.CheckAlerts()
+				if err != nil {
+					log.Printf("Error checking alerts: %v", err)
+					continue
 				}
+				handler(alerts)
 			}
 		}
 	}()
-} 
+}

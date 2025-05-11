@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"golang.org/x/time/rate"
 	"gopkg.in/yaml.v3"
 )
 
@@ -166,8 +167,11 @@ func (c *Config) SaveConfig(path string) error {
 
 // ApplyConfig applies the security configuration to the security manager
 func (m *SecurityManager) ApplyConfig(config *SecurityConfig) error {
+	// Store the config
+	m.config = config
+
 	// Configure JWT
-	m.jwtSecret = []byte(config.JWT.Secret)
+	m.jwtSecret = config.JWT.Secret
 	m.jwtExpiration = config.JWT.Expiration
 
 	// Configure TLS if enabled
@@ -179,7 +183,7 @@ func (m *SecurityManager) ApplyConfig(config *SecurityConfig) error {
 
 	// Configure rate limiting
 	if config.RateLimit.Enabled {
-		m.SetRateLimit("default", config.RateLimit.RequestsPerMinute, config.RateLimit.Burst)
+		m.SetRateLimit("default", rate.Limit(config.RateLimit.RequestsPerMinute), config.RateLimit.Burst)
 	}
 
 	// Configure IP allowlist

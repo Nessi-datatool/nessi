@@ -2,15 +2,20 @@ package delta
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
 	"time"
 
-	"github.com/apache/arrow/go/v12/arrow"
-	"github.com/apache/arrow/go/v12/arrow/array"
-	"github.com/apache/arrow/go/v12/arrow/memory"
+	"github.com/apache/arrow/go/v15/arrow"
+	"github.com/apache/arrow/go/v15/arrow/array"
+	"github.com/apache/arrow/go/v15/arrow/memory"
+
+	"github.com/nessi-dev/nessi-dev/internal/quality"
+	"github.com/nessi-dev/nessi-dev/internal/quality/profile"
+	"github.com/nessi-dev/nessi-dev/internal/quality/rules"
 )
 
 // TimeTravelOptions defines options for time travel operations
@@ -69,7 +74,7 @@ func (o *DeltaOperations) TimeTravel(ctx context.Context, options TimeTravelOpti
 
 // findVersionByTimestamp finds the version closest to the given timestamp
 func (o *DeltaOperations) findVersionByTimestamp(timestamp time.Time) (int64, error) {
-	logPath := filepath.Join(o.connector.tablePath, "_delta_log")
+	logPath := filepath.Join(o.connector.TablePath, "_delta_log")
 	files, err := os.ReadDir(logPath)
 	if err != nil {
 		return 0, fmt.Errorf("failed to read log directory: %w", err)
@@ -110,12 +115,12 @@ func (o *DeltaOperations) findVersionByTimestamp(timestamp time.Time) (int64, er
 
 // createCheckpoint creates a checkpoint at the specified version
 func (o *DeltaOperations) createCheckpoint(version int64) error {
-	checkpointPath := filepath.Join(o.connector.tablePath, "_delta_log", fmt.Sprintf("%d.checkpoint.parquet", version))
+	checkpointPath := filepath.Join(o.connector.TablePath, "_delta_log", fmt.Sprintf("%d.checkpoint.parquet", version))
 	
 	// Read all actions up to the target version
 	var actions []Action
 	for v := int64(0); v <= version; v++ {
-		filePath := filepath.Join(o.connector.tablePath, "_delta_log", fmt.Sprintf("%d.json", v))
+		filePath := filepath.Join(o.connector.TablePath, "_delta_log", fmt.Sprintf("%d.json", v))
 		data, err := os.ReadFile(filePath)
 		if err != nil {
 			return fmt.Errorf("failed to read log file: %w", err)
@@ -148,7 +153,7 @@ func (o *DeltaOperations) createCheckpoint(version int64) error {
 	record := builder.NewRecord()
 	defer record.Release()
 
-	if err := writeParquetFile(checkpointPath, record); err != nil {
+	if err := WriteRecordToParquet(checkpointPath, record); err != nil {
 		return fmt.Errorf("failed to write checkpoint file: %w", err)
 	}
 
@@ -164,12 +169,12 @@ func (o *DeltaOperations) EvolveSchema(ctx context.Context, options SchemaEvolut
 	}
 
 	// Create new schema
-	newFields := make([]arrow.Field, 0, currentSchema.NumFields())
+	newFields := make([]arrow.Field, 0, len(currentSchema.Fields()))
 	fieldMap := make(map[string]arrow.Field)
 
 	// Add existing fields
-	for i := 0; i < currentSchema.NumFields(); i++ {
-		field := currentSchema.Field(i)
+	for i := 0; i < len(currentSchema.Fields()); i++ {
+		field := currentSchema.Fields()[i]
 		fieldMap[field.Name] = field
 		newFields = append(newFields, field)
 	}
@@ -242,7 +247,7 @@ func (o *DeltaOperations) EvolveSchema(ctx context.Context, options SchemaEvolut
 	}
 
 	// Write the transaction to the log
-	logPath := filepath.Join(o.connector.tablePath, "_delta_log", fmt.Sprintf("%d.json", metadata.Version))
+	logPath := filepath.Join(o.connector.TablePath, "_delta_log", fmt.Sprintf("%d.json", metadata.Version))
 	data, err := json.Marshal(transaction)
 	if err != nil {
 		return fmt.Errorf("failed to marshal transaction: %w", err)
@@ -255,6 +260,52 @@ func (o *DeltaOperations) EvolveSchema(ctx context.Context, options SchemaEvolut
 	return nil
 }
 
+// ListTables is a stub for listing Delta tables.
+// TODO: path parameter is not used by this stub. It should be used to determine where to look for tables.
+func ListTables(ctx context.Context, path string) ([]Table, error) {
+	// TODO: Implement actual ListTables logic. This would involve scanning the 'path' directory for Delta tables.
+	// For now, returning an empty slice and a 'not implemented' error.
+	return []Table{}, fmt.Errorf("delta.ListTables not implemented")
+}
+
+// GetTable is a stub for getting a specific Delta table.
+// TODO: tableName and version parameters are not used by this stub.
+func GetTable(ctx context.Context, tableName string, version int64) (*Table, error) {
+	// TODO: Implement actual GetTable logic. This would involve loading the specific table at the given version.
+	return nil, fmt.Errorf("delta.GetTable not implemented")
+}
+
+// GetTableProfile is a stub for getting a table's profile.
+// TODO: tableName and sample parameters are not used by this stub.
+func GetTableProfile(ctx context.Context, tableName string, sample float64) (*profile.Profile, error) {
+	// TODO: Implement actual GetTableProfile logic.
+	// Example approach:
+	// tablePath := filepath.Join("/data/delta", tableName) // Or construct path based on tableName
+	// profilerInstance, err := profile.NewProfiler(tablePath, &profile.ProfilerConfig{SamplingRate: sample / 100.0})
+	// if err != nil { return nil, fmt.Errorf("failed to create profiler for %s: %w", tableName, err) }
+	// defer profilerInstance.Close()
+	// return profilerInstance.ProfileTable()
+	return nil, fmt.Errorf("delta.GetTableProfile not implemented")
+}
+
+// CheckTableQuality is a stub for checking a table's data quality.
+// TODO: tableName and requestRules parameters are not used by this stub.
+func CheckTableQuality(ctx context.Context, tableName string, requestRules []rules.Rule) (*quality.QualityReport, error) {
+	// TODO: Implement actual CheckTableQuality logic.
+	// This might involve:
+	// 1. Loading the table data or profile.
+	// 2. Iterating through requestRules and evaluating them against the data.
+	// 3. Aggregating results into a QualityReport.
+	return nil, fmt.Errorf("delta.CheckTableQuality not implemented")
+}
+
+// GetTableVersions is a stub for listing a table's versions.
+// TODO: tableName parameter is not used by this stub.
+func GetTableVersions(ctx context.Context, tableName string) ([]int64, error) {
+	// TODO: Implement actual GetTableVersions logic. This would involve reading the _delta_log for the table.
+	return nil, fmt.Errorf("delta.GetTableVersions not implemented")
+}
+
 // parseVersionFromFilename extracts the version number from a Delta log filename
 func parseVersionFromFilename(filename string) (int64, error) {
 	base := filepath.Base(filename)
@@ -264,4 +315,4 @@ func parseVersionFromFilename(filename string) (int64, error) {
 	}
 	versionStr := base[:len(base)-len(ext)]
 	return strconv.ParseInt(versionStr, 10, 64)
-} 
+}

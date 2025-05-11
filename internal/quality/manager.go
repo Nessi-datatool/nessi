@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/apache/arrow/go/v12/arrow"
-	"github.com/apache/arrow/go/v12/arrow/array"
 )
 
 // QualityMetric represents a data quality metric
@@ -116,7 +115,7 @@ func (m *QualityManager) EvaluateRecord(record arrow.Record) ([]QualityMetric, e
 func (m *QualityManager) evaluateRule(record arrow.Record, rule QualityRule) (QualityMetric, error) {
 	// Find the column index
 	colIdx := -1
-	for i := 0; i < record.NumCols(); i++ {
+	for i := 0; int64(i) < record.NumCols(); i++ {
 		if record.ColumnName(i) == rule.Column {
 			colIdx = i
 			break

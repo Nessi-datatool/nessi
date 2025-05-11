@@ -8,9 +8,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/apache/arrow/go/v12/arrow"
-	"github.com/apache/arrow/go/v12/arrow/array"
-	"github.com/apache/arrow/go/v12/arrow/memory"
+	"github.com/apache/arrow/go/v15/arrow"
+	"github.com/apache/arrow/go/v15/arrow/memory"
+	parquetfile "github.com/apache/arrow/go/v15/parquet/file"
+	"github.com/apache/arrow/go/v15/parquet/pqarrow"
 )
 
 // StatsManager manages Delta Lake statistics
@@ -64,68 +65,86 @@ func (s *StatsManager) GetFileStats(ctx context.Context, filePath string) (*File
 	}
 	defer file.Close()
 
-	reader, err := file.NewParquetReader(file)
+	pr, err := parquetfile.NewParquetReader(file) // Parquet file reader
 	if err != nil {
 		return nil, fmt.Errorf("failed to create parquet reader: %w", err)
 	}
-	defer reader.Close()
+	defer pr.Close()
 
 	stats := &FileStats{
 		Path:      filePath,
 		Size:      info.Size(),
-		NumRows:   reader.NumRows(),
-		MinValues: make(map[string]string),
+		NumRows:   pr.NumRows(),
+		MinValues: make(map[string]string), // Initialize maps
 		MaxValues: make(map[string]string),
 		NullCount: make(map[string]int64),
 	}
 
-	// Read the first batch to get column statistics
-	batch, err := reader.ReadNext()
+	// No batch reading needed in GetFileStats, other functions will populate detailed stats.
+	return stats, nil
+}
+
+// CalculateColumnStats calculates min, max, and null counts for columns in a Parquet file.
+func CalculateColumnStats(pr *parquetfile.Reader, fileColumnStats map[string]*ColumnStats, ctx context.Context) error {
+	arrowFileRdr, err := pqarrow.NewFileReader(pr, pqarrow.ArrowReadProperties{}, memory.DefaultAllocator)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read batch: %w", err)
+		return fmt.Errorf("failed to create pqarrow.FileReader: %w", err)
 	}
 
-	for i := 0; i < batch.NumCols(); i++ {
-		col := batch.Column(i)
-		field := s.schema.Field(i)
+	// Get a record reader for all columns and all row groups
+	recordReader, err := arrowFileRdr.GetRecordReader(ctx, nil, nil)
+	if err != nil {
+		return fmt.Errorf("failed to get record reader from pqarrow.FileReader: %w", err)
+	}
+	defer recordReader.Release()
 
-		// Get min and max values
-		if col.Len() > 0 {
-			minVal := col.ValueStr(0)
-			maxVal := col.ValueStr(0)
-			nullCount := int64(0)
-
-			for j := 0; j < col.Len(); j++ {
-				if col.IsNull(j) {
-					nullCount++
-					continue
+	// Read all batches
+	for recordReader.Next() {
+		batch := recordReader.Record()
+		// Process batch
+		for i, field := range batch.Schema().Fields() {
+			col := batch.Column(i)
+			// ... (rest of the logic for processing column remains the same)
+			colStats := fileColumnStats[field.Name]
+			if col.Len() > 0 {
+				// Update min and max values
+				if colStats.MinValue == "" {
+					colStats.MinValue = col.ValueStr(0)
+					colStats.MaxValue = col.ValueStr(0)
 				}
 
-				val := col.ValueStr(j)
-				if val < minVal {
-					minVal = val
-				}
-				if val > maxVal {
-					maxVal = val
+				for j := 0; j < col.Len(); j++ {
+					if col.IsNull(j) {
+						colStats.NullCount++
+						continue
+					}
+
+					val := col.ValueStr(j)
+					if val < colStats.MinValue {
+						colStats.MinValue = val
+					}
+					if val > colStats.MaxValue {
+						colStats.MaxValue = val
+					}
 				}
 			}
-
-			stats.MinValues[field.Name] = minVal
-			stats.MaxValues[field.Name] = maxVal
-			stats.NullCount[field.Name] = nullCount
 		}
+		batch.Release() // Release the current batch after processing
+	}
+	if recordReader.Err() != nil {
+		return fmt.Errorf("error reading records: %w", recordReader.Err())
 	}
 
-	return stats, nil
+	return nil
 }
 
 // GetColumnStats returns statistics for a column
 func (s *StatsManager) GetColumnStats(ctx context.Context, column string) (*ColumnStats, error) {
 	// Find the column in the schema
 	var field *arrow.Field
-	for i := 0; i < s.schema.NumFields(); i++ {
-		if s.schema.Field(i).Name == column {
-			field = &s.schema.Field(i)
+	for i := 0; i < len(s.schema.Fields()); i++ {
+		if s.schema.Fields()[i].Name == column {
+			field = &s.schema.Fields()[i]
 			break
 		}
 	}
@@ -152,42 +171,15 @@ func (s *StatsManager) GetColumnStats(ctx context.Context, column string) (*Colu
 			}
 			defer file.Close()
 
-			reader, err := file.NewParquetReader(file)
+			pr, err := parquetfile.NewParquetReader(file) // Parquet file reader
 			if err != nil {
 				return fmt.Errorf("failed to create parquet reader: %w", err)
 			}
-			defer reader.Close()
+			defer pr.Close()
 
-			// Read all batches
-			for {
-				batch, err := reader.ReadNext()
-				if err != nil {
-					break
-				}
-
-				col := batch.Column(s.schema.FieldIndices(column)[0])
-				if col.Len() > 0 {
-					// Update min and max values
-					if stats.MinValue == "" {
-						stats.MinValue = col.ValueStr(0)
-						stats.MaxValue = col.ValueStr(0)
-					}
-
-					for j := 0; j < col.Len(); j++ {
-						if col.IsNull(j) {
-							stats.NullCount++
-							continue
-						}
-
-						val := col.ValueStr(j)
-						if val < stats.MinValue {
-							stats.MinValue = val
-						}
-						if val > stats.MaxValue {
-							stats.MaxValue = val
-						}
-					}
-				}
+			fileColumnStats := map[string]*ColumnStats{column: stats}
+			if err := CalculateColumnStats(pr, fileColumnStats, ctx); err != nil { // Pass context
+				return fmt.Errorf("failed to calculate column stats: %w", err)
 			}
 		}
 		return nil
@@ -200,13 +192,12 @@ func (s *StatsManager) GetColumnStats(ctx context.Context, column string) (*Colu
 	return stats, nil
 }
 
-// GetTableStats returns statistics for the entire table
 func (s *StatsManager) GetTableStats(ctx context.Context) (map[string]*ColumnStats, error) {
 	stats := make(map[string]*ColumnStats)
 
 	// Initialize stats for each column
-	for i := 0; i < s.schema.NumFields(); i++ {
-		field := s.schema.Field(i)
+	for i := 0; i < len(s.schema.Fields()); i++ {
+		field := s.schema.Fields()[i]
 		stats[field.Name] = &ColumnStats{
 			Name:      field.Name,
 			NullCount: 0,
@@ -226,47 +217,15 @@ func (s *StatsManager) GetTableStats(ctx context.Context) (map[string]*ColumnSta
 			}
 			defer file.Close()
 
-			reader, err := file.NewParquetReader(file)
+			pr, err := parquetfile.NewParquetReader(file) // Parquet file reader
 			if err != nil {
 				return fmt.Errorf("failed to create parquet reader: %w", err)
 			}
-			defer reader.Close()
+			defer pr.Close()
 
-			// Read all batches
-			for {
-				batch, err := reader.ReadNext()
-				if err != nil {
-					break
-				}
-
-				for i := 0; i < batch.NumCols(); i++ {
-					col := batch.Column(i)
-					field := s.schema.Field(i)
-					colStats := stats[field.Name]
-
-					if col.Len() > 0 {
-						// Update min and max values
-						if colStats.MinValue == "" {
-							colStats.MinValue = col.ValueStr(0)
-							colStats.MaxValue = col.ValueStr(0)
-						}
-
-						for j := 0; j < col.Len(); j++ {
-							if col.IsNull(j) {
-								colStats.NullCount++
-								continue
-							}
-
-							val := col.ValueStr(j)
-							if val < colStats.MinValue {
-								colStats.MinValue = val
-							}
-							if val > colStats.MaxValue {
-								colStats.MaxValue = val
-							}
-						}
-					}
-				}
+			fileColumnStats := stats
+			if err := CalculateColumnStats(pr, fileColumnStats, ctx); err != nil { // Pass context
+				return fmt.Errorf("failed to calculate column stats: %w", err)
 			}
 		}
 		return nil
@@ -277,6 +236,63 @@ func (s *StatsManager) GetTableStats(ctx context.Context) (map[string]*ColumnSta
 	}
 
 	return stats, nil
+}
+
+func (s *StatsManager) GetNullCounts(ctx context.Context) (map[string]int64, error) {
+	nullCounts := make(map[string]int64)
+
+	// Walk through all Parquet files to collect null counts
+	err := filepath.Walk(s.tablePath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() && strings.HasSuffix(path, ".parquet") {
+			file, err := os.Open(path)
+			if err != nil {
+				return fmt.Errorf("failed to open file: %w", err)
+			}
+			defer file.Close()
+
+			pr, err := parquetfile.NewParquetReader(file)
+			if err != nil {
+				return fmt.Errorf("failed to create parquet reader: %w", err)
+			}
+			// pr.Close() is implicitly handled by file.Close() for underlying resources, 
+			// and pqarrow.FileReader doesn't own pr to close it.
+
+			arrowFileRdr, err := pqarrow.NewFileReader(pr, pqarrow.ArrowReadProperties{}, memory.DefaultAllocator)
+			if err != nil {
+				return fmt.Errorf("failed to create pqarrow.FileReader for null counts: %w", err)
+			}
+
+			// Get a record reader for all columns and all row groups
+			recordReader, err := arrowFileRdr.GetRecordReader(ctx, nil, nil)
+			if err != nil {
+				return fmt.Errorf("failed to get record reader for null counts: %w", err)
+			}
+			defer recordReader.Release() // Release after this file's processing
+
+			// Read all batches
+			for recordReader.Next() {
+				batch := recordReader.Record()
+				for i, field := range batch.Schema().Fields() {
+					column := batch.Column(i)
+					nullCounts[field.Name] += int64(column.NullN())
+				}
+				batch.Release() // Release the current batch after processing
+			}
+			if recordReader.Err() != nil {
+                return fmt.Errorf("error reading records for null counts: %w", recordReader.Err())
+            }
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get null counts: %w", err)
+	}
+
+	return nullCounts, nil
 }
 
 // WriteStats writes statistics to a file
@@ -321,7 +337,7 @@ func (s *StatsManager) UpdateStats(ctx context.Context, filePath string, record 
 	}
 
 	// Update statistics with the new record
-	for i := 0; i < record.NumCols(); i++ {
+	for i := 0; i < int(record.NumCols()); i++ { // Fixed: Cast NumCols to int
 		col := record.Column(i)
 		field := s.schema.Field(i)
 
@@ -352,4 +368,4 @@ func (s *StatsManager) UpdateStats(ctx context.Context, filePath string, record 
 	// Write updated statistics
 	statsPath := filepath.Join(s.tablePath, "_delta_log", "stats", filePath+".stats.json")
 	return s.WriteStats(ctx, stats, statsPath)
-} 
+}

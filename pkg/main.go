@@ -25,11 +25,6 @@ func StartServer(host string, port int) error {
 	return http.ListenAndServe(addr, nil)
 }
 
-// DeltaTable represents a Delta table configuration
-type DeltaTable struct {
-	Path string
-}
-
 // RunQualityChecks performs data quality checks on a Delta table
 func RunQualityChecks(tablePath string) error {
 	table := &DeltaTable{

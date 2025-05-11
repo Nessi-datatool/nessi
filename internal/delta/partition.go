@@ -8,8 +8,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/apache/arrow/go/v12/arrow"
-	"github.com/apache/arrow/go/v12/arrow/array"
+	"github.com/apache/arrow/go/v15/arrow"
+	"github.com/apache/arrow/go/v15/arrow/memory"
+	parquetfile "github.com/apache/arrow/go/v15/parquet/file"
+	"github.com/apache/arrow/go/v15/parquet/pqarrow"
 )
 
 // PartitionManager manages Delta Lake partitions
@@ -115,7 +117,7 @@ func (p *PartitionManager) GetPartitionStats(ctx context.Context, partition stri
 			}
 			defer file.Close()
 
-			reader, err := file.NewParquetReader(file)
+			reader, err := parquetfile.NewParquetReader(file)
 			if err != nil {
 				return fmt.Errorf("failed to create parquet reader: %w", err)
 			}
@@ -308,13 +310,21 @@ func (p *PartitionManager) GetPartitionSchema(ctx context.Context, partition str
 			}
 			defer file.Close()
 
-			reader, err := file.NewParquetReader(file)
+			reader, err := parquetfile.NewParquetReader(file)
 			if err != nil {
 				return fmt.Errorf("failed to create parquet reader: %w", err)
 			}
 			defer reader.Close()
 
-			schema = reader.Schema()
+			arrowReader, err := pqarrow.NewFileReader(reader, pqarrow.ArrowReadProperties{}, memory.DefaultAllocator)
+			if err != nil {
+				return fmt.Errorf("failed to create arrow reader from parquet: %w", err)
+			}
+			
+			schema, err = arrowReader.Schema()
+			if err != nil {
+				return fmt.Errorf("failed to get schema from arrow reader: %w", err)
+			}
 			return filepath.SkipAll
 		}
 		return nil
@@ -360,4 +370,4 @@ func (p *PartitionManager) GetPartitionFiles(ctx context.Context, partition stri
 
 	sort.Strings(files)
 	return files, nil
-} 
+}
