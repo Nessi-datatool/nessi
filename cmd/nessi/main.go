@@ -35,22 +35,24 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/nessi-dev/nessi-dev/cmd/nessi/cli"
 	"github.com/nessi-dev/nessi-dev/internal/config"
 	"github.com/nessi-dev/nessi-dev/internal/delta"
 	"github.com/nessi-dev/nessi-dev/internal/extensions"
 	"github.com/nessi-dev/nessi-dev/internal/monitor"
-	"github.com/nessi-dev/nessi-dev/internal/quality" // Added back quality import
+	"github.com/nessi-dev/nessi-dev/internal/quality"
 	"github.com/nessi-dev/nessi-dev/internal/report"
 	"github.com/nessi-dev/nessi-dev/internal/security"
-	"github.com/nessi-dev/nessi-dev/internal/server" // Added back server import
+	"github.com/nessi-dev/nessi-dev/internal/server"
 	"github.com/nessi-dev/nessi-dev/pkg"
 	"go.uber.org/zap"
 )
 
 var (
 	// Global flags
-	cfgFile   string
-	verbose   bool
+	configPath string
+	verbose    bool
+	version    bool
 
 	extManager *extensions.Manager // Added extension manager instance
 
@@ -66,9 +68,6 @@ var (
 	// Profile command flags
 	outputPath string
 	reportFmt  string
-
-	configPath = flag.String("config", "config/config.yaml", "path to configuration file")
-	version    = flag.Bool("version", false, "print version and exit")
 )
 
 var rootCmd = &cobra.Command{
@@ -103,9 +102,9 @@ var rootCmd = &cobra.Command{
 func initConfig() error {
 	home, homeErr := os.UserHomeDir() // Declare home and its error at the top
 
-	if cfgFile != "" {
+	if configPath != "" {
 		// Use config file from the flag
-		viper.SetConfigFile(cfgFile)
+		viper.SetConfigFile(configPath)
 	} else {
 		// Find home directory
 		if homeErr != nil {
@@ -244,9 +243,13 @@ var disableExtensionCmd = &cobra.Command{
 }
 
 func init() {
+	// Initialize CLI
+	cli.Init()
+
 	// Global flags
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.nessi.yaml)")
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable verbose output")
+	cli.CLI.RootCmd.PersistentFlags().StringVar(&configPath, "config", "", "path to config file")
+	cli.CLI.RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+	cli.CLI.RootCmd.PersistentFlags().BoolVarP(&version, "version", "V", false, "show version")
 
 	// Serve command flags
 	serveCmd.Flags().StringVar(&host, "host", "", "Host to bind the server to (default from config)")
@@ -261,147 +264,26 @@ func init() {
 	profileCmd.Flags().StringVar(&outputPath, "output", ".", "Path for report output")
 	profileCmd.Flags().StringVar(&reportFmt, "format", "html", "Report format (html/pdf/json)")
 
-	// Add commands
-	rootCmd.AddCommand(serveCmd)
-	rootCmd.AddCommand(checkCmd)
-	rootCmd.AddCommand(profileCmd)
-	
+	// Add subcommands
+	cli.CLI.RootCmd.AddCommand(serveCmd)
+	cli.CLI.RootCmd.AddCommand(checkCmd)
+	cli.CLI.RootCmd.AddCommand(profileCmd)
+	cli.CLI.RootCmd.AddCommand(extensionsCmd)
+
 	// Add extension subcommands
 	extensionsCmd.AddCommand(listExtensionsCmd)
 	extensionsCmd.AddCommand(enableExtensionCmd)
 	extensionsCmd.AddCommand(disableExtensionCmd)
-	rootCmd.AddCommand(extensionsCmd)
+
+	// Initialize Cobra
+	cobra.OnInitialize(initConfig)
 }
 
 func main() {
-	flag.Parse()
-
-	if *version {
-		fmt.Println("Nessi.dev v0.1.0")
-		return
+	if err := cli.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
-
-	// Load configuration
-	cfg, err := config.LoadConfig(*configPath)
-	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
-	}
-
-	// Create context with cancellation
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	// Initialize components
-	secManager := security.NewSecurityManager(cfg.Security.JWT.Secret, cfg.Security.JWT.Expiration)
-	// The secManager.ApplyConfig call was incorrect as it expected security.SecurityConfig,
-	// not the global config.SecurityConfig. SecurityManager is typically configured internally
-	// or via its own specific config structure if ApplyConfig is used directly.
-	// if err := secManager.ApplyConfig(cfg.Security); err != nil {
-	// 	log.Fatalf("Failed to apply security configuration: %v", err)
-	// }
-
-	// Corrected delta.NewConnector call and error handling
-	deltaConnector, err := delta.NewConnector(cfg.Delta.BasePath)
-	if err != nil {
-		log.Fatalf("Failed to initialize Delta Lake connector: %v", err)
-	}
-
-	// Initialize Quality Manager
-	// TODO: Add configuration for QualityManager if needed (e.g., rules path)
-	qualityManager := quality.NewManager() // Corrected: NewManager takes no arguments
-
-	monitorManager := monitor.NewManager(cfg.Monitoring.Prometheus.PushGateway)
-	// Loop through configured metrics and register them
-	for _, metricConf := range cfg.Monitoring.Metrics {
-		// Convert string type from config to monitor.MetricType
-		metricType := monitor.MetricType(metricConf.Type)
-		if err := monitorManager.RegisterMetric(metricConf.Name, metricConf.Description, metricType, metricConf.Labels); err != nil {
-			log.Fatalf("Failed to register metric '%s': %v", metricConf.Name, err)
-		}
-	}
-
-	// Loop through configured alerts and add them
-	for _, alertConf := range cfg.Monitoring.Alerts {
-		// Create monitor.MonitoringAlert from config.AlertConfig
-		// Note: config.AlertConfig doesn't have Labels, so passing nil or empty map for now.
-		// If labels are needed for alerts from config, config.AlertConfig needs to be updated.
-		alert := monitor.MonitoringAlert{
-			Name:        alertConf.Name,
-			Description: alertConf.Description,
-			Severity:    alertConf.Severity,
-			Condition:   alertConf.Condition,
-			Threshold:   alertConf.Threshold,
-			Labels:      nil, // Or make(map[string]string) if empty map is preferred
-		}
-		if err := monitorManager.AddAlert(alert); err != nil {
-			log.Fatalf("Failed to add alert '%s': %v", alertConf.Name, err)
-		}
-	}
-
-	reportManager, err := report.NewManager(cfg.Reports.OutputDir)
-	if err != nil {
-		log.Fatalf("Failed to initialize report manager: %v", err)
-	}
-	// Loop through configured report templates and add them
-	for _, templateConf := range cfg.Reports.Templates {
-		// Manually map config.TemplateConfig to report.ReportTemplate
-		reportTpl := report.ReportTemplate{
-			ID:          templateConf.ID,
-			Name:        templateConf.Name,
-			Description: templateConf.Description,
-			Format:      report.ReportFormat(templateConf.Format), // Cast string to report.ReportFormat
-			Template:    templateConf.Template,
-			Parameters:  templateConf.Parameters,
-		}
-		if err := reportManager.AddTemplate(reportTpl); err != nil {
-			log.Fatalf("Failed to add report template '%s': %v", templateConf.Name, err)
-		}
-	}
-
-	// Prepare server.Config from the global config.ServerConfig
-	serverCfg := &server.Config{
-		Host:            cfg.Server.Host,
-		Port:            cfg.Server.Port,
-		ReadTimeout:     cfg.Server.ReadTimeout,
-		WriteTimeout:    cfg.Server.WriteTimeout,
-		ShutdownTimeout: cfg.Server.ShutdownTimeout, // This should now be valid
-		TLS: struct {
-			Enabled  bool
-			CertFile string
-			KeyFile  string
-		}{
-			Enabled:  cfg.Security.TLS.Enabled,  // Corrected: Source from cfg.Security.TLS
-			CertFile: cfg.Security.TLS.CertFile, // Corrected: Source from cfg.Security.TLS
-			KeyFile:  cfg.Security.TLS.KeyFile,  // Corrected: Source from cfg.Security.TLS
-		},
-	}
-
-	// Create and start server
-	logger, err := zap.NewDevelopment()
-	if err != nil {
-		log.Fatalf("Failed to create logger: %v", err)
-	}
-	srv := server.NewServer(
-		serverCfg,      // *server.Config
-		extManager,     // *extensions.Manager
-		secManager,     // *security.SecurityManager
-		deltaConnector, // *delta.DeltaConnector
-		qualityManager, // *quality.QualityManager
-		monitorManager, // *monitor.MonitorManager
-		logger,         // *zap.Logger
-	)
-
-	// Start server in a goroutine
-	go func() {
-		if err := srv.Start(); err != nil {
-			log.Printf("Server error: %v", err)
-			cancel()
-		}
-	}()
-
-	// Start monitoring
-	if cfg.Monitoring.Prometheus.Enabled {
-		go monitorManager.StartPeriodicPush(ctx, cfg.Monitoring.Prometheus.Interval)
 		go monitorManager.StartPeriodicAlertCheck(ctx, cfg.Monitoring.Prometheus.Interval, func(alerts []monitor.MonitoringAlert) {
 			for _, alert := range alerts {
 				log.Printf("Alert firing: %s - %s", alert.Name, alert.Description)
