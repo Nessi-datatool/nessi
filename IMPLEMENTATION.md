@@ -719,6 +719,43 @@ func (r *RangeCheckRule) Validate(record arrow.Record) []ValidationError {
 }
 ```
 
+## Implementation Decisions
+
+### Data Exchange Strategy
+- **Arrow vs. JSON Selection:**
+  - Use Arrow for datasets > 1MB (configurable via `ArrowThreshold`)
+  - Use JSON for smaller datasets and control messages
+  - Track memory usage and enforce limits
+  - Compress data when `UseCompression` is enabled
+
+### Error Handling
+- **Arrow Operations:**
+  - Validate schema before serialization/deserialization
+  - Track operation timing and memory usage
+  - Provide detailed error messages with context
+  - Implement graceful fallback to JSON if needed
+
+### Rule Validation
+- **Implementation Pattern:**
+  - Each rule is a separate type implementing the `Rule` interface
+  - Rules are configured via YAML files
+  - Rules operate on Arrow records for efficiency
+  - Track validation stats for monitoring
+
+### Report Generation
+- **Component Responsibilities:**
+  - `ReportGenerator`: Orchestrates report creation
+  - `ReportSection`: Handles specific content types
+  - `AssetManager`: Manages resources and templates
+  - Support multiple output formats (HTML, PDF, MD)
+
+### Deployment Strategy
+- **Container-based Deployment:**
+  - Multi-stage builds for minimal image size
+  - Python environment isolation
+  - Resource limits and monitoring
+  - Health checks and auto-recovery
+
 ## Timeline and Milestones
 
 ### Week 1-2: Core Infrastructure
