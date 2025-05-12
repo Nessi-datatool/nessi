@@ -23,7 +23,7 @@ Every time development resumes, check this file and `IMPLEMENTATION.md` to decid
 
 ## 3. Anomaly Detection
 - [x] Outlier detection (z-score): Go profiler
-- [ ] IQR-based outliers: Add IQR method
+- [x] IQR-based outliers: Add IQR method
 - [ ] Sudden change detection: Compare stats across runs
 
 ## 4. Rule Validation

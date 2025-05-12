@@ -160,12 +160,15 @@ type QualityIssue struct {
 	Recommendation string
 }
 
-// Profiler handles data profiling
-type Profiler struct {
-	reader *pkg.Reader
-	config *ProfilerConfig
-	concurrency int
-}
+// OutlierDetectionMethod defines the method used for outlier detection
+type OutlierDetectionMethod string
+
+const (
+	// ZScoreMethod uses z-score (standard deviations from mean) for outlier detection
+	ZScoreMethod OutlierDetectionMethod = "zscore"
+	// IQRMethod uses interquartile range for outlier detection
+	IQRMethod OutlierDetectionMethod = "iqr"
+)
 
 // ProfilerConfig represents profiler configuration
 type ProfilerConfig struct {
@@ -174,8 +177,17 @@ type ProfilerConfig struct {
 	NumHistogramBins    int
 	MinPatternFrequency float64
 	OutlierThreshold    float64
+	IQRMultiplier       float64
+	OutlierMethod       OutlierDetectionMethod
 	SamplingRate        float64
 	MaxRows             int64
+}
+
+// Profiler handles data profiling
+type Profiler struct {
+	reader *pkg.Reader
+	config *ProfilerConfig
+	concurrency int
 }
 
 // NewProfiler creates a new data profiler
@@ -192,6 +204,8 @@ func NewProfiler(tablePath string, config *ProfilerConfig) (*Profiler, error) {
 			NumHistogramBins:    20,
 			MinPatternFrequency: 0.01,
 			OutlierThreshold:    3.0,
+			IQRMultiplier:       1.5,
+			OutlierMethod:       ZScoreMethod, // Default to z-score method
 			SamplingRate:        1.0,
 			MaxRows:             100000,
 		}
@@ -390,8 +404,13 @@ func (p *Profiler) profileNumericColumn(values []interface{}) NumericStats {
 		stats.Median = floats[mid]
 	}
 
-	// Detect outliers
-	stats.Outliers = detectOutliers(floats, p.config.OutlierThreshold)
+	// Detect outliers based on the configured method
+	switch p.config.OutlierMethod {
+	case IQRMethod:
+		stats.Outliers = detectOutliersIQR(floats, p.config.IQRMultiplier)
+	default: // ZScoreMethod or any other value defaults to z-score
+		stats.Outliers = detectOutliers(floats, p.config.OutlierThreshold)
+	}
 
 	return stats
 }
@@ -468,8 +487,13 @@ func (p *Profiler) profileDateColumn(values []interface{}) DateStats {
 	}
 	stats.AvgInterval = totalInterval / time.Duration(len(dates)-1)
 
-	// Detect outliers
-	stats.Outliers = detectDateOutliers(dates, p.config.OutlierThreshold)
+	// Detect outliers based on the configured method
+	switch p.config.OutlierMethod {
+	case IQRMethod:
+		stats.Outliers = detectDateOutliersIQR(dates, p.config.IQRMultiplier)
+	default: // ZScoreMethod or any other value defaults to z-score
+		stats.Outliers = detectDateOutliers(dates, p.config.OutlierThreshold)
+	}
 
 	return stats
 }
@@ -542,37 +566,98 @@ func detectOutliers(values []float64, threshold float64) []int {
 	return outliers
 }
 
-// detectDateOutliers identifies outliers in date data
+// detectDateOutliers identifies outliers in date data using z-score method
 func detectDateOutliers(dates []time.Time, threshold float64) []int {
 	if len(dates) < 2 {
 		return nil
 	}
 
-	// Calculate intervals
-	intervals := make([]float64, len(dates)-1)
-	for i := 1; i < len(dates); i++ {
-		intervals[i-1] = float64(dates[i].Sub(dates[i-1]))
+	// Convert dates to durations from earliest date
+	earliest := dates[0]
+	for _, date := range dates {
+		if date.Before(earliest) {
+			earliest = date
+		}
 	}
 
-	// Calculate mean and standard deviation
-	var sum, sumSquares float64
-	for _, v := range intervals {
-		sum += v
-		sumSquares += v * v
+	// Convert to durations in hours
+	durations := make([]float64, len(dates))
+	for i, date := range dates {
+		duration := date.Sub(earliest)
+		durations[i] = duration.Hours()
 	}
-	mean := sum / float64(len(intervals))
-	stdDev := math.Sqrt(sumSquares/float64(len(intervals)) - mean*mean)
+
+	// Use the same outlier detection as for numeric values
+	return detectOutliers(durations, threshold)
+}
+
+// detectOutliersIQR identifies outliers in numeric data using the Interquartile Range (IQR) method
+// Values outside of Q1 - multiplier*IQR and Q3 + multiplier*IQR are considered outliers
+// A typical multiplier value is 1.5 for outliers and 3.0 for extreme outliers
+func detectOutliersIQR(values []float64, multiplier float64) []int {
+	if len(values) < 4 { // Need at least 4 values to calculate meaningful quartiles
+		return nil
+	}
+
+	// Make a copy and sort the values
+	sorted := make([]float64, len(values))
+	copy(sorted, values)
+	sort.Float64s(sorted)
+
+	// Calculate quartiles
+	n := len(sorted)
+	q1Index := n / 4
+	q3Index := n * 3 / 4
+
+	// Handle even number of elements
+	var q1, q3 float64
+	if n%4 == 0 {
+		q1 = (sorted[q1Index-1] + sorted[q1Index]) / 2
+		q3 = (sorted[q3Index-1] + sorted[q3Index]) / 2
+	} else {
+		q1 = sorted[q1Index]
+		q3 = sorted[q3Index]
+	}
+
+	// Calculate IQR and bounds
+	iqr := q3 - q1
+	lowerBound := q1 - multiplier*iqr
+	upperBound := q3 + multiplier*iqr
 
 	// Find outliers
 	outliers := make([]int, 0)
-	for i, v := range intervals {
-		zScore := math.Abs((v - mean) / stdDev)
-		if zScore > threshold {
-			outliers = append(outliers, i+1) // +1 because intervals are offset by 1
+	for i, v := range values {
+		if v < lowerBound || v > upperBound {
+			outliers = append(outliers, i)
 		}
 	}
 
 	return outliers
+}
+
+// detectDateOutliersIQR identifies outliers in date data using the IQR method
+func detectDateOutliersIQR(dates []time.Time, multiplier float64) []int {
+	if len(dates) < 4 {
+		return nil
+	}
+
+	// Convert dates to durations from earliest date
+	earliest := dates[0]
+	for _, date := range dates {
+		if date.Before(earliest) {
+			earliest = date
+		}
+	}
+
+	// Convert to durations in hours
+	durations := make([]float64, len(dates))
+	for i, date := range dates {
+		duration := date.Sub(earliest)
+		durations[i] = duration.Hours()
+	}
+
+	// Use the IQR outlier detection
+	return detectOutliersIQR(durations, multiplier)
 }
 
 // detectPatterns identifies patterns in string data
