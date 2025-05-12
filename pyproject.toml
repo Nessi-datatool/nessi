@@ -1,47 +1,77 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "nessi"
-version = "0.1.0"
-description = "NESSI - Network and System Scanner for Infrastructure"
+name = "nessi-scanner"
+version = "1.0.0"
+description = "Data quality scanner and report generator for Nessi.dev"
 authors = [
-    {name = "NESSI Team", email = "nessi@example.com"},
+    {name = "Nessi.dev Team", email = "team@nessi.dev"}
 ]
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.8"
+license = {text = "MIT"}
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
+    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Database :: Database Engines/Servers",
+    "Topic :: Scientific/Engineering :: Information Analysis"
+]
+dependencies = [
+    "delta-spark>=3.3.1",
+    "pyspark>=3.5.5",
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "pyarrow>=14.0.0",
+    "fastparquet>=2023.10.1",
+    "plotly>=5.18.0",
+    "jinja2>=3.1.0",
+    "reportlab>=4.0.0",
+    "weasyprint>=60.1",
+    "python-docx>=1.0.0",
+    "pydantic>=2.11.4",
+    "pydantic_core>=2.34.1",
+    "typing-extensions>=4.13.2",
+    "annotated-types>=0.7.0"
 ]
 
-[project.urls]
-Homepage = "https://github.com/Nessi-datatool/nessi"
-Documentation = "https://github.com/Nessi-datatool/nessi/tree/main/docs"
-Repository = "https://github.com/Nessi-datatool/nessi.git"
-Issues = "https://github.com/Nessi-datatool/nessi/issues"
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.7.0",
+    "flake8>=6.1.0",
+    "mypy>=1.5.0"
+]
+
+[project.scripts]
+nessi-scan = "scanner.cli:main"
 
 [tool.black]
-line-length = 100
-target-version = ["py39"]
+line-length = 88
+target-version = ["py38"]
 include = '\.pyi?$'
 
 [tool.isort]
 profile = "black"
 multi_line_output = 3
-line_length = 100
 include_trailing_comma = true
 force_grid_wrap = 0
 use_parentheses = true
-ensure_newline_before_comments = true
+line_length = 88
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.8"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -55,28 +85,12 @@ warn_no_return = true
 warn_unreachable = true
 
 [tool.pytest.ini_options]
-minversion = "7.0"
-addopts = "-ra -q --cov=src/nessi --cov-report=html --cov-report=xml"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+addopts = "-v --cov=src --cov-report=term-missing"
 filterwarnings = [
     "ignore::DeprecationWarning",
-    "ignore::UserWarning",
-]
-
-[tool.coverage.run]
-source = ["src/nessi"]
-omit = ["tests/*", "setup.py"]
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "if self.debug:",
-    "raise NotImplementedError",
-    "if __name__ == .__main__.:",
-    "pass",
-    "raise ImportError",
+    "ignore::UserWarning"
 ] 
