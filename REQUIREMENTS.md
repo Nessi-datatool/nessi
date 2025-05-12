@@ -1,51 +1,128 @@
 # Nessi.dev Project Requirements
 
 ## Project Overview
-Nessi.dev is a data quality and Delta Lake management tool with a Go-first architecture. Python components are optional and can be enabled by users as needed.
+Nessi.dev is a data quality and Delta Lake management tool with a Go-first architecture. Python components are optional and can be enabled by users as needed. The goal is to become the go-to tool for Delta Lake data quality and management.
 
 ## Core Features
 
-### Delta Lake Support
-- Native Delta Lake support with schema evolution, version control, and time travel
+### Full Schema Management
+- Schema evolution tracking and history
+- Schema validation on write operations
+- Field-level metadata exploration
 - Partition intelligence and Z-ordering awareness
 - Metadata inspection and optimization hints
 
-### Data Quality Intelligence
+### Version Control
+- Transaction history with commit details
+- Data rollback capabilities (up to 30 days)
+- Version comparison with change summaries
+
+### Time Travel
+- Point-in-time querying (up to 30 days history)
+- Timestamp and version-based access
+- Historical state reconstruction
+
+### Automated Profiling
+- Statistical summaries (min, max, mean, median)
+- Distribution analysis with histograms
+- Null percentage and unique value ratios
+- Type inference and consistency checks
 - Completeness, accuracy, and consistency scoring
-- Built-in profiling for every column (min, max, unique %, null %)
-- Anomaly and outlier detection
-- Pattern recognition (e.g., regex pattern mismatches, column formats)
+
+### Anomaly Detection
+- Outlier detection using z-score and IQR methods
+- Sudden change detection between runs
+- Constant changes detection between runs
+- Sudden spikes/dips detection between runs
+- Oscillations detection between runs
+- Historical trend deviation alerts
+
+### Pattern Recognition
+- Regex pattern extraction and matching
+- Common format validation (emails, dates, IDs)
+- Data format consistency monitoring
+
+### Rule Validation
+- Predefined rules library (null checks, range validation, length, regex, enum)
+- Custom rule creation via YAML/SQL/Python
+- Rule execution history and impact analysis
 - Row-level rule validation with custom logic
 
-### Monitoring
+### Real-time Dashboard
+- Table health scores and trends
+- Quality metric tracking over time
+- Recent validation failures
 - Live metrics for table health and ingestion
-- Grafana dashboards with panel templates
-- Prometheus integration for alerts and historical trends
-- Supports threshold-based alerting and reporting
 
-### Report Generation
+### Grafana Integration
+- 5 pre-built dashboard templates
+- Custom visualization options
+- Shareable insights with team members
+- Prometheus integration for alerts and historical trends
+
+### Advanced Alerting
+- Email notifications for critical issues
+- Threshold-based triggers
+- Daily/Weekly summary reports
+- Integration with collaboration tools (Slack, Teams)
+- Configurable alert routing and escalation policies
+- Intelligent alerting based on historical trends and anomalies
+
+### Monitoring History
+- 30-day metrics retention
+- Trend visualization and comparison
+- Performance impact analysis
+
+### Interactive Reports
+- Quality score cards with drill-down
+- Table and column level summaries
+- Trend charts and comparison views
+- Distribution histograms
+- Pattern frequency charts
+- Failure rate trends
 - HTML and PDF reports with summary cards, histograms, and partition heatmaps
 - Export to JSON/CSV for automation
+- Shareable links with expiration
 
 ### Security
 - SSL/TLS encrypted interfaces
+- User authentication with JWT
+- API key management
 - Role-based access control (RBAC) for APIs and dashboards
 - API rate limiting and optional IP allowlisting
+- Audit logging for key operations
 
 ### Containerization
 - 100% Docker-native for easy installation
 - No JVM setup or Spark tuning required
 - Multi-service orchestration via Docker Compose
 
-### Data Format Support
-- Delta Lake, Parquet, and CSV support
+### Enhanced Multi-format Support
+- Delta Lake (primary)
+- Parquet files
+- CSV with automatic schema inference
 - Auto schema inference and fallback logic
 - Handles nested schemas and edge cases
+- Configuration options for schema inference (e.g., date formats)
+- Basic data quality checks across different formats
 
-### Developer Features
-- CLI-first with Python API support
+### Developer Experience
+- CLI-first with one-line validation commands
+- Batch processing scripts
+- Configuration management
+- Python API for programmatic access to all features
+- Webhook integration
+- Custom extension support
 - Embeddable in Airflow, GitHub Actions, or custom scripts
-- Detailed documentation and examples
+- Interactive examples
+- API reference
+- Best practices guides
+
+### Collaboration & Governance
+- Role-Based Access Control (RBAC) for the CLI/API
+- Audit Logging for key operations (configuration changes, rule executions)
+- Team-based permissions and access controls
+- Shared rule libraries and configurations
 
 ## Architecture Requirements
 
@@ -54,22 +131,21 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
 2. Data Quality Engine
 3. Monitoring Service
 4. Report Generator
-5. Basic Delta Lake Connector
+5. Delta Lake Connector
 6. Security Manager
 7. CLI Interface
+8. Alerting System
 
 ### Optional Python Extensions
 1. Advanced Delta Lake Features
 2. ML-based Anomaly Detection
 3. Advanced Statistical Analysis
+4. Custom Rule Execution Engine
+5. Advanced Visualization Components
 
 ### Extension System
 - Plugin architecture for enabling/disabling features
 - Feature flags for toggling functionality
 - Dynamic configuration loading
-
-## Pro Features (Future)
-- Data contracts and schema diff automation
-- SLA compliance monitoring
-- Git integration for schema diffs and versioning audits
-- BI tool connectors (e.g., dbt, Tableau lineage sync)
+- Custom rule extensions
+- Integration points for external systems
