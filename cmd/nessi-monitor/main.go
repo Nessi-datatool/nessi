@@ -39,6 +39,21 @@ func main() {
 			Execute:     exportMetrics,
 		},
 		{
+			Name:        "login",
+			Description: "Authenticate and get an access token",
+			Execute:     login,
+		},
+		{
+			Name:        "user",
+			Description: "User management (create, list, update, delete)",
+			Execute:     manageUsers,
+		},
+		{
+			Name:        "apikey",
+			Description: "Generate or regenerate API key",
+			Execute:     manageAPIKey,
+		},
+		{
 			Name:        "help",
 			Description: "Show help",
 			Execute:     showHelp,
@@ -81,6 +96,9 @@ func showHelp(args []string) error {
 	fmt.Println("  metrics     Show metrics")
 	fmt.Println("  alerts      Show alerts")
 	fmt.Println("  export      Export metrics to CSV or JSON")
+	fmt.Println("  login       Authenticate and get an access token")
+	fmt.Println("  user        User management (create, list, update, delete)")
+	fmt.Println("  apikey      Generate or regenerate API key")
 	fmt.Println("  help        Show help")
 	fmt.Println()
 	fmt.Println("For command-specific help, run:")

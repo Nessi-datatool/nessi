@@ -58,5 +58,20 @@
         "Authorization": "Bearer token"
       }
     }
+  },
+  "security": {
+    "auth": {
+      "enabled": true,
+      "jwt_secret": "nessi-monitoring-secret-key",
+      "users_file": "data/security/users.json",
+      "token_expiry": 24,
+      "require_https": true
+    },
+    "ssl": {
+      "enabled": true,
+      "cert_file": "data/security/cert.pem",
+      "key_file": "data/security/key.pem",
+      "auto_generate": true
+    }
   }
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/nessi-dev/nessi-dev/pkg/logging"
+	"github.com/nessi-dev/nessi-dev/pkg/security"
 	"bytes"
 	"net/smtp"
 )
@@ -44,6 +45,10 @@ type Config struct {
 		RetentionPeriod  time.Duration `json:"retention_period"`
 		SnapshotInterval time.Duration `json:"snapshot_interval"`
 	} `json:"retention"`
+	Security struct {
+		Auth security.AuthConfig `json:"auth"`
+		SSL  security.SSLConfig  `json:"ssl"`
+	} `json:"security"`
 }
 
 // AlertThreshold represents threshold values
@@ -93,6 +98,8 @@ type Monitor struct {
 	webhookConfig    *WebhookNotificationConfig
 	lastAlertTimes   map[string]time.Time
 	metricRetention  *MetricRetention
+	authManager      *security.AuthManager
+	certManager      *security.CertManager
 }
 
 // NewMetrics creates a new Metrics instance
@@ -135,6 +142,68 @@ func NewMetrics(reg *prometheus.Registry) *Metrics {
 			[]string{"rule_name", "table_name"},
 		),
 	}
+}
+
+// NewMonitor creates a new Monitor instance
+func NewMonitor(configPath string) (*Monitor, error) {
+	config, err := loadConfig(configPath)
+	if err != nil {
+		return nil, err
+	}
+
+	metrics := NewMetrics(prometheus.NewRegistry())
+
+	m := &Monitor{
+		metrics:         metrics,
+		alerts:          make(chan Alert, 100),
+		stopCh:          make(chan struct{}),
+		collector:       prometheus.NewRegistry(),
+		configPath:      configPath,
+		config:          config,
+		lastAlertTimes:  make(map[string]time.Time),
+	}
+
+	// Initialize metric retention if enabled
+	if config.Retention.Enabled {
+		m.metricRetention, err = NewMetricRetention(config.Retention.StoragePath, config.Retention.RetentionPeriod)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize metric retention: %w", err)
+		}
+	}
+
+	// Initialize alert thresholds
+	m.alertThresholds = make(map[string]AlertThreshold)
+	for name, threshold := range config.Alerts.Thresholds {
+		m.alertThresholds[name] = threshold
+	}
+
+	// Set silence and cooldown periods
+	m.silencePeriod = config.Alerts.SilencePeriod
+	m.cooldownPeriod = config.Alerts.CooldownPeriod
+
+	// Set notification configs
+	m.slackConfig = config.Notifications.Slack
+	m.emailConfig = config.Notifications.Email
+	m.webhookConfig = config.Notifications.Webhook
+
+	// Initialize security components if enabled
+	if config.Security.Auth.Enabled {
+		m.authManager, err = security.NewAuthManager(config.Security.Auth)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize auth manager: %w", err)
+		}
+		logging.Info("Authentication system initialized")
+	}
+
+	if config.Security.SSL.Enabled {
+		m.certManager = security.NewCertManager(config.Security.SSL)
+		logging.Info("SSL certificate manager initialized")
+	}
+
+	// Register metrics with Prometheus
+	m.registerMetrics()
+
+	return m, nil
 }
 
 // updateConfig updates the monitoring configuration
@@ -561,17 +630,48 @@ func (m *Monitor) Start() {
 		return
 	}
 
-	// Start HTTP server for metrics
+	// Create router and set up routes
+	router := http.NewServeMux()
+
+	// Set up handlers
+	router.Handle("/metrics", promhttp.HandlerFor(m.collector, promhttp.HandlerOpts{}))
+	router.HandleFunc("/health", m.healthCheck)
+
+	// Apply authentication middleware if enabled
+	if m.authManager != nil {
+		// Protected routes
+		router.Handle("/alerts", m.authManager.AuthMiddleware(http.HandlerFunc(m.listAlerts)))
+		router.Handle("/metrics/history", m.authManager.AuthMiddleware(http.HandlerFunc(m.metricsHistory)))
+		
+		// Add authentication endpoints
+		router.HandleFunc("/auth/login", m.handleLogin)
+		router.HandleFunc("/auth/refresh", m.handleRefreshToken)
+		
+		// Admin routes
+		router.Handle("/admin/users", m.authManager.RoleMiddleware(security.RoleAdmin)(http.HandlerFunc(m.handleUsers)))
+	} else {
+		// No authentication, routes are public
+		router.HandleFunc("/alerts", m.listAlerts)
+		router.HandleFunc("/metrics/history", m.metricsHistory)
+	}
+
+	// Start metrics server
 	if m.config.Metrics.Enabled {
 		go func() {
-			http.Handle("/metrics", promhttp.HandlerFor(m.collector, promhttp.HandlerOpts{}))
-			http.HandleFunc("/health", m.healthCheck)
-			http.HandleFunc("/alerts", m.listAlerts)
-			// Add endpoint for metrics history
-			http.HandleFunc("/metrics/history", m.metricsHistory)
+			addr := fmt.Sprintf(":%d", m.config.Metrics.Port)
 			logging.Info(fmt.Sprintf("Starting metrics server on port %d", m.config.Metrics.Port))
-			if err := http.ListenAndServe(fmt.Sprintf(":%d", m.config.Metrics.Port), nil); err != nil {
-				logging.Error("Failed to start metrics server", err)
+			
+			// Use SSL if enabled
+			if m.certManager != nil && m.config.Security.SSL.Enabled {
+				logging.Info("Starting HTTPS server")
+				if err := m.certManager.StartHTTPSServer(addr, router); err != nil {
+					logging.Error("Failed to start HTTPS server", err)
+				}
+			} else {
+				// Fallback to HTTP
+				if err := http.ListenAndServe(addr, router); err != nil {
+					logging.Error("Failed to start HTTP server", err)
+				}
 			}
 		}()
 	}

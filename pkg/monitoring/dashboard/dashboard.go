@@ -6,10 +6,13 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/nessi-dev/nessi-dev/pkg/logging"
 	"github.com/nessi-dev/nessi-dev/pkg/monitoring"
+	"github.com/nessi-dev/nessi-dev/pkg/security"
 )
 
 //go:embed templates
@@ -20,14 +23,20 @@ var staticFS embed.FS
 
 // Dashboard represents a monitoring dashboard
 type Dashboard struct {
-	monitor    *monitoring.Monitor
-	templates  *template.Template
-	listenAddr string
+	monitor      *monitoring.Monitor
+	templates    *template.Template
+	listenAddr   string
+	authManager  *security.AuthManager
+	certManager  *security.CertManager
+	secureMode   bool
 }
 
 // DashboardOptions represents dashboard configuration options
 type DashboardOptions struct {
-	ListenAddr string
+	ListenAddr  string
+	AuthManager *security.AuthManager
+	CertManager *security.CertManager
+	SecureMode  bool
 }
 
 // New creates a new Dashboard instance
@@ -39,9 +48,12 @@ func New(monitor *monitoring.Monitor, options DashboardOptions) (*Dashboard, err
 	}
 
 	return &Dashboard{
-		monitor:    monitor,
-		templates:  templates,
-		listenAddr: options.ListenAddr,
+		monitor:     monitor,
+		templates:   templates,
+		listenAddr:  options.ListenAddr,
+		authManager: options.AuthManager,
+		certManager: options.CertManager,
+		secureMode:  options.SecureMode,
 	}, nil
 }
 
@@ -53,14 +65,43 @@ func (d *Dashboard) Start() error {
 	// Static files
 	mux.Handle("/static/", http.FileServer(http.FS(staticFS)))
 	
-	// Dashboard routes
+	// Public routes
 	mux.HandleFunc("/", d.handleIndex)
-	mux.HandleFunc("/api/metrics", d.handleMetrics)
-	mux.HandleFunc("/api/alerts", d.handleAlerts)
-	mux.HandleFunc("/api/export", d.handleExport)
+	mux.HandleFunc("/health", d.handleHealth)
+	
+	// Authentication routes
+	if d.authManager != nil {
+		mux.HandleFunc("/login", d.handleLogin)
+		mux.HandleFunc("/auth/login", d.handleAPILogin)
+	}
+	
+	// Protected routes
+	if d.authManager != nil {
+		// Apply authentication middleware to API routes
+		mux.Handle("/api/metrics", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleMetrics)))
+		mux.Handle("/api/alerts", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleAlerts)))
+		mux.Handle("/api/export", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleExport)))
+		
+		// Admin routes
+		adminHandler := d.authManager.RoleMiddleware(security.RoleAdmin)
+		mux.Handle("/admin/users", adminHandler(http.HandlerFunc(d.handleUsers)))
+	} else {
+		// No authentication, routes are public
+		mux.HandleFunc("/api/metrics", d.handleMetrics)
+		mux.HandleFunc("/api/alerts", d.handleAlerts)
+		mux.HandleFunc("/api/export", d.handleExport)
+	}
 	
 	// Start server
 	logging.Info(fmt.Sprintf("Starting dashboard server on %s", d.listenAddr))
+	
+	// Use HTTPS if secure mode is enabled and cert manager is available
+	if d.secureMode && d.certManager != nil {
+		logging.Info("Starting dashboard in secure mode (HTTPS)")
+		return d.certManager.StartHTTPSServer(d.listenAddr, mux)
+	}
+	
+	// Fallback to HTTP
 	return http.ListenAndServe(d.listenAddr, mux)
 }
 

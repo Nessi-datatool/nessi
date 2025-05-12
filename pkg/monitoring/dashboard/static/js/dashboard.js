@@ -116,9 +116,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         try {
-            const response = await fetch(`/api/metrics?metric=${metricName}&start=${start.toISOString()}&end=${end.toISOString()}`);
+            // Use fetchWithAuth for authenticated requests
+            const response = await fetchWithAuth(`/api/metrics?metric=${metricName}&start=${start.toISOString()}&end=${end.toISOString()}`);
             
             if (!response.ok) {
+                if (response.status === 401) {
+                    // Unauthorized, redirect to login
+                    window.location.href = '/login';
+                    return;
+                }
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             
@@ -128,6 +134,30 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Error loading metrics data:', error);
             alert('Failed to load metrics data. See console for details.');
+        }
+    }
+    
+    // Load alerts data
+    async function loadAlertsData() {
+        const severity = document.getElementById('alert-severity').value;
+        
+        try {
+            // Use fetchWithAuth for authenticated requests
+            const response = await fetchWithAuth(`/api/alerts${severity !== 'all' ? `?severity=${severity}` : ''}`);
+            
+            if (!response.ok) {
+                if (response.status === 401) {
+                    // Unauthorized, redirect to login
+                    window.location.href = '/login';
+                    return;
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            updateAlertsTable(data, severity);
+        } catch (error) {
+            console.error('Error loading alerts data:', error);
         }
     }
     
@@ -231,25 +261,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Load alerts data
-    async function loadAlertsData() {
-        const severity = document.getElementById('alert-severity').value;
-        
-        try {
-            const response = await fetch('/api/alerts');
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            updateAlertsTable(data, severity);
-        } catch (error) {
-            console.error('Error loading alerts data:', error);
-            alert('Failed to load alerts data. See console for details.');
-        }
-    }
-    
     // Update alerts table with new data
     function updateAlertsTable(data, severity) {
         const tableBody = document.querySelector('#alerts-table tbody');
@@ -262,7 +273,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Filter by severity if needed
+        // Filter by severity if not 'all'
         let filteredData = data;
         if (severity !== 'all') {
             filteredData = data.filter(alert => 
@@ -313,7 +324,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Export metrics function
-    function exportMetrics() {
+    async function exportMetrics() {
         const metricName = document.getElementById('metric-selector').value;
         const timeRange = document.getElementById('time-range').value;
         const format = document.getElementById('export-format').value;
@@ -343,8 +354,51 @@ document.addEventListener('DOMContentLoaded', function() {
         // Create export URL
         const exportUrl = `/api/export?metric=${metricName}&format=${format}&start=${start.toISOString()}&end=${end.toISOString()}`;
         
-        // Open export URL in a new tab/window
-        window.open(exportUrl, '_blank');
+        // Check if authenticated
+        if (isAuthenticated()) {
+            // Create a link with authentication token
+            const a = document.createElement('a');
+            a.href = exportUrl;
+            a.target = '_blank';
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            
+            // Set up authentication for the download
+            const authHeader = `Bearer ${getAuthToken()}`;
+            
+            // Use fetch with authentication to download the file
+            try {
+                const response = await fetchWithAuth(exportUrl);
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        // Unauthorized, redirect to login
+                        window.location.href = '/login';
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                // Get the blob from the response
+                const blob = await response.blob();
+                
+                // Create a download link
+                const url = window.URL.createObjectURL(blob);
+                a.href = url;
+                a.download = `${metricName}_export.${format}`;
+                a.click();
+                
+                // Clean up
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            } catch (error) {
+                console.error('Error exporting metrics:', error);
+                alert('Failed to export metrics. Please try again.');
+            }
+        } else {
+            // Not authenticated, redirect to login
+            window.location.href = '/login';
+        }
     }
     
     // Refresh and export buttons

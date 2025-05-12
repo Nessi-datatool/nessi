@@ -16,6 +16,13 @@
                     <li><a href="#metrics" class="active">Metrics</a></li>
                     <li><a href="#alerts">Alerts</a></li>
                     <li><a href="#settings">Settings</a></li>
+                    <li id="user-menu" style="display: none;">
+                        <a href="#" id="username-display">User</a>
+                        <div class="dropdown-content">
+                            <a href="#" id="logout-link">Logout</a>
+                        </div>
+                    </li>
+                    <li id="login-menu"><a href="/login">Login</a></li>
                 </ul>
             </nav>
         </div>
@@ -129,6 +136,7 @@
         <p>&copy; 2025 Nessi Data Profiling System</p>
     </footer>
 
+    <script src="/static/js/auth.js"></script>
     <script src="/static/js/dashboard.js"></script>
 </body>
 </html>

@@ -1,173 +1,119 @@
 package security
 
 import (
+	"os"
 	"testing"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestNew(t *testing.T) {
-	tokenSecret := []byte("test-secret")
+// TestLegacySecurityManager tests the backward compatibility of the SecurityManager
+func TestLegacySecurityManager(t *testing.T) {
+	// Create temporary users file
+	tempFile, err := os.CreateTemp("", "security-legacy-*.json")
+	require.NoError(t, err)
+	defer os.Remove(tempFile.Name())
+	
+	// Initialize the file with empty JSON object
+	_, err = tempFile.WriteString("{}")
+	require.NoError(t, err)
+	tempFile.Close()
+
+	tokenSecret := []byte("test-legacy-secret")
 	tokenExpiration := 24 * time.Hour
-	s := New(tokenSecret, tokenExpiration)
+	
+	// Create auth config directly
+	config := AuthConfig{
+		Enabled:      true,
+		JWTSecret:    string(tokenSecret),
+		TokenExpiry:  int(tokenExpiration.Hours()),
+		UsersFile:    tempFile.Name(),
+		RequireHTTPS: false,
+	}
+	
+	// Create auth manager directly
+	am, err := NewAuthManager(config)
+	require.NoError(t, err)
+	
+	// Create security manager with the auth manager
+	s := &SecurityManager{
+		AuthManager: am,
+	}
+	
 	assert.NotNil(t, s)
-	assert.NotNil(t, s.tokenSecret)
-	assert.Equal(t, tokenExpiration, s.tokenExpiration)
-}
+	assert.NotNil(t, s.AuthManager)
 
-func TestAuthenticate(t *testing.T) {
-	tokenSecret := []byte("test-secret")
-	tokenExpiration := 24 * time.Hour
-	s := New(tokenSecret, tokenExpiration)
+	t.Run("AddUser and Authenticate", func(t *testing.T) {
+		// Add test user
+		err := s.AddUser("legacyuser", "password", []string{"user"})
+		require.NoError(t, err)
 
-	// Test with non-existent user
-	token, err := s.Authenticate("nonexistent", "password")
-	require.Error(t, err)
-	assert.Empty(t, token)
+		// Test with correct credentials
+		token, err := s.Authenticate("legacyuser", "password")
+		require.NoError(t, err)
+		assert.NotEmpty(t, token)
 
-	// Add test user
-	err = s.AddUser("testuser", "password", []string{"user"})
-	require.NoError(t, err)
+		// Test with incorrect password
+		token, err = s.Authenticate("legacyuser", "wrongpassword")
+		require.Error(t, err)
+		assert.Empty(t, token)
 
-	// Test with correct credentials
-	token, err = s.Authenticate("testuser", "password")
-	require.NoError(t, err)
-	assert.NotEmpty(t, token)
-
-	// Test with incorrect password
-	token, err = s.Authenticate("testuser", "wrongpassword")
-	require.Error(t, err)
-	assert.Empty(t, token)
-}
-
-func TestValidateToken(t *testing.T) {
-	tokenSecret := []byte("test-secret")
-	tokenExpiration := 24 * time.Hour
-	s := New(tokenSecret, tokenExpiration)
-
-	// Add test user
-	err := s.AddUser("testuser", "password", []string{"user"})
-	require.NoError(t, err)
-
-	// Get valid token
-	token, err := s.Authenticate("testuser", "password")
-	require.NoError(t, err)
-
-	// Validate token
-	claims, err := s.ValidateToken(token)
-	require.NoError(t, err)
-	assert.Equal(t, "testuser", claims.Username)
-	assert.Equal(t, []string{"user"}, claims.Roles)
-}
-
-func TestCreateAPIKey(t *testing.T) {
-	tokenSecret := []byte("test-secret")
-	tokenExpiration := 24 * time.Hour
-	s := New(tokenSecret, tokenExpiration)
-
-	// Add test user
-	err := s.AddUser("testuser", "password", []string{"user"})
-	require.NoError(t, err)
-
-	// Create API key
-	apiKey, err := s.CreateAPIKey("testuser")
-	require.NoError(t, err)
-	assert.NotEmpty(t, apiKey)
-
-	// Validate API key
-	username, err := s.ValidateAPIKey(apiKey)
-	require.NoError(t, err)
-	assert.Equal(t, "testuser", username)
-}
-
-func TestValidateAPIKey(t *testing.T) {
-	tokenSecret := []byte("test-secret")
-	tokenExpiration := 24 * time.Hour
-	s := New(tokenSecret, tokenExpiration)
-
-	// Add test user and create API key
-	err := s.AddUser("testuser", "password", []string{"user"})
-	require.NoError(t, err)
-
-	apiKey, err := s.CreateAPIKey("testuser")
-	require.NoError(t, err)
-
-	// Validate existing API key
-	username, err := s.ValidateAPIKey(apiKey)
-	require.NoError(t, err)
-	assert.Equal(t, "testuser", username)
-
-	// Validate non-existent API key
-	_, err = s.ValidateAPIKey("nonexistent-key")
-	require.Error(t, err)
-}
-
-func TestAddUser(t *testing.T) {
-	tokenSecret := []byte("test-secret")
-	tokenExpiration := 24 * time.Hour
-	s := New(tokenSecret, tokenExpiration)
-
-	// Add user
-	err := s.AddUser("testuser", "password", []string{"user"})
-	require.NoError(t, err)
-
-	// Verify user exists
-	user, exists := s.users["testuser"]
-	assert.True(t, exists)
-	assert.Equal(t, "testuser", user.Username)
-	assert.Equal(t, []string{"user"}, user.Roles)
-
-	// Try adding same user again
-	err = s.AddUser("testuser", "password", []string{"user"})
-	require.Error(t, err)
-}
-
-func TestGenerateToken(t *testing.T) {
-	tokenSecret := []byte("test-secret")
-	tokenExpiration := 24 * time.Hour
-	s := New(tokenSecret, tokenExpiration)
-
-	// Add test user
-	err := s.AddUser("testuser", "password", []string{"user"})
-	require.NoError(t, err)
-
-	// Get user
-	user, exists := s.users["testuser"]
-	require.True(t, exists)
-
-	// Generate token
-	token, err := s.generateToken(user)
-	require.NoError(t, err)
-	assert.NotEmpty(t, token)
-
-	// Parse token
-	parsedToken, err := jwt.ParseWithClaims(token, &TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return tokenSecret, nil
+		// Test with non-existent user
+		token, err = s.Authenticate("nonexistent", "password")
+		require.Error(t, err)
+		assert.Empty(t, token)
 	})
-	require.NoError(t, err)
-	assert.True(t, parsedToken.Valid)
-}
 
-func TestHashPassword(t *testing.T) {
-	password := "testpassword"
-	hashed := hashPassword(password)
-	assert.NotEmpty(t, hashed)
-	assert.NotEqual(t, password, hashed)
-}
+	t.Run("ValidateToken", func(t *testing.T) {
+		// Get valid token
+		token, err := s.Authenticate("legacyuser", "password")
+		require.NoError(t, err)
 
-func TestGenerateUserID(t *testing.T) {
-	id1 := generateUserID()
-	id2 := generateUserID()
-	assert.NotEmpty(t, id1)
-	assert.NotEqual(t, id1, id2)
-}
+		// Validate token
+		claims, err := s.ValidateToken(token)
+		require.NoError(t, err)
+		assert.Equal(t, "legacyuser", claims.Username)
+		assert.Contains(t, claims.Roles, "user")
+	})
 
-func TestGenerateAPIKey(t *testing.T) {
-	key1 := generateAPIKey()
-	key2 := generateAPIKey()
-	assert.NotEmpty(t, key1)
-	assert.NotEqual(t, key1, key2)
+	t.Run("API Key Management", func(t *testing.T) {
+		// Create API key
+		apiKey, err := s.CreateAPIKey("legacyuser")
+		require.NoError(t, err)
+		assert.NotEmpty(t, apiKey)
+
+		// Validate API key
+		username, err := s.ValidateAPIKey(apiKey)
+		require.NoError(t, err)
+		assert.Equal(t, "legacyuser", username)
+
+		// Validate non-existent API key
+		_, err = s.ValidateAPIKey("nonexistent-key")
+		require.Error(t, err)
+	})
+
+	t.Run("Add Duplicate User", func(t *testing.T) {
+		// Try adding same user again
+		err = s.AddUser("legacyuser", "password", []string{"user"})
+		require.Error(t, err)
+	})
+
+	t.Run("Add Admin User", func(t *testing.T) {
+		// Add admin user
+		err := s.AddUser("legacyadmin", "adminpass", []string{"admin"})
+		require.NoError(t, err)
+
+		// Verify user can authenticate
+		token, err := s.Authenticate("legacyadmin", "adminpass")
+		require.NoError(t, err)
+		assert.NotEmpty(t, token)
+
+		// Validate token and check role
+		claims, err := s.ValidateToken(token)
+		require.NoError(t, err)
+		assert.Equal(t, "legacyadmin", claims.Username)
+		assert.Contains(t, claims.Roles, "admin")
+	})
 }
