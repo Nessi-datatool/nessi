@@ -772,11 +772,31 @@ func (r *RangeCheckRule) Validate(record arrow.Record) []ValidationError {
 - Data profiling
 - Quality rules
 - Metrics collection
+- Anomaly detection (z-score, IQR, sudden change detection)
 
 ### Week 5: Visualization & Polish
 - Reporting
 - Documentation
 - Testing
+
+## Progress Update (May 2025)
+
+### Completed Features
+- **IQR-based Outlier Detection**: Implemented a more robust outlier detection method using Interquartile Range (IQR), which works better for skewed distributions compared to z-score method.
+- **Sudden Change Detection**: Added capability to detect various patterns of changes in metrics over time:
+  - Constant changes: Gradual increases or decreases over multiple runs
+  - Sudden spikes/dips: Temporary anomalies that return to normal
+  - Oscillations: Alternating patterns in metric values
+
+### Next Steps
+- **Rule Validation Enhancements**:
+  - Expand predefined rule library (length, regex, enum validations)
+  - Implement custom rule authoring via YAML/SQL/Python
+  - Add rule execution history tracking
+- **Monitoring & Alerts**:
+  - Develop real-time dashboard (web UI or Grafana integration)
+  - Implement metric retention system (30-day history)
+  - Add alerting capabilities (email/CLI notifications)
 
 ## Future Enhancements
 

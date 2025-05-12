@@ -1,0 +1,78 @@
+rules:
+  # Basic rule types
+  - name: "ID Not Null Check"
+    description: "Checks that ID values are not null"
+    type: "completeness"
+    column: "id"
+    threshold: 100.0
+    severity: "critical"
+
+  - name: "Unique ID Check"
+    description: "Checks that IDs are unique"
+    type: "uniqueness"
+    column: "id"
+    threshold: 100.0
+    severity: "high"
+
+  - name: "Age Range Check"
+    description: "Checks that age values are within a valid range"
+    type: "range"
+    column: "age"
+    min: 0
+    max: 120
+    severity: "medium"
+
+  - name: "Email Pattern Check"
+    description: "Checks that email values contain @ symbol"
+    type: "pattern"
+    column: "email"
+    pattern: "@"
+    severity: "medium"
+
+  # Extended rule types
+  - name: "Email Format Check"
+    description: "Checks that email values match a valid email format"
+    type: "regex"
+    column: "email"
+    regex_pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+    severity: "high"
+
+  - name: "Username Length Check"
+    description: "Checks that username length is between 3 and 20 characters"
+    type: "length"
+    column: "username"
+    min_length: 3
+    max_length: 20
+    severity: "medium"
+
+  - name: "Status Enum Check"
+    description: "Checks that status values are valid"
+    type: "enum"
+    column: "status"
+    enum_values:
+      - "active"
+      - "inactive"
+      - "pending"
+    severity: "medium"
+
+  - name: "Date Format Check"
+    description: "Checks that date values are in the correct format"
+    type: "datetime"
+    column: "created_at"
+    date_format: "2006-01-02"
+    severity: "medium"
+
+  - name: "Price Range Check"
+    description: "Checks that price values are within a valid range"
+    type: "range"
+    column: "price"
+    min: 0.01
+    max: 9999.99
+    severity: "high"
+
+  - name: "Description Length Check"
+    description: "Checks that description length is at least 10 characters"
+    type: "length"
+    column: "description"
+    min_length: 10
+    severity: "low"

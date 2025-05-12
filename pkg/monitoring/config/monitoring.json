@@ -24,6 +24,39 @@
         "threshold": 0.95,
         "severity": "critical"
       }
-    ]
+    ],
+    "silence_period": 3600,
+    "cooldown_period": 300,
+    "check_interval": 60,
+    "notification_channels": ["email", "slack"]
+  },
+  "retention": {
+    "enabled": true,
+    "storage_path": "data/metrics",
+    "retention_period": 720,
+    "snapshot_interval": 300
+  },
+  "notifications": {
+    "slack": {
+      "webhook_url": "https://hooks.slack.com/services/TXXXXXXXX/BXXXXXXXX/XXXXXXXXXXXXXXXXXXXXXXXX",
+      "channel": "#monitoring",
+      "username": "Nessi Monitoring"
+    },
+    "email": {
+      "smtp_server": "smtp.example.com",
+      "port": 587,
+      "username": "monitoring@example.com",
+      "password": "password",
+      "from": "monitoring@example.com",
+      "to": ["admin@example.com"]
+    },
+    "webhook": {
+      "url": "https://example.com/webhook",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer token"
+      }
+    }
   }
 }

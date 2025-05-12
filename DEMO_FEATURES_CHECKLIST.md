@@ -24,28 +24,28 @@ Every time development resumes, check this file and `IMPLEMENTATION.md` to decid
 ## 3. Anomaly Detection
 - [x] Outlier detection (z-score): Go profiler
 - [x] IQR-based outliers: Add IQR method
-- [ ] Sudden change detection: Compare stats across runs
+- [x] Sudden change detection: Compare stats across runs
 
 ## 4. Rule Validation
 - [x] Null/range checks: Go rules
-- [ ] Predefined rule library: Add more rules (length, regex, enum, etc)
-- [ ] Custom rule authoring: YAML/SQL/Python-based rules
-- [ ] Rule execution history: Store/display validation results over time
+- [x] Predefined rule library: Add more rules (length, regex, enum, etc)
+- [x] Custom rule authoring: YAML/SQL/Python-based rules
+- [x] Rule execution history: Store/display validation results over time
 
 ## 5. Monitoring & Alerts
-- [ ] Real-time dashboard: Web UI or Grafana
-- [ ] Metric retention: Store metrics for 30 days
-- [ ] Alerting: Email/CLI notifications
+- [x] Real-time dashboard: Web UI or Grafana
+- [x] Metric retention: Store metrics for 30 days
+- [x] Alerting: Email/CLI notifications
 
 ## 6. Reports & Visualization
 - [x] HTML/JSON reports: Python profiler
-- [ ] Trend/failure charts: Add to HTML or Grafana
-- [ ] Export options: JSON/CSV export from Go/Python
+- [x] Trend/failure charts: Add to HTML or Grafana
+- [x] Export options: JSON/CSV export from Go/Python
 
 ## 7. Platform, Security, Developer Experience
 - [x] Dockerized deployment
 - [ ] Basic security: SSL, API keys, user auth
-- [ ] CLI tools: One-line validation/profiling
+- [x] CLI tools: One-line validation/profiling
 - [ ] Python API: Expose programmatic access
 - [ ] Docs: Interactive examples, best practices
 

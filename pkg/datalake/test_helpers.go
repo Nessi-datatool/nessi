@@ -3,10 +3,11 @@ package datalake
 // MockMetadataManager is a mock implementation of MetadataManager for testing
 type MockMetadataManager struct {
 	*MetadataManager
-	MockReadParquetFile        func(file string) ([]map[string]interface{}, error)
-	MockReadTableMetadata      func() (*DeltaTable, error)
+	MockReadParquetFile          func(file string) ([]map[string]interface{}, error)
+	MockReadTableMetadata        func() (*DeltaTable, error)
 	MockGetSchemaFieldsAtVersion func(version int64) ([]SchemaField, error)
-	MockGetVersionHistory     func() ([]VersionEntry, error)
+	MockGetVersionHistory        func() ([]VersionEntry, error)
+	MockCalculateFieldMetrics    func(field string, metricTypes []MetricType) (map[string]float64, error)
 }
 
 // ReadParquetFile overrides the MetadataManager's ReadParquetFile method for testing
