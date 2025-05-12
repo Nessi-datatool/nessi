@@ -37,6 +37,6 @@ annotated-types==0.7.0
 
 # Test utilities
 coverage==7.4.0
-requests==2.26.0
+requests==2.32.3
 aiohttp==3.8.1
 redis==3.5.3
