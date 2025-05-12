@@ -3,11 +3,11 @@ package monitoring
 import (
 	"testing"
 	"time"
+	"strings"
 
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"strings"
 )
 
 // Metric represents a monitoring metric
@@ -19,29 +19,43 @@ type Metric struct {
 
 func TestNew(t *testing.T) {
 	m := New()
-	assert.NotNil(t, m)
+	if m == nil {
+		t.Errorf("New() returned nil")
+	}
+	// Override config path for tests
+	m.configPath = "pkg/monitoring/config/monitoring_test.json"
+	// Load test config
+	if err := m.LoadConfig(); err != nil {
+		t.Errorf("Failed to load test config: %v", err)
+	}
 }
 
 func TestRecordTableMetrics(t *testing.T) {
 	m := New()
+	m.configPath = "pkg/monitoring/config/monitoring_test.json"
 
 	// Record metrics without starting the HTTP server
-	m.RecordTableMetrics("test_table", 1024, 100)
+	m.RecordTableMetrics("test_table", []map[string]interface{}{{"size": 1024, "count": 100}})
 
 	// Verify metrics using testutil
-	expected := strings.NewReader(`
-		# HELP nessi_table_size_bytes Size of Delta tables in bytes
-		# TYPE nessi_table_size_bytes gauge
-		# HELP nessi_record_count Number of records in Delta tables
-		# TYPE nessi_record_count gauge
-		nessi_table_size_bytes{table_name="test_table"} 1024
-		nessi_record_count{table_name="test_table"} 100
-	`)
-	assert.NoError(t, testutil.CollectAndCompare(m.collector, expected))
+	expected := `# HELP nessi_table_size_bytes Size of Delta tables in bytes
+# TYPE nessi_table_size_bytes gauge
+nessi_table_size_bytes{table_name="test_table"} 1024
+# HELP nessi_record_count Number of records in Delta tables
+# TYPE nessi_record_count gauge
+nessi_record_count{table_name="test_table"} 100
+`
+	if err := testutil.CollectAndCompare(m.collector, strings.NewReader(expected)); err != nil {
+		t.Errorf("Metric comparison failed: %v", err)
+	}
 }
 
 func TestRecordLatency(t *testing.T) {
 	m := New()
+	m.configPath = "pkg/monitoring/config/monitoring_test.json"
+	if err := m.LoadConfig(); err != nil {
+		t.Fatalf("Failed to load test config: %v", err)
+	}
 
 	// Record latency without starting the HTTP server
 	start := time.Now()
@@ -67,79 +81,138 @@ func TestRecordLatency(t *testing.T) {
 
 func TestRecordRuleViolation(t *testing.T) {
 	m := New()
+	m.configPath = "pkg/monitoring/config/monitoring_test.json"
+	if err := m.LoadConfig(); err != nil {
+		t.Fatalf("Failed to load test config: %v", err)
+	}
 
 	// Record violation without starting the HTTP server
 	m.RecordRuleViolation("test_table", "not_null")
 
 	// Verify violation count
 	metricFamilies, err := m.collector.Gather()
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("Failed to gather metrics: %v", err)
+		return
+	}
 
+	found := false
 	for _, mf := range metricFamilies {
 		if mf.GetName() == "nessi_rule_violations_total" {
 			for _, metric := range mf.GetMetric() {
-				for _, label := range metric.GetLabel() {
-					if label.GetValue() == "not_null" && label.GetName() == "rule_name" {
-						for _, label2 := range metric.GetLabel() {
-							if label2.GetValue() == "test_table" && label2.GetName() == "table_name" {
-								assert.Equal(t, float64(1), metric.GetCounter().GetValue())
-							}
-						}
+				labels := metric.GetLabel()
+				var ruleName, tableName string
+				for _, label := range labels {
+					if label.GetName() == "rule_name" {
+						ruleName = label.GetValue()
+					} else if label.GetName() == "table_name" {
+						tableName = label.GetValue()
 					}
+				}
+				if ruleName == "not_null" && tableName == "test_table" {
+					if metric.GetCounter().GetValue() != 1 {
+						t.Errorf("Expected violation count to be 1, got %v", metric.GetCounter().GetValue())
+					}
+					found = true
 				}
 			}
 		}
+	}
+	if !found {
+		t.Errorf("Expected rule violation metric not found in metrics")
 	}
 }
 
 func TestSendAlert(t *testing.T) {
 	m := New()
-	alert := Alert{
-		Name:        "test_alert",
-		Severity:    "critical",
-		Message:     "threshold exceeded",
-		Timestamp:   time.Now(),
-		Metadata:    map[string]string{"env": "test"},
+	m.configPath = "pkg/monitoring/config/monitoring_test.json"
+	if err := m.LoadConfig(); err != nil {
+		t.Fatalf("Failed to load test config: %v", err)
 	}
-	m.SendAlert(alert)
-
+	m.SendAlert("test_alert", "test_table", 100)
 	// Verify alert was sent
 	select {
-	case got := <-m.alerts:
-		assert.Equal(t, "test_alert", got.Name)
-		assert.Equal(t, "critical", got.Severity)
-		assert.Equal(t, "threshold exceeded", got.Message)
+	case alert := <-m.alerts:
+		if alert.Name != "test_alert" {
+			t.Errorf("Expected alert name 'test_alert', got '%s'", alert.Name)
+		}
+		if alert.Message != "Metric test_alert exceeded threshold for table test_table (value: 100)" {
+			t.Errorf("Expected alert message containing '100', got '%s'", alert.Message)
+		}
+	default:
+		t.Errorf("No alert was sent")
 	}
-	m.Stop()
-}
-
-func TestGetCollector(t *testing.T) {
-	m := New()
-	collector := m.GetCollector()
-	assert.NotNil(t, collector)
 }
 
 func TestAlert(t *testing.T) {
-	alert := Alert{
-		Name:        "test_alert",
-		Severity:    "critical",
-		Message:     "threshold exceeded",
-		Timestamp:   time.Now(),
-		Metadata:    map[string]string{"env": "test"},
+	m := New()
+	m.configPath = "pkg/monitoring/config/monitoring_test.json"
+	if err := m.LoadConfig(); err != nil {
+		t.Fatalf("Failed to load test config: %v", err)
 	}
-
-	assert.Equal(t, "test_alert", alert.Name)
-	assert.Equal(t, "critical", alert.Severity)
-	assert.Equal(t, "threshold exceeded", alert.Message)
-	assert.Equal(t, map[string]string{"env": "test"}, alert.Metadata)
+	m.alertThresholds["test_alert"] = AlertThreshold{
+		Warning:  50,
+		Critical: 100,
+	}
+	m.alerts = make(chan Alert, 1)
+	go m.processAlerts([]Alert{{
+		Name:        "test_alert",
+		Severity:    "CRITICAL",
+		Message:     "Test alert message",
+		Timestamp:   time.Now(),
+		Metadata:    map[string]string{"table_name": "test_table"},
+	}}, m.alertThresholds)
+	select {
+	case alert := <-m.alerts:
+		if alert.Name != "test_alert" {
+			t.Errorf("Expected alert name 'test_alert', got '%s'", alert.Name)
+		}
+		if alert.Severity != "CRITICAL" {
+			t.Errorf("Expected alert severity 'CRITICAL', got '%s'", alert.Severity)
+		}
+	default:
+		t.Errorf("No alert was processed")
+	}
 }
 
 func TestRecordMetric(t *testing.T) {
 	m := New()
-	
-	// Record a table metric using the existing method
-	m.RecordTableMetrics("test_table", 42.0, 10)
+	m.configPath = "pkg/monitoring/config/monitoring_test.json"
+	if err := m.LoadConfig(); err != nil {
+		t.Fatalf("Failed to load test config: %v", err)
+	}
 
-	// Verify metric was recorded
-	assert.NotNil(t, m.metrics.TableSize, "TableSize metric should not be nil")
+	// Record a table metric
+	m.RecordTableMetrics("test_metric", []map[string]interface{}{{"size": 100}})
+
+	// Verify metric
+	metricFamilies, err := m.collector.Gather()
+	if err != nil {
+		t.Errorf("Failed to gather metrics: %v", err)
+		return
+	}
+
+	found := false
+	for _, mf := range metricFamilies {
+		if mf.GetName() == "nessi_table_size_bytes" {
+			for _, metric := range mf.GetMetric() {
+				labels := metric.GetLabel()
+				var tableName string
+				for _, label := range labels {
+					if label.GetName() == "table_name" {
+						tableName = label.GetValue()
+					}
+				}
+				if tableName == "test_metric" {
+					if metric.GetGauge().GetValue() != 100 {
+						t.Errorf("Expected metric value to be 100, got %v", metric.GetGauge().GetValue())
+					}
+					found = true
+				}
+			}
+		}
+	}
+	if !found {
+		t.Errorf("Expected metric not found in metrics")
+	}
 }

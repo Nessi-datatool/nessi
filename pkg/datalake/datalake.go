@@ -1,15 +1,15 @@
-// Package datalake provides functionality for reading Delta tables
+// Package datalake provides functionality for reading and writing Delta tables
 package datalake
 
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
 	"github.com/apache/arrow/go/v15/arrow"
 	"github.com/apache/arrow/go/v15/arrow/array"
-	"github.com/apache/arrow/go/v15/arrow/memory"
 )
 
 // DeltaTable represents a Delta table
@@ -65,29 +65,40 @@ type Reader struct {
 
 // NewReader creates a new Delta table reader
 func NewReader(tablePath string) (*Reader, error) {
-	schema := arrow.NewSchema(
-		[]arrow.Field{
-			{Name: "id", Type: arrow.PrimitiveTypes.Int32},
-			{Name: "name", Type: arrow.BinaryTypes.String},
-			{Name: "value", Type: arrow.PrimitiveTypes.Float64},
-		},
-		nil,
-	)
+	// Create metadata manager
+	metadataManager := NewMetadataManager(tablePath)
+
+	// Read table metadata
+	table, err := metadataManager.ReadTableMetadata()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read table metadata: %w", err)
+	}
 
 	return &Reader{
-		table: &DeltaTable{
-			Path:   tablePath,
-			Schema: schema,
-			Stats:  &TableStats{},
-		},
-		closed:    false,
-		fileCache: make(map[string]*os.File),
+		table:      table,
+		closed:     false,
+		fileCache:  make(map[string]*os.File),
 	}, nil
 }
 
 // Initialize sets up the reader by reading table metadata
 func (r *Reader) Initialize() error {
-	// Mock implementation for testing
+	if r.closed {
+		return fmt.Errorf("reader is closed")
+	}
+
+	// Create metadata manager
+	metadataManager := NewMetadataManager(r.table.Path)
+
+	// Read table metadata
+	table, err := metadataManager.ReadTableMetadata()
+	if err != nil {
+		return fmt.Errorf("failed to read table metadata: %w", err)
+	}
+
+	// Update table
+	r.table = table
+
 	return nil
 }
 
@@ -97,16 +108,21 @@ func (r *Reader) ReadPartition(partition string) (arrow.Record, error) {
 		return nil, fmt.Errorf("reader is closed")
 	}
 
-	// Create a simple record for testing
-	builder := array.NewRecordBuilder(memory.DefaultAllocator, r.table.Schema)
-	defer builder.Release()
+	// Check if partition exists
+	files, ok := r.table.Partitions[partition]
+	if !ok {
+		return nil, fmt.Errorf("partition not found: %s", partition)
+	}
 
-	// Add some test data
-	builder.Field(0).(*array.Int32Builder).Append(1)
-	builder.Field(1).(*array.StringBuilder).Append("test")
-	builder.Field(2).(*array.Float64Builder).Append(1.0)
+	// Create Parquet manager
+	parquetManager := NewParquetManager()
 
-	return builder.NewRecord(), nil
+	// Read first file in partition
+	if len(files) == 0 {
+		return nil, fmt.Errorf("no files in partition: %s", partition)
+	}
+
+	return parquetManager.ReadRecord(files[0], r.table.Schema)
 }
 
 // GetStats returns the table statistics
@@ -115,12 +131,45 @@ func (r *Reader) GetStats() (*TableStats, error) {
 		return nil, fmt.Errorf("reader is closed")
 	}
 
-	// Return mock stats for testing
-	return &TableStats{
-		NumFiles:   1,
-		NumRecords: 100,
-		TotalSize:  1024,
-	}, nil
+	// Create Parquet manager
+	parquetManager := NewParquetManager()
+
+	// Calculate stats from all files
+	stats := &TableStats{
+		NumFiles:        0,
+		NumRecords:      0,
+		TotalSize:       0,
+		PartitionCounts: make(map[string]int64),
+		ColumnStats:     make(map[string]*ColumnStats),
+	}
+
+	// Process each file
+	for _, file := range r.table.Files {
+		fileStats, err := parquetManager.GetFileStats(file)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get file stats: %w", err)
+		}
+
+		stats.NumFiles++
+		stats.NumRecords += fileStats.NumRows
+		stats.TotalSize += fileStats.Size
+
+		// Update partition counts
+		partition := filepath.Base(filepath.Dir(file))
+		stats.PartitionCounts[partition]++
+
+		// Merge column stats
+		for colName, colStats := range fileStats.Columns {
+			if _, ok := stats.ColumnStats[colName]; !ok {
+				stats.ColumnStats[colName] = &ColumnStats{}
+			}
+			// Update column stats (simplified for now)
+			stats.ColumnStats[colName].NullCount += colStats.NullCount
+			stats.ColumnStats[colName].DistinctCount += colStats.DistinctCount
+		}
+	}
+
+	return stats, nil
 }
 
 // ReadAllStructured reads all data from the table and returns it as structured records
@@ -130,19 +179,30 @@ func (r *Reader) ReadAllStructured() ([]map[string]interface{}, error) {
 		return nil, fmt.Errorf("reader is closed")
 	}
 
-	// Create a simple result for testing
-	return []map[string]interface{}{
-		{
-			"id":    int32(1),
-			"name":  "test",
-			"value": float64(1.0),
-		},
-		{
-			"id":    int32(2),
-			"name":  "test2",
-			"value": float64(2.0),
-		},
-	}, nil
+	// Create Parquet manager
+	parquetManager := NewParquetManager()
+
+	// Read all files and combine records
+	var result []map[string]interface{}
+
+	for _, file := range r.table.Files {
+		// Read record from file
+		record, err := parquetManager.ReadRecord(file, r.table.Schema)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read record from file %s: %w", file, err)
+		}
+
+		// Convert record to structured data
+		structured, err := r.ConvertToStructuredData(record)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert record to structured data: %w", err)
+		}
+
+		// Append to result
+		result = append(result, structured...)
+	}
+
+	return result, nil
 }
 
 // Close closes the reader
@@ -167,12 +227,37 @@ func (r *Reader) ConvertToStructuredData(record arrow.Record) ([]map[string]inte
 		return nil, fmt.Errorf("record is nil")
 	}
 
-	// Create a simple result for testing
-	return []map[string]interface{}{
-		{
-			"id":    int32(1),
-			"name":  "test",
-			"value": float64(1.0),
-		},
-	}, nil
+	result := make([]map[string]interface{}, record.NumRows())
+
+	// Create a map for each row
+	for i := int64(0); i < record.NumRows(); i++ {
+		row := make(map[string]interface{})
+
+		// Add each column's value to the map
+		for j, col := range record.Columns() {
+			fieldName := record.Schema().Field(j).Name
+
+			// Handle null values
+			if col.IsNull(int(i)) {
+				row[fieldName] = nil
+				continue
+			}
+
+			// Extract value based on type
+			switch col := col.(type) {
+			case *array.Int32:
+				row[fieldName] = col.Value(int(i))
+			case *array.Float64:
+				row[fieldName] = col.Value(int(i))
+			case *array.String:
+				row[fieldName] = col.Value(int(i))
+			default:
+				return nil, fmt.Errorf("unsupported column type: %T", col)
+			}
+		}
+
+		result[i] = row
+	}
+
+	return result, nil
 }

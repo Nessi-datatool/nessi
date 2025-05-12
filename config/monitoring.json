@@ -1,0 +1,29 @@
+{
+  "slack": {
+    "webhook_url": "https://hooks.slack.com/services/TXXXXXXXX/BXXXXXXXX/XXXXXXXXXXXXXXXXXXXXXXXX",
+    "channel": "#monitoring",
+    "username": "Nessi Monitoring"
+  },
+  "metrics": {
+    "enabled": true,
+    "endpoint": "http://localhost:9090/metrics",
+    "interval": 60
+  },
+  "alerts": {
+    "enabled": true,
+    "rules": [
+      {
+        "name": "high_latency",
+        "description": "High latency detected",
+        "threshold": 1000,
+        "severity": "warning"
+      },
+      {
+        "name": "data_quality",
+        "description": "Data quality issue detected",
+        "threshold": 0.95,
+        "severity": "critical"
+      }
+    ]
+  }
+}
