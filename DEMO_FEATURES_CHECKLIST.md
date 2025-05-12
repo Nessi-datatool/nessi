@@ -18,7 +18,7 @@ Every time development resumes, check this file and `IMPLEMENTATION.md` to decid
 - [x] Null %, unique ratio, type inference: Go
 - [x] Consistency checks: Compare schema/types across versions
 - [x] Pattern recognition: Regex, email, URL, digit-only (Go)
-- [ ] Format validation: Add more (dates, IDs, custom regex)
+- [x] Format validation: Add more (dates, IDs, custom regex)
 - [ ] Trend deviation: Compare current/previous runs, alert on changes
 
 ## 3. Anomaly Detection
