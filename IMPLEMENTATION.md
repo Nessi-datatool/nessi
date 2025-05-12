@@ -364,15 +364,55 @@ func (p *ProcessPool) handleError(stderr io.Reader) error {
 
 ### Data Exchange Format
 
-#### Arrow-based Exchange (Large Datasets)
+#### Data Exchange Strategy
 ```go
-// pkg/common/arrow.go
+// pkg/common/exchange.go
+type ExchangeStrategy interface {
+    Serialize(data interface{}) ([]byte, error)
+    Deserialize(data []byte, target interface{}) error
+    SupportsType(data interface{}) bool
+}
+
+type ExchangeManager struct {
+    strategies []ExchangeStrategy
+    config    ExchangeConfig
+}
+
+type ExchangeConfig struct {
+    // Size thresholds in bytes
+    ArrowThreshold int64 `json:"arrow_threshold"`
+    // Memory limits
+    MaxMemoryUsage int64 `json:"max_memory_usage"`
+    // Compression settings
+    UseCompression bool `json:"use_compression"`
+}
+
+// Arrow-based Exchange for Large Datasets
 type ArrowExchange struct {
     Schema  *arrow.Schema
     Records []arrow.Record
+    stats   ExchangeStats
+}
+
+type ExchangeStats struct {
+    RowCount     int64
+    SizeBytes    int64
+    MemoryUsage  int64
+    SerializeMs  int64
+    DeserializeMs int64
 }
 
 func (a *ArrowExchange) ToIPC() ([]byte, error) {
+    start := time.Now()
+    defer func() {
+        a.stats.SerializeMs = time.Since(start).Milliseconds()
+    }()
+
+    // Check memory limits
+    if err := a.checkMemoryUsage(); err != nil {
+        return nil, fmt.Errorf("memory limit exceeded: %w", err)
+    }
+
     buf := new(bytes.Buffer)
     writer := ipc.NewWriter(buf, ipc.WithSchema(a.Schema))
     defer writer.Close()
@@ -381,13 +421,30 @@ func (a *ArrowExchange) ToIPC() ([]byte, error) {
         if err := writer.Write(record); err != nil {
             return nil, fmt.Errorf("failed to write record: %w", err)
         }
+        a.stats.RowCount += record.NumRows()
     }
-    return buf.Bytes(), nil
+
+    data := buf.Bytes()
+    a.stats.SizeBytes = int64(len(data))
+    return data, nil
 }
 
-func FromIPC(data []byte) (*ArrowExchange, error) {
+func (a *ArrowExchange) FromIPC(data []byte) error {
+    start := time.Now()
+    defer func() {
+        a.stats.DeserializeMs = time.Since(start).Milliseconds()
+    }()
+
+    if len(data) == 0 {
+        return fmt.Errorf("empty data received")
+    }
+
     reader := ipc.NewReader(bytes.NewReader(data))
     defer reader.Close()
+
+    if reader.Schema() == nil {
+        return fmt.Errorf("invalid Arrow IPC format: missing schema")
+    }
 
     var records []arrow.Record
     for reader.Next() {
@@ -395,35 +452,47 @@ func FromIPC(data []byte) (*ArrowExchange, error) {
         records = append(records, record)
     }
 
-    return &ArrowExchange{
-        Schema:  reader.Schema(),
-        Records: records,
-    }, nil
+    if err := reader.Err(); err != nil {
+        return fmt.Errorf("error reading Arrow IPC: %w", err)
+    }
+
+    a.Schema = reader.Schema()
+    a.Records = records
+    return nil
 }
 ```
 
 #### JSON Exchange (Small Datasets)
-```json
-{
-    "status": "success",
-    "data": {
-        "records": [...],
-        "metadata": {
-            "rowCount": 1000,
-            "timestamp": "2025-05-12T12:42:47+02:00",
-            "version": "1.0.0"
-        },
-        "schema": {
-            "fields": [
-                {
-                    "name": "id",
-                    "type": "int32",
-                    "nullable": false
-                }
-            ]
-        }
-    },
-    "error": null
+```go
+// pkg/common/json.go
+type JSONExchange struct {
+    stats ExchangeStats
+}
+
+type JSONData struct {
+    Status string          `json:"status"`
+    Data   JSONDataContent `json:"data"`
+    Error  *JSONError      `json:"error,omitempty"`
+}
+
+type JSONDataContent struct {
+    Records  []map[string]interface{} `json:"records"`
+    Metadata JSONMetadata            `json:"metadata"`
+    Schema   JSONSchema              `json:"schema"`
+}
+
+type JSONMetadata struct {
+    RowCount   int       `json:"row_count"`
+    Timestamp  time.Time `json:"timestamp"`
+    Version    string    `json:"version"`
+    Source     string    `json:"source"`
+    Properties map[string]interface{} `json:"properties,omitempty"`
+}
+
+type JSONError struct {
+    Code    string `json:"code"`
+    Message string `json:"message"`
+    Details string `json:"details,omitempty"`
 }
 ```
 
@@ -483,21 +552,171 @@ kaleido>=0.2.1
 
 ## Deployment Requirements
 
-### System Requirements
-- Go 1.21+
-- Python 3.9+
-- Required Python packages installed
-- Sufficient disk space for Delta Lake operations
+### Container-based Deployment
+```dockerfile
+# Dockerfile
+FROM golang:1.21-alpine AS builder
 
-### Environment Setup
-```bash
-# Python environment setup
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+WORKDIR /app
+COPY . .
+RUN go mod download
+RUN CGO_ENABLED=0 GOOS=linux go build -o nessi ./cmd/nessi
 
-# Go setup
-go mod tidy
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create Python virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy Go binary and scripts
+COPY --from=builder /app/nessi /usr/local/bin/
+COPY scripts/ /app/scripts/
+COPY config/ /app/config/
+
+# Set environment variables
+ENV NESSI_CONFIG=/app/config
+ENV NESSI_SCRIPTS=/app/scripts
+ENV PYTHONPATH=/app/scripts
+
+# Set resource limits
+ENV NESSI_MAX_MEMORY=4G
+ENV NESSI_MAX_CPU=2
+
+CMD ["nessi", "serve"]
+```
+
+### Docker Compose Setup
+```yaml
+# docker-compose.yml
+version: '3.8'
+
+services:
+  nessi:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - NESSI_ENV=production
+      - NESSI_LOG_LEVEL=info
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+```
+
+### Rule Validation Implementation
+```go
+// pkg/quality/rules/validator.go
+type RuleValidator struct {
+    rules []Rule
+    stats ValidationStats
+}
+
+type ValidationStats struct {
+    TotalRecords   int64
+    ValidRecords   int64
+    InvalidRecords int64
+    ErrorsByRule   map[string]int64
+    StartTime      time.Time
+    EndTime        time.Time
+}
+
+// Example rule implementation
+type NullCheckRule struct {
+    fields []string
+    config RuleConfig
+}
+
+func (r *NullCheckRule) Validate(record arrow.Record) []ValidationError {
+    var errors []ValidationError
+    
+    for _, field := range r.fields {
+        colIdx := record.Schema().FieldIndices(field)[0]
+        if colIdx < 0 {
+            continue
+        }
+        
+        col := record.Column(colIdx)
+        for i := 0; i < int(record.NumRows()); i++ {
+            if col.IsNull(i) {
+                errors = append(errors, ValidationError{
+                    RuleID:   "null_check",
+                    Field:    field,
+                    Value:    "null",
+                    Message:  fmt.Sprintf("Field '%s' cannot be null", field),
+                    RowIndex: int64(i),
+                })
+            }
+        }
+    }
+    
+    return errors
+}
+
+// Example range check rule
+type RangeCheckRule struct {
+    fields map[string]RangeConfig
+    config RuleConfig
+}
+
+type RangeConfig struct {
+    Min float64 `json:"min"`
+    Max float64 `json:"max"`
+}
+
+func (r *RangeCheckRule) Validate(record arrow.Record) []ValidationError {
+    var errors []ValidationError
+    
+    for field, rangeConfig := range r.fields {
+        colIdx := record.Schema().FieldIndices(field)[0]
+        if colIdx < 0 {
+            continue
+        }
+        
+        col := record.Column(colIdx)
+        for i := 0; i < int(record.NumRows()); i++ {
+            if col.IsNull(i) {
+                continue
+            }
+            
+            value := col.(*array.Float64).Value(i)
+            if value < rangeConfig.Min || value > rangeConfig.Max {
+                errors = append(errors, ValidationError{
+                    RuleID:   "range_check",
+                    Field:    field,
+                    Value:    fmt.Sprintf("%f", value),
+                    Message:  fmt.Sprintf("Value %f is outside range [%f, %f]",
+                                         value, rangeConfig.Min, rangeConfig.Max),
+                    RowIndex: int64(i),
+                })
+            }
+        }
+    }
+    
+    return errors
+}
 ```
 
 ## Timeline and Milestones
