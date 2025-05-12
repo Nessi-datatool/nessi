@@ -22,7 +22,7 @@ pytest-xprocess==0.22.2
 pytest-metadata==3.1.1
 
 # Code quality
-black==23.12.1
+black==24.3.0
 flake8==7.0.0
 mypy==1.8.0
 isort==5.13.2
