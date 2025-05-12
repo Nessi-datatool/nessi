@@ -1,0 +1,11 @@
+{
+  "isBlindAppend": false,
+  "isolationLevel": "Serializable",
+  "operation": "ALTER_TABLE",
+  "operationParameters": {
+    "addedFields": "timestamp"
+  },
+  "timestamp": 1747055869831,
+  "userId": "demo_user_id",
+  "userName": "demo_user"
+}

@@ -9,7 +9,7 @@ Every time development resumes, check this file and `IMPLEMENTATION.md` to decid
 - [x] Schema evolution/history: Track schema changes, expose diffs
 - [x] Schema validation on write: Enforce/log errors
 - [x] Field-level metadata: Comments, tags, types
-- [ ] Version history & rollback: Commit logs, version compare, rollback (30 days)
+- [x] Version history & rollback: Commit logs, version compare, rollback (30 days)
 - [ ] Time travel: CLI/API for version/timestamp query
 
 ## 2. Automated Profiling & Data Quality

@@ -1,0 +1,35 @@
+{
+  "files": [
+    "part-00000.parquet",
+    "part-00001.parquet",
+    "part-00002.parquet"
+  ],
+  "metadata": {},
+  "partitions": {},
+  "schema": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "int32"
+      },
+      {
+        "name": "name",
+        "type": "utf8"
+      },
+      {
+        "name": "value",
+        "type": "float64"
+      },
+      {
+        "name": "timestamp",
+        "type": "timestamp"
+      },
+      {
+        "name": "is_active",
+        "type": "boolean"
+      }
+    ]
+  },
+  "timestamp": 1747055869,
+  "version": 2
+}

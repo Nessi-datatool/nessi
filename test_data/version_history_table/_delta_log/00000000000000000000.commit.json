@@ -1,0 +1,9 @@
+{
+  "isBlindAppend": false,
+  "isolationLevel": "Serializable",
+  "operation": "CREATE_TABLE",
+  "operationParameters": null,
+  "timestamp": 1747055869831,
+  "userId": "demo_user_id",
+  "userName": "demo_user"
+}
