@@ -10,7 +10,7 @@ Every time development resumes, check this file and `IMPLEMENTATION.md` to decid
 - [x] Schema validation on write: Enforce/log errors
 - [x] Field-level metadata: Comments, tags, types
 - [x] Version history & rollback: Commit logs, version compare, rollback (30 days)
-- [ ] Time travel: CLI/API for version/timestamp query
+- [x] Time travel: CLI/API for version/timestamp query
 
 ## 2. Automated Profiling & Data Quality
 - [x] Statistical summaries: min, max, mean, median (Go/Python)
