@@ -29,6 +29,7 @@ type Dashboard struct {
 	authManager  *security.AuthManager
 	certManager  *security.CertManager
 	secureMode   bool
+	mux          *http.ServeMux
 }
 
 // DashboardOptions represents dashboard configuration options
@@ -54,43 +55,64 @@ func New(monitor *monitoring.Monitor, options DashboardOptions) (*Dashboard, err
 		authManager: options.AuthManager,
 		certManager: options.CertManager,
 		secureMode:  options.SecureMode,
+		mux:         http.NewServeMux(),
 	}, nil
 }
 
 // Start starts the dashboard server
 func (d *Dashboard) Start() error {
 	// Set up routes
-	mux := http.NewServeMux()
+	d.mux = http.NewServeMux()
 	
 	// Static files
-	mux.Handle("/static/", http.FileServer(http.FS(staticFS)))
+	d.mux.Handle("/static/", http.FileServer(http.FS(staticFS)))
 	
 	// Public routes
-	mux.HandleFunc("/", d.handleIndex)
-	mux.HandleFunc("/health", d.handleHealth)
+	d.mux.HandleFunc("/", d.handleIndex)
+	d.mux.HandleFunc("/health", d.handleHealth)
+	d.mux.HandleFunc("/data-quality", d.handleDataQualityDashboard)
 	
 	// Authentication routes
 	if d.authManager != nil {
-		mux.HandleFunc("/login", d.handleLogin)
-		mux.HandleFunc("/auth/login", d.handleAPILogin)
+		d.mux.HandleFunc("/login", d.handleLogin)
+		d.mux.HandleFunc("/auth/login", d.handleAPILogin)
 	}
 	
 	// Protected routes
 	if d.authManager != nil {
 		// Apply authentication middleware to API routes
-		mux.Handle("/api/metrics", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleMetrics)))
-		mux.Handle("/api/alerts", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleAlerts)))
-		mux.Handle("/api/export", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleExport)))
+		d.mux.Handle("/api/metrics", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleMetrics)))
+		d.mux.Handle("/api/alerts", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleAlerts)))
+		d.mux.Handle("/api/export", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleExport)))
+		
+		// Data quality routes with authentication
+		d.mux.Handle("/api/profiles", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleGetProfiles)))
+		d.mux.Handle("/api/profiles/summary", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleGetProfileSummaries)))
+		d.mux.Handle("/api/rules", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleGetRules)))
+		d.mux.Handle("/api/rules/validate", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleValidateRules)))
+		d.mux.Handle("/api/rules/history", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleGetRuleHistory)))
+		d.mux.Handle("/api/rules/trends", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleGetExecutionTrends)))
 		
 		// Admin routes
 		adminHandler := d.authManager.RoleMiddleware(security.RoleAdmin)
-		mux.Handle("/admin/users", adminHandler(http.HandlerFunc(d.handleUsers)))
+		d.mux.Handle("/admin/users", adminHandler(http.HandlerFunc(d.handleUsers)))
 	} else {
 		// No authentication, routes are public
-		mux.HandleFunc("/api/metrics", d.handleMetrics)
-		mux.HandleFunc("/api/alerts", d.handleAlerts)
-		mux.HandleFunc("/api/export", d.handleExport)
+		d.mux.HandleFunc("/api/metrics", d.handleMetrics)
+		d.mux.HandleFunc("/api/alerts", d.handleAlerts)
+		d.mux.HandleFunc("/api/export", d.handleExport)
+		
+		// Data quality routes without authentication
+		d.mux.HandleFunc("/api/profiles", d.handleGetProfiles)
+		d.mux.HandleFunc("/api/profiles/summary", d.handleGetProfileSummaries)
+		d.mux.HandleFunc("/api/rules", d.handleGetRules)
+		d.mux.HandleFunc("/api/rules/validate", d.handleValidateRules)
+		d.mux.HandleFunc("/api/rules/history", d.handleGetRuleHistory)
+		d.mux.HandleFunc("/api/rules/trends", d.handleGetExecutionTrends)
 	}
+	
+	// Register data quality handlers
+	d.registerDataQualityHandlers()
 	
 	// Start server
 	logging.Info(fmt.Sprintf("Starting dashboard server on %s", d.listenAddr))
@@ -98,11 +120,11 @@ func (d *Dashboard) Start() error {
 	// Use HTTPS if secure mode is enabled and cert manager is available
 	if d.secureMode && d.certManager != nil {
 		logging.Info("Starting dashboard in secure mode (HTTPS)")
-		return d.certManager.StartHTTPSServer(d.listenAddr, mux)
+		return d.certManager.StartHTTPSServer(d.listenAddr, d.mux)
 	}
 	
 	// Fallback to HTTP
-	return http.ListenAndServe(d.listenAddr, mux)
+	return http.ListenAndServe(d.listenAddr, d.mux)
 }
 
 // handleIndex handles the dashboard index page

@@ -5,15 +5,15 @@ go 1.23.0
 toolchain go1.24.3
 
 require (
-	github.com/apache/arrow/go/arrow v0.0.0-20200730104253-651201b0f516
 	github.com/apache/arrow/go/v12 v12.0.1
+	github.com/apache/arrow/go/v14 v14.0.2
 	github.com/apache/arrow/go/v15 v15.0.2
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-openapi/runtime v0.28.0
 	github.com/go-openapi/strfmt v0.23.0
+	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/golang-jwt/jwt/v5 v5.2.2
-	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.6.0
 	github.com/jung-kurt/gofpdf v1.16.2
 	github.com/prometheus/alertmanager v0.28.1
@@ -23,6 +23,8 @@ require (
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/zap v1.27.0
+	golang.org/x/crypto v0.32.0
+	golang.org/x/term v0.28.0
 	golang.org/x/time v0.11.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -30,7 +32,6 @@ require (
 require (
 	github.com/JohnCGriffin/overflow v0.0.0-20211019200055-46fa312c352c // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
-	github.com/apache/arrow/go/v14 v14.0.2 // indirect
 	github.com/apache/thrift v0.17.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -57,7 +58,6 @@ require (
 	github.com/go-playground/validator/v10 v10.20.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/flatbuffers v23.5.26+incompatible // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -89,10 +89,10 @@ require (
 	github.com/spf13/afero v1.12.0 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
-	github.com/xitongsys/parquet-go v1.6.2 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
 	go.mongodb.org/mongo-driver v1.14.0 // indirect
 	go.opentelemetry.io/otel v1.29.0 // indirect
@@ -100,7 +100,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.29.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect
-	golang.org/x/crypto v0.32.0 // indirect
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/net v0.33.0 // indirect
