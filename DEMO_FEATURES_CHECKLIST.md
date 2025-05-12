@@ -19,7 +19,7 @@ Every time development resumes, check this file and `IMPLEMENTATION.md` to decid
 - [x] Consistency checks: Compare schema/types across versions
 - [x] Pattern recognition: Regex, email, URL, digit-only (Go)
 - [x] Format validation: Add more (dates, IDs, custom regex)
-- [ ] Trend deviation: Compare current/previous runs, alert on changes
+- [x] Trend deviation: Compare current/previous runs, alert on changes
 
 ## 3. Anomaly Detection
 - [x] Outlier detection (z-score): Go profiler

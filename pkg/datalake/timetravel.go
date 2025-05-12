@@ -32,11 +32,7 @@ type TimeTravelResult struct {
 	Files []string
 }
 
-// SchemaField represents a field in the schema
-type SchemaField struct {
-	Name string
-	Type string
-}
+// Using SchemaField from table.go
 
 // TimeTravel queries a Delta table as it existed at a specific version or timestamp
 func (m *MetadataManager) TimeTravel(options TimeTravelOptions) (*TimeTravelResult, error) {
