@@ -72,6 +72,15 @@ func (w *Writer) WritePartition(partition string, record arrow.Record) error {
 		return fmt.Errorf("record cannot be nil")
 	}
 
+	// Validate schema
+	validator := NewSchemaValidator(w.table.Schema)
+	errors := validator.ValidateRecord(record)
+	if len(errors) > 0 {
+		// Log the validation errors
+		formattedErrors := FormatValidationErrors(errors)
+		return fmt.Errorf("schema validation failed: %s", formattedErrors)
+	}
+
 	// Create partition directory
 	partitionPath := filepath.Join(w.table.Path, partition)
 	if err := os.MkdirAll(partitionPath, 0755); err != nil {

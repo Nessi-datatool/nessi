@@ -2,7 +2,9 @@ package datalake
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 	"time"
@@ -222,6 +224,145 @@ func TestGetStats(t *testing.T) {
 	require.Equal(t, int64(1024), stats.TotalSize)
 
 	// Test closing
+	err = reader.Close()
+	require.NoError(t, err)
+	require.True(t, reader.IsClosed())
+}
+
+func generateSampleParquet(t *testing.T, output string, rows int, schema string) {
+	t.Helper()
+	cmd := exec.Command("python3", "scripts/generate_sample_parquet.py", "--output", output, "--rows", fmt.Sprintf("%d", rows), "--schema", schema)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Failed to generate Parquet file: %v\nOutput: %s", err, string(out))
+	}
+}
+
+func TestReadAllStructuredWithRealParquet(t *testing.T) {
+	tests := []struct {
+		name      string
+		schema    string
+		rows      int
+		allNull   bool
+		empty     bool
+		large     bool
+		wantRows  int
+		wantEmpty bool
+	}{
+		{"default schema", "default", 10, false, false, false, 10, false},
+		{"wide schema", "wide", 10, false, false, false, 10, false},
+		{"all-null default", "default", 10, true, false, false, 10, false},
+		{"all-null wide", "wide", 10, true, false, false, 10, false},
+		{"empty file", "default", 0, false, true, false, 0, true},
+		{"large file", "default", 100000, false, false, true, 100000, false},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			parquetPath := "testdata/test.parquet"
+			args := []string{"--output", parquetPath, "--schema", tc.schema, "--rows", fmt.Sprint(tc.rows)}
+			if tc.allNull {
+				args = append(args, "--all-null")
+			}
+			if tc.empty {
+				args = append(args, "--empty")
+			}
+			if tc.large {
+				args = append(args, "--large")
+			}
+			cmd := exec.Command("python3", append([]string{"scripts/generate_sample_parquet.py"}, args...)...)
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			if err := cmd.Run(); err != nil {
+				t.Fatalf("failed to generate parquet: %v", err)
+			}
+
+			r, err := NewReader("testdata")
+			if err != nil {
+				t.Fatalf("failed to create reader: %v", err)
+			}
+			defer r.Close()
+
+			rows, err := r.ReadAllStructured()
+			if err != nil {
+				t.Fatalf("ReadAllStructured failed: %v", err)
+			}
+			if tc.wantEmpty && len(rows) != 0 {
+				t.Errorf("expected empty result, got %d rows", len(rows))
+			}
+			if !tc.wantEmpty && len(rows) != tc.wantRows {
+				t.Errorf("expected %d rows, got %d", tc.wantRows, len(rows))
+			}
+			if tc.allNull && len(rows) > 0 {
+				for _, row := range rows {
+					for _, v := range row {
+						if v != nil {
+							t.Errorf("expected nil in all-null columns, got %v", v)
+						}
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestReadAllStructuredWithRealParquetFile(t *testing.T) {
+	// Generate a real sample Parquet file
+	parquetPath := filepath.Join("..", "..", "test_data.parquet")
+	generateSampleParquet(t, parquetPath, 5, "default")
+	_, err := os.Stat(parquetPath)
+	if err != nil {
+		t.Fatalf("Sample Parquet file not found: %v", err)
+	}
+
+	// Create a minimal DeltaTable metadata for the test file
+	tempDir, err := os.MkdirTemp("", "delta-real-parquet*")
+	require.NoError(t, err)
+	defer os.RemoveAll(tempDir)
+
+	deltaLogDir := filepath.Join(tempDir, "_delta_log")
+	err = os.MkdirAll(deltaLogDir, 0755)
+	require.NoError(t, err)
+
+	// Schema must match the Parquet file
+	schema := arrow.NewSchema([]arrow.Field{
+		{Name: "id", Type: &arrow.Int32Type{}},
+		{Name: "name", Type: &arrow.StringType{}},
+		{Name: "value", Type: &arrow.Float64Type{}},
+	}, nil)
+
+	metadata := map[string]interface{}{
+		"version":    int64(0),
+		"timestamp":  time.Now().Unix(),
+		"schema":     serializeSchema(schema),
+		"files":      []string{parquetPath},
+		"partitions": map[string][]string{},
+		"stats":      &TableStats{},
+		"metadata":   map[string]interface{}{},
+	}
+	data, err := json.Marshal(metadata)
+	require.NoError(t, err)
+	logFile := filepath.Join(deltaLogDir, "00000000000000000000.json")
+	err = os.WriteFile(logFile, data, 0644)
+	require.NoError(t, err)
+
+	// Create reader
+	reader, err := NewReader(tempDir)
+	require.NoError(t, err)
+	require.NotNil(t, reader)
+
+	// Test reading all structured
+	structured, err := reader.ReadAllStructured()
+	require.NoError(t, err)
+	require.NotNil(t, structured)
+	require.Greater(t, len(structured), 0)
+
+	// Print the results for verification
+	for _, rec := range structured {
+		b, _ := json.Marshal(rec)
+		t.Logf("Row: %s", string(b))
+	}
+
 	err = reader.Close()
 	require.NoError(t, err)
 	require.True(t, reader.IsClosed())

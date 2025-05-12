@@ -1,0 +1,1 @@
+{"files":["test_data/sample_table/data/part-1747054814061485000-data.parquet"],"metadata":{},"operation":"WRITE","partitions":{"data":["test_data/sample_table/data/part-1747054814061485000-data.parquet"]},"schema":{},"stats":{"NumFiles":1,"NumRecords":10,"TotalSize":0,"PartitionCounts":null,"ColumnStats":null},"timestamp":1747054814,"version":1}

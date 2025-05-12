@@ -23,29 +23,16 @@
 package main
 
 import (
-	"context"
-	"flag"
 	"fmt"
 	"log"
 	"os"
-	"os/signal"
 	"path/filepath"
-	"syscall"
-	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/nessi-dev/nessi-dev/cmd/nessi/cli"
-	"github.com/nessi-dev/nessi-dev/internal/config"
-	"github.com/nessi-dev/nessi-dev/internal/delta"
 	"github.com/nessi-dev/nessi-dev/internal/extensions"
-	"github.com/nessi-dev/nessi-dev/internal/monitor"
-	"github.com/nessi-dev/nessi-dev/internal/quality"
-	"github.com/nessi-dev/nessi-dev/internal/report"
-	"github.com/nessi-dev/nessi-dev/internal/security"
-	"github.com/nessi-dev/nessi-dev/internal/server"
 	"github.com/nessi-dev/nessi-dev/pkg"
-	"go.uber.org/zap"
 )
 
 var (
@@ -275,8 +262,13 @@ func init() {
 	extensionsCmd.AddCommand(enableExtensionCmd)
 	extensionsCmd.AddCommand(disableExtensionCmd)
 
+	// Register field-metadata commands
+	RegisterCommands(cli.CLI.RootCmd)
+
 	// Initialize Cobra
-	cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(func() {
+		_ = initConfig()
+	})
 }
 
 func main() {
@@ -284,31 +276,4 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-		go monitorManager.StartPeriodicAlertCheck(ctx, cfg.Monitoring.Prometheus.Interval, func(alerts []monitor.MonitoringAlert) {
-			for _, alert := range alerts {
-				log.Printf("Alert firing: %s - %s", alert.Name, alert.Description)
-			}
-		})
-	}
-
-	// Handle graceful shutdown
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-
-	select {
-	case sig := <-sigChan:
-		log.Printf("Received signal: %v", sig)
-	case <-ctx.Done():
-		log.Println("Context cancelled")
-	}
-
-	// Shutdown server
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer shutdownCancel()
-
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		log.Printf("Error during server shutdown: %v", err)
-	}
-
-	log.Println("Server stopped")
 }

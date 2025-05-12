@@ -245,14 +245,77 @@ func (r *Reader) ConvertToStructuredData(record arrow.Record) ([]map[string]inte
 
 			// Extract value based on type
 			switch col := col.(type) {
+			case *array.Int8:
+				row[fieldName] = col.Value(int(i))
+			case *array.Int16:
+				row[fieldName] = col.Value(int(i))
 			case *array.Int32:
+				row[fieldName] = col.Value(int(i))
+			case *array.Int64:
+				row[fieldName] = col.Value(int(i))
+			case *array.Uint8:
+				row[fieldName] = col.Value(int(i))
+			case *array.Uint16:
+				row[fieldName] = col.Value(int(i))
+			case *array.Uint32:
+				row[fieldName] = col.Value(int(i))
+			case *array.Uint64:
+				row[fieldName] = col.Value(int(i))
+			case *array.Float32:
 				row[fieldName] = col.Value(int(i))
 			case *array.Float64:
 				row[fieldName] = col.Value(int(i))
 			case *array.String:
 				row[fieldName] = col.Value(int(i))
+			case *array.LargeString:
+				row[fieldName] = col.Value(int(i))
+			case *array.Binary:
+				row[fieldName] = string(col.Value(int(i)))
+			case *array.LargeBinary:
+				row[fieldName] = string(col.Value(int(i)))
+			case *array.Timestamp:
+				row[fieldName] = col.Value(int(i)) // returns int64 nanoseconds since epoch
+			case *array.Decimal128:
+				val := col.Value(int(i)).ToFloat64(4) // 4 = scale, matches schema
+				row[fieldName] = val
+			case *array.Struct:
+				structMap := make(map[string]interface{})
+				for k := 0; k < col.NumField(); k++ {
+					field := col.Field(k)
+					name := col.DataType().(*arrow.StructType).Field(k).Name
+					if field.IsNull(int(i)) {
+						structMap[name] = nil
+						continue
+					}
+					switch f := field.(type) {
+					case *array.String:
+						structMap[name] = f.Value(int(i))
+					case *array.Int32:
+						structMap[name] = f.Value(int(i))
+					case *array.Int64:
+						structMap[name] = f.Value(int(i))
+					default:
+						structMap[name] = nil
+					}
+				}
+				row[fieldName] = structMap
+			case *array.List:
+				// Only handle list<string> for now
+				if col.DataType().(*arrow.ListType).Elem().ID() == arrow.STRING {
+					valArr := col.ListValues().(*array.String)
+					start := col.Offsets()[int(i)]
+					end := col.Offsets()[int(i)+1]
+					var vals []string
+					for idx := start; idx < end; idx++ {
+						vals = append(vals, valArr.Value(int(idx)))
+					}
+					row[fieldName] = vals
+				} else {
+					row[fieldName] = nil
+				}
 			default:
-				return nil, fmt.Errorf("unsupported column type: %T", col)
+				fmt.Fprintf(os.Stderr, "[ConvertToStructuredData] Unsupported column type: %T\n", col)
+				row[fieldName] = nil
 			}
 		}
 

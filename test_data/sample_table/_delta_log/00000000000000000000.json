@@ -1,0 +1,1 @@
+{"files":[],"metadata":{},"partitions":{},"schema":{"fields":[{"name":"id","type":"int32"},{"name":"name","type":"utf8"},{"name":"value","type":"float64"}]},"stats":null,"timestamp":-62135596800,"version":0}

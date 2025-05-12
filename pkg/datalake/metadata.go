@@ -230,7 +230,7 @@ func (m *MetadataManager) GetTableAtVersion(version int64) (*DeltaTable, error) 
 	var metadata struct {
 		Version      int64                    `json:"version"`
 		Timestamp    int64                    `json:"timestamp"`
-		Schema       *arrow.Schema            `json:"schema"`
+		Schema       map[string]interface{}   `json:"schema"`
 		Files        []string                 `json:"files"`
 		Partitions   map[string][]string      `json:"partitions"`
 		Stats        *TableStats              `json:"stats"`
@@ -241,12 +241,50 @@ func (m *MetadataManager) GetTableAtVersion(version int64) (*DeltaTable, error) 
 		return nil, fmt.Errorf("failed to parse metadata: %w", err)
 	}
 
+	// Parse schema
+	fields, ok := metadata.Schema["fields"].([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("invalid schema format")
+	}
+
+	arrowFields := make([]arrow.Field, len(fields))
+	for i, field := range fields {
+		fieldMap, ok := field.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("invalid field format")
+		}
+
+		name, ok := fieldMap["name"].(string)
+		if !ok {
+			return nil, fmt.Errorf("invalid field name")
+		}
+
+		typeStr, ok := fieldMap["type"].(string)
+		if !ok {
+			return nil, fmt.Errorf("invalid field type")
+		}
+
+		var dataType arrow.DataType
+		switch typeStr {
+		case "int32":
+			dataType = &arrow.Int32Type{}
+		case "string", "utf8":
+			dataType = &arrow.StringType{}
+		case "double", "float64":
+			dataType = &arrow.Float64Type{}
+		default:
+			return nil, fmt.Errorf("unsupported field type: %s", typeStr)
+		}
+
+		arrowFields[i] = arrow.Field{Name: name, Type: dataType}
+	}
+
 	// Create DeltaTable
 	table := &DeltaTable{
 		Path:         m.tablePath,
 		Version:      metadata.Version,
 		LastModified: time.Unix(metadata.Timestamp, 0),
-		Schema:       metadata.Schema,
+		Schema:       arrow.NewSchema(arrowFields, nil),
 		Files:        metadata.Files,
 		Partitions:   metadata.Partitions,
 		Stats:        metadata.Stats,

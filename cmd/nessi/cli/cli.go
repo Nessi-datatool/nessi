@@ -2,14 +2,9 @@ package cli
 
 import (
 	"context"
-	"flag"
+	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
-	"time"
 
-	"github.com/apache/arrow/go/v15/arrow"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -72,7 +67,10 @@ func initValidateCmd() {
 
 			// Initialize engine and datalake reader
 			engine := engine.New()
-			datalake := datalake.NewReader(CLI.TablePath)
+			datalake, err := datalake.NewReader(CLI.TablePath)
+			if err != nil {
+				return fmt.Errorf("failed to create datalake reader: %w", err)
+			}
 			if err := datalake.Initialize(); err != nil {
 				return fmt.Errorf("failed to initialize datalake reader: %w", err)
 			}
@@ -105,7 +103,10 @@ func initProfileCmd() {
 
 			// Initialize engine and datalake reader
 			engine := engine.New()
-			datalake := datalake.NewReader(CLI.TablePath)
+			datalake, err := datalake.NewReader(CLI.TablePath)
+			if err != nil {
+				return fmt.Errorf("failed to create datalake reader: %w", err)
+			}
 			if err := datalake.Initialize(); err != nil {
 				return fmt.Errorf("failed to initialize datalake reader: %w", err)
 			}
@@ -138,7 +139,10 @@ func initMonitorCmd() {
 
 			// Initialize engine and datalake reader
 			engine := engine.New()
-			datalake := datalake.NewReader(CLI.TablePath)
+			datalake, err := datalake.NewReader(CLI.TablePath)
+			if err != nil {
+				return fmt.Errorf("failed to create datalake reader: %w", err)
+			}
 			if err := datalake.Initialize(); err != nil {
 				return fmt.Errorf("failed to initialize datalake reader: %w", err)
 			}
@@ -171,7 +175,10 @@ func initReportCmd() {
 
 			// Initialize engine and datalake reader
 			engine := engine.New()
-			datalake := datalake.NewReader(CLI.TablePath)
+			datalake, err := datalake.NewReader(CLI.TablePath)
+			if err != nil {
+				return fmt.Errorf("failed to create datalake reader: %w", err)
+			}
 			if err := datalake.Initialize(); err != nil {
 				return fmt.Errorf("failed to initialize datalake reader: %w", err)
 			}
@@ -199,11 +206,7 @@ func initUserCmd() {
 		Long:  "Manage users and API keys",
 	}
 
-	// Add subcommands
-	initUserAddCmd(userCmd)
-	initUserListCmd(userCmd)
-	initApiKeyCmd(userCmd)
-
+	// User management is not implemented yet
 	CLI.RootCmd.AddCommand(userCmd)
 }
 

@@ -5,10 +5,12 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	"bytes"
+	"os/exec"
 
 	"github.com/apache/arrow/go/v15/arrow"
-	"github.com/apache/arrow/go/v15/arrow/array"
 	"github.com/apache/arrow/go/v15/arrow/memory"
+	"github.com/apache/arrow/go/v15/arrow/ipc"
 )
 
 // ParquetManager handles Parquet file operations
@@ -52,28 +54,51 @@ func (p *ParquetManager) ReadRecord(filePath string, schema *arrow.Schema) (arro
 		return nil, fmt.Errorf("schema cannot be nil")
 	}
 
-	// TODO: Implement actual Parquet reading
-	// For now, return a mock record
-	builder := array.NewRecordBuilder(p.allocator, schema)
-	defer builder.Release()
+	// Try Go-native reading (not implemented, so always fallback for now)
+	// TODO: Implement Go-native Parquet reading here
+	// If fails, fallback to Python
 
-	// Add mock data
-	for i := 0; i < schema.NumFields(); i++ {
-		field := schema.Field(i)
-		switch field.Type.ID() {
-		case arrow.INT32:
-			builder.Field(i).(*array.Int32Builder).Append(1)
-		case arrow.FLOAT64:
-			builder.Field(i).(*array.Float64Builder).Append(1.0)
-		case arrow.STRING:
-			builder.Field(i).(*array.StringBuilder).Append("test")
-		default:
-			return nil, fmt.Errorf("unsupported type: %s", field.Type)
-		}
+	record, err := p.readRecordPythonFallback(filePath, schema)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read Parquet file using Go and Python fallback: %w", err)
+	}
+	return record, nil
+}
+
+// readRecordPythonFallback calls the Python script to read Parquet and returns Arrow record (or error)
+// This aligns with the Go-Python bridge described in IMPLEMENTATION.md.
+func (p *ParquetManager) readRecordPythonFallback(filePath string, schema *arrow.Schema) (arrow.Record, error) {
+	cmd := exec.Command(filepath.Join("..", "..", "venv", "bin", "python"), filepath.Join("..", "..", "scripts", "read_parquet.py"), filePath)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		return nil, fmt.Errorf("python fallback error: %v, stderr: %s", err, stderr.String())
 	}
 
-	return builder.NewRecord(), nil
+	if stderr.Len() > 0 {
+		fmt.Fprintf(os.Stderr, "[Python fallback stderr]: %s\n", stderr.String())
+	}
+	ipcBytes := out.Bytes()
+	fmt.Fprintf(os.Stderr, "[Python fallback] Arrow IPC buffer size: %d bytes\n", len(ipcBytes))
+	reader, err := ipc.NewReader(bytes.NewReader(ipcBytes))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Arrow IPC reader: %w", err)
+	}
+	defer reader.Release()
+
+	if !reader.Next() {
+		max := 64
+		if len(ipcBytes) < max {
+			max = len(ipcBytes)
+		}
+		fmt.Fprintf(os.Stderr, "[Python fallback] First %d bytes of Arrow IPC: %x\n", max, ipcBytes[:max])
+		return nil, fmt.Errorf("no record returned from Arrow IPC stream (buffer size: %d bytes)", len(ipcBytes))
+	}
+	return reader.Record(), nil
 }
+
 
 // GetFileStats gets statistics about a Parquet file
 func (p *ParquetManager) GetFileStats(filePath string) (*FileStats, error) {
