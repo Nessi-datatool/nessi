@@ -16,7 +16,7 @@ Every time development resumes, check this file and `IMPLEMENTATION.md` to decid
 - [x] Statistical summaries: min, max, mean, median (Go/Python)
 - [x] Distribution analysis: HTML (Python), stats (Go), add histogram if possible
 - [x] Null %, unique ratio, type inference: Go
-- [ ] Consistency checks: Compare schema/types across versions
+- [x] Consistency checks: Compare schema/types across versions
 - [x] Pattern recognition: Regex, email, URL, digit-only (Go)
 - [ ] Format validation: Add more (dates, IDs, custom regex)
 - [ ] Trend deviation: Compare current/previous runs, alert on changes
