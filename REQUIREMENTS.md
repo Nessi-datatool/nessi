@@ -23,36 +23,36 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
 - Historical state reconstruction
 
 ### Automated Profiling
-- Statistical summaries (min, max, mean, median)
-- Distribution analysis with histograms
-- Null percentage and unique value ratios
-- Type inference and consistency checks
-- Completeness, accuracy, and consistency scoring
+- ✅ Statistical summaries (min, max, mean, median)
+- ✅ Distribution analysis with histograms
+- ✅ Null percentage and unique value ratios
+- ✅ Type inference and consistency checks
+- ✅ Completeness, accuracy, and consistency scoring
 
 ### Anomaly Detection
-- Outlier detection using z-score and IQR methods
-- Sudden change detection between runs
-- Constant changes detection between runs
-- Sudden spikes/dips detection between runs
-- Oscillations detection between runs
-- Historical trend deviation alerts
+- ✅ Outlier detection using z-score and IQR methods
+- ✅ Sudden change detection between runs
+- ✅ Constant changes detection between runs
+- ✅ Sudden spikes/dips detection between runs
+- ✅ Oscillations detection between runs
+- ✅ Historical trend deviation alerts
 
 ### Pattern Recognition
-- Regex pattern extraction and matching
-- Common format validation (emails, dates, IDs)
-- Data format consistency monitoring
+- ✅ Regex pattern extraction and matching
+- ✅ Common format validation (emails, dates, IDs)
+- ✅ Data format consistency monitoring
 
 ### Rule Validation
-- Predefined rules library (null checks, range validation, length, regex, enum)
-- Custom rule creation via YAML/SQL/Python
-- Rule execution history and impact analysis
-- Row-level rule validation with custom logic
+- ✅ Predefined rules library (null checks, range validation, length, regex, enum)
+- ✅ Custom rule creation via YAML/SQL/Python
+- ✅ Rule execution history and impact analysis
+- ✅ Row-level rule validation with custom logic
 
 ### Real-time Dashboard
-- Table health scores and trends
-- Quality metric tracking over time
-- Recent validation failures
-- Live metrics for table health and ingestion
+- ✅ Table health scores and trends
+- ✅ Quality metric tracking over time
+- ✅ Recent validation failures
+- ✅ Live metrics for table health and ingestion
 
 ### Grafana Integration
 - 5 pre-built dashboard templates
@@ -74,23 +74,23 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
 - Performance impact analysis
 
 ### Interactive Reports
-- Quality score cards with drill-down
-- Table and column level summaries
-- Trend charts and comparison views
-- Distribution histograms
-- Pattern frequency charts
-- Failure rate trends
-- HTML and PDF reports with summary cards, histograms, and partition heatmaps
-- Export to JSON/CSV for automation
-- Shareable links with expiration
+- ✅ Quality score cards with drill-down
+- ✅ Table and column level summaries
+- ✅ Trend charts and comparison views
+- ✅ Distribution histograms
+- ✅ Pattern frequency charts
+- ✅ Failure rate trends
+- ✅ HTML and PDF reports with summary cards, histograms, and partition heatmaps
+- ✅ Export to JSON/CSV for automation
+- ✅ Shareable links with expiration
 
 ### Security
-- SSL/TLS encrypted interfaces
-- User authentication with JWT
-- API key management
-- Role-based access control (RBAC) for APIs and dashboards
-- API rate limiting and optional IP allowlisting
-- Audit logging for key operations
+- ✅ SSL/TLS encrypted interfaces
+- ✅ User authentication with JWT
+- ✅ API key management
+- ✅ Role-based access control (RBAC) for APIs and dashboards
+- ✅ API rate limiting and optional IP allowlisting
+- ✅ Audit logging for key operations
 
 ### Containerization
 - 100% Docker-native for easy installation

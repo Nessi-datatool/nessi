@@ -19,7 +19,10 @@ nessi-dev/
 │   │   └── writer.go             # Delta table writing
 │   ├── quality/                  # Data quality engine
 │   │   ├── profile/              # Data profiling
+│   │   │   └── outlier_detection.go  # IQR-based outlier detection
 │   │   ├── rules/                # Rule validation
+│   │   │   ├── validator.go      # Core validation logic
+│   │   │   └── extended_rules.go # Extended rule types
 │   │   ├── patterns/             # Pattern matching
 │   │   └── scoring/              # Quality scoring
 │   ├── monitor/                  # Monitoring service
@@ -38,6 +41,32 @@ nessi-dev/
 │       ├── server.go             # Server setup
 │       └── graceful.go           # Graceful shutdown
 ├── pkg/                          # Public packages
+│   ├── datalake/                 # Delta Lake & multi-format operations
+│   │   ├── delta.go              # Delta table interface
+│   │   ├── parquet.go            # Parquet file operations
+│   │   └── schema.go             # Schema management
+│   ├── quality/                  # Data quality & profiling
+│   │   ├── profile/              # Data profiling & statistics
+│   │   │   ├── profiler.go       # Core profiling functionality
+│   │   │   └── advanced_profiling.go  # Enhanced profiling capabilities
+│   │   ├── rules/                # Rule validation engine
+│   │   │   ├── validator.go      # Core validation logic
+│   │   │   ├── extended_rules.go # Extended rule types (Regex, Enum, Length, DateFormat)
+│   │   │   └── yaml_loader.go    # YAML configuration support
+│   │   └── anomaly/              # Anomaly detection algorithms
+│   │       └── sudden_change.go  # Sudden change detection
+│   ├── monitoring/               # Metrics & monitoring
+│   │   ├── monitoring.go         # Core monitoring functionality
+│   │   ├── dashboard/            # Web dashboard
+│   │   │   ├── dashboard.go      # Core dashboard functionality
+│   │   │   ├── data_quality_dashboard.go  # Data quality UI
+│   │   │   ├── data_quality_handlers.go   # Data quality API handlers
+│   │   │   └── templates/        # Dashboard templates
+│   │   └── alerts/               # Alerting system
+│   ├── security/                 # Authentication & authorization
+│   │   ├── auth.go               # Authentication system
+│   │   ├── ssl.go                # SSL/TLS support
+│   │   └── rbac.go               # Role-based access control
 │   ├── extensions/               # Extension system
 │   │   ├── manager.go            # Extension management
 │   │   ├── python.go             # Python extension interface

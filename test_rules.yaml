@@ -1,0 +1,42 @@
+rules:
+  - id: email_regex
+    name: Email Format
+    description: Validates email format
+    severity: error
+    rule_type: regex
+    field: email
+    tags: [validation, format]
+    config:
+      pattern: ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
+  
+  - id: status_enum
+    name: Status Values
+    description: Validates status values
+    severity: warning
+    rule_type: enum
+    field: status
+    tags: [validation, domain]
+    config:
+      values: [active, inactive, pending]
+      case_sensitive: true
+  
+  - id: username_length
+    name: Username Length
+    description: Validates username length
+    severity: error
+    rule_type: length
+    field: username
+    tags: [validation, format]
+    config:
+      min_length: 3.0
+      max_length: 10.0
+  
+  - id: date_format
+    name: Date Format
+    description: Validates date format
+    severity: error
+    rule_type: date_format
+    field: created_at
+    tags: [validation, format]
+    config:
+      format: "2006-01-02"
