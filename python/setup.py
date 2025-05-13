@@ -21,6 +21,9 @@ setup(
     python_requires=">=3.7",
     install_requires=[
         "requests>=2.25.0",
-        "dataclasses;python_version<'3.7'"
+        "dataclasses;python_version<'3.7'",
+        "pandas>=1.0.0",
+        "pyarrow>=5.0.0",
+        "deltalake>=0.6.0"
     ],
 )

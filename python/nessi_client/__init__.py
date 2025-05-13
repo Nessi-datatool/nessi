@@ -14,6 +14,14 @@ from .models import (
     Profile,
     ValidationResult
 )
+from .format_handler import FormatHandler
+from .format_models import (
+    SchemaField,
+    Schema,
+    FormatConfig,
+    FormatDetectionResult,
+    DataBatch
+)
 
 __all__ = [
     "NessiClient",
@@ -21,5 +29,11 @@ __all__ = [
     "Alert",
     "Rule",
     "Profile",
-    "ValidationResult"
+    "ValidationResult",
+    "FormatHandler",
+    "SchemaField",
+    "Schema",
+    "FormatConfig",
+    "FormatDetectionResult",
+    "DataBatch"
 ]

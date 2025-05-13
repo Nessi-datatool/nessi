@@ -6,12 +6,15 @@ Client for interacting with the Nessi monitoring system API.
 
 import json
 import logging
+import os
 import requests
 from datetime import datetime
 from typing import Dict, List, Optional, Any, Union
 from urllib.parse import urljoin
 
 from .models import Metric, Alert, Rule, Profile, ValidationResult
+from .format_handler import FormatHandler
+from .format_models import FormatConfig, FormatDetectionResult, DataBatch, Schema, SchemaField
 
 
 class NessiClient:
@@ -29,7 +32,8 @@ class NessiClient:
         api_key: Optional[str] = None,
         username: Optional[str] = None,
         password: Optional[str] = None,
-        verify_ssl: bool = True
+        verify_ssl: bool = True,
+        format_config: Optional[FormatConfig] = None
     ):
         """
         Initialize the Nessi client.
@@ -40,6 +44,7 @@ class NessiClient:
             username: Username for authentication
             password: Password for authentication
             verify_ssl: Whether to verify SSL certificates
+            format_config: Configuration for format handling
         """
         self.base_url = base_url.rstrip("/") + "/"
         self.api_key = api_key
@@ -49,6 +54,9 @@ class NessiClient:
         self.token = None
         self.token_expiry = None
         self.logger = logging.getLogger("nessi_client")
+        
+        # Initialize format handler
+        self.format_handler = FormatHandler(config=format_config)
         
         # Set up session
         self.session = requests.Session()
@@ -439,3 +447,107 @@ class NessiClient:
             ))
         
         return results
+    
+    # Format Handling API
+    
+    def detect_format(self, path: str) -> FormatDetectionResult:
+        """
+        Detect the format of a file or directory.
+        
+        Args:
+            path: Path to the file or directory
+            
+        Returns:
+            FormatDetectionResult with detected format and confidence
+        """
+        return self.format_handler.detect_format(path)
+    
+    def infer_schema(self, data) -> Schema:
+        """
+        Infer schema from data.
+        
+        Args:
+            data: Data to infer schema from (file path, file object, or list of records)
+            
+        Returns:
+            Inferred schema
+        """
+        return self.format_handler.infer_schema(data)
+    
+    def read_data(self, path: str) -> DataBatch:
+        """
+        Read data from a file or directory.
+        
+        Args:
+            path: Path to the file or directory
+            
+        Returns:
+            DataBatch with data and schema
+        """
+        return self.format_handler.read_data(path)
+    
+    def validate_file(self, path: str, rules: Optional[List[str]] = None) -> List[ValidationResult]:
+        """
+        Validate a file against quality rules.
+        
+        Args:
+            path: Path to the file to validate
+            rules: List of rule IDs to validate against (optional)
+            
+        Returns:
+            List of ValidationResult objects
+        """
+        # Read the data from the file
+        data_batch = self.read_data(path)
+        
+        # Validate the data
+        return self.validate_data(data_batch.data, rules)
+    
+    def profile_file(self, path: str) -> Profile:
+        """
+        Create a profile for a file.
+        
+        Args:
+            path: Path to the file to profile
+            
+        Returns:
+            Profile object
+        """
+        # Detect format and read data
+        format_result = self.detect_format(path)
+        data_batch = self.read_data(path)
+        
+        # Create a profile request
+        payload = {
+            "dataset_name": os.path.basename(path),
+            "data": data_batch.data,
+            "format": format_result.format,
+            "metadata": {
+                "schema": {
+                    "fields": [
+                        {"name": field.name, "data_type": field.data_type, "nullable": field.nullable}
+                        for field in data_batch.schema.fields
+                    ]
+                },
+                "format_metadata": format_result.metadata
+            }
+        }
+        
+        # Send the profile request
+        response = self._request("post", "api/profiles/create", json=payload)
+        item = response.json()
+        
+        # Create and return the profile
+        timestamp = datetime.fromisoformat(item["timestamp"]) if "timestamp" in item else datetime.now()
+        return Profile(
+            id=item["id"],
+            name=item["name"],
+            dataset_name=item["dataset_name"],
+            timestamp=timestamp,
+            row_count=item.get("row_count", 0),
+            column_count=item.get("column_count", 0),
+            column_stats=item.get("column_stats", {}),
+            outliers=item.get("outliers", {}),
+            metadata=item.get("metadata", {}),
+            detection_method=item.get("detection_method", "zscore")
+        )

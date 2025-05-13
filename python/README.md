@@ -24,6 +24,8 @@ pip install -e .
 - **Data Profiling**: Access data profiles and statistics
 - **Data Validation**: Validate data against quality rules
 - **Authentication**: Secure access with API keys or username/password
+- **Multi-Format Support**: Work with Delta Lake, Parquet, and CSV files
+- **Automatic Schema Inference**: Detect schemas from various data formats
 
 ## Quick Start
 
@@ -219,6 +221,106 @@ for metric in metrics:
         print(f"Change type: {change_info.get('pattern', 'normal')}")
         print(f"Magnitude: {change_info.get('magnitude')}")
         print(f"Direction: {change_info.get('direction')}")
+```
+
+## Multi-Format Support
+
+The client provides comprehensive support for working with multiple data formats, including Delta Lake, Parquet, and CSV files.
+
+### Format Detection
+
+```python
+from nessi_client import NessiClient
+
+client = NessiClient()
+
+# Detect the format of a file or directory
+format_result = client.detect_format("/path/to/data")
+print(f"Detected format: {format_result.format} with {format_result.confidence} confidence")
+
+# Access the schema
+if format_result.schema:
+    print(f"Schema has {len(format_result.schema.fields)} fields:")
+    for field in format_result.schema.fields:
+        print(f"  - {field.name}: {field.data_type} (nullable: {field.nullable})")
+```
+
+### Reading Data
+
+```python
+# Read data from a file or directory
+data_batch = client.read_data("/path/to/data")
+print(f"Read {len(data_batch.data)} rows with {len(data_batch.schema.fields)} columns")
+
+# Access the data (list of dictionaries)
+for i, record in enumerate(data_batch.data[:3]):
+    print(f"Record {i}: {record}")
+```
+
+### Schema Inference
+
+```python
+# Infer schema from a list of records
+records = [
+    {"id": 1, "name": "Alice", "score": 95.5},
+    {"id": 2, "name": "Bob", "score": 87.0}
+]
+schema = client.infer_schema(records)
+
+# Infer schema from a file
+schema = client.infer_schema("/path/to/data.csv")
+
+# Infer schema from a file-like object
+with open("/path/to/data.csv", "rb") as f:
+    schema = client.infer_schema(f)
+```
+
+### Validating Files
+
+```python
+# Validate a file against quality rules
+results = client.validate_file("/path/to/data.csv")
+for result in results:
+    status = "PASSED" if result.passed else "FAILED"
+    print(f"{status}: {result.rule_id} - {result.message}")
+
+# Validate with specific rules
+results = client.validate_file("/path/to/data.csv", rules=["rule1", "rule2"])
+```
+
+### Profiling Files
+
+```python
+# Create a profile for a file
+profile = client.profile_file("/path/to/data.csv")
+print(f"Profile created: {profile.id} - {profile.name}")
+print(f"Row count: {profile.row_count}")
+print(f"Column count: {profile.column_count}")
+
+# Access column statistics
+for column, stats in profile.column_stats.items():
+    print(f"Column: {column}")
+    print(f"  Type: {stats.get('type')}")
+    print(f"  Null %: {stats.get('null_percentage')}")
+```
+
+### Custom Format Configuration
+
+```python
+from nessi_client import NessiClient
+from nessi_client.format_models import FormatConfig
+
+# Create a custom format configuration
+format_config = FormatConfig(
+    date_formats=["%Y-%m-%d", "%Y/%m/%d", "%d-%m-%Y"],
+    csv_delimiter=",",
+    csv_has_header=True,
+    max_rows_for_inference=500,
+    min_confidence_threshold=0.8
+)
+
+# Initialize client with custom format configuration
+client = NessiClient(format_config=format_config)
 ```
 
 ## License
