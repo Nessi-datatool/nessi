@@ -1,0 +1,98 @@
+name: Nessi Data Quality Checks
+
+on:
+  schedule:
+    # Run daily at midnight
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    # Allow manual triggering
+  push:
+    branches: [ main ]
+    paths:
+      # Only run when data files change
+      - 'data/**'
+
+jobs:
+  data-quality-checks:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          
+      - name: Install Nessi
+        run: |
+          # Clone Nessi repository
+          git clone https://github.com/nessi-dev/nessi-dev.git
+          cd nessi-dev
+          
+          # Build and install Nessi
+          make build
+          sudo cp bin/nessi /usr/local/bin/
+          
+          # Verify installation
+          nessi version
+      
+      - name: Set up Delta Lake environment
+        run: |
+          # Install Python and Delta Lake dependencies
+          python -m pip install --upgrade pip
+          pip install delta-spark pyarrow pandas
+      
+      - name: Run data quality checks
+        run: |
+          # Create a configuration file for the checks
+          cat > nessi-config.yaml << EOF
+          validation:
+            rules:
+              - name: "completeness"
+                description: "Check for null values"
+                severity: "critical"
+              - name: "uniqueness"
+                description: "Check for duplicate values"
+                severity: "high"
+              - name: "format"
+                description: "Check data format"
+                severity: "medium"
+          EOF
+          
+          # Run checks on all Delta tables in the data directory
+          for table in data/*/; do
+            echo "Running checks on $table"
+            nessi validate "$table" --config nessi-config.yaml --format json > "${table//\//_}_results.json"
+            
+            # Check if validation passed
+            if [ $? -ne 0 ]; then
+              echo "::error::Data quality checks failed for $table"
+              exit 1
+            fi
+          done
+      
+      - name: Generate summary report
+        run: |
+          # Generate a summary report of all checks
+          nessi report generate --input "*.json" --output report.html --format html
+      
+      - name: Upload results
+        uses: actions/upload-artifact@v3
+        with:
+          name: data-quality-results
+          path: |
+            *_results.json
+            report.html
+      
+      - name: Send notification on failure
+        if: failure()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: data-quality-alerts
+          SLACK_COLOR: danger
+          SLACK_TITLE: Data Quality Checks Failed
+          SLACK_MESSAGE: 'Data quality checks failed. See the GitHub Actions run for details.'
+          SLACK_FOOTER: 'Powered by Nessi'
