@@ -4,7 +4,11 @@ This guide explains how to integrate Nessi with external systems such as Apache 
 
 ## Table of Contents
 
-- [Airflow Integration](#airflow-integration)
+- [Workflow Orchestration Integrations](#workflow-orchestration-integrations)
+  - [Airflow Integration](#airflow-integration)
+  - [Prefect Integration](#prefect-integration)
+  - [Dagster Integration](#dagster-integration)
+  - [Kubernetes Integration](#kubernetes-integration)
 - [GitHub Actions Integration](#github-actions-integration)
 - [Custom Script Integration](#custom-script-integration)
   - [Python Scripts](#python-scripts)
@@ -12,9 +16,57 @@ This guide explains how to integrate Nessi with external systems such as Apache 
 - [Integration Best Practices](#integration-best-practices)
 - [Troubleshooting](#troubleshooting)
 
+## Workflow Orchestration Integrations
+
+Nessi.dev provides dedicated integrations for popular workflow orchestration tools and container orchestration platforms, allowing you to incorporate data quality checks, profiling, validation, and lineage tracking into your data pipelines. These integrations are more powerful and easier to use than the basic script-based approaches.
+
+For detailed documentation on these integrations, see the [Workflow Orchestration Integration Guide](./workflow_orchestration.md).
+
 ## Airflow Integration
 
 Apache Airflow is a popular platform for programmatically authoring, scheduling, and monitoring workflows. You can integrate Nessi into your Airflow DAGs to run data quality checks as part of your data pipelines.
+
+### Native Airflow Integration
+
+Nessi.dev provides a native Airflow integration package with custom operators and sensors:
+
+```bash
+pip install nessi-airflow
+```
+
+```python
+from nessi_airflow.operators.data_quality_operator import NessiDataQualityOperator
+from nessi_airflow.operators.profile_operator import NessiProfileOperator
+from nessi_airflow.operators.validation_operator import NessiValidationOperator
+from nessi_airflow.operators.lineage_operator import NessiLineageOperator
+from nessi_airflow.sensors.data_quality_sensor import NessiDataQualitySensor
+
+# Create a data quality check task
+quality_check = NessiDataQualityOperator(
+    task_id='run_quality_check',
+    table_name='my_table',
+    rules=[{'name': 'not_null_check', 'rule_type': 'not_null', 'column': 'id'}],
+    quality_threshold=0.9,
+    conn_id='nessi_default',
+    dag=dag,
+)
+
+# Create a sensor to wait for the quality check to complete
+wait_for_quality = NessiDataQualitySensor(
+    task_id='wait_for_quality',
+    check_id="{{ task_instance.xcom_pull(task_ids='run_quality_check')['check_id'] }}",
+    quality_threshold=0.9,
+    conn_id='nessi_default',
+    dag=dag,
+)
+
+# Define task dependencies
+quality_check >> wait_for_quality
+```
+
+For more details, see the [Workflow Orchestration Integration Guide](./workflow_orchestration.md#apache-airflow-integration).
+
+### Script-Based Airflow Integration
 
 ### Example Airflow DAG
 
@@ -87,11 +139,288 @@ For a complete example, see [airflow_integration.py](../examples/integrations/ai
 
 ### Airflow Integration Tips
 
-1. **Install Nessi in your Airflow environment**: Make sure Nessi is installed and accessible in your Airflow worker environment.
-2. **Use XComs for passing results**: Use Airflow's XComs to pass validation results between tasks.
-3. **Handle failures appropriately**: Configure your DAG to handle validation failures according to your requirements.
-4. **Use Airflow variables for configuration**: Store Nessi configuration in Airflow variables for flexibility.
-5. **Set up alerting**: Configure Airflow to send alerts when data quality checks fail.
+1. **Use the native integration package**: The `nessi-airflow` package provides a more robust and maintainable integration than script-based approaches.
+2. **Install Nessi in your Airflow environment**: Make sure Nessi is installed and accessible in your Airflow worker environment.
+3. **Use XComs for passing results**: Use Airflow's XComs to pass validation results between tasks.
+4. **Handle failures appropriately**: Configure your DAG to handle validation failures according to your requirements.
+5. **Use Airflow variables for configuration**: Store Nessi configuration in Airflow variables for flexibility.
+6. **Set up alerting**: Configure Airflow to send alerts when data quality checks fail.
+
+## Prefect Integration
+
+Prefect is a modern workflow orchestration tool designed for data engineers and scientists. Nessi.dev provides a native Prefect integration package with tasks and flows for data quality checks, profiling, validation, and lineage tracking.
+
+### Installation
+
+```bash
+pip install nessi-prefect
+```
+
+### Example Prefect Flow
+
+```python
+from prefect import flow
+from nessi_prefect.tasks.quality import run_quality_check, wait_for_quality_results
+
+@flow(name="Data Quality Flow")
+def data_quality_flow(table_name: str):
+    # Run quality check
+    quality_response = run_quality_check(
+        table_name=table_name,
+        rules=[
+            {
+                "name": "not_null_check",
+                "description": "Check that id column is not null",
+                "rule_type": "not_null",
+                "column": "id",
+            },
+        ],
+        profile=True,
+        api_host="http://your-nessi-instance",
+        api_key="your-api-key",
+    )
+    
+    # Wait for quality results
+    quality_results = wait_for_quality_results(
+        check_id=quality_response["check_id"],
+        quality_threshold=0.9,
+        fail_on_rule_failure=True,
+        api_host="http://your-nessi-instance",
+        api_key="your-api-key",
+    )
+    
+    return quality_results
+
+if __name__ == "__main__":
+    data_quality_flow("my_table")
+```
+
+### Using Pre-built Flows
+
+Nessi.dev provides pre-built flows for common use cases:
+
+```python
+from nessi_prefect.flows.data_quality_flow import data_quality_flow
+from nessi_prefect.flows.data_pipeline_flow import data_pipeline_flow
+
+# Run a simple data quality flow
+result = data_quality_flow(
+    table_name="my_table",
+    rules=[...],
+    quality_threshold=0.9,
+    api_host="http://your-nessi-instance",
+    api_key="your-api-key",
+)
+
+# Run a complete data pipeline flow
+result = data_pipeline_flow(
+    input_table="source_table",
+    output_table="target_table",
+    quality_rules=[...],
+    validation_rules=[...],
+    api_host="http://your-nessi-instance",
+    api_key="your-api-key",
+)
+```
+
+For more details, see the [Workflow Orchestration Integration Guide](./workflow_orchestration.md#prefect-integration).
+
+### Prefect Integration Tips
+
+1. **Use the native integration package**: The `nessi-prefect` package provides a more robust and maintainable integration than script-based approaches.
+2. **Leverage Prefect Secret blocks**: Store API keys and other sensitive information in Prefect Secret blocks.
+3. **Use Prefect deployments**: Deploy your flows to run on a schedule or in response to events.
+4. **Configure appropriate retries**: Set up retries for tasks that might fail due to transient issues.
+5. **Use Prefect notifications**: Configure notifications for flow run failures.
+
+## Dagster Integration
+
+Dagster is a data orchestrator for machine learning, analytics, and ETL. Nessi.dev provides a native Dagster integration package with resources, ops, and jobs for data quality checks, profiling, validation, and lineage tracking.
+
+### Installation
+
+```bash
+pip install nessi-dagster
+```
+
+### Example Dagster Job
+
+```python
+from dagster import job
+from nessi_dagster.resources import nessi_resource
+from nessi_dagster.ops.quality_ops import run_quality_check, wait_for_quality_results
+
+@job(
+    resource_defs={
+        "nessi": nessi_resource.configured({
+            "api_host": "http://your-nessi-instance",
+            "api_key": "your-api-key",
+            "api_secret": "",
+            "timeout": 300,
+        }),
+    },
+)
+def data_quality_job():
+    # Run quality check
+    quality_response = run_quality_check(
+        table_name="my_table",
+        rules=[
+            {
+                "name": "not_null_check",
+                "description": "Check that id column is not null",
+                "rule_type": "not_null",
+                "column": "id",
+            },
+        ],
+        profile=True,
+    )
+    
+    # Wait for quality results
+    quality_results = wait_for_quality_results(
+        check_id=quality_response["check_id"],
+        quality_threshold=0.9,
+        fail_on_rule_failure=True,
+    )
+    
+    return quality_results
+
+if __name__ == "__main__":
+    result = data_quality_job.execute_in_process()
+```
+
+### Using Pre-built Jobs
+
+Nessi.dev provides pre-built jobs for common use cases:
+
+```python
+from nessi_dagster.jobs.data_quality_job import data_quality_job
+from nessi_dagster.jobs.data_pipeline_job import data_pipeline_job
+
+# Configure and execute the jobs
+data_quality_job.execute_in_process(
+    run_config={
+        "ops": {
+            "run_quality_check": {
+                "config": {
+                    "table_name": "my_table",
+                    "rules": [...],
+                }
+            },
+
+## Kubernetes Integration
+
+Kubernetes is a powerful container orchestration platform. Nessi.dev provides a dedicated Kubernetes integration that allows you to run data quality operations as Kubernetes jobs.
+
+### Installation
+
+```bash
+pip install nessi-k8s
+```
+
+### Native Kubernetes Integration
+
+Nessi.dev provides a native Kubernetes integration package with operators for running data quality checks, profiling, and validation as Kubernetes jobs:
+
+```python
+from nessi_k8s.client import NessiK8sClient
+
+# Create client
+client = NessiK8sClient(
+    namespace="nessi",
+    image="nessi/nessi:latest",
+    api_host="http://your-nessi-instance",
+    api_key="your-api-key",
+)
+
+# Run a data quality check
+result = client.run_quality_check(
+    table_name="my_table",
+    rules=[
+        {
+            "name": "not_null_check",
+            "description": "Check that id column is not null",
+            "rule_type": "not_null",
+            "column": "id",
+        },
+    ],
+    profile=True,
+    wait_for_completion=True,
+)
+
+print(f"Job status: {result}")
+```
+
+### Kubernetes Manifest Example
+
+You can also create Kubernetes manifests directly to run Nessi operations:
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nessi-quality-check
+  namespace: nessi
+spec:
+  template:
+    spec:
+      containers:
+      - name: nessi
+        image: nessi/nessi:latest
+        command: ["nessi", "quality", "check", "my_table", "--format", "json"]
+        env:
+        - name: NESSI_API_HOST
+          value: "http://nessi-api:8080"
+        - name: NESSI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: nessi-secrets
+              key: api-key
+      restartPolicy: Never
+  backoffLimit: 3
+```
+
+### Command Line Interface
+
+The Kubernetes integration also provides a command-line interface:
+
+```bash
+# Run a data quality check
+python -m nessi_k8s.cli quality-check --table my_table --rules rules.json --namespace nessi
+
+# Create a default configuration file
+python -m nessi_k8s.cli create-config --output nessi-k8s-config.yaml
+```
+
+For more details, see the [Workflow Orchestration Integration Guide](./workflow_orchestration.md#kubernetes-integration).
+
+data_quality_job.execute_in_process(
+    run_config={
+        "ops": {
+            "run_quality_check": {
+                "config": {
+                    "table_name": "my_table",
+                    "rules": [...],
+                }
+            },
+            "wait_for_quality_results": {
+                "config": {
+                    "quality_threshold": 0.9,
+                }
+            }
+        }
+    }
+)
+```
+
+For more details, see the [Workflow Orchestration Integration Guide](./workflow_orchestration.md#dagster-integration).
+
+### Dagster Integration Tips
+
+1. **Use the native integration package**: The `nessi-dagster` package provides a more robust and maintainable integration than script-based approaches.
+2. **Leverage Dagster resources**: Use the Nessi resource to configure the API connection once and reuse it across ops.
+3. **Use Dagster schedules**: Schedule your jobs to run on a regular basis.
+4. **Configure appropriate retries**: Set up retries for ops that might fail due to transient issues.
+5. **Use Dagster alerts**: Configure alerts for job run failures.
 
 ## GitHub Actions Integration
 
@@ -242,6 +571,8 @@ When integrating Nessi with external systems, follow these best practices:
 6. **Log validation results**: Store validation results for historical analysis and trend detection.
 7. **Use configuration files**: Use Nessi configuration files to define validation rules and thresholds.
 8. **Automate report generation**: Generate reports automatically after validation for easy sharing and analysis.
+9. **Implement observability**: Add metrics collection and structured logging for better monitoring and debugging.
+10. **Use resource constraints**: Set appropriate resource requests and limits for Kubernetes jobs.
 
 ## Troubleshooting
 
