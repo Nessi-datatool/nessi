@@ -1,20 +1,23 @@
 name: Nessi Data Quality Checks
-
 on:
   schedule:
-    # Run daily at midnight
     - cron: '0 0 * * *'
-  workflow_dispatch:
-    # Allow manual triggering
+  workflow_dispatch: {}
   push:
     branches: [ main ]
     paths:
-      # Only run when data files change
       - 'data/**'
 
 jobs:
   data-quality-checks:
     runs-on: ubuntu-latest
+    env:
+      NESSI_LOG_LEVEL: "info"
+      NESSI_VALIDATION_THRESHOLD: "0.9"
+      DELTA_LAKE_VERSION: "2.3.0"
+      NESSI_API_HOST: "https://api.nessi.dev"
+      NESSI_API_KEY: "${{ secrets.NESSI_API_KEY }}"
+      NESSI_API_SECRET: "${{ secrets.NESSI_API_SECRET }}"
     
     steps:
       - name: Checkout repository
@@ -70,6 +73,8 @@ jobs:
             if [ $? -ne 0 ]; then
               echo "::error::Data quality checks failed for $table"
               exit 1
+            else
+              echo "Validation passed! Quality checks for $table completed successfully."
             fi
           done
       
@@ -96,3 +101,30 @@ jobs:
           SLACK_TITLE: Data Quality Checks Failed
           SLACK_MESSAGE: 'Data quality checks failed. See the GitHub Actions run for details.'
           SLACK_FOOTER: 'Powered by Nessi'
+      
+      - name: Send notification on success
+        if: success()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: data-quality-alerts
+          SLACK_COLOR: good
+          SLACK_TITLE: Data Quality Checks Passed
+          SLACK_MESSAGE: 'All data quality checks passed successfully.'
+          SLACK_FOOTER: 'Powered by Nessi'
+      
+      - name: Send email notification
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: Nessi Data Quality Check Results
+          body: |
+            Data quality check results for ${{ github.repository }}
+            Status: ${{ job.status }}
+            See details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          to: data-team@example.com
+          from: GitHub Actions
