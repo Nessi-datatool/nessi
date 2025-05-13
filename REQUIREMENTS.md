@@ -99,23 +99,23 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
 - ✅ Audit logging for key operations
 
 ### Containerization
-- 100% Docker-native for easy installation
-- No JVM setup or Spark tuning required
-- Multi-service orchestration via Docker Compose
+- ✅ 100% Docker-native for easy installation
+- ✅ No JVM setup or Spark tuning required
+- ✅ Multi-service orchestration via Docker Compose
 
 ### Enhanced Multi-format Support
-- Delta Lake (primary)
-- Parquet files
-- CSV with automatic schema inference
-- Auto schema inference and fallback logic
-- Handles nested schemas and edge cases
-- Configuration options for schema inference (e.g., date formats)
-- Basic data quality checks across different formats
+- ✅ Delta Lake (primary)
+- ✅ Parquet files
+- ✅ CSV with automatic schema inference
+- ✅ Auto schema inference and fallback logic
+- ✅ Handles nested schemas and edge cases
+- ✅ Configuration options for schema inference (e.g., date formats)
+- ✅ Basic data quality checks across different formats
 
 ### Developer Experience
-- CLI-first with one-line validation commands
-- Batch processing scripts
-- Configuration management
+- ✅ CLI-first with one-line validation commands
+- ✅ Batch processing scripts
+- ✅ Configuration management
 - Python API for programmatic access to all features
 - Webhook integration
 - Custom extension support
