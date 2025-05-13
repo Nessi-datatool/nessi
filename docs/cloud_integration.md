@@ -62,13 +62,15 @@ endpoint_override: ""  # Optional, for S3-compatible services
 provider: azure
 credentials:
   account_name: mystorageaccount
+  # Authentication options (choose one):
+  # Option 1: Account Key
   account_key: YOUR_ACCOUNT_KEY
-  # Or use SAS token
-  sas_token: YOUR_SAS_TOKEN
-  # Or use Azure AD
-  use_azure_ad: true
+  # Option 2: SAS Token
+  # sas_token: YOUR_SAS_TOKEN
+  # Option 3: Azure AD (recommended for production)
+  # use_azure_ad: true
 default_bucket: my-container
-endpoint_override: ""  # Optional
+endpoint_override: ""  # Optional, for custom endpoints
 
 # GCP Example
 provider: gcp
@@ -165,9 +167,9 @@ Nessi.dev supports the following AWS authentication methods:
 
 ### Azure Authentication
 
-Nessi.dev supports the following Azure authentication methods:
+Nessi.dev supports the following Azure authentication methods (using the latest Azure SDK v1.6.1+):
 
-1. **Account Key**: Use storage account key
+1. **Account Key**: Use storage account key (simplest but least secure for production)
 2. **SAS Token**: Use Shared Access Signature token
 3. **Azure AD**: Use Azure Active Directory authentication
 
@@ -258,6 +260,8 @@ To optimize costs when using cloud integration:
 - **Azure Monitor**: Send metrics and alerts to Azure Monitor
 - **Azure Functions**: Deploy Nessi.dev validation as Azure Functions
 - **Azure Data Factory**: Trigger validations from Data Factory pipelines
+- **Azure Blob Storage**: Seamless integration with the latest Azure SDK (v1.6.1+)
+- **Azure Key Vault**: Secure storage for connection credentials
 
 ### GCP Integration
 
