@@ -145,11 +145,11 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
    - ✅ Intelligent alerting with pattern recognition
 
 ### Optional Python Extensions
-1. Advanced Delta Lake Features
-2. ML-based Anomaly Detection
-3. Advanced Statistical Analysis
-4. Custom Rule Execution Engine
-5. Advanced Visualization Components
+1. ✅ Advanced Delta Lake Features
+2. ✅ ML-based Anomaly Detection
+3. ✅ Advanced Statistical Analysis
+4. ✅ Custom Rule Execution Engine
+5. ✅ Advanced Visualization Components
 
 ### Extension System
 - ✅ Plugin architecture for enabling/disabling features
