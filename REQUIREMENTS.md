@@ -125,10 +125,10 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
 - ✅ Best practices guides
 
 ### Collaboration & Governance
-- Role-Based Access Control (RBAC) for the CLI/API
-- Audit Logging for key operations (configuration changes, rule executions)
-- Team-based permissions and access controls
-- Shared rule libraries and configurations
+- ✅ Role-Based Access Control (RBAC) for the CLI/API
+- ✅ Audit Logging for key operations (configuration changes, rule executions)
+- ✅ Team-based permissions and access controls
+- ✅ Shared rule libraries and configurations
 
 ## Architecture Requirements
 
@@ -152,8 +152,8 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
 5. Advanced Visualization Components
 
 ### Extension System
-- Plugin architecture for enabling/disabling features
-- Feature flags for toggling functionality
-- Dynamic configuration loading
-- Custom rule extensions
-- Integration points for external systems
+- ✅ Plugin architecture for enabling/disabling features
+- ✅ Feature flags for toggling functionality
+- ✅ Dynamic configuration loading
+- ✅ Custom rule extensions
+- ✅ Integration points for external systems
