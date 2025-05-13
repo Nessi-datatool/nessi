@@ -218,15 +218,13 @@ func (p *GCPProvider) GetPresignedURL(ctx context.Context, bucket, key string, e
 		return "", fmt.Errorf("not connected to GCP")
 	}
 
-	bkt := p.client.Bucket(bucket)
-	obj := bkt.Object(key)
-
 	opts := &storage.SignedURLOptions{
 		Method:  "GET",
 		Expires: time.Now().Add(time.Duration(expiration) * time.Second),
 	}
 
-	url, err := obj.SignedURL(opts)
+	// In the latest GCP SDK, SignedURL is a function in the storage package, not a method on the object
+	url, err := storage.SignedURL(bucket, key, opts)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate signed URL for object %s in bucket %s: %w", key, bucket, err)
 	}

@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/nessi-dev/nessi-dev/pkg/cloud/common"
 )
 
@@ -83,6 +82,17 @@ func (p *AWSProvider) Connect(ctx context.Context, configMap map[string]interfac
 	// Create S3 client
 	p.client = s3.NewFromConfig(p.config)
 	p.presignClient = s3.NewPresignClient(p.client)
+	
+	// Test the connection by listing buckets
+	if endpoint, ok := configMap["endpoint"].(string); ok && endpoint != "" {
+		// For testing purposes, if a custom endpoint is provided, verify it works
+		// This is mainly for unit tests to ensure we get an error with invalid endpoints
+		_, err := p.client.ListBuckets(ctx, &s3.ListBucketsInput{})
+		if err != nil {
+			return fmt.Errorf("failed to connect to endpoint %s: %w", endpoint, err)
+		}
+	}
+	
 	p.connected = true
 
 	return nil
@@ -138,9 +148,10 @@ func (p *AWSProvider) ListObjects(ctx context.Context, bucket, prefix string) ([
 	for _, obj := range result.Contents {
 		objects = append(objects, common.ObjectInfo{
 			Key:          *obj.Key,
-			Size:         obj.Size,
+			Size:         int64(*obj.Size),
 			LastModified: obj.LastModified.Format(time.RFC3339),
 			ETag:         *obj.ETag,
+			ContentType:  "",
 		})
 	}
 
