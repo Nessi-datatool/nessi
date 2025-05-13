@@ -16,9 +16,19 @@ The cloud integration features allow you to:
 
 Nessi.dev supports the following cloud providers:
 
-- **AWS**: Amazon S3 for storage
-- **Azure**: Azure Blob Storage
-- **GCP**: Google Cloud Storage
+- **AWS**: Amazon S3 for storage, AWS Glue Data Catalog
+- **Azure**: Azure Blob Storage, Azure Purview
+- **GCP**: Google Cloud Storage, Google Cloud Data Catalog
+
+## Data Catalog Integration
+
+In addition to cloud storage integration, Nessi.dev also provides seamless integration with popular data catalogs:
+
+- **AWS Glue Data Catalog**: Discover tables, leverage metadata, and publish quality metrics
+- **Azure Purview**: Connect to Azure's unified data governance service for metadata management
+- **Google Cloud Data Catalog**: Integrate with GCP's fully managed, scalable metadata management service
+
+See the [Data Catalog Integration Guide](./data_catalog_integration.md) for more details.
 
 ## Configuration
 

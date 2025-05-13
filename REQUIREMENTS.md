@@ -120,6 +120,22 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
 - ✅ Cloud-native authentication methods
 - ✅ Cross-cloud data quality validation
 
+### Data Catalog Integration
+- ✅ AWS Glue Data Catalog integration
+- ✅ Azure Purview integration
+- ✅ Google Cloud Data Catalog integration
+- ✅ Data asset discovery and connection
+- ✅ Metadata utilization (descriptions, tags, lineage)
+- ✅ Quality metrics and lineage publishing back to catalogs
+
+### Data Lineage Visualization and Comparison
+- ✅ Interactive lineage graph visualization
+- ✅ Upstream and downstream dependency tracking
+- ✅ Version comparison of lineage changes
+- ✅ Impact analysis for schema changes
+- ✅ Time-based lineage evolution view
+- ✅ Export lineage to various formats
+
 ### Developer Experience
 - ✅ CLI-first with one-line validation commands
 - ✅ Batch processing scripts
@@ -131,6 +147,14 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
 - ✅ Interactive examples
 - ✅ API reference
 - ✅ Best practices guides
+
+### Workflow Orchestration Integration
+- ✅ Apache Airflow operators and sensors for Nessi.dev tasks
+- ✅ Prefect tasks and flows integration
+- ✅ Dagster ops and resources integration
+- ◻ Kubernetes operators for Nessi.dev jobs
+- ✅ Workflow status monitoring and callbacks
+- ✅ Pipeline-aware data quality checks
 
 ### Collaboration & Governance
 - ✅ Role-Based Access Control (RBAC) for the CLI/API

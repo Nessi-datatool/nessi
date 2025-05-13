@@ -2166,6 +2166,287 @@ func (c *CloudDeltaConnector) GetTableInfo(ctx context.Context, tablePath string
 }
 ```
 
+### Data Catalog Integration Implementation
+
+#### Data Catalog Interface
+```go
+// pkg/catalog/interface.go
+type DataCatalog interface {
+    // Core operations
+    Name() string
+    Connect(ctx context.Context, config map[string]interface{}) error
+    Disconnect(ctx context.Context) error
+    
+    // Asset discovery
+    ListDatabases(ctx context.Context) ([]DatabaseInfo, error)
+    ListTables(ctx context.Context, database string) ([]TableInfo, error)
+    GetTableDetails(ctx context.Context, database, table string) (*TableDetails, error)
+    
+    // Metadata operations
+    GetTableMetadata(ctx context.Context, database, table string) (*TableMetadata, error)
+    UpdateTableMetadata(ctx context.Context, database, table string, metadata *TableMetadata) error
+    
+    // Lineage operations
+    GetTableLineage(ctx context.Context, database, table string) (*LineageInfo, error)
+    UpdateTableLineage(ctx context.Context, database, table string, lineage *LineageInfo) error
+    
+    // Quality metrics
+    PublishQualityMetrics(ctx context.Context, database, table string, metrics *QualityMetrics) error
+    GetQualityMetrics(ctx context.Context, database, table string) (*QualityMetrics, error)
+}
+
+type DatabaseInfo struct {
+    Name        string
+    Description string
+    Properties  map[string]string
+}
+
+type TableInfo struct {
+    Name        string
+    Type        string // delta, parquet, csv, etc.
+    Description string
+    Location    string // S3 URI, Azure Blob path, etc.
+    Properties  map[string]string
+}
+
+type TableDetails struct {
+    Info        TableInfo
+    Schema      *TableSchema
+    Metadata    *TableMetadata
+    Lineage     *LineageInfo
+    Statistics  *TableStatistics
+}
+
+type TableSchema struct {
+    Fields      []FieldInfo
+    Format      string
+    Version     int64
+}
+
+type FieldInfo struct {
+    Name        string
+    Type        string
+    Description string
+    Nullable    bool
+    Tags        []string
+    Properties  map[string]string
+}
+
+type TableMetadata struct {
+    Owner       string
+    CreatedAt   time.Time
+    UpdatedAt   time.Time
+    Tags        []string
+    Properties  map[string]string
+}
+
+type LineageInfo struct {
+    Upstream    []TableReference
+    Downstream  []TableReference
+    Process     string
+    ProcessDetails map[string]string
+}
+
+type TableReference struct {
+    Database    string
+    Table       string
+    Catalog     string
+}
+
+type TableStatistics struct {
+    RowCount    int64
+    SizeBytes   int64
+    LastUpdated time.Time
+    ColumnStats map[string]ColumnStatistics
+}
+
+type ColumnStatistics struct {
+    Min         string
+    Max         string
+    NullCount   int64
+    DistinctCount int64
+}
+
+type QualityMetrics struct {
+    OverallScore    float64
+    Completeness    float64
+    Accuracy        float64
+    Consistency     float64
+    Timeliness      float64
+    RuleResults     []RuleResult
+    LastUpdated     time.Time
+}
+
+type RuleResult struct {
+    RuleName    string
+    RuleType    string
+    Passed      bool
+    Score       float64
+    Details     string
+}
+```
+
+#### AWS Glue Data Catalog Implementation
+```go
+// pkg/catalog/aws/glue.go
+type GlueCatalog struct {
+    client      *glue.Client
+    connected   bool
+    region      string
+}
+
+// Connect establishes a connection to AWS Glue Data Catalog
+func (c *GlueCatalog) Connect(ctx context.Context, config map[string]interface{}) error {
+    // Extract configuration
+    region, _ := config["region"].(string)
+    accessKey, _ := config["access_key"].(string)
+    secretKey, _ := config["secret_key"].(string)
+    useIAMRole, _ := config["use_iam_role"].(bool)
+    
+    // Create AWS configuration
+    var cfg aws.Config
+    var err error
+    
+    if accessKey != "" && secretKey != "" {
+        // Use access key and secret key
+        cfg, err = config.LoadDefaultConfig(ctx,
+            config.WithRegion(region),
+            config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(
+                accessKey, secretKey, "",
+            )),
+        )
+    } else if useIAMRole {
+        // Use IAM role
+        cfg, err = config.LoadDefaultConfig(ctx, config.WithRegion(region))
+    } else {
+        return fmt.Errorf("no valid authentication method provided")
+    }
+    
+    if err != nil {
+        return fmt.Errorf("failed to load AWS configuration: %w", err)
+    }
+    
+    // Create Glue client
+    c.client = glue.NewFromConfig(cfg)
+    c.connected = true
+    c.region = region
+    
+    return nil
+}
+
+// ListDatabases lists all databases in the Glue Data Catalog
+func (c *GlueCatalog) ListDatabases(ctx context.Context) ([]catalog.DatabaseInfo, error) {
+    if !c.connected {
+        return nil, fmt.Errorf("not connected to AWS Glue Data Catalog")
+    }
+    
+    // Call Glue API to list databases
+    result, err := c.client.GetDatabases(ctx, &glue.GetDatabasesInput{})
+    if err != nil {
+        return nil, fmt.Errorf("failed to list databases: %w", err)
+    }
+    
+    // Convert to DatabaseInfo
+    databases := make([]catalog.DatabaseInfo, 0, len(result.DatabaseList))
+    for _, db := range result.DatabaseList {
+        databases = append(databases, catalog.DatabaseInfo{
+            Name:        *db.Name,
+            Description: aws.ToString(db.Description),
+            Properties:  convertMapToStringMap(db.Parameters),
+        })
+    }
+    
+    return databases, nil
+}
+
+// Helper function to convert AWS map to string map
+func convertMapToStringMap(m map[string]string) map[string]string {
+    result := make(map[string]string)
+    for k, v := range m {
+        result[k] = v
+    }
+    return result
+}
+```
+
+#### Azure Purview Implementation
+```go
+// pkg/catalog/azure/purview.go
+type PurviewCatalog struct {
+    client      *purview.Client
+    connected   bool
+    accountName string
+}
+
+// Connect establishes a connection to Azure Purview
+func (c *PurviewCatalog) Connect(ctx context.Context, config map[string]interface{}) error {
+    // Extract configuration
+    accountName, _ := config["account_name"].(string)
+    useAzureAD, _ := config["use_azure_ad"].(bool)
+    
+    // Create credential
+    var credential azcore.TokenCredential
+    var err error
+    
+    if useAzureAD {
+        // Use Azure AD authentication
+        credential, err = azidentity.NewDefaultAzureCredential(nil)
+        if err != nil {
+            return fmt.Errorf("failed to create Azure AD credential: %w", err)
+        }
+    } else {
+        return fmt.Errorf("Azure Purview requires Azure AD authentication")
+    }
+    
+    // Create Purview client
+    endpoint := fmt.Sprintf("https://%s.purview.azure.com", accountName)
+    c.client = purview.NewClient(endpoint, credential, nil)
+    c.connected = true
+    c.accountName = accountName
+    
+    return nil
+}
+```
+
+#### Quality Metrics Publishing
+```go
+// pkg/catalog/quality.go
+
+// PublishQualityMetrics publishes data quality metrics to a data catalog
+func PublishQualityMetrics(ctx context.Context, catalog DataCatalog, database, table string, profile *quality.Profile, results *quality.ValidationResults) error {
+    // Convert profile and validation results to QualityMetrics
+    metrics := &QualityMetrics{
+        OverallScore: calculateOverallScore(profile, results),
+        Completeness: calculateCompleteness(profile),
+        Accuracy: calculateAccuracy(results),
+        Consistency: calculateConsistency(results),
+        Timeliness: calculateTimeliness(profile),
+        LastUpdated: time.Now(),
+    }
+    
+    // Add rule results
+    for _, result := range results.RuleResults {
+        metrics.RuleResults = append(metrics.RuleResults, RuleResult{
+            RuleName: result.Rule.Name,
+            RuleType: result.Rule.Type,
+            Passed: result.Passed,
+            Score: result.Score,
+            Details: result.Details,
+        })
+    }
+    
+    // Publish to catalog
+    return catalog.PublishQualityMetrics(ctx, database, table, metrics)
+}
+
+// Helper functions to calculate quality scores
+func calculateOverallScore(profile *quality.Profile, results *quality.ValidationResults) float64 {
+    // Calculate weighted average of completeness, accuracy, consistency, and timeliness
+    // ...
+    return 0.0 // Placeholder
+}
+```
+
 ### Additional Security Considerations
 
 #### Input Validation
