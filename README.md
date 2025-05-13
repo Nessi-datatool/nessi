@@ -57,7 +57,8 @@ Nessi.dev is a powerful data quality and Delta Lake management tool that helps o
   - Prometheus metrics integration
   - Grafana dashboards
   - Secure API access
-  - Webhook support
+  - Comprehensive webhook integration
+  - Event-based notifications
 
 - **Documentation**
   - Comprehensive user guides
