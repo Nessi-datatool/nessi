@@ -56,9 +56,11 @@ Nessi.dev is a powerful data quality and Delta Lake management tool that helps o
 - **Developer Experience**
   - Intuitive CLI interface
   - Comprehensive documentation
+  - Python API for programmatic access
   - Extensible architecture with plugin system
-  - Embeddable in Airflow, GitHub Actions, or custom scripts
-  - Custom extension support
+  - Custom extension support via plugins
+  - Embeddable in Airflow, GitHub Actions, and custom scripts
+  - Interactive examples and integration guides
 
 - **Integration Capabilities**
   - Prometheus metrics integration

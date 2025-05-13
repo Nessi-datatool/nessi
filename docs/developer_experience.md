@@ -146,6 +146,152 @@ Comprehensive tests ensure the reliability of the developer experience features:
 - **Batch Processing Tests**: Ensure reliable batch operations
 - **Integration Tests**: Verify seamless integration with other components
 
+## Webhook Integration
+
+Nessi.dev provides comprehensive webhook integration for event notifications:
+
+```bash
+# List all registered webhooks
+nessi webhook list
+
+# Create a new webhook
+nessi webhook create --name "Quality Alert" --url "https://example.com/webhook" --events "data.validation.failed,alert.triggered"
+
+# Get details of a webhook
+nessi webhook get webhook-id
+
+# Update a webhook
+nessi webhook update webhook-id --name "Updated Webhook" --url "https://example.com/new-webhook"
+
+# Enable/disable a webhook
+nessi webhook enable webhook-id
+nessi webhook disable webhook-id
+
+# List supported event types
+nessi webhook events
+
+# Test a webhook
+nessi webhook test webhook-id data.validation.failed
+```
+
+Implementation details:
+- Event-based notifications for various system events
+- Configurable webhook endpoints with custom headers
+- Flexible event filtering with wildcard support
+- Automatic retry mechanism for failed deliveries
+- JSON-based webhook payloads with standardized format
+
+See [webhook_integration.md](./webhook_integration.md) for more details.
+
+## Plugin System
+
+Nessi.dev includes a flexible plugin system for custom extensions:
+
+```bash
+# List all installed plugins
+nessi plugin list
+
+# Install a plugin
+nessi plugin install /path/to/plugin.so
+
+# Get plugin information
+nessi plugin info plugin-name
+
+# Enable/disable a plugin
+nessi plugin enable plugin-name
+nessi plugin disable plugin-name
+
+# List supported plugin types
+nessi plugin types
+
+# Execute a plugin function
+nessi plugin exec plugin-name function-name arg1 arg2
+```
+
+Implementation details:
+- Multiple plugin types (validation, alert, metric, storage, export, UI)
+- Dynamic loading of Go plugins as shared libraries
+- Plugin metadata and versioning support
+- Thread-safe plugin management
+
+See [plugin_system.md](./plugin_system.md) for more details.
+
+## Integration Examples
+
+Nessi.dev can be easily integrated with various external systems:
+
+### Airflow Integration
+
+```python
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+from airflow.utils.dates import days_ago
+
+def run_nessi_validation(table_path):
+    # Run Nessi validation on a Delta table
+    import subprocess
+    cmd = ['nessi', 'validate', table_path, '--format', 'json']
+    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    return result.stdout
+
+dag = DAG('nessi_data_quality', start_date=days_ago(1))
+
+validate_task = PythonOperator(
+    task_id='validate_delta_table',
+    python_callable=run_nessi_validation,
+    op_kwargs={'table_path': '/path/to/delta/table'},
+    dag=dag,
+)
+```
+
+### GitHub Actions Integration
+
+```yaml
+name: Nessi Data Quality Checks
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Run daily at midnight
+
+jobs:
+  data-quality-checks:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        
+      - name: Install Nessi
+        run: |
+          # Install Nessi
+          ...
+      
+      - name: Run data quality checks
+        run: |
+          nessi validate /path/to/table --format json > results.json
+```
+
+### Custom Script Integration
+
+```python
+import subprocess
+import json
+
+def run_nessi_validation(table_path):
+    """Run Nessi validation on a Delta table and return the results."""
+    cmd = ['nessi', 'validate', table_path, '--format', 'json']
+    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    return json.loads(result.stdout)
+
+results = run_nessi_validation('/path/to/delta/table')
+if results.get('passed', False):
+    print("Validation passed!")
+else:
+    print("Validation failed!")
+```
+
+See [integration_guide.md](./integration_guide.md) for more detailed examples and best practices.
+
 ## Future Enhancements
 
 Planned enhancements for developer experience include:
@@ -153,5 +299,3 @@ Planned enhancements for developer experience include:
 1. Interactive command-line interface with auto-completion
 2. Scheduled batch jobs with cron-like syntax
 3. Enhanced reporting capabilities
-4. Integration with CI/CD pipelines
-5. Plugin system for extending functionality

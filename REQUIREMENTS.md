@@ -116,13 +116,13 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
 - ✅ CLI-first with one-line validation commands
 - ✅ Batch processing scripts
 - ✅ Configuration management
-- Python API for programmatic access to all features
-- Webhook integration
-- Custom extension support
-- Embeddable in Airflow, GitHub Actions, or custom scripts
-- Interactive examples
-- API reference
-- Best practices guides
+- ✅ Python API for programmatic access to all features
+- ✅ Webhook integration
+- ✅ Custom extension support
+- ✅ Embeddable in Airflow, GitHub Actions, or custom scripts
+- ✅ Interactive examples
+- ✅ API reference
+- ✅ Best practices guides
 
 ### Collaboration & Governance
 - Role-Based Access Control (RBAC) for the CLI/API
