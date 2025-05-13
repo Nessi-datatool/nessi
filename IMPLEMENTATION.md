@@ -9,6 +9,11 @@ nessi/
 │   └── nessi/          # Main CLI application
 ├── pkg/
 │   ├── datalake/       # Delta Lake & multi-format operations (Go)
+│   ├── cloud/          # Cloud provider integrations
+│   │   ├── aws/        # AWS S3 integration
+│   │   ├── azure/      # Azure Blob Storage integration (SDK v1.6.1+)
+│   │   ├── gcp/        # GCP Cloud Storage integration
+│   │   └── common/     # Common cloud interfaces and utilities
 │   ├── quality/        # Data quality & profiling (Go)
 │   │   ├── profile/    # Data profiling & statistics
 │   │   ├── rules/      # Rule validation engine
@@ -2033,6 +2038,133 @@ type AuditQuery struct {
   - SSL certificate generation testing
   - Role-based access control verification
   - API key authentication testing
+
+### Cloud Integration Implementation
+
+#### Cloud Provider Interface
+```go
+// pkg/cloud/common/provider.go
+type CloudProvider interface {
+    // Core operations
+    Name() string
+    Connect(ctx context.Context, config map[string]interface{}) error
+    Disconnect(ctx context.Context) error
+    
+    // Bucket operations
+    ListBuckets(ctx context.Context) ([]BucketInfo, error)
+    
+    // Object operations
+    ListObjects(ctx context.Context, bucket, prefix string) ([]ObjectInfo, error)
+    GetObject(ctx context.Context, bucket, key string) (io.ReadCloser, error)
+    PutObject(ctx context.Context, bucket, key string, data io.Reader, size int64, metadata map[string]string) error
+    DeleteObject(ctx context.Context, bucket, key string) error
+    GetMetadata(ctx context.Context, bucket, key string) (map[string]string, error)
+    GetPresignedURL(ctx context.Context, bucket, key string, expiration int64) (string, error)
+}
+
+type BucketInfo struct {
+    Name         string
+    CreationDate time.Time
+}
+
+type ObjectInfo struct {
+    Key          string
+    Size         int64
+    LastModified time.Time
+    ETag         string
+}
+```
+
+#### Azure Provider Implementation
+```go
+// pkg/cloud/azure/provider.go
+type AzureProvider struct {
+    client      *azblob.Client
+    connected   bool
+    accountName string
+}
+
+// Connect establishes a connection to Azure Blob Storage
+func (p *AzureProvider) Connect(ctx context.Context, config map[string]interface{}) error {
+    // Extract configuration
+    accountName, _ := config["account_name"].(string)
+    accountKey, _ := config["account_key"].(string)
+    sasToken, _ := config["sas_token"].(string)
+    useAzureAD, _ := config["use_azure_ad"].(bool)
+    endpointOverride, _ := config["endpoint_override"].(string)
+    
+    // Create credential based on authentication method
+    var credential azcore.TokenCredential
+    var err error
+    
+    if accountKey != "" {
+        // Use account key authentication
+        credential, err = azblob.NewSharedKeyCredential(accountName, accountKey)
+    } else if sasToken != "" {
+        // Use SAS token authentication
+        credential = azblob.NewAnonymousCredential()
+        // SAS token will be appended to the URL
+    } else if useAzureAD {
+        // Use Azure AD authentication
+        credential, err = azidentity.NewDefaultAzureCredential(nil)
+    } else {
+        return fmt.Errorf("no valid authentication method provided")
+    }
+    
+    if err != nil {
+        return fmt.Errorf("failed to create credential: %w", err)
+    }
+    
+    // Create client options
+    clientOptions := &azblob.ClientOptions{}
+    if endpointOverride != "" {
+        clientOptions.Endpoint = endpointOverride
+    }
+    
+    // Create client
+    client, err := azblob.NewClient(accountName, credential, clientOptions)
+    if err != nil {
+        return fmt.Errorf("failed to create Azure Blob Storage client: %w", err)
+    }
+    
+    p.client = client
+    p.connected = true
+    p.accountName = accountName
+    
+    return nil
+}
+```
+
+#### Cloud Delta Connector
+```go
+// pkg/datalake/cloud_delta_connector.go
+type CloudDeltaConnector struct {
+    provider      common.CloudProvider
+    bucket        string
+    defaultPrefix string
+}
+
+// GetTableInfo retrieves information about a Delta Lake table
+func (c *CloudDeltaConnector) GetTableInfo(ctx context.Context, tablePath string) (*DeltaTableInfo, error) {
+    // Normalize table path
+    tablePath = c.normalizePath(tablePath)
+    
+    // Get the latest version
+    latestVersion, err := c.getLatestVersion(ctx, tablePath)
+    if err != nil {
+        return nil, fmt.Errorf("failed to get latest version: %w", err)
+    }
+    
+    // Get transaction log entries
+    entries, err := c.getTransactionLog(ctx, tablePath, 0, latestVersion)
+    if err != nil {
+        return nil, fmt.Errorf("failed to get transaction log: %w", err)
+    }
+    
+    // Process transaction log entries to build table info
+    // ...
+}
+```
 
 ### Additional Security Considerations
 

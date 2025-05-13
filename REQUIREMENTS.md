@@ -112,6 +112,14 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
 - ✅ Configuration options for schema inference (e.g., date formats)
 - ✅ Basic data quality checks across different formats
 
+### Cloud Integration
+- ✅ AWS S3 integration for Delta Lake tables
+- ✅ Azure Blob Storage integration with latest SDK (v1.6.1+)
+- ✅ GCP Cloud Storage integration
+- ✅ Multi-cloud Delta Lake management
+- ✅ Cloud-native authentication methods
+- ✅ Cross-cloud data quality validation
+
 ### Developer Experience
 - ✅ CLI-first with one-line validation commands
 - ✅ Batch processing scripts
