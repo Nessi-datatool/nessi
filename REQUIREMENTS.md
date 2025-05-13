@@ -152,7 +152,7 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
 - ✅ Apache Airflow operators and sensors for Nessi.dev tasks
 - ✅ Prefect tasks and flows integration
 - ✅ Dagster ops and resources integration
-- ◻ Kubernetes operators for Nessi.dev jobs
+- ✅ Kubernetes operators for Nessi.dev jobs
 - ✅ Workflow status monitoring and callbacks
 - ✅ Pipeline-aware data quality checks
 
