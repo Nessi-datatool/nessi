@@ -268,16 +268,12 @@ func TestAuditService(t *testing.T) {
 			t.Errorf("Expected resource_id to be 'server.port', but it was %s", entry.ResourceID)
 		}
 
-		details, ok := entry.Details.(map[string]interface{})
-		if !ok {
-			t.Errorf("Expected details to be a map, but it wasn't")
-		} else {
-			if details["old_value"] != float64(8080) {
-				t.Errorf("Expected old_value to be 8080, but it was %v", details["old_value"])
-			}
-			if details["new_value"] != float64(9090) {
-				t.Errorf("Expected new_value to be 9090, but it was %v", details["new_value"])
-			}
+		// Check the details map directly
+		if entry.Details["old_value"] != float64(8080) {
+			t.Errorf("Expected old_value to be 8080, but it was %v", entry.Details["old_value"])
+		}
+		if entry.Details["new_value"] != float64(9090) {
+			t.Errorf("Expected new_value to be 9090, but it was %v", entry.Details["new_value"])
 		}
 	})
 

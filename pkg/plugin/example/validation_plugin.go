@@ -5,24 +5,24 @@ import (
 	"regexp"
 )
 
-// PluginInfo contains metadata about this plugin
-var PluginInfo = &PluginInfo{
-	Name:        "email-validator",
-	Version:     "1.0.0",
-	Description: "Validates email addresses using regular expressions",
-	Author:      "Nessi Team",
-	Type:        "validation",
-	Enabled:     true,
-}
-
-// PluginInfo represents the structure for plugin metadata
-type PluginInfo struct {
+// PluginMetadata represents the structure for plugin metadata
+type PluginMetadata struct {
 	Name        string
 	Version     string
 	Description string
 	Author      string
 	Type        string
 	Enabled     bool
+}
+
+// PluginInfo contains metadata about this plugin
+var PluginInfo = &PluginMetadata{
+	Name:        "email-validator",
+	Version:     "1.0.0",
+	Description: "Validates email addresses using regular expressions",
+	Author:      "Nessi Team",
+	Type:        "validation",
+	Enabled:     true,
 }
 
 // Validate validates an email address

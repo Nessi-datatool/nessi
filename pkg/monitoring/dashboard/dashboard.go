@@ -71,6 +71,7 @@ func (d *Dashboard) Start() error {
 	d.mux.HandleFunc("/", d.handleIndex)
 	d.mux.HandleFunc("/health", d.handleHealth)
 	d.mux.HandleFunc("/data-quality", d.handleDataQualityDashboard)
+	d.mux.HandleFunc("/alerts", d.handleAlertsDashboard)
 	
 	// Authentication routes
 	if d.authManager != nil {
@@ -83,6 +84,29 @@ func (d *Dashboard) Start() error {
 		// Apply authentication middleware to API routes
 		d.mux.Handle("/api/metrics", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleMetrics)))
 		d.mux.Handle("/api/alerts", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleAlerts)))
+		d.mux.Handle("/api/alerts/rules", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleAlertRules)))
+		d.mux.Handle("/api/alerts/{id}/acknowledge", d.authManager.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			d.handleAlertAction(w, r, "acknowledge")
+		})))
+		d.mux.Handle("/api/alerts/{id}/resolve", d.authManager.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			d.handleAlertAction(w, r, "resolve")
+		})))
+		d.mux.Handle("/api/alerts/{id}/silence", d.authManager.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			d.handleAlertAction(w, r, "silence")
+		})))
+		d.mux.Handle("/api/alerts/rules/{id}/enable", d.authManager.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			d.handleAlertRuleAction(w, r, "enable")
+		})))
+		d.mux.Handle("/api/alerts/rules/{id}/disable", d.authManager.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			d.handleAlertRuleAction(w, r, "disable")
+		})))
+		d.mux.Handle("/api/alerts/rules/{id}", d.authManager.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodDelete {
+				d.handleAlertRuleAction(w, r, "delete")
+			} else {
+				w.WriteHeader(http.StatusMethodNotAllowed)
+			}
+		})))
 		d.mux.Handle("/api/export", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleExport)))
 		
 		// Data quality routes with authentication
@@ -100,6 +124,29 @@ func (d *Dashboard) Start() error {
 		// No authentication, routes are public
 		d.mux.HandleFunc("/api/metrics", d.handleMetrics)
 		d.mux.HandleFunc("/api/alerts", d.handleAlerts)
+		d.mux.HandleFunc("/api/alerts/rules", d.handleAlertRules)
+		d.mux.HandleFunc("/api/alerts/{id}/acknowledge", func(w http.ResponseWriter, r *http.Request) {
+			d.handleAlertAction(w, r, "acknowledge")
+		})
+		d.mux.HandleFunc("/api/alerts/{id}/resolve", func(w http.ResponseWriter, r *http.Request) {
+			d.handleAlertAction(w, r, "resolve")
+		})
+		d.mux.HandleFunc("/api/alerts/{id}/silence", func(w http.ResponseWriter, r *http.Request) {
+			d.handleAlertAction(w, r, "silence")
+		})
+		d.mux.HandleFunc("/api/alerts/rules/{id}/enable", func(w http.ResponseWriter, r *http.Request) {
+			d.handleAlertRuleAction(w, r, "enable")
+		})
+		d.mux.HandleFunc("/api/alerts/rules/{id}/disable", func(w http.ResponseWriter, r *http.Request) {
+			d.handleAlertRuleAction(w, r, "disable")
+		})
+		d.mux.HandleFunc("/api/alerts/rules/{id}", func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodDelete {
+				d.handleAlertRuleAction(w, r, "delete")
+			} else {
+				w.WriteHeader(http.StatusMethodNotAllowed)
+			}
+		})
 		d.mux.HandleFunc("/api/export", d.handleExport)
 		
 		// Data quality routes without authentication

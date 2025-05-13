@@ -86,17 +86,7 @@ func (iam *IntelligentAlertManager) analyzeMetrics() {
 	logging.Info(fmt.Sprintf("Completed intelligent metrics analysis in %v", duration))
 }
 
-// GetConfig returns the intelligent alerting configuration
-func (iam *IntelligentAlertManager) GetConfig() *IntelligentAlertingConfig {
-	return iam.config
-}
-
-// GetMetricStore returns the metric store used by the intelligent alert manager
-func (iam *IntelligentAlertManager) GetMetricStore() MetricStore {
-	return iam.metricStore
-}
-
-// GetAlertManager returns the alert manager used by the intelligent alert manager
-func (iam *IntelligentAlertManager) GetAlertManager() *AlertManager {
-	return iam.alertManager
-}
+// These methods are now defined in intelligent_alerting.go
+// GetConfig() *IntelligentAlertingConfig
+// GetMetricStore() MetricStore
+// GetAlertManager() *AlertManager

@@ -222,9 +222,19 @@ func (c *DynamicConfig) SetAll(data map[string]interface{}) {
 
 	c.data = data
 
-	// Notify watchers
-	for _, watcher := range c.watchers {
-		go watcher.OnConfigChange(c.data)
+	// Create a copy of the data for the watchers to avoid race conditions
+	dataCopy := make(map[string]interface{})
+	for k, v := range data {
+		dataCopy[k] = v
+	}
+
+	// Store the watchers in a local variable to avoid holding the lock while notifying
+	watchers := make([]ConfigChangeWatcher, len(c.watchers))
+	copy(watchers, c.watchers)
+
+	// Notify watchers outside the lock
+	for _, watcher := range watchers {
+		watcher.OnConfigChange(dataCopy)
 	}
 }
 

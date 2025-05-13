@@ -78,6 +78,21 @@ type MetricDataPoint struct {
 	Labels    map[string]string
 }
 
+// GetConfig returns the current configuration
+func (iam *IntelligentAlertManager) GetConfig() *IntelligentAlertingConfig {
+	return iam.config
+}
+
+// GetAlertManager returns the alert manager
+func (iam *IntelligentAlertManager) GetAlertManager() *AlertManager {
+	return iam.alertManager
+}
+
+// GetMetricStore returns the metric store
+func (iam *IntelligentAlertManager) GetMetricStore() MetricStore {
+	return iam.metricStore
+}
+
 // NewIntelligentAlertManager creates a new intelligent alert manager
 func NewIntelligentAlertManager(alertManager *AlertManager, metricStore MetricStore, config *IntelligentAlertingConfig) *IntelligentAlertManager {
 	if config == nil {
@@ -513,6 +528,46 @@ func (iam *IntelligentAlertManager) createSeasonalPatternRules(metricName string
 			if err := iam.createRule(lowerRule); err != nil {
 				return fmt.Errorf("failed to create lower bound rule: %w", err)
 			}
+		}
+	}
+	
+	return nil
+}
+
+// AnalyzeMetricData analyzes a specific metric and creates intelligent alert rules
+// This method is primarily used for testing purposes
+func (iam *IntelligentAlertManager) AnalyzeMetricData(metricName string) error {
+	// Get historical data for the metric
+	end := time.Now()
+	start := end.Add(-iam.config.AnalysisPeriod)
+	
+	dataPoints, err := iam.metricStore.GetMetricValues(metricName, start, end, nil)
+	if err != nil {
+		return fmt.Errorf("failed to get metric values: %w", err)
+	}
+	
+	// Check if we have enough data points
+	if len(dataPoints) < iam.config.MinimumDataPoints {
+		return fmt.Errorf("insufficient data points for metric %s: got %d, need %d", 
+			metricName, len(dataPoints), iam.config.MinimumDataPoints)
+	}
+	
+	// Create rules based on the configuration
+	if iam.config.EnableOutlierDetection {
+		if err := iam.createOutlierRules(metricName, dataPoints); err != nil {
+			return fmt.Errorf("failed to create outlier rules: %w", err)
+		}
+	}
+	
+	if iam.config.EnableTrendDeviation {
+		if err := iam.createTrendDeviationRules(metricName, dataPoints); err != nil {
+			return fmt.Errorf("failed to create trend deviation rules: %w", err)
+		}
+	}
+	
+	if iam.config.EnableSeasonalPatterns {
+		if err := iam.createSeasonalPatternRules(metricName, dataPoints); err != nil {
+			return fmt.Errorf("failed to create seasonal pattern rules: %w", err)
 		}
 	}
 	

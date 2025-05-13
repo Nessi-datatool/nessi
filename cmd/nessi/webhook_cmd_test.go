@@ -3,10 +3,9 @@ package main
 import (
 	"encoding/json"
 	"os"
-	"path/filepath"
-	"strings"
 	"testing"
 
+	"github.com/nessi-dev/nessi-dev/cmd/nessi/cli"
 	"github.com/nessi-dev/nessi-dev/pkg/webhook"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
