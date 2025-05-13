@@ -63,7 +63,9 @@ Nessi.dev is a powerful data quality and Delta Lake management tool that helps o
   - Custom extension support via plugins
   - Embeddable in Airflow, GitHub Actions, Kubernetes, and custom scripts
   - Interactive examples and integration guides
-  - Observability features with metrics collection and structured logging
+  - Observability features with metrics collection, structured logging, and distributed tracing
+  - Authentication enhancements with OAuth 2.0 and token refresh capabilities
+  - Environment variable-based configuration for secure deployment
 
 - **Integration Capabilities**
   - Prometheus metrics integration
@@ -75,6 +77,8 @@ Nessi.dev is a powerful data quality and Delta Lake management tool that helps o
   - Modern Azure SDK (v1.6.1+) support
   - **Workflow Orchestration Integration**: Seamless integration with Apache Airflow, Prefect, Dagster, and Kubernetes for incorporating data quality checks into data pipelines
   - **Kubernetes Integration**: Native operators for running Nessi operations as Kubernetes jobs with configurable resources and monitoring
+  - **Error Handling and Retries**: Configurable retry mechanisms with exponential backoff for API failures and detailed error categorization
+  - **Observability**: Comprehensive metrics collection, structured logging, and tracing support for monitoring and debugging
 
 - **Documentation**
   - Comprehensive user guides
@@ -198,9 +202,9 @@ security:
     expiration: 24h
 ```
 
-## Monitoring
+## Monitoring and Observability
 
-The application integrates with Prometheus for monitoring. Configure the monitoring settings in `config/config.yaml`:
+The application integrates with Prometheus for monitoring and provides comprehensive observability features. Configure the monitoring settings in `config/config.yaml`:
 
 ```yaml
 monitoring:
@@ -209,6 +213,31 @@ monitoring:
     push_gateway: "http://localhost:9091"
     job_name: "nessi"
     interval: 15s
+  tracing:
+    enabled: true
+    provider: "opentelemetry"
+    endpoint: "http://localhost:4317"
+    service_name: "nessi"
+  logging:
+    structured: true
+    format: "json"
+    level: "info"
+```
+
+### Error Handling and Retries
+
+The application includes configurable retry mechanisms for API failures and external service interactions. Configure the retry settings in `config/config.yaml`:
+
+```yaml
+api:
+  retries:
+    max_attempts: 3
+    initial_backoff: 1s
+    max_backoff: 30s
+    backoff_factor: 2.0
+  error_handling:
+    categorize: true
+    detailed_logging: true
 ```
 
 ## Contributing
