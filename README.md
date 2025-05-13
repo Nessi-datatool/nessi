@@ -10,6 +10,8 @@ Nessi.dev is a powerful data quality and Delta Lake management tool that helps o
   - Schema evolution tracking
   - Partition management
   - Version control and time travel
+  - Multi-format support (Delta, Parquet, CSV)
+  - Automatic schema inference and validation
 
 - **Data Quality Intelligence**
   - Automated data quality checks
@@ -42,6 +44,26 @@ Nessi.dev is a powerful data quality and Delta Lake management tool that helps o
   - Rate limiting
   - IP allowlist
   - Security headers
+
+## Developer Experience
+
+- **CLI-First Approach**
+  - One-line validation commands
+  - Batch processing scripts
+  - Comprehensive configuration management
+  - Intuitive command structure
+
+- **Integration Capabilities**
+  - Prometheus metrics integration
+  - Grafana dashboards
+  - Secure API access
+  - Webhook support
+
+- **Documentation**
+  - Comprehensive user guides
+  - API reference
+  - Example scripts
+  - Best practices
 
 ## Requirements
 
