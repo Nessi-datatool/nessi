@@ -240,6 +240,30 @@ api:
     detailed_logging: true
 ```
 
+## Test Strategy
+
+### Fast/unit tests
+Run locally for rapid feedback:
+
+```sh
+./scripts/run_fast_tests.sh
+```
+This skips all integration/long-running tests.
+
+### Integration/slow tests
+Run only in CI (or with the full suite, no `-short` flag):
+
+```sh
+go test ./...
+```
+
+All integration/slow tests use the Go convention:
+```go
+if testing.Short() {
+    t.Skip("Skipping integration test in short mode")
+}
+```
+
 ## Contributing
 
 1. Fork the repository
