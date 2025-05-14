@@ -8,7 +8,7 @@ import (
 )
 
 // TestMonitor is a simplified version of the Monitor struct for testing
-type Monitor struct {
+type TestMonitor struct {
 	metricsPort              int
 	alertManager             *alerts.AlertManager
 	intelligentAlertManager  *alerts.IntelligentAlertManager
@@ -16,27 +16,27 @@ type Monitor struct {
 }
 
 // GetMetricsPort returns the metrics server port
-func (m *Monitor) GetMetricsPort() int {
+func (m *TestMonitor) GetMetricsPort() int {
 	return m.metricsPort
 }
 
 // GetAlertManager returns the alert manager
-func (m *Monitor) GetAlertManager() *alerts.AlertManager {
+func (m *TestMonitor) GetAlertManager() *alerts.AlertManager {
 	return m.alertManager
 }
 
 // GetIntelligentAlertManager returns the intelligent alert manager
-func (m *Monitor) GetIntelligentAlertManager() *alerts.IntelligentAlertManager {
+func (m *TestMonitor) GetIntelligentAlertManager() *alerts.IntelligentAlertManager {
 	return m.intelligentAlertManager
 }
 
 // RecordMetric records a metric value with the current timestamp
-func (m *Monitor) RecordMetric(metricName string, value float64, labels map[string]string) error {
+func (m *TestMonitor) RecordMetric(metricName string, value float64, labels map[string]string) error {
 	return m.RecordMetricWithTimestamp(metricName, value, time.Now(), labels)
 }
 
 // RecordMetricWithTimestamp records a metric value with a specific timestamp
-func (m *Monitor) RecordMetricWithTimestamp(metricName string, value float64, timestamp time.Time, labels map[string]string) error {
+func (m *TestMonitor) RecordMetricWithTimestamp(metricName string, value float64, timestamp time.Time, labels map[string]string) error {
 	// Create a metric data point
 	dataPoint := alerts.MetricDataPoint{
 		Timestamp: timestamp,

@@ -1,6 +1,7 @@
 package datalake
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"github.com/apache/arrow/go/v15/arrow"
 )
 
+// ... (rest of the code remains the same)
 // SchemaChange represents a change between two schema versions
 type SchemaChange struct {
 	Type      string      // "added", "removed", "type_changed"
@@ -27,6 +29,83 @@ type SchemaVersion struct {
 	Timestamp    time.Time
 	Schema       *arrow.Schema
 	SchemaFields []arrow.Field
+}
+
+// SerializableField is a JSON-serializable representation of arrow.Field
+type SerializableField struct {
+	Name     string          `json:"name"`
+	Type     string          `json:"type"`
+	Nullable bool            `json:"nullable"`
+	Metadata json.RawMessage `json:"metadata,omitempty"`
+}
+
+// SerializableSchemaVersion is a JSON-serializable representation of SchemaVersion
+type SerializableSchemaVersion struct {
+	Version   int64              `json:"version"`
+	Timestamp time.Time          `json:"timestamp"`
+	Fields    []SerializableField `json:"fields"`
+}
+
+// MarshalJSON implements custom JSON marshaling for SchemaVersion
+func (sv SchemaVersion) MarshalJSON() ([]byte, error) {
+	serializable := SerializableSchemaVersion{
+		Version:   sv.Version,
+		Timestamp: sv.Timestamp,
+		Fields:    make([]SerializableField, len(sv.SchemaFields)),
+	}
+
+	// Convert arrow.Field to SerializableField
+	for i, field := range sv.SchemaFields {
+		serializable.Fields[i] = SerializableField{
+			Name:     field.Name,
+			Type:     field.Type.String(),
+			Nullable: field.Nullable,
+		}
+	}
+
+	return json.Marshal(serializable)
+}
+
+// UnmarshalJSON implements custom JSON unmarshaling for SchemaVersion
+func (sv *SchemaVersion) UnmarshalJSON(data []byte) error {
+	var serializable SerializableSchemaVersion
+	if err := json.Unmarshal(data, &serializable); err != nil {
+		return err
+	}
+
+	// Set basic fields
+	sv.Version = serializable.Version
+	sv.Timestamp = serializable.Timestamp
+
+	// Convert SerializableField to arrow.Field
+	sv.SchemaFields = make([]arrow.Field, len(serializable.Fields))
+	for i, field := range serializable.Fields {
+		// Convert type string to arrow.DataType
+		var dataType arrow.DataType
+		switch field.Type {
+		case "int64":
+			dataType = arrow.PrimitiveTypes.Int64
+		case "float64":
+			dataType = arrow.PrimitiveTypes.Float64
+		case "bool":
+			dataType = arrow.FixedWidthTypes.Boolean
+		case "timestamp[s]":
+			dataType = arrow.FixedWidthTypes.Timestamp_s
+		default:
+			dataType = arrow.BinaryTypes.String
+		}
+
+		sv.SchemaFields[i] = arrow.Field{
+			Name:     field.Name,
+			Type:     dataType,
+			Nullable: field.Nullable,
+		}
+	}
+
+	// Create arrow.Schema from fields
+	sv.Schema = arrow.NewSchema(sv.SchemaFields, nil)
+
+	return nil
 }
 
 // GetSchemaHistory returns the schema history for a table

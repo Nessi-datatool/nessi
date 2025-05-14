@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,10 +13,9 @@ import (
 // VersionManager handles Delta Lake version control operations
 type VersionManager struct {
 	tablePath string
-	metaDir   string
 }
 
-// TransactionHistory represents the history of transactions
+// TransactionHistory represents the history of transactions in a Delta Lake table
 type TransactionHistory struct {
 	Transactions []*Transaction `json:"transactions"`
 	CurrentIndex int            `json:"current_index"`
@@ -27,7 +25,7 @@ type TransactionHistory struct {
 type Transaction struct {
 	ID            string                 `json:"id"`
 	Version       int                    `json:"version"`
-	Timestamp     time.Time              `json:"timestamp"`
+	Timestamp     int64                  `json:"timestamp"` // Milliseconds since epoch
 	Operation     string                 `json:"operation"`
 	CommitInfo    map[string]string      `json:"commit_info"`
 	AddedFiles    []string               `json:"added_files,omitempty"`
@@ -42,65 +40,51 @@ type Transaction struct {
 
 // MetadataChange represents a change to table metadata
 type MetadataChange struct {
-	SchemaChange   bool     `json:"schema_change,omitempty"`
-	PartitionChange bool     `json:"partition_change,omitempty"`
-	PropertiesChange bool     `json:"properties_change,omitempty"`
-	AddedColumns   []string  `json:"added_columns,omitempty"`
-	RemovedColumns []string  `json:"removed_columns,omitempty"`
-	ModifiedColumns []string `json:"modified_columns,omitempty"`
+	Name        string            `json:"name,omitempty"`
+	Description string            `json:"description,omitempty"`
+	Format      string            `json:"format,omitempty"`
+	Properties  map[string]string `json:"properties,omitempty"`
+	SchemaID    string            `json:"schema_id,omitempty"`
 }
 
-// VersionDiff represents the difference between two versions
-type VersionDiff struct {
-	FromVersion   int            `json:"from_version"`
-	ToVersion     int            `json:"to_version"`
-	AddedRows     int64          `json:"added_rows"`
-	RemovedRows   int64          `json:"removed_rows"`
-	ModifiedRows  int64          `json:"modified_rows"`
-	SchemaChanges []SchemaChange `json:"schema_changes,omitempty"`
+// TransactionSummary represents a summary of transactions between two versions
+type TransactionSummary struct {
+	FromVersion   int           `json:"from_version"`
+	ToVersion     int           `json:"to_version"`
+	AddedFiles    int           `json:"added_files"`
+	RemovedFiles  int           `json:"removed_files"`
+	ModifiedRows  int           `json:"modified_rows"`
+	SchemaChanges []SchemaChange `json:"schema_changes"`
 	Operations    []string       `json:"operations"`
-	TimeSpan      time.Duration  `json:"time_span"`
-	FromTimestamp time.Time      `json:"from_timestamp"`
-	ToTimestamp   time.Time      `json:"to_timestamp"`
+	TimeSpan      int64          `json:"time_span_ms"` // Time span in milliseconds
+	FromTimestamp int64          `json:"from_timestamp"`
+	ToTimestamp   int64          `json:"to_timestamp"`
 }
 
 // NewVersionManager creates a new version manager
 func NewVersionManager(tablePath string) *VersionManager {
 	return &VersionManager{
 		tablePath: tablePath,
-		metaDir:   filepath.Join(tablePath, "_delta_log", "transactions"),
 	}
 }
 
-// RecordTransaction records a transaction in the history
+// RecordTransaction records a new transaction in the Delta Lake log
 func (vm *VersionManager) RecordTransaction(
 	operation string,
 	commitInfo map[string]string,
-	addedFiles, removedFiles []string,
+	addedFiles []string,
+	removedFiles []string,
 	metadataChange *MetadataChange,
 	stats map[string]interface{},
 ) (*Transaction, error) {
-	// Create transaction history directory if it doesn't exist
-	if err := os.MkdirAll(vm.metaDir, 0755); err != nil {
-		return nil, fmt.Errorf("failed to create transaction history directory: %w", err)
-	}
-
-	// Get current history
-	history, err := vm.readHistory()
-	if err != nil && !os.IsNotExist(err) {
+	// Get current transaction history
+	history, err := vm.getTransactionHistory()
+	if err != nil {
 		return nil, err
 	}
 
-	// Initialize history if it doesn't exist
-	if history == nil {
-		history = &TransactionHistory{
-			Transactions: []*Transaction{},
-			CurrentIndex: -1,
-		}
-	}
-
-	// Determine new version number
-	version := 1
+	// Determine next version
+	version := 0
 	if len(history.Transactions) > 0 {
 		version = history.Transactions[len(history.Transactions)-1].Version + 1
 	}
@@ -109,55 +93,50 @@ func (vm *VersionManager) RecordTransaction(
 	transaction := &Transaction{
 		ID:            uuid.New().String(),
 		Version:       version,
-		Timestamp:     time.Now(),
+		Timestamp:     time.Now().UnixNano() / int64(time.Millisecond),
 		Operation:     operation,
 		CommitInfo:    commitInfo,
 		AddedFiles:    addedFiles,
 		RemovedFiles:  removedFiles,
 		MetadataChange: metadataChange,
 		Stats:         stats,
-		IsolationLevel: "Serializable", // Default isolation level
-		ReadVersion:   version - 1,
-		UserID:        os.Getenv("USER"),
-		ClientInfo:    map[string]string{"client": "nessi-go"},
 	}
 
 	// Add transaction to history
 	history.Transactions = append(history.Transactions, transaction)
 	history.CurrentIndex = len(history.Transactions) - 1
 
-	// Write history to file
-	if err := vm.writeHistory(history); err != nil {
+	// Save transaction history
+	err = vm.saveTransactionHistory(history)
+	if err != nil {
 		return nil, err
 	}
 
 	return transaction, nil
 }
 
-// GetTransactionHistory gets the transaction history
-func (vm *VersionManager) GetTransactionHistory() (*TransactionHistory, error) {
-	return vm.readHistory()
-}
-
-// GetTransaction gets a specific transaction
+// GetTransaction gets a transaction by version
 func (vm *VersionManager) GetTransaction(version int) (*Transaction, error) {
-	history, err := vm.readHistory()
+	// Get transaction history
+	history, err := vm.getTransactionHistory()
 	if err != nil {
 		return nil, err
 	}
 
-	for _, transaction := range history.Transactions {
-		if transaction.Version == version {
-			return transaction, nil
+	// Find transaction with the specified version
+	for _, tx := range history.Transactions {
+		if tx.Version == version {
+			return tx, nil
 		}
 	}
 
-	return nil, fmt.Errorf("transaction version %d not found", version)
+	return nil, fmt.Errorf("transaction with version %d not found", version)
 }
 
 // GetLatestTransaction gets the latest transaction
 func (vm *VersionManager) GetLatestTransaction() (*Transaction, error) {
-	history, err := vm.readHistory()
+	// Get transaction history
+	history, err := vm.getTransactionHistory()
 	if err != nil {
 		return nil, err
 	}
@@ -166,127 +145,48 @@ func (vm *VersionManager) GetLatestTransaction() (*Transaction, error) {
 		return nil, fmt.Errorf("no transactions found")
 	}
 
-	return history.Transactions[history.CurrentIndex], nil
+	return history.Transactions[len(history.Transactions)-1], nil
 }
 
-// RollbackToVersion rolls back to a specific version
-func (vm *VersionManager) RollbackToVersion(version int) error {
-	history, err := vm.readHistory()
-	if err != nil {
-		return err
-	}
-
-	// Find the target version
-	targetIndex := -1
-	for i, transaction := range history.Transactions {
-		if transaction.Version == version {
-			targetIndex = i
-			break
-		}
-	}
-
-	if targetIndex == -1 {
-		return fmt.Errorf("version %d not found", version)
-	}
-
-	// Check if already at target version
-	if history.CurrentIndex == targetIndex {
-		return nil
-	}
-
-	// Record rollback transaction
-	commitInfo := map[string]string{
-		"operation": "rollback",
-		"target_version": fmt.Sprintf("%d", version),
-		"previous_version": fmt.Sprintf("%d", history.Transactions[history.CurrentIndex].Version),
-	}
-
-	// Create metadata change for rollback
-	metadataChange := &MetadataChange{
-		SchemaChange: true,
-		PropertiesChange: true,
-	}
-
-	// Record rollback transaction
-	_, err = vm.RecordTransaction(
-		"ROLLBACK",
-		commitInfo,
-		nil,
-		nil,
-		metadataChange,
-		nil,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to record rollback transaction: %w", err)
-	}
-
-	// Update current index
-	history, err = vm.readHistory()
-	if err != nil {
-		return err
-	}
-
-	// Set the current index to point to the target version
-	// This is a simplified approach - in a real implementation,
-	// we would need to actually restore the data files
-	for i, transaction := range history.Transactions {
-		if transaction.Version == version {
-			history.CurrentIndex = i
-			break
-		}
-	}
-
-	// Write history to file
-	if err := vm.writeHistory(history); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// CompareVersions compares two versions and returns the differences
-func (vm *VersionManager) CompareVersions(fromVersion, toVersion int) (*VersionDiff, error) {
-	history, err := vm.readHistory()
+// GetTransactionSummary gets a summary of transactions between two versions
+func (vm *VersionManager) GetTransactionSummary(fromVersion, toVersion int) (*TransactionSummary, error) {
+	// Get transaction history
+	history, err := vm.getTransactionHistory()
 	if err != nil {
 		return nil, err
 	}
 
-	// Find the transactions
-	var fromTx, toTx *Transaction
+	// Find transactions with the specified versions
 	var fromIndex, toIndex int
+	var fromTx, toTx *Transaction
 	for i, tx := range history.Transactions {
 		if tx.Version == fromVersion {
-			fromTx = tx
 			fromIndex = i
+			fromTx = tx
 		}
 		if tx.Version == toVersion {
-			toTx = tx
 			toIndex = i
+			toTx = tx
 		}
 	}
 
 	if fromTx == nil {
-		return nil, fmt.Errorf("from version %d not found", fromVersion)
+		return nil, fmt.Errorf("transaction with version %d not found", fromVersion)
 	}
 	if toTx == nil {
-		return nil, fmt.Errorf("to version %d not found", toVersion)
+		return nil, fmt.Errorf("transaction with version %d not found", toVersion)
 	}
 
-	// Ensure fromVersion is before toVersion
-	if fromIndex > toIndex {
-		return nil, fmt.Errorf("from version %d is after to version %d", fromVersion, toVersion)
-	}
-
-	// Initialize diff
-	diff := &VersionDiff{
+	// Create summary
+	summary := &TransactionSummary{
 		FromVersion:   fromVersion,
 		ToVersion:     toVersion,
-		AddedRows:     0,
-		RemovedRows:   0,
+		AddedFiles:    0,
+		RemovedFiles:  0,
 		ModifiedRows:  0,
 		SchemaChanges: []SchemaChange{},
 		Operations:    []string{},
-		TimeSpan:      toTx.Timestamp.Sub(fromTx.Timestamp),
+		TimeSpan:      toTx.Timestamp - fromTx.Timestamp, // Time span in milliseconds
 		FromTimestamp: fromTx.Timestamp,
 		ToTimestamp:   toTx.Timestamp,
 	}
@@ -294,156 +194,142 @@ func (vm *VersionManager) CompareVersions(fromVersion, toVersion int) (*VersionD
 	// Collect operations
 	for i := fromIndex + 1; i <= toIndex; i++ {
 		tx := history.Transactions[i]
-		diff.Operations = append(diff.Operations, tx.Operation)
+		summary.Operations = append(summary.Operations, tx.Operation)
+		summary.AddedFiles += len(tx.AddedFiles)
+		summary.RemovedFiles += len(tx.RemovedFiles)
 
-		// Count row changes (simplified)
+		// Collect stats
 		if tx.Stats != nil {
 			if numRecords, ok := tx.Stats["numRecords"].(float64); ok {
-				if tx.Operation == "WRITE" || tx.Operation == "MERGE" {
-					diff.AddedRows += int64(numRecords)
-				} else if tx.Operation == "DELETE" {
-					diff.RemovedRows += int64(numRecords)
-				} else if tx.Operation == "UPDATE" {
-					diff.ModifiedRows += int64(numRecords)
-				}
-			}
-		}
-
-		// Collect schema changes
-		if tx.MetadataChange != nil && tx.MetadataChange.SchemaChange {
-			// In a real implementation, we would extract the actual schema changes
-			// For now, we'll just use placeholder changes
-			if len(tx.MetadataChange.AddedColumns) > 0 {
-				for _, col := range tx.MetadataChange.AddedColumns {
-					diff.SchemaChanges = append(diff.SchemaChanges, SchemaChange{
-						Type:        "add",
-						Field:       col,
-						Description: fmt.Sprintf("Added column '%s'", col),
-					})
-				}
-			}
-			if len(tx.MetadataChange.RemovedColumns) > 0 {
-				for _, col := range tx.MetadataChange.RemovedColumns {
-					diff.SchemaChanges = append(diff.SchemaChanges, SchemaChange{
-						Type:        "remove",
-						Field:       col,
-						Description: fmt.Sprintf("Removed column '%s'", col),
-					})
-				}
-			}
-			if len(tx.MetadataChange.ModifiedColumns) > 0 {
-				for _, col := range tx.MetadataChange.ModifiedColumns {
-					diff.SchemaChanges = append(diff.SchemaChanges, SchemaChange{
-						Type:        "modify",
-						Field:       col,
-						Description: fmt.Sprintf("Modified column '%s'", col),
-					})
-				}
+				summary.ModifiedRows += int(numRecords)
 			}
 		}
 	}
 
-	return diff, nil
+	return summary, nil
 }
 
-// GetVersionsInTimeRange gets versions within a time range
-func (vm *VersionManager) GetVersionsInTimeRange(startTime, endTime time.Time) ([]*Transaction, error) {
-	history, err := vm.readHistory()
+// GetTransactionAtTimestamp gets the transaction that was current at the specified timestamp
+func (vm *VersionManager) GetTransactionAtTimestamp(timestamp time.Time) (*Transaction, error) {
+	// Get transaction history
+	history, err := vm.getTransactionHistory()
 	if err != nil {
 		return nil, err
 	}
 
-	var versions []*Transaction
-	for _, tx := range history.Transactions {
-		if (tx.Timestamp.Equal(startTime) || tx.Timestamp.After(startTime)) &&
-			(tx.Timestamp.Equal(endTime) || tx.Timestamp.Before(endTime)) {
-			versions = append(versions, tx)
-		}
+	if len(history.Transactions) == 0 {
+		return nil, fmt.Errorf("no transactions found")
 	}
 
-	return versions, nil
-}
+	// Convert timestamp to milliseconds since epoch
+	timestampMillis := timestamp.UnixNano() / int64(time.Millisecond)
 
-// GetVersionAtTimestamp gets the version at a specific timestamp
-func (vm *VersionManager) GetVersionAtTimestamp(timestamp time.Time) (*Transaction, error) {
-	history, err := vm.readHistory()
-	if err != nil {
-		return nil, err
-	}
-
-	// Find the version that was current at the given timestamp
+	// Find the latest transaction that was created before or at the specified timestamp
 	var latestTx *Transaction
 	for _, tx := range history.Transactions {
-		if tx.Timestamp.Before(timestamp) || tx.Timestamp.Equal(timestamp) {
-			if latestTx == nil || tx.Timestamp.After(latestTx.Timestamp) {
-				latestTx = tx
-			}
+		if tx.Timestamp <= timestampMillis {
+			latestTx = tx
+		} else {
+			break
 		}
 	}
 
 	if latestTx == nil {
-		return nil, fmt.Errorf("no version found at or before timestamp %s", timestamp)
+		// If no transaction was found, return the earliest transaction
+		return history.Transactions[0], nil
 	}
 
 	return latestTx, nil
 }
 
-// readHistory reads the transaction history from file
-func (vm *VersionManager) readHistory() (*TransactionHistory, error) {
-	historyPath := filepath.Join(vm.metaDir, "history.json")
-	
-	// Check if file exists
-	if _, err := os.Stat(historyPath); os.IsNotExist(err) {
+// GetTransactionsBetween gets transactions between two timestamps
+func (vm *VersionManager) GetTransactionsBetween(fromTimestamp, toTimestamp time.Time) ([]*Transaction, error) {
+	// Get transaction history
+	history, err := vm.getTransactionHistory()
+	if err != nil {
 		return nil, err
 	}
+
+	// Convert timestamps to milliseconds since epoch
+	fromMillis := fromTimestamp.UnixNano() / int64(time.Millisecond)
+	toMillis := toTimestamp.UnixNano() / int64(time.Millisecond)
+
+	// Find transactions between the specified timestamps
+	var transactions []*Transaction
+	for _, tx := range history.Transactions {
+		if tx.Timestamp >= fromMillis && tx.Timestamp <= toMillis {
+			transactions = append(transactions, tx)
+		}
+	}
+
+	return transactions, nil
+}
+
+// GetSummary gets a summary of a transaction
+func (tx *Transaction) GetSummary() string {
+	// Convert timestamp from milliseconds to time.Time
+	timestamp := time.Unix(0, tx.Timestamp*int64(time.Millisecond))
 	
+	summary := fmt.Sprintf("Version %d (%s) - %s\n", tx.Version+1, timestamp.Format(time.RFC3339), tx.Operation)
+	if tx.CommitInfo != nil {
+		if message, ok := tx.CommitInfo["message"]; ok {
+			summary += fmt.Sprintf("Message: %s\n", message)
+		}
+	}
+	summary += fmt.Sprintf("Added files: %d, Removed files: %d\n", len(tx.AddedFiles), len(tx.RemovedFiles))
+	return summary
+}
+
+// getTransactionHistory gets the transaction history from disk
+func (vm *VersionManager) getTransactionHistory() (*TransactionHistory, error) {
+	// Create transaction history file path
+	historyPath := filepath.Join(vm.tablePath, "_delta_log", "transaction_history.json")
+
+	// Check if file exists
+	_, err := os.Stat(historyPath)
+	if os.IsNotExist(err) {
+		// Create empty history
+		return &TransactionHistory{
+			Transactions: []*Transaction{},
+			CurrentIndex: -1,
+		}, nil
+	} else if err != nil {
+		return nil, err
+	}
+
 	// Read file
 	data, err := os.ReadFile(historyPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read transaction history: %w", err)
+		return nil, err
 	}
-	
+
 	// Parse JSON
 	var history TransactionHistory
-	if err := json.Unmarshal(data, &history); err != nil {
-		return nil, fmt.Errorf("failed to parse transaction history: %w", err)
+	err = json.Unmarshal(data, &history)
+	if err != nil {
+		return nil, err
 	}
-	
+
 	return &history, nil
 }
 
-// writeHistory writes the transaction history to file
-func (vm *VersionManager) writeHistory(history *TransactionHistory) error {
-	historyPath := filepath.Join(vm.metaDir, "history.json")
-	
+// saveTransactionHistory saves the transaction history to disk
+func (vm *VersionManager) saveTransactionHistory(history *TransactionHistory) error {
+	// Create transaction history file path
+	historyPath := filepath.Join(vm.tablePath, "_delta_log", "transaction_history.json")
+
 	// Create directory if it doesn't exist
-	if err := os.MkdirAll(vm.metaDir, 0755); err != nil {
-		return fmt.Errorf("failed to create transaction history directory: %w", err)
+	err := os.MkdirAll(filepath.Join(vm.tablePath, "_delta_log"), 0755)
+	if err != nil {
+		return err
 	}
-	
-	// Marshal to JSON
+
+	// Convert to JSON
 	data, err := json.MarshalIndent(history, "", "  ")
 	if err != nil {
-		return fmt.Errorf("failed to marshal transaction history: %w", err)
+		return err
 	}
-	
-	// Write file
-	if err := os.WriteFile(historyPath, data, 0644); err != nil {
-		return fmt.Errorf("failed to write transaction history: %w", err)
-	}
-	
-	return nil
-}
 
-// Helper function to get a summary of a transaction
-func (tx *Transaction) GetSummary() string {
-	summary := fmt.Sprintf("Version %d: %s (%s)", tx.Version, tx.Operation, tx.Timestamp.Format(time.RFC3339))
-	
-	if tx.CommitInfo != nil {
-		if message, ok := tx.CommitInfo["message"]; ok {
-			summary += fmt.Sprintf(" - %s", message)
-		}
-	}
-	
-	return summary
+	// Write file
+	return os.WriteFile(historyPath, data, 0644)
 }

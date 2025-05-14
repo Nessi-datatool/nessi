@@ -2,17 +2,37 @@ package monitoring
 
 import (
 	"fmt"
+	"os"
+	"sync"
 	"time"
 
 	"github.com/nessi-dev/nessi-dev/pkg/monitoring/alerts"
+	"github.com/nessi-dev/nessi-dev/pkg/security"
 )
 
 // Monitor represents a monitoring system
 type Monitor struct {
-	metricsPort  int
-	alertManager *alerts.AlertManager
+	mu                     sync.RWMutex
+	metricsPort            int
+	alertManager           *alerts.AlertManager
 	intelligentAlertManager *alerts.IntelligentAlertManager
-	metricStore *PrometheusMetricStore
+	metricStore            *PrometheusMetricStore
+	authManager            *security.AuthManager
+	certManager            *security.CertManager
+	config                 *Config
+	metricRetention        *MetricRetention
+	alertThresholds        map[string]AlertThreshold
+	silencePeriod          time.Duration
+	cooldownPeriod         time.Duration
+	slackConfig            *SlackNotificationConfig
+	emailConfig            *EmailNotificationConfig
+	webhookConfig          *WebhookNotificationConfig
+	lastAlertTimes         map[string]time.Time
+	stopCh                 chan struct{}
+	running                bool
+	alerts                 chan Alert
+	configPath             string
+	metrics                map[string]interface{}
 }
 
 // MonitorOptions represents monitor configuration options
@@ -68,33 +88,7 @@ func (m *Monitor) GetIntelligentAlertManager() *alerts.IntelligentAlertManager {
 	return m.intelligentAlertManager
 }
 
-// ExportFormat represents the format for exporting metrics
-type ExportFormat string
-
-const (
-	// ExportFormatCSV exports metrics in CSV format
-	ExportFormatCSV ExportFormat = "csv"
-	// ExportFormatJSON exports metrics in JSON format
-	ExportFormatJSON ExportFormat = "json"
-)
-
-// ExportOptions represents options for exporting metrics
-type ExportOptions struct {
-	Format     ExportFormat
-	OutputPath string
-	StartTime  time.Time
-	EndTime    time.Time
-	MetricName string
-	Labels     map[string]string
-}
-
-// ExportMetrics exports metrics to a file
-func (m *Monitor) ExportMetrics(options ExportOptions) (string, error) {
-	// For now, just return the output path
-	// In a real implementation, this would query the metrics database
-	// and export the data to the specified format
-	return options.OutputPath, nil
-}
+// Export functionality is defined in export.go
 
 // AlertManagerOptions represents options for creating an AlertManager
 type AlertManagerOptions struct {
@@ -131,7 +125,7 @@ func DefaultAlertManagerOptions() AlertManagerOptions {
 			Method:     "POST",
 			Headers:    map[string]string{"Content-Type": "application/json"},
 			MaxRetries: 3,
-			RetryDelay: time.Second * 5,
+			RetryInterval: time.Second * 5,
 		},
 	}
 }
@@ -144,8 +138,14 @@ func CreateAlertManager(options ...AlertManagerOptions) (*alerts.AlertManager, e
 		opts = options[0]
 	}
 
+	// Create data directory for alerts if it doesn't exist
+	dataDir := "./data/alerts"
+	if err := os.MkdirAll(dataDir, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create data directory: %w", err)
+	}
+
 	// Create alert manager
-	alertManager, err := alerts.NewAlertManager()
+	alertManager, err := alerts.NewAlertManager(dataDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create alert manager: %w", err)
 	}
@@ -156,19 +156,19 @@ func CreateAlertManager(options ...AlertManagerOptions) (*alerts.AlertManager, e
 		if err != nil {
 			return nil, fmt.Errorf("failed to create email notifier: %w", err)
 		}
-		alertManager.RegisterNotifier("email", emailNotifier)
+		alertManager.RegisterNotifier(emailNotifier)
 	}
 
 	// Create Slack notifier if enabled
 	if opts.EnableSlack && opts.SlackConfig != nil {
 		slackNotifier := alerts.NewSlackNotifier(*opts.SlackConfig)
-		alertManager.RegisterNotifier("slack", slackNotifier)
+		alertManager.RegisterNotifier(slackNotifier)
 	}
 
 	// Create webhook notifier if enabled
 	if opts.EnableWebhook && opts.WebhookConfig != nil {
 		webhookNotifier := alerts.NewWebhookNotifier(*opts.WebhookConfig)
-		alertManager.RegisterNotifier("webhook", webhookNotifier)
+		alertManager.RegisterNotifier(webhookNotifier)
 	}
 
 	return alertManager, nil

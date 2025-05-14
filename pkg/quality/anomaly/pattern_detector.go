@@ -233,7 +233,7 @@ func (pd *PatternDetector) detectSpikes(values []float64) []*PatternDetectionRes
 		sum := 0.0
 		count := 0
 		
-		for j := max(0, i-windowSize+1); j <= min(len(values)-1, i+windowSize-1); j++ {
+		for j := maxInt(0, i-windowSize+1); j <= minInt(len(values)-1, i+windowSize-1); j++ {
 			if j != i { // Exclude the current point
 				sum += values[j]
 				count++
@@ -270,7 +270,7 @@ func (pd *PatternDetector) detectSpikes(values []float64) []*PatternDetectionRes
 			
 			results = append(results, &PatternDetectionResult{
 				Pattern:     SpikePattern,
-				Confidence:  min(1.0, change/pd.config.SpikeThreshold),
+				Confidence:  minFloat64(1.0, change/pd.config.SpikeThreshold),
 				Description: fmt.Sprintf("Spike of %.2f%% at index %d", change*100, i),
 				StartIndex:  start,
 				EndIndex:    end,
@@ -301,7 +301,7 @@ func (pd *PatternDetector) detectDips(values []float64) []*PatternDetectionResul
 		sum := 0.0
 		count := 0
 		
-		for j := max(0, i-windowSize+1); j <= min(len(values)-1, i+windowSize-1); j++ {
+		for j := maxInt(0, i-windowSize+1); j <= minInt(len(values)-1, i+windowSize-1); j++ {
 			if j != i { // Exclude the current point
 				sum += values[j]
 				count++
@@ -338,7 +338,7 @@ func (pd *PatternDetector) detectDips(values []float64) []*PatternDetectionResul
 			
 			results = append(results, &PatternDetectionResult{
 				Pattern:     DipPattern,
-				Confidence:  min(1.0, change/pd.config.DipThreshold),
+				Confidence:  minFloat64(1.0, change/pd.config.DipThreshold),
 				Description: fmt.Sprintf("Dip of %.2f%% at index %d", change*100, i),
 				StartIndex:  start,
 				EndIndex:    end,
@@ -387,7 +387,7 @@ func (pd *PatternDetector) detectOscillation(values []float64) *PatternDetection
 	
 	// Check if we have enough direction changes and the magnitude is significant
 	if directionChanges >= len(values)/3 && avgMagnitude >= pd.config.OscillationThreshold {
-		confidence := min(1.0, float64(directionChanges)/float64(len(values)/2))
+		confidence := minFloat64(1.0, float64(directionChanges)/float64(len(values)/2))
 		
 		return &PatternDetectionResult{
 			Pattern:     OscillationPattern,
@@ -455,7 +455,7 @@ func (pd *PatternDetector) detectTrendDeviations(values []float64) []*PatternDet
 			
 			results = append(results, &PatternDetectionResult{
 				Pattern:     TrendDeviationPattern,
-				Confidence:  min(1.0, deviation/pd.config.TrendDeviationThreshold),
+				Confidence:  minFloat64(1.0, deviation/pd.config.TrendDeviationThreshold),
 				Description: fmt.Sprintf("Value at index %d is %.2f%% %s predicted trend", i, deviation*100, direction),
 				StartIndex:  i - pd.config.HistoricalWindowSize,
 				EndIndex:    i,
@@ -468,14 +468,28 @@ func (pd *PatternDetector) detectTrendDeviations(values []float64) []*PatternDet
 }
 
 // Helper functions
-func min(a, b float64) float64 {
+func minInt(a, b int) int {
 	if a < b {
 		return a
 	}
 	return b
 }
 
-func max(a, b int) int {
+func minFloat64(a, b float64) float64 {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func maxInt(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func maxFloat64(a, b float64) float64 {
 	if a > b {
 		return a
 	}

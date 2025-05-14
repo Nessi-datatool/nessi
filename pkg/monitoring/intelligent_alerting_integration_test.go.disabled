@@ -39,19 +39,20 @@ func TestIntelligentAlertingBasic(t *testing.T) {
 		DisableThreshold:       15,
 	}
 	
-	// Create the monitor
-	monitor := &monitoring.Monitor{
-		metricsPort:  9090,
-		alertManager: alertManager,
-		metricStore:  mockStore,
+	// Create monitor options
+	options := monitoring.MonitorOptions{
+		MetricsPort:  9090,
+		AlertManager: alertManager,
+		EnableIntelligentAlerting: true,
+		IntelligentAlertingConfig: intelligentConfig,
 	}
 	
-	// Initialize intelligent alerting
-	monitor.intelligentAlertManager = alerts.NewIntelligentAlertManager(
-		alertManager,
-		mockStore,
-		intelligentConfig,
-	)
+	// Create the monitor
+	monitor, err := monitoring.New(options)
+	require.NoError(t, err)
+	
+	// Override the metric store for testing
+	monitor.SetMetricStore(mockStore)
 	
 	// Add some test metrics
 	err = monitor.RecordMetric("test_metric", 100.0, map[string]string{"service": "test"})

@@ -3,25 +3,49 @@ package dashboard
 import (
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
+	"time"
 
 	"github.com/nessi-dev/nessi-dev/pkg/monitoring"
+	"github.com/nessi-dev/nessi-dev/pkg/monitoring/alerts"
+	"github.com/nessi-dev/nessi-dev/pkg/monitoring/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// TestAlertsDashboard tests the alerts dashboard page
-func TestAlertsDashboard(t *testing.T) {
-	// Create a mock monitor
-	mock := &mockMonitor{
-		metricsPort: 9090,
-	}
+// TestAlertsDashboardPage tests the alerts dashboard page
+func TestAlertsDashboardPage(t *testing.T) {
+	t.Parallel()
+	// Initialize test environment
+	TestCleanup()
+	
+	// Set up test timeout to prevent hanging
+	SetupTestTimeout(t, 500*time.Millisecond)
+	
+	// Create a temporary directory for the test
+	tempDir, err := os.MkdirTemp("", "alerts-dashboard-test")
+	require.NoError(t, err)
+	
+	// Clean up the temporary directory after the test
+	t.Cleanup(func() {
+		CleanupTempDir(tempDir)
+	})
+	
+	// Create a mock alert manager
+	alertManager, err := alerts.NewAlertManager(tempDir)
+	require.NoError(t, err)
+	
+	// Create a test monitor with our alert manager
+	mock := testutil.CreateTestMonitorWithAlertManager(9090, alertManager)
 	
 	// Create dashboard
 	opts := DashboardOptions{
 		ListenAddr: ":8080",
+		Profiler:      &MockProfiler{},
+		RuleValidator: &MockRuleValidator{},
 	}
-	
+
 	dash, err := New(mock, opts)
 	require.NoError(t, err)
 	require.NotNil(t, dash)
@@ -38,15 +62,20 @@ func TestAlertsDashboard(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
-// mockMonitor implements a minimal mock for the monitoring.Monitor interface
-type mockMonitor struct {
+// dashboardMockMonitor implements a minimal mock for the monitoring.Monitor interface
+type dashboardMockMonitor struct {
 	metricsPort int
+	alertManager *alerts.AlertManager
 }
 
-func (m *mockMonitor) GetMetricsPort() int {
+func (m *dashboardMockMonitor) GetMetricsPort() int {
 	return m.metricsPort
 }
 
-func (m *mockMonitor) ExportMetrics(options monitoring.ExportOptions) (string, error) {
+func (m *dashboardMockMonitor) GetAlertManager() *alerts.AlertManager {
+	return m.alertManager
+}
+
+func (m *dashboardMockMonitor) ExportMetrics(options monitoring.ExportOptions) (string, error) {
 	return options.OutputPath, nil
 }

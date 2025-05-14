@@ -11,6 +11,7 @@ import (
 
 // TestAlertsUITemplate tests the alerts dashboard template
 func TestAlertsUITemplate(t *testing.T) {
+	t.Parallel()
 	// Create a simple template for testing
 	tmpl := template.Must(template.New("alerts.html").Parse(`
 		<!DOCTYPE html>
@@ -44,6 +45,7 @@ func TestAlertsUITemplate(t *testing.T) {
 
 // TestAlertsDashboardStaticResources tests that the static resources for the alerts dashboard are available
 func TestAlertsDashboardStaticResources(t *testing.T) {
+	t.Parallel()
 	// This test verifies that the CSS and JS files for the alerts dashboard exist
 	// In a real implementation, we would check the actual file system or embedded resources
 	// Here we're just ensuring the test passes for demonstration purposes

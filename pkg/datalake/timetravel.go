@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-// TimeTravelOptions represents options for time travel queries
-type TimeTravelOptions struct {
+// DeltaTimeTravelOptions represents options for time travel queries in Delta Lake
+type DeltaTimeTravelOptions struct {
 	// Version to query (if specified, Timestamp is ignored)
 	Version *int64
 
@@ -17,8 +17,8 @@ type TimeTravelOptions struct {
 	Timestamp *time.Time
 }
 
-// TimeTravelResult represents the result of a time travel query
-type TimeTravelResult struct {
+// DeltaTimeTravelResult represents the result of a time travel query in Delta Lake
+type DeltaTimeTravelResult struct {
 	// The version that was queried
 	Version int64
 
@@ -35,13 +35,13 @@ type TimeTravelResult struct {
 // Using SchemaField from table.go
 
 // TimeTravel queries a Delta table as it existed at a specific version or timestamp
-func (m *MetadataManager) TimeTravel(options TimeTravelOptions) (*TimeTravelResult, error) {
+func (m *MetadataManager) TimeTravel(options DeltaTimeTravelOptions) (*DeltaTimeTravelResult, error) {
 	var targetVersion int64
 	var targetTimestamp time.Time
 
 	// If version is specified, use it
 	if options.Version != nil {
-		targetVersion = *options.Version
+		targetVersion = int64(*options.Version)
 		return m.getTableInfoAtVersion(targetVersion)
 	}
 
@@ -84,7 +84,7 @@ func (m *MetadataManager) findVersionAtTimestamp(timestamp time.Time) (int64, er
 }
 
 // getTableInfoAtVersion gets table information at a specific version
-func (m *MetadataManager) getTableInfoAtVersion(version int64) (*TimeTravelResult, error) {
+func (m *MetadataManager) getTableInfoAtVersion(version int64) (*DeltaTimeTravelResult, error) {
 	// Read transaction log
 	logFile := filepath.Join(m.tablePath, "_delta_log", fmt.Sprintf("%020d.json", version))
 	data, err := os.ReadFile(logFile)
@@ -134,7 +134,7 @@ func (m *MetadataManager) getTableInfoAtVersion(version int64) (*TimeTravelResul
 	}
 
 	// Create result
-	result := &TimeTravelResult{
+	result := &DeltaTimeTravelResult{
 		Version:      version,
 		Timestamp:    time.Unix(metadata.Timestamp, 0),
 		SchemaFields: schemaFields,

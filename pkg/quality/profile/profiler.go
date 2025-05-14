@@ -31,6 +31,7 @@ type Profile struct {
 	Patterns    []string
 	Anomalies   []Anomaly
 	Stats       Stats `json:"stats"`
+	ValueCounts map[interface{}]int `json:"value_counts,omitempty"`
 }
 
 // Stats represents different statistical measures for numeric columns

@@ -2,14 +2,17 @@ package dashboard
 
 import (
 	"net/http"
+	
+	"github.com/nessi-dev/nessi-dev/pkg/security"
 )
 
 // handleDataQualityDashboard handles the data quality dashboard page
 func (d *Dashboard) handleDataQualityDashboard(w http.ResponseWriter, r *http.Request) {
 	// Check if user is authenticated when authentication is enabled
 	if d.authManager != nil {
-		user, err := d.authManager.GetUserFromRequest(r)
-		if err != nil || user == nil {
+		// Check if user is authenticated
+		_, ok := security.UserFromContext(r.Context())
+		if !ok {
 			// Redirect to login page
 			http.Redirect(w, r, "/login?redirect=/data-quality", http.StatusFound)
 			return

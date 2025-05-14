@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/nessi-dev/nessi-dev/pkg/lineage/model"
 	"github.com/stretchr/testify/assert"

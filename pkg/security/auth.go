@@ -40,6 +40,7 @@ type AuthConfig struct {
 	UsersFile    string `json:"users_file"`
 	TokenExpiry  int    `json:"token_expiry"` // in hours
 	RequireHTTPS bool   `json:"require_https"`
+	InMemoryOnly bool   `json:"in_memory_only"` // If true, disables all file I/O for tests
 }
 
 // AuthManager handles authentication and authorization
@@ -70,6 +71,9 @@ func NewAuthManager(config AuthConfig) (*AuthManager, error) {
 
 // loadUsers loads users from the users file
 func (am *AuthManager) loadUsers() error {
+	if am.config.InMemoryOnly {
+		return nil // skip file I/O for tests
+	}
 	// Check if users file exists
 	if _, err := os.Stat(am.config.UsersFile); os.IsNotExist(err) {
 		// Create default admin user if file doesn't exist
@@ -114,8 +118,11 @@ func (am *AuthManager) loadUsers() error {
 
 // saveUsers saves users to the users file
 func (am *AuthManager) saveUsers() error {
-	am.mu.RLock()
-	defer am.mu.RUnlock()
+	if am.config.InMemoryOnly {
+		return nil // skip file I/O for tests
+	}
+	am.mu.Lock()
+	defer am.mu.Unlock()
 
 	// Convert users map to slice
 	var users []User

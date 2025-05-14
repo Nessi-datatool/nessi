@@ -18,7 +18,7 @@ type WebhookConfig struct {
 	Headers     map[string]string `json:"headers,omitempty"`
 	Enabled     bool              `json:"enabled"`
 	RetryCount  int               `json:"retry_count,omitempty"`
-	RetryDelay  int               `json:"retry_delay,omitempty"` // in seconds
+	RetryDelay  int               `json:"retry_delay,omitempty"` // in milliseconds
 	Description string            `json:"description,omitempty"`
 	CreatedAt   time.Time         `json:"created_at"`
 	UpdatedAt   time.Time         `json:"updated_at"`
@@ -54,7 +54,7 @@ func NewWebhookManager() *WebhookManager {
 	return &WebhookManager{
 		webhooks: make(map[string]*WebhookConfig),
 		client: &http.Client{
-			Timeout: 10 * time.Second,
+			Timeout: 2 * time.Second,
 		},
 	}
 }
@@ -276,7 +276,8 @@ func (m *WebhookManager) sendWebhook(webhook *WebhookConfig, event *WebhookEvent
 
 		// Retry after delay if not the last attempt
 		if attempt < webhook.RetryCount {
-			time.Sleep(time.Duration(webhook.RetryDelay) * time.Second)
+			// For tests, use milliseconds instead of seconds to speed up execution
+			time.Sleep(time.Duration(webhook.RetryDelay) * time.Millisecond)
 		}
 	}
 

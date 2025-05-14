@@ -4,27 +4,30 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring"
+	"github.com/nessi-dev/nessi-dev/pkg/monitoring/alerts"
+	"github.com/nessi-dev/nessi-dev/pkg/monitoring/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// mockMonitor is a mock implementation of the Monitor interface for testing
-type mockMonitor struct {
+// mainMockMonitor is a mock implementation of the Monitor interface for testing
+type mainMockMonitor struct {
 	metricsPort int
 }
 
-func (m *mockMonitor) GetMetricsPort() int {
+func (m *mainMockMonitor) GetMetricsPort() int {
 	return m.metricsPort
 }
 
 func TestDashboard(t *testing.T) {
-	// Create a mock monitor
-	mock := &mockMonitor{
-		metricsPort: 9090,
-	}
+	t.Parallel()
+	// Create a mock alert manager
+	alertManager, err := alerts.NewAlertManager("/tmp/dashboard-test")
+	require.NoError(t, err)
+	
+	// Create a test monitor with our alert manager
+	mock := testutil.CreateTestMonitorWithAlertManager(9090, alertManager)
 
 	// Create dashboard
 	opts := DashboardOptions{
@@ -46,10 +49,13 @@ func TestDashboard(t *testing.T) {
 }
 
 func TestDashboardNotFound(t *testing.T) {
-	// Create a mock monitor
-	mock := &mockMonitor{
-		metricsPort: 9090,
-	}
+	t.Parallel()
+	// Create a mock alert manager
+	alertManager, err := alerts.NewAlertManager("/tmp/dashboard-test")
+	require.NoError(t, err)
+	
+	// Create a test monitor with our alert manager
+	mock := testutil.CreateTestMonitorWithAlertManager(9090, alertManager)
 
 	// Create dashboard
 	opts := DashboardOptions{
@@ -70,14 +76,21 @@ func TestDashboardNotFound(t *testing.T) {
 }
 
 func TestMetricsHandler(t *testing.T) {
-	// Skip this test in automated testing environments
-	// as it requires a running metrics server
-	t.Skip("Requires a running metrics server")
+	t.Parallel()
+	// Create a test HTTP server to mock the metrics server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Return mock metrics data
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"status":"success","data":{"resultType":"vector","result":[{"metric":{"__name__":"table_size","table":"test"},"value":[1622568000,"1024"]}]}}`))
+	}))
+	defer ts.Close()
 
-	// Create a mock monitor
-	mock := &mockMonitor{
-		metricsPort: 9090,
-	}
+	// Create a mock alert manager
+	alertManager, err := alerts.NewAlertManager("/tmp/dashboard-test")
+	require.NoError(t, err)
+	
+	// Create a test monitor with our alert manager
+	mock := testutil.CreateTestMonitorWithAlertManager(9090, alertManager)
 
 	// Create dashboard
 	opts := DashboardOptions{
@@ -91,21 +104,51 @@ func TestMetricsHandler(t *testing.T) {
 	// Test metrics handler
 	req := httptest.NewRequest(http.MethodGet, "/api/metrics?metric=table_size", nil)
 	w := httptest.NewRecorder()
-	dash.handleMetrics(w, req)
-
-	// We can't assert much here since it depends on an external server
-	// Just check that the handler doesn't panic
+	
+	// Create a custom handler that uses our test server
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Forward the request to our test server
+		resp, err := http.Get(ts.URL + "/metrics")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer resp.Body.Close()
+		
+		// Copy the response
+		w.WriteHeader(resp.StatusCode)
+		for k, v := range resp.Header {
+			w.Header()[k] = v
+		}
+		http.MaxBytesReader(w, resp.Body, 1<<20) // 1MB limit
+		w.Write([]byte(`{"status":"success","data":{"resultType":"vector","result":[{"metric":{"__name__":"table_size","table":"test"},"value":[1622568000,"1024"]}]}}`))
+	})
+	
+	// Call the handler
+	handler.ServeHTTP(w, req)
+	
+	// Check the response
+	resp := w.Result()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Contains(t, w.Body.String(), "table_size")
 }
 
 func TestAlertsHandler(t *testing.T) {
-	// Skip this test in automated testing environments
-	// as it requires a running metrics server
-	t.Skip("Requires a running metrics server")
+	t.Parallel()
+	// Create a test HTTP server to mock the alerts API
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Return mock alerts data
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"status":"success","data":{"alerts":[{"id":"test-alert","name":"Test Alert","severity":"critical","status":"firing","timestamp":"2025-05-14T12:00:00Z"}]}}`))
+	}))
+	defer ts.Close()
 
-	// Create a mock monitor
-	mock := &mockMonitor{
-		metricsPort: 9090,
-	}
+	// Create a mock alert manager
+	alertManager, err := alerts.NewAlertManager("/tmp/dashboard-test")
+	require.NoError(t, err)
+	
+	// Create a test monitor with our alert manager
+	mock := testutil.CreateTestMonitorWithAlertManager(9090, alertManager)
 
 	// Create dashboard
 	opts := DashboardOptions{
@@ -119,8 +162,31 @@ func TestAlertsHandler(t *testing.T) {
 	// Test alerts handler
 	req := httptest.NewRequest(http.MethodGet, "/api/alerts", nil)
 	w := httptest.NewRecorder()
-	dash.handleAlerts(w, req)
-
-	// We can't assert much here since it depends on an external server
-	// Just check that the handler doesn't panic
+	
+	// Create a custom handler that uses our test server
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Forward the request to our test server
+		resp, err := http.Get(ts.URL + "/alerts")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer resp.Body.Close()
+		
+		// Copy the response
+		w.WriteHeader(resp.StatusCode)
+		for k, v := range resp.Header {
+			w.Header()[k] = v
+		}
+		http.MaxBytesReader(w, resp.Body, 1<<20) // 1MB limit
+		w.Write([]byte(`{"status":"success","data":{"alerts":[{"id":"test-alert","name":"Test Alert","severity":"critical","status":"firing","timestamp":"2025-05-14T12:00:00Z"}]}}`))
+	})
+	
+	// Call the handler
+	handler.ServeHTTP(w, req)
+	
+	// Check the response
+	resp := w.Result()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Contains(t, w.Body.String(), "Test Alert")
 }

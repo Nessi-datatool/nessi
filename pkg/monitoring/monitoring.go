@@ -1,23 +1,18 @@
 package monitoring
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"os"
-	"sync"
-	"time"
-	"strings"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"github.com/nessi-dev/nessi-dev/pkg/logging"
 	"github.com/nessi-dev/nessi-dev/pkg/security"
-	"bytes"
-	"net/smtp"
 )
 
 // Config represents the monitoring configuration
@@ -80,95 +75,42 @@ type Alert struct {
 	Metadata    map[string]string
 }
 
-// Monitor represents a monitoring instance
-type Monitor struct {
-	mu               sync.Mutex
-	metrics          *Metrics
-	alerts           chan Alert
-	running          bool
-	stopCh           chan struct{}
-	collector        *prometheus.Registry
-	configPath       string
-	config           *Config
-	alertThresholds  map[string]AlertThreshold
-	silencePeriod    time.Duration
-	cooldownPeriod   time.Duration
-	slackConfig      *SlackNotificationConfig
-	emailConfig      *EmailNotificationConfig
-	webhookConfig    *WebhookNotificationConfig
-	lastAlertTimes   map[string]time.Time
-	metricRetention  *MetricRetention
-	authManager      *security.AuthManager
-	certManager      *security.CertManager
-}
+// Monitor struct is defined in monitor.go
 
-// NewMetrics creates a new Metrics instance
-func NewMetrics(reg *prometheus.Registry) *Metrics {
-	return &Metrics{
-		TableSize: promauto.With(reg).NewGaugeVec(
-			prometheus.GaugeOpts{
-				Name: "nessi_table_size_bytes",
-				Help: "Size of Delta tables in bytes",
-			},
-			[]string{"table_name"},
-		),
-		RecordCount: promauto.With(reg).NewGaugeVec(
-			prometheus.GaugeOpts{
-				Name: "nessi_record_count",
-				Help: "Number of records in Delta tables",
-			},
-			[]string{"table_name"},
-		),
-		ErrorCount: promauto.With(reg).NewCounterVec(
-			prometheus.CounterOpts{
-				Name: "nessi_errors_total",
-				Help: "Total number of errors",
-			},
-			[]string{"error_type", "table_name"},
-		),
-		Latency: promauto.With(reg).NewHistogramVec(
-			prometheus.HistogramOpts{
-				Name: "nessi_operation_latency_seconds",
-				Help: "Latency of operations",
-				Buckets: []float64{0.001, 0.01, 0.1, 1.0, 10.0},
-			},
-			[]string{"operation"},
-		),
-		RuleViolations: promauto.With(reg).NewCounterVec(
-			prometheus.CounterOpts{
-				Name: "nessi_rule_violations_total",
-				Help: "Total number of rule violations",
-			},
-			[]string{"rule_name", "table_name"},
-		),
-	}
-}
-
-// NewMonitor creates a new Monitor instance
-func NewMonitor(configPath string) (*Monitor, error) {
-	config, err := loadConfig(configPath)
+// NewMonitoringSystem creates a new Monitor instance
+func NewMonitoringSystem() (*Monitor, error) {
+	// Load configuration
+	config, err := loadConfig("./config/monitoring.json")
 	if err != nil {
-		return nil, err
+		logging.Error("Failed to load monitoring config", err)
+		config = defaultConfig()
 	}
 
-	metrics := NewMetrics(prometheus.NewRegistry())
+	// Create alert manager
+	alertManager, err := CreateAlertManager()
+	if err != nil {
+		logging.Error("Failed to create alert manager", err)
+	}
 
+	// Create monitor
 	m := &Monitor{
-		metrics:         metrics,
-		alerts:          make(chan Alert, 100),
-		stopCh:          make(chan struct{}),
-		collector:       prometheus.NewRegistry(),
-		configPath:      configPath,
-		config:          config,
-		lastAlertTimes:  make(map[string]time.Time),
+		metricsPort: config.Metrics.Port,
+		alertManager: alertManager,
+		config: config,
 	}
+
+	// Initialize metric store
+	m.metricStore = NewPrometheusMetricStore(m)
 
 	// Initialize metric retention if enabled
 	if config.Retention.Enabled {
-		m.metricRetention, err = NewMetricRetention(config.Retention.StoragePath, config.Retention.RetentionPeriod)
-		if err != nil {
-			return nil, fmt.Errorf("failed to initialize metric retention: %w", err)
+		retentionConfig := RetentionConfig{
+			Enabled: true,
+			StoragePath: config.Retention.StoragePath,
+			RetentionPeriod: config.Retention.RetentionPeriod,
+			SnapshotInterval: config.Retention.SnapshotInterval,
 		}
+		m.metricRetention = NewMetricRetention(retentionConfig)
 	}
 
 	// Initialize alert thresholds
@@ -355,7 +297,7 @@ func (m *Monitor) checkAlerts() error {
 		}
 	}
 
-	errorRate := m.getErrorRate()
+	errorRate := m.GetErrorRate()
 
 	// Check each alert condition
 	for alertName, threshold := range m.alertThresholds {
@@ -433,85 +375,6 @@ type Metrics struct {
 	RuleViolations *prometheus.CounterVec
 }
 
-// New creates a new Monitor instance
-func New() *Monitor {
-	collector := prometheus.NewRegistry()
-	metrics := &Metrics{
-		TableSize: promauto.With(collector).NewGaugeVec(
-			prometheus.GaugeOpts{
-				Name: "nessi_table_size_bytes",
-				Help: "Size of Delta tables in bytes",
-			},
-			[]string{"table_name"},
-		),
-		RecordCount: promauto.With(collector).NewGaugeVec(
-			prometheus.GaugeOpts{
-				Name: "nessi_record_count",
-				Help: "Number of records in Delta tables",
-			},
-			[]string{"table_name"},
-		),
-		ErrorCount: promauto.With(collector).NewCounterVec(
-			prometheus.CounterOpts{
-				Name: "nessi_error_count_total",
-				Help: "Total number of errors",
-			},
-			[]string{"error_type", "table_name"},
-		),
-		Latency: promauto.With(collector).NewHistogramVec(
-			prometheus.HistogramOpts{
-				Name: "nessi_operation_latency_seconds",
-				Help: "Latency of operations in seconds",
-				Buckets: prometheus.ExponentialBuckets(0.001, 2, 10),
-			},
-			[]string{"operation"},
-		),
-		RuleViolations: promauto.With(collector).NewCounterVec(
-			prometheus.CounterOpts{
-				Name: "nessi_rule_violations_total",
-				Help: "Total number of rule violations",
-			},
-			[]string{"rule_name", "table_name"},
-		),
-	}
-
-	m := &Monitor{
-		metrics:         metrics,
-		alerts:          make(chan Alert, 100),
-		collector:       reg,
-		configPath:      "pkg/monitoring/config/monitoring.json",
-		alertThresholds: make(map[string]AlertThreshold),
-		lastAlertTimes:  make(map[string]time.Time),
-		running:        false,
-		stopCh:         make(chan struct{}),
-		config:         &Config{},
-	}
-	return m
-}
-
-// New creates a new Monitor instance
-func New() *Monitor {
-	reg := prometheus.NewRegistry()
-	metrics := NewMetrics(reg)
-	m := &Monitor{
-		metrics:         metrics,
-		alerts:          make(chan Alert, 100),
-		collector:       reg,
-		configPath:      "pkg/monitoring/config/monitoring.json",
-		alertThresholds: make(map[string]AlertThreshold),
-		lastAlertTimes:  make(map[string]time.Time),
-		running:        false,
-		stopCh:         make(chan struct{}),
-		config:         &Config{},
-	}
-	return m
-}
-
-// GetMetricsPort returns the metrics server port
-func (m *Monitor) GetMetricsPort() int {
-	return m.config.Metrics.Port
-}
-
 // SetMetricsPort sets the metrics server port
 func (m *Monitor) SetMetricsPort(port int) {
 	m.mu.Lock()
@@ -526,8 +389,8 @@ func (m *Monitor) SetConfigPath(path string) {
 	m.configPath = path
 }
 
-// GetErrorRate returns the error rate for a table
-func (m *Monitor) GetErrorRate(tableName string) float64 {
+// GetTableErrorRate returns the error rate for a table
+func (m *Monitor) GetTableErrorRate(tableName string) float64 {
 	metrics, err := prometheus.DefaultGatherer.Gather()
 	if err != nil {
 		return 0
@@ -565,8 +428,9 @@ func (m *Monitor) RecordTableMetrics(tableName string, records []map[string]inte
 		count++
 	}
 
-	m.metrics.TableSize.WithLabelValues(tableName).Set(size)
-	m.metrics.RecordCount.WithLabelValues(tableName).Set(float64(count))
+	// Record metrics using the metricStore
+	m.metricStore.RecordMetric("table_size_"+tableName, size)
+	m.metricStore.RecordMetric("record_count_"+tableName, float64(count))
 	
 	// Record metrics in retention system if enabled
 	if m.config.Retention.Enabled && m.metricRetention != nil {
@@ -578,7 +442,7 @@ func (m *Monitor) RecordTableMetrics(tableName string, records []map[string]inte
 
 // RecordError records an error metric
 func (m *Monitor) RecordError(tableName, errorType string) {
-	m.metrics.ErrorCount.WithLabelValues(errorType, tableName).Inc()
+	m.metricStore.RecordMetric("error_count_"+tableName, 1.0)
 	
 	// Record error in retention system if enabled
 	if m.config.Retention.Enabled && m.metricRetention != nil {
@@ -592,7 +456,7 @@ func (m *Monitor) RecordError(tableName, errorType string) {
 
 // RecordLatency records operation latency
 func (m *Monitor) RecordLatency(operation string, duration time.Duration) {
-	m.metrics.Latency.WithLabelValues(operation).Observe(duration.Seconds())
+	m.metricStore.RecordMetric("latency_"+operation, duration.Seconds())
 	
 	// Record latency in retention system if enabled
 	if m.config.Retention.Enabled && m.metricRetention != nil {
@@ -607,7 +471,7 @@ func (m *Monitor) RecordRuleViolation(tableName, ruleName string) {
 		return
 	}
 
-	m.metrics.RuleViolations.WithLabelValues(ruleName, tableName).Inc()
+	m.metricStore.RecordMetric("rule_violations_"+ruleName+"_"+tableName, 1.0)
 	
 	// Record rule violation in retention system if enabled
 	if m.config.Retention.Enabled && m.metricRetention != nil {
@@ -634,7 +498,8 @@ func (m *Monitor) Start() {
 	router := http.NewServeMux()
 
 	// Set up handlers
-	router.Handle("/metrics", promhttp.HandlerFor(m.collector, promhttp.HandlerOpts{}))
+	// Use the default Prometheus registry
+	router.Handle("/metrics", promhttp.Handler())
 	router.HandleFunc("/health", m.healthCheck)
 
 	// Apply authentication middleware if enabled

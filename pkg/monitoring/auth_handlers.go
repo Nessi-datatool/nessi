@@ -222,7 +222,7 @@ func (m *Monitor) listUsers(w http.ResponseWriter, r *http.Request) {
 			Username:  user.Username,
 			Email:     user.Email,
 			Role:      user.Role,
-			CreatedAt: user.CreatedAt,
+			CreatedAt: user.DateCreated,
 			LastLogin: user.LastLogin,
 		})
 	}
@@ -288,7 +288,7 @@ func (m *Monitor) createUser(w http.ResponseWriter, r *http.Request) {
 		Username:  createdUser.Username,
 		Email:     createdUser.Email,
 		Role:      createdUser.Role,
-		CreatedAt: createdUser.CreatedAt,
+		CreatedAt: createdUser.DateCreated,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -350,7 +350,7 @@ func (m *Monitor) updateUser(w http.ResponseWriter, r *http.Request) {
 		Username:  updatedUser.Username,
 		Email:     updatedUser.Email,
 		Role:      updatedUser.Role,
-		CreatedAt: updatedUser.CreatedAt,
+		CreatedAt: updatedUser.DateCreated,
 		LastLogin: updatedUser.LastLogin,
 	}
 

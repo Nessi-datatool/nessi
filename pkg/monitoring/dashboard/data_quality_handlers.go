@@ -11,6 +11,15 @@ import (
 	"github.com/nessi-dev/nessi-dev/pkg/quality/rules"
 )
 
+// sendJSONResponse sends a JSON response with the given status code and data
+func sendJSONResponse(w http.ResponseWriter, statusCode int, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 // DataQualityResponse represents the response for data quality endpoints
 type DataQualityResponse struct {
 	Success bool        `json:"success"`
@@ -53,9 +62,14 @@ func (d *Dashboard) handleGetProfiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create advanced profiler
-	profiler := profile.NewAdvancedProfiler(tablePath)
-	
+	// Use injected profiler if available, else fallback to real implementation
+	var profiler Profiler
+	if d.profiler != nil {
+		profiler = d.profiler
+	} else {
+		profiler = profile.NewAdvancedProfiler(tablePath)
+	}
+
 	// Generate profiles
 	profiles, err := profiler.GenerateProfile()
 	if err != nil {
@@ -166,59 +180,52 @@ func (d *Dashboard) handleValidateRules(w http.ResponseWriter, r *http.Request) 
 	if r.Method != http.MethodPost {
 		sendJSONResponse(w, http.StatusMethodNotAllowed, DataQualityResponse{
 			Success: false,
-			Message: "Method not allowed",
+			Message: "Only POST method is allowed",
 		})
 		return
 	}
 
-	// Parse request body
-	var requestBody struct {
-		TablePath string   `json:"table_path"`
-		RuleIDs   []string `json:"rule_ids"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+	// Get table parameter
+	tablePath := r.URL.Query().Get("table")
+	if tablePath == "" {
 		sendJSONResponse(w, http.StatusBadRequest, DataQualityResponse{
 			Success: false,
-			Message: fmt.Sprintf("Invalid request body: %v", err),
+			Message: "Missing table parameter",
 		})
 		return
 	}
 
-	// Validate required fields
-	if requestBody.TablePath == "" {
-		sendJSONResponse(w, http.StatusBadRequest, DataQualityResponse{
+	// Use injected profiler if available, else fallback
+	var profiler Profiler
+	if d.profiler != nil {
+		profiler = d.profiler
+	} else {
+		profiler = profile.NewAdvancedProfiler(tablePath)
+	}
+	profiles, err := profiler.GenerateProfile()
+	if err != nil {
+		sendJSONResponse(w, http.StatusInternalServerError, DataQualityResponse{
 			Success: false,
-			Message: "Missing table_path",
+			Message: fmt.Sprintf("Failed to generate profiles: %v", err),
 		})
 		return
 	}
 
-	// In a real implementation, we would load rules and validate data
-	// Here we're just creating some example validation results
+
+	// Example: Validate each profile (mocked)
 	var results []RuleValidationResult
-	
-	// Create example results
-	results = append(results, RuleValidationResult{
-		RuleID:      "null_check_1",
-		RuleName:    "Required Fields Check",
-		Severity:    "error",
-		Passed:      true,
-		ErrorCount:  0,
-		Timestamp:   time.Now(),
-		ExecutionID: "exec-" + strconv.FormatInt(time.Now().Unix(), 10),
-	})
-
-	results = append(results, RuleValidationResult{
-		RuleID:      "range_check_1",
-		RuleName:    "Age Range Check",
-		Severity:    "warning",
-		Passed:      false,
-		ErrorCount:  2,
-		Details:     []string{"Value 150 is outside range [0, 120]", "Value -5 is outside range [0, 120]"},
-		Timestamp:   time.Now(),
-		ExecutionID: "exec-" + strconv.FormatInt(time.Now().Unix(), 10),
-	})
+	for range profiles {
+		// In a real implementation, would validate records
+		results = append(results, RuleValidationResult{
+			RuleID:      "null_check_1",
+			RuleName:    "Required Fields Check",
+			Severity:    "error",
+			Passed:      true,
+			ErrorCount:  0,
+			Timestamp:   time.Now(),
+			ExecutionID: "exec-" + strconv.FormatInt(time.Now().Unix(), 10),
+		})
+	}
 
 	sendJSONResponse(w, http.StatusOK, DataQualityResponse{
 		Success: true,
@@ -265,7 +272,7 @@ func (d *Dashboard) handleGetRuleHistory(w http.ResponseWriter, r *http.Request)
 			RuleID:         ruleID,
 			Timestamp:      now.Add(time.Duration(-i) * time.Hour),
 			RecordsChecked: 1000,
-			Failures:       i * 2, // Increasing failures over time
+			Failures:       int64(i * 2), // Increasing failures over time
 			ExecutionTimeMs: 150 + int64(i*10),
 			DatasetID:      "dataset-1",
 		})

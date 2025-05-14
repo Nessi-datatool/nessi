@@ -22,40 +22,13 @@ type DistributionAnalysis struct {
 	Entropy        float64           `json:"entropy"`
 }
 
-// ValueCount represents a value and its count
-type ValueCount struct {
-	Value interface{} `json:"value"`
-	Count int         `json:"count"`
-}
+// ValueCount is defined in shared_types.go
 
-// DataQualityScore represents the quality score for a column
-type DataQualityScore struct {
-	Completeness    float64 `json:"completeness"`
-	Consistency     float64 `json:"consistency"`
-	Accuracy        float64 `json:"accuracy"`
-	Uniqueness      float64 `json:"uniqueness"`
-	Overall         float64 `json:"overall"`
-	RecommendedType string  `json:"recommended_type"`
-}
+// DataQualityScore is defined in shared_types.go
 
-// PatternInfo represents information about detected patterns
-type PatternInfo struct {
-	Name        string  `json:"name"`
-	Regex       string  `json:"regex,omitempty"`
-	Description string  `json:"description"`
-	Confidence  float64 `json:"confidence"`
-	Examples    []string `json:"examples"`
-}
+// PatternInfo is defined in shared_types.go
 
-// EnhancedProfile extends the basic Profile with advanced analytics
-type EnhancedProfile struct {
-	*Profile
-	Distribution     *DistributionAnalysis `json:"distribution,omitempty"`
-	QualityScore     *DataQualityScore     `json:"quality_score,omitempty"`
-	DetailedPatterns []PatternInfo         `json:"detailed_patterns,omitempty"`
-	FormatConsistency float64              `json:"format_consistency,omitempty"`
-	TypeConsistency   float64              `json:"type_consistency,omitempty"`
-}
+// EnhancedProfile is defined in shared_types.go
 
 // AdvancedProfiler extends the basic Profiler with advanced analytics
 type AdvancedProfiler struct {

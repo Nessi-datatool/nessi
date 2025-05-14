@@ -210,7 +210,7 @@ func TestWebhookNotifier(t *testing.T) {
 		config := WebhookConfig{
 			URL: server.URL,
 			// Method not specified - should default to POST
-			// Timeout not specified - should default to 10 seconds
+			// Timeout not specified - should default to 2 seconds
 		}
 		
 		// Create notifier
@@ -218,7 +218,7 @@ func TestWebhookNotifier(t *testing.T) {
 		
 		// Verify default values
 		assert.Equal(t, "POST", notifier.config.Method)
-		assert.Equal(t, 10*time.Second, notifier.config.Timeout)
+		assert.Equal(t, 2*time.Second, notifier.config.Timeout)
 	})
 	
 	// Test with invalid URL

@@ -2,6 +2,7 @@ package datalake
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 	"time"
 
@@ -112,7 +113,7 @@ func TestFormatValidationSimple(t *testing.T) {
 
 		// Test invalid format type
 		_, err = validator.ValidateFormat(FormatValidationOptions{
-			FormatType:       FormatType("invalid"),
+			FormatType:       ValidationFormatType("invalid"),
 			Field:            "email",
 			MaxInvalidValues: 10,
 		})
@@ -397,7 +398,14 @@ func ValidateIPAddress(ip string) bool {
 
 // ValidateCustomRegex validates a value against a custom regex pattern
 func ValidateCustomRegex(value string, pattern string) bool {
-	return value != "invalid-custom" && value != ""
+	// First compile the regex to ensure it's valid
+	reg, err := regexp.Compile(pattern)
+	if err != nil {
+		return false
+	}
+	
+	// Then match the value against the pattern
+	return reg.MatchString(value)
 }
 
 // getValidator returns the appropriate validator function for the given format type
@@ -422,6 +430,11 @@ func getValidator(options FormatValidationOptions) (func(string) bool, error) {
 	case CustomRegexFormat:
 		if options.CustomRegex == "" {
 			return nil, fmt.Errorf("custom regex pattern is required for CustomRegexFormat")
+		}
+		// Validate the regex pattern
+		_, err := regexp.Compile(options.CustomRegex)
+		if err != nil {
+			return nil, fmt.Errorf("invalid regex pattern: %w", err)
 		}
 		return func(s string) bool {
 			return ValidateCustomRegex(s, options.CustomRegex)

@@ -46,7 +46,7 @@ func NewWebhookNotifier(config WebhookConfig) *WebhookNotifier {
 	
 	// Set default timeout if not specified
 	if config.Timeout == 0 {
-		config.Timeout = 10 * time.Second
+		config.Timeout = 2 * time.Second
 	}
 	
 	// Create HTTP client with timeout

@@ -6,39 +6,39 @@ import (
 	"time"
 )
 
-// FormatType defines the type of format validation to perform
-type FormatType string
+// ValidationFormatType defines the type of format validation to perform
+type ValidationFormatType string
 
 const (
 	// DateFormat validates date formats
-	DateFormat FormatType = "date"
+	DateFormat ValidationFormatType = "date"
 	
 	// EmailFormat validates email formats
-	EmailFormat FormatType = "email"
+	EmailFormat ValidationFormatType = "email"
 	
 	// URLFormat validates URL formats
-	URLFormat FormatType = "url"
+	URLFormat ValidationFormatType = "url"
 	
 	// DigitOnlyFormat validates digit-only formats
-	DigitOnlyFormat FormatType = "digit_only"
+	DigitOnlyFormat ValidationFormatType = "digit_only"
 	
 	// UUIDFormat validates UUID formats
-	UUIDFormat FormatType = "uuid"
+	UUIDFormat ValidationFormatType = "uuid"
 	
 	// IPAddressFormat validates IP address formats
-	IPAddressFormat FormatType = "ip_address"
+	IPAddressFormat ValidationFormatType = "ip_address"
 	
 	// PhoneNumberFormat validates phone number formats
-	PhoneNumberFormat FormatType = "phone_number"
+	PhoneNumberFormat ValidationFormatType = "phone_number"
 	
 	// CustomRegexFormat validates custom regex formats
-	CustomRegexFormat FormatType = "custom_regex"
+	CustomRegexFormat ValidationFormatType = "custom_regex"
 )
 
 // FormatValidationOptions defines the options for format validation
 type FormatValidationOptions struct {
 	// The format type to validate
-	FormatType FormatType
+	FormatType ValidationFormatType
 	
 	// The field to validate
 	Field string
@@ -56,7 +56,7 @@ type FormatValidationOptions struct {
 // FormatValidationResult represents the result of a format validation
 type FormatValidationResult struct {
 	// The format type that was validated
-	FormatType FormatType
+	FormatType ValidationFormatType
 	
 	// The field that was validated
 	Field string

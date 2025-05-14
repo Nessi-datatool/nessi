@@ -697,7 +697,7 @@ func (e *PythonExtension) ExecuteFunction(name string, args ...interface{}) (int
 	}
 
 	// Wait for response with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	responseChan := make(chan interface{}, 1)

@@ -6,12 +6,19 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAuthManager(t *testing.T) {
+	// Add timeout to prevent test hanging
+	t.Parallel()
+	t.Helper()
+	// Set a shorter timeout for this test
+	_, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	// Create temporary users file
 	tempFile, err := os.CreateTemp("", "users-*.json")
 	require.NoError(t, err)
