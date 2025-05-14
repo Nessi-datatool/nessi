@@ -148,6 +148,17 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
 - ✅ API reference
 - ✅ Best practices guides
 
+### dbt Integration
+- ✅ Opt-in dbt plugin for data quality and profiling
+- ✅ Execute Nessi.dev data quality rules against dbt models
+- ✅ Enhanced model selection with dbt syntax (e.g., tag:daily,+downstream)
+- ✅ Generate data profiles for Delta tables associated with dbt models
+- ✅ Lineage-aware validation for root cause analysis
+- ✅ Automatic mapping between dbt models and Delta tables
+- ✅ Export results in various formats (JSON, CSV, table)
+- ✅ Generate artifacts for dbt Docs integration
+- ✅ Alerting capabilities via Slack and email
+
 ### Workflow Orchestration Integration
 - ✅ Apache Airflow operators and sensors for Nessi.dev tasks
 - ✅ Prefect tasks and flows integration

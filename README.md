@@ -21,6 +21,7 @@ Nessi.dev is a powerful data quality and Delta Lake management tool that helps o
   - Data profiling and statistics
   - Anomaly detection
   - Quality scoring and metrics
+  - **dbt Integration**: Seamless integration with dbt for validating and profiling models directly in your dbt workflow
 
 - **Monitoring and Alerting**
   - Real-time monitoring with Prometheus
@@ -75,6 +76,7 @@ Nessi.dev is a powerful data quality and Delta Lake management tool that helps o
   - Event-based notifications
   - Cloud provider integration (AWS, Azure, GCP)
   - Modern Azure SDK (v1.6.1+) support
+  - **dbt Integration**: Opt-in plugin for executing data quality rules against dbt models and generating data profiles
   - **Workflow Orchestration Integration**: Seamless integration with Apache Airflow, Prefect, Dagster, and Kubernetes for incorporating data quality checks into data pipelines
   - **Kubernetes Integration**: Native operators for running Nessi operations as Kubernetes jobs with configurable resources and monitoring
   - **Error Handling and Retries**: Configurable retry mechanisms with exponential backoff for API failures and detailed error categorization
@@ -85,6 +87,7 @@ Nessi.dev is a powerful data quality and Delta Lake management tool that helps o
   - API reference
   - Example scripts
   - Best practices
+  - Integration guides for dbt, Airflow, and other tools
 
 ## Requirements
 

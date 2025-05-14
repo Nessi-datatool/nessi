@@ -45,6 +45,14 @@ nessi-dev/
 │   │   ├── delta.go              # Delta table interface
 │   │   ├── parquet.go            # Parquet file operations
 │   │   └── schema.go             # Schema management
+│   ├── dbt/                      # dbt plugin integration
+│   │   ├── config.go             # Plugin configuration
+│   │   ├── validator.go          # dbt model validation
+│   │   ├── profiler.go           # dbt model profiling
+│   │   ├── lineage.go            # dbt lineage integration
+│   │   ├── alert.go              # Alerting for validation results
+│   │   ├── delta.go              # Delta table integration
+│   │   └── output.go             # Output formatting (JSON, CSV, table)
 │   ├── quality/                  # Data quality & profiling
 │   │   ├── profile/              # Data profiling & statistics
 │   │   │   ├── profiler.go       # Core profiling functionality
