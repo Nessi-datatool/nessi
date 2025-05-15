@@ -62,10 +62,20 @@ func (s *SecurityManager) ValidateToken(tokenStr string) (*LegacyTokenClaims, er
 	legacyClaims := &LegacyTokenClaims{
 		Username: claims["username"].(string),
 		Roles:    []string{claims["role"].(string)},
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Unix(int64(claims["exp"].(float64)), 0)),
-			IssuedAt:  jwt.NewNumericDate(time.Unix(int64(claims["iat"].(float64)), 0)),
-		},
+		RegisteredClaims: jwt.RegisteredClaims{},
+	}
+
+	// Safely handle exp and iat claims
+	if exp, ok := claims["exp"]; ok && exp != nil {
+		if expFloat, ok := exp.(float64); ok {
+			legacyClaims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Unix(int64(expFloat), 0))
+		}
+	}
+
+	if iat, ok := claims["iat"]; ok && iat != nil {
+		if iatFloat, ok := iat.(float64); ok {
+			legacyClaims.RegisteredClaims.IssuedAt = jwt.NewNumericDate(time.Unix(int64(iatFloat), 0))
+		}
 	}
 
 	return legacyClaims, nil

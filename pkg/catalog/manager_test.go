@@ -4,11 +4,13 @@ import (
 	"context"
 	"testing"
 
+	"github.com/nessi-dev/nessi-dev/pkg/api/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 // MockCatalog is a mock implementation of the DataCatalog interface
+// MockCatalog implements the DataCatalog interface for testing
 type MockCatalog struct {
 	mock.Mock
 }
@@ -28,49 +30,49 @@ func (m *MockCatalog) Disconnect(ctx context.Context) error {
 	return args.Error(0)
 }
 
-func (m *MockCatalog) ListDatabases(ctx context.Context) ([]DatabaseInfo, error) {
+func (m *MockCatalog) ListDatabases(ctx context.Context) ([]types.DatabaseInfo, error) {
 	args := m.Called(ctx)
-	return args.Get(0).([]DatabaseInfo), args.Error(1)
+	return args.Get(0).([]types.DatabaseInfo), args.Error(1)
 }
 
-func (m *MockCatalog) ListTables(ctx context.Context, database string) ([]TableInfo, error) {
+func (m *MockCatalog) ListTables(ctx context.Context, database string) ([]types.TableInfo, error) {
 	args := m.Called(ctx, database)
-	return args.Get(0).([]TableInfo), args.Error(1)
+	return args.Get(0).([]types.TableInfo), args.Error(1)
 }
 
-func (m *MockCatalog) GetTableDetails(ctx context.Context, database, table string) (*TableDetails, error) {
+func (m *MockCatalog) GetTableDetails(ctx context.Context, database, table string) (*types.TableDetails, error) {
 	args := m.Called(ctx, database, table)
-	return args.Get(0).(*TableDetails), args.Error(1)
+	return args.Get(0).(*types.TableDetails), args.Error(1)
 }
 
-func (m *MockCatalog) GetTableMetadata(ctx context.Context, database, table string) (*TableMetadata, error) {
+func (m *MockCatalog) GetTableMetadata(ctx context.Context, database, table string) (*types.TableMetadata, error) {
 	args := m.Called(ctx, database, table)
-	return args.Get(0).(*TableMetadata), args.Error(1)
+	return args.Get(0).(*types.TableMetadata), args.Error(1)
 }
 
-func (m *MockCatalog) UpdateTableMetadata(ctx context.Context, database, table string, metadata *TableMetadata) error {
+func (m *MockCatalog) UpdateTableMetadata(ctx context.Context, database, table string, metadata *types.TableMetadata) error {
 	args := m.Called(ctx, database, table, metadata)
 	return args.Error(0)
 }
 
-func (m *MockCatalog) GetTableLineage(ctx context.Context, database, table string) (*LineageInfo, error) {
+func (m *MockCatalog) GetTableLineage(ctx context.Context, database, table string) (*types.LineageInfo, error) {
 	args := m.Called(ctx, database, table)
-	return args.Get(0).(*LineageInfo), args.Error(1)
+	return args.Get(0).(*types.LineageInfo), args.Error(1)
 }
 
-func (m *MockCatalog) UpdateTableLineage(ctx context.Context, database, table string, lineage *LineageInfo) error {
+func (m *MockCatalog) UpdateTableLineage(ctx context.Context, database, table string, lineage *types.LineageInfo) error {
 	args := m.Called(ctx, database, table, lineage)
 	return args.Error(0)
 }
 
-func (m *MockCatalog) PublishQualityMetrics(ctx context.Context, database, table string, metrics *QualityMetrics) error {
+func (m *MockCatalog) PublishQualityMetrics(ctx context.Context, database, table string, metrics *types.QualityMetrics) error {
 	args := m.Called(ctx, database, table, metrics)
 	return args.Error(0)
 }
 
-func (m *MockCatalog) GetQualityMetrics(ctx context.Context, database, table string) (*QualityMetrics, error) {
+func (m *MockCatalog) GetQualityMetrics(ctx context.Context, database, table string) (*types.QualityMetrics, error) {
 	args := m.Called(ctx, database, table)
-	return args.Get(0).(*QualityMetrics), args.Error(1)
+	return args.Get(0).(*types.QualityMetrics), args.Error(1)
 }
 
 // TestCatalogManager_RegisterCatalog tests the RegisterCatalog method

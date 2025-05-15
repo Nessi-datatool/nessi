@@ -20,6 +20,10 @@ func TestSSLIntegration(t *testing.T) {
 	}
 	// Run tests in parallel for faster execution
 	t.Parallel()
+	
+	// Use the helper to run with timeout
+	security.RunWithTimeout(t, func() {
+	
 	// Create temporary directory for certificates
 	tempDir, err := os.MkdirTemp("", "ssl-integration-")
 	require.NoError(t, err)
@@ -117,6 +121,7 @@ func TestSSLIntegration(t *testing.T) {
 		err = disabledCM.StartHTTPSServer(":0", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 		assert.Error(t, err)
 	})
+	}, security.GetTestTimeout())
 }
 
 func TestSSLWithExistingCertificates(t *testing.T) {
@@ -125,6 +130,10 @@ func TestSSLWithExistingCertificates(t *testing.T) {
 	}
 	// Run tests in parallel for faster execution
 	t.Parallel()
+	
+	// Use the helper to run with timeout
+	security.RunWithTimeout(t, func() {
+	
 	// Create temporary directory for certificates
 	tempDir, err := os.MkdirTemp("", "ssl-existing-")
 	require.NoError(t, err)
@@ -189,4 +198,5 @@ func TestSSLWithExistingCertificates(t *testing.T) {
 	body, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 	assert.Equal(t, "Using existing certificates", string(body))
+	}, security.GetTestTimeout())
 }

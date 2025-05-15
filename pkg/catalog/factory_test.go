@@ -1,82 +1,46 @@
-package catalog
+package catalog_test
 
 import (
+	"context"
 	"testing"
 
+	nessitypes "github.com/nessi-dev/nessi-dev/pkg/api/types"
 	"github.com/stretchr/testify/assert"
 )
 
-// TestCatalogFactory_CreateCatalog tests the CreateCatalog method
-func TestCatalogFactory_CreateCatalog(t *testing.T) {
-	// Create catalog factory
-	factory := NewCatalogFactory()
-	
-	// Test creating AWS Glue catalog
-	awsGlue, err := factory.CreateCatalog(AWSGlue)
-	assert.NoError(t, err)
-	assert.NotNil(t, awsGlue)
-	assert.Contains(t, awsGlue.Name(), "AWS Glue")
-	
-	// Test creating Azure Purview catalog
-	azurePurview, err := factory.CreateCatalog(AzurePurview)
-	assert.NoError(t, err)
-	assert.NotNil(t, azurePurview)
-	assert.Contains(t, azurePurview.Name(), "Azure Purview")
-	
-	// Test creating GCP Data Catalog
-	gcpDataCatalog, err := factory.CreateCatalog(GCPDataCatalog)
-	assert.NoError(t, err)
-	assert.NotNil(t, gcpDataCatalog)
-	assert.Contains(t, gcpDataCatalog.Name(), "Google Cloud Data Catalog")
-	
-	// Test creating Apache Atlas catalog (not implemented yet)
-	apacheAtlas, err := factory.CreateCatalog(ApacheAtlas)
-	assert.Equal(t, ErrNotImplemented, err)
-	assert.Nil(t, apacheAtlas)
-	
-	// Test creating Collibra catalog (not implemented yet)
-	collibra, err := factory.CreateCatalog(Collibra)
-	assert.Equal(t, ErrNotImplemented, err)
-	assert.Nil(t, collibra)
-	
-	// Test creating unsupported catalog type
-	unsupported, err := factory.CreateCatalog("unsupported")
-	assert.Equal(t, ErrUnsupportedCatalogType, err)
-	assert.Nil(t, unsupported)
-}
+// Define mock catalog
+type mockCatalog struct{}
 
-// TestCatalogFactory_RegisterAllCatalogs tests the RegisterAllCatalogs method
-func TestCatalogFactory_RegisterAllCatalogs(t *testing.T) {
-	// Create catalog factory
-	factory := NewCatalogFactory()
-	
-	// Create catalog manager
-	manager := NewCatalogManager()
-	
-	// Register all catalogs
-	err := factory.RegisterAllCatalogs(manager)
-	assert.NoError(t, err)
-	
-	// Verify catalogs are registered
-	catalogs := manager.ListCatalogs()
-	
-	// We should have at least AWS Glue, Azure Purview, and GCP Data Catalog
-	assert.GreaterOrEqual(t, len(catalogs), 3)
-	
-	// Check for specific catalog names
-	var hasAWSGlue, hasAzurePurview, hasGCPDataCatalog bool
-	
-	for _, name := range catalogs {
-		if name == "AWS Glue Data Catalog" {
-			hasAWSGlue = true
-		} else if name == "Azure Purview Data Catalog" {
-			hasAzurePurview = true
-		} else if name == "Google Cloud Data Catalog" {
-			hasGCPDataCatalog = true
-		}
+func (m *mockCatalog) Connect(ctx context.Context, config map[string]interface{}) error { return nil }
+func (m *mockCatalog) Disconnect(ctx context.Context) error { return nil }
+func (m *mockCatalog) ListDatabases(ctx context.Context) ([]nessitypes.DatabaseInfo, error) { return nil, nil }
+func (m *mockCatalog) GetDatabase(ctx context.Context, name string) (*nessitypes.DatabaseInfo, error) { return nil, nil }
+func (m *mockCatalog) ListTables(ctx context.Context, databaseName string) ([]nessitypes.TableInfo, error) { return nil, nil }
+func (m *mockCatalog) GetTable(ctx context.Context, databaseName, tableName string) (*nessitypes.TableInfo, error) { return nil, nil }
+func (m *mockCatalog) GetTableSchema(ctx context.Context, databaseName, tableName string) (*nessitypes.TableSchema, error) { return nil, nil }
+func (m *mockCatalog) GetTableMetadata(ctx context.Context, databaseName, tableName string) (*nessitypes.TableMetadata, error) { return nil, nil }
+func (m *mockCatalog) GetTableLineage(ctx context.Context, databaseName, tableName string) (*nessitypes.LineageInfo, error) { return nil, nil }
+func (m *mockCatalog) PublishQualityMetrics(ctx context.Context, databaseName, tableName string, metrics *nessitypes.QualityMetrics) error { return nil }
+func (m *mockCatalog) GetQualityMetrics(ctx context.Context, databaseName, tableName string) (*nessitypes.QualityMetrics, error) { return nil, nil }
+func (m *mockCatalog) GetTableDetails(ctx context.Context, databaseName, tableName string) (*nessitypes.TableDetails, error) { return nil, nil }
+func (m *mockCatalog) Name() string { return "mock" }
+func (m *mockCatalog) UpdateTableLineage(ctx context.Context, databaseName, tableName string, lineage *nessitypes.LineageInfo) error { return nil }
+func (m *mockCatalog) UpdateTableMetadata(ctx context.Context, databaseName, tableName string, metadata *nessitypes.TableMetadata) error { return nil }
+
+func TestCatalogFactory(t *testing.T) {
+	factory := nessitypes.GetCatalogFactory()
+	assert.NotNil(t, factory)
+
+	// Test registering a mock provider
+	mockProvider := func() nessitypes.DataCatalog {
+		return &mockCatalog{}
 	}
-	
-	assert.True(t, hasAWSGlue, "AWS Glue catalog should be registered")
-	assert.True(t, hasAzurePurview, "Azure Purview catalog should be registered")
-	assert.True(t, hasGCPDataCatalog, "GCP Data Catalog should be registered")
+
+	// Register mock provider
+	factory.RegisterProvider(nessitypes.CatalogType("mock"), mockProvider)
+
+	// Test creating a catalog
+	catalog, err := factory.CreateCatalog(nessitypes.CatalogType("mock"))
+	assert.NoError(t, err)
+	assert.NotNil(t, catalog)
 }

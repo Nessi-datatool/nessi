@@ -6,29 +6,29 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/freshness"
 	"github.com/nessi-dev/nessi-dev/pkg/logging"
+	"github.com/nessi-dev/nessi-dev/pkg/monitoring/freshness"
 )
 
-// FreshnessManager is an interface for freshness management
-type FreshnessManager interface {
-	// GetSLA gets the SLA configuration for a table
-	GetSLA(tableName string) (*freshness.SLAConfig, error)
+// FreshnessHandlerManager is an interface for freshness management in handlers
+type FreshnessHandlerManager interface {
+	// GetTableStatus gets the table status for a table
+	GetTableStatus(tableName string) (freshness.TableFreshnessStatus, error)
 	
-	// ListSLAs lists all SLA configurations
-	ListSLAs() []*freshness.SLAConfig
+	// GetAllTableStatuses lists all table statuses
+	GetAllTableStatuses() ([]freshness.TableFreshnessStatus, error)
 	
-	// SetSLA sets the SLA configuration for a table
-	SetSLA(config *freshness.SLAConfig) error
+	// GetSLAConfig gets the SLA configuration for a table
+	GetSLAConfig(tableName string) (freshness.SLAConfig, error)
 	
-	// DeleteSLA deletes the SLA configuration for a table
-	DeleteSLA(tableName string) error
+	// GetAllSLAConfigs lists all SLA configurations
+	GetAllSLAConfigs() ([]freshness.SLAConfig, error)
 	
-	// CheckFreshness checks the freshness of a table
-	CheckFreshness(tableName string) (*freshness.FreshnessStatus, error)
+	// SetSLAConfig sets the SLA configuration for a table
+	SetSLAConfig(config freshness.SLAConfig) error
 	
-	// CheckAllFreshness checks the freshness of all tables with SLA configurations
-	CheckAllFreshness() ([]*freshness.FreshnessStatus, error)
+	// DeleteSLAConfig deletes the SLA configuration for a table
+	DeleteSLAConfig(tableName string) error
 	
 	// GetTableTrends gets the freshness trends for a specific table
 	GetTableTrends(tableName string) (*freshness.FreshnessTrends, error)
@@ -65,21 +65,21 @@ func (d *Dashboard) handleFreshnessStatusAPI(w http.ResponseWriter, r *http.Requ
 	// Get query parameters
 	tableName := r.URL.Query().Get("table")
 
-	var statuses []*freshness.FreshnessStatus
+	var statuses []freshness.TableFreshnessStatus
 	var err error
 
 	if tableName != "" {
 		// Get status for specific table
-		status, err := d.freshnessManager.CheckFreshness(tableName)
+		status, err := d.freshnessManager.GetTableStatus(tableName)
 		if err != nil {
-			logging.Error("Failed to get table freshness status", err, "table", tableName)
+			logging.Error("Failed to get table freshness status", err)
 			http.Error(w, fmt.Sprintf("Table not found or error retrieving status: %v", err), http.StatusNotFound)
 			return
 		}
-		statuses = []*freshness.FreshnessStatus{status}
+		statuses = []freshness.TableFreshnessStatus{status}
 	} else {
 		// Get status for all tables
-		statuses, err = d.freshnessManager.CheckAllFreshness()
+		statuses, err = d.freshnessManager.GetAllTableStatuses()
 		if err != nil {
 			logging.Error("Failed to get all table freshness statuses", err)
 			http.Error(w, fmt.Sprintf("Failed to get freshness statuses: %v", err), http.StatusInternalServerError)
@@ -111,17 +111,22 @@ func (d *Dashboard) handleFreshnessSLAAPI(w http.ResponseWriter, r *http.Request
 		// GET: Retrieve SLA configurations
 		if tableName != "" {
 			// Get SLA for specific table
-			sla, err := d.freshnessManager.GetSLA(tableName)
+			sla, err := d.freshnessManager.GetSLAConfig(tableName)
 			if err != nil {
-				logging.Error("Failed to get SLA configuration", err, "table", tableName)
+				logging.Error("Failed to get SLA configuration", err)
 				http.Error(w, fmt.Sprintf("SLA configuration not found: %v", err), http.StatusNotFound)
 				return
 			}
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode([]*freshness.SLAConfig{sla})
+			json.NewEncoder(w).Encode([]freshness.SLAConfig{sla})
 		} else {
 			// Get all SLA configurations
-			slas := d.freshnessManager.ListSLAs()
+			slas, err := d.freshnessManager.GetAllSLAConfigs()
+			if err != nil {
+				logging.Error("Failed to get all SLA configurations", err)
+				http.Error(w, fmt.Sprintf("Failed to get SLA configurations: %v", err), http.StatusInternalServerError)
+				return
+			}
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(slas)
 		}
@@ -135,10 +140,12 @@ func (d *Dashboard) handleFreshnessSLAAPI(w http.ResponseWriter, r *http.Request
 			return
 		}
 
-		// Parse expected frequency if it's a string
-		if frequencyStr, ok := r.URL.Query().Get("expected_frequency"); ok && frequencyStr != "" {
+		// Parse expected frequency from query parameters
+		freqStr := r.URL.Query().Get("expected_frequency")
+
+		if freqStr != "" {
 			// Handle predefined frequencies
-			switch frequencyStr {
+			switch freqStr {
 			case "hourly":
 				slaConfig.ExpectedFrequency = time.Hour
 			case "daily":
@@ -149,9 +156,9 @@ func (d *Dashboard) handleFreshnessSLAAPI(w http.ResponseWriter, r *http.Request
 				slaConfig.ExpectedFrequency = 30 * 24 * time.Hour
 			default:
 				// Try to parse custom duration
-				duration, err := time.ParseDuration(frequencyStr)
+				duration, err := time.ParseDuration(freqStr)
 				if err != nil {
-					logging.Error("Invalid frequency format", err, "frequency", frequencyStr)
+					logging.Error("Failed to parse frequency", err)
 					http.Error(w, fmt.Sprintf("Invalid frequency format: %v", err), http.StatusBadRequest)
 					return
 				}
@@ -159,8 +166,8 @@ func (d *Dashboard) handleFreshnessSLAAPI(w http.ResponseWriter, r *http.Request
 			}
 		}
 
-		// Save SLA configuration
-		if err := d.freshnessManager.SetSLA(&slaConfig); err != nil {
+		// Set the SLA configuration
+		if err := d.freshnessManager.SetSLAConfig(slaConfig); err != nil {
 			logging.Error("Failed to save SLA configuration", err)
 			http.Error(w, fmt.Sprintf("Failed to save SLA configuration: %v", err), http.StatusInternalServerError)
 			return
@@ -176,8 +183,8 @@ func (d *Dashboard) handleFreshnessSLAAPI(w http.ResponseWriter, r *http.Request
 			return
 		}
 
-		if err := d.freshnessManager.DeleteSLA(tableName); err != nil {
-			logging.Error("Failed to delete SLA configuration", err, "table", tableName)
+		if err := d.freshnessManager.DeleteSLAConfig(tableName); err != nil {
+			logging.Error("Failed to delete SLA configuration", err)
 			http.Error(w, fmt.Sprintf("Failed to delete SLA configuration: %v", err), http.StatusInternalServerError)
 			return
 		}
@@ -214,7 +221,7 @@ func (d *Dashboard) handleFreshnessTrendsAPI(w http.ResponseWriter, r *http.Requ
 	}
 
 	if err != nil {
-		logging.Error("Failed to get freshness trends", err, "table", tableName)
+		logging.Error("Failed to get freshness trends", err)
 		http.Error(w, fmt.Sprintf("Failed to get freshness trends: %v", err), http.StatusInternalServerError)
 		return
 	}
@@ -241,7 +248,7 @@ func (d *Dashboard) handleFreshnessExportAPI(w http.ResponseWriter, r *http.Requ
 	}
 
 	// Get all table statuses
-	statuses, err := d.freshnessManager.CheckAllFreshness()
+	statuses, err := d.freshnessManager.GetAllTableStatuses()
 	if err != nil {
 		logging.Error("Failed to get all table freshness statuses", err)
 		http.Error(w, fmt.Sprintf("Failed to get freshness statuses: %v", err), http.StatusInternalServerError)

@@ -1,9 +1,7 @@
 package security
 
 import (
-	"os"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -11,43 +9,16 @@ import (
 
 // TestLegacySecurityManager tests the backward compatibility of the SecurityManager
 func TestLegacySecurityManager(t *testing.T) {
-	// Create temporary users file
-	tempFile, err := os.CreateTemp("", "security-legacy-*.json")
-	require.NoError(t, err)
-	defer os.Remove(tempFile.Name())
-	
-	// Initialize the file with empty JSON object
-	_, err = tempFile.WriteString("{}")
-	require.NoError(t, err)
-	tempFile.Close()
-
-	tokenSecret := []byte("test-legacy-secret")
-	tokenExpiration := 24 * time.Hour
-	
-	// Create auth config directly
-	config := AuthConfig{
-		Enabled:      true,
-		JWTSecret:    string(tokenSecret),
-		TokenExpiry:  int(tokenExpiration.Hours()),
-		UsersFile:    tempFile.Name(),
-		RequireHTTPS: false,
-	}
-	
-	// Create auth manager directly
-	am, err := NewAuthManager(config)
-	require.NoError(t, err)
-	
-	// Create security manager with the auth manager
-	s := &SecurityManager{
-		AuthManager: am,
-	}
+	// Use the optimized test helper to create a SecurityManager
+	s := CreateTestSecurityManager()
 	
 	assert.NotNil(t, s)
 	assert.NotNil(t, s.AuthManager)
 
 	t.Run("AddUser and Authenticate", func(t *testing.T) {
 		// Add test user
-		err := s.AddUser("legacyuser", "password", []string{"user"})
+		var err error
+		err = s.AddUser("legacyuser", "password", []string{"user"})
 		require.NoError(t, err)
 
 		// Test with correct credentials
@@ -96,6 +67,7 @@ func TestLegacySecurityManager(t *testing.T) {
 
 	t.Run("Add Duplicate User", func(t *testing.T) {
 		// Try adding same user again
+		var err error
 		err = s.AddUser("legacyuser", "password", []string{"user"})
 		require.Error(t, err)
 	})

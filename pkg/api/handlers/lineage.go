@@ -1,9 +1,9 @@
-package api
+package handlers
 
 import (
 	"encoding/json"
 	"net/http"
-	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -142,7 +142,7 @@ func (h *LineageHandler) addNode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	respondJSON(w, node)
+	w.WriteHeader(http.StatusCreated)
 }
 
 // addEdge handles POST /lineage/graphs/{id}/edges
@@ -163,7 +163,7 @@ func (h *LineageHandler) addEdge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	respondJSON(w, edge)
+	w.WriteHeader(http.StatusCreated)
 }
 
 // listSnapshots handles GET /lineage/graphs/{id}/snapshots
@@ -234,22 +234,23 @@ func (h *LineageHandler) getSnapshotAtTime(w http.ResponseWriter, r *http.Reques
 	
 	vars := mux.Vars(r)
 	graphID := vars["id"]
-	timestampStr := vars["timestamp"]
+	timestamp := vars["timestamp"]
 	
-	timestamp, err := time.Parse(time.RFC3339, timestampStr)
+	// Parse timestamp
+	ts, err := time.Parse(time.RFC3339, timestamp)
 	if err != nil {
 		http.Error(w, "Invalid timestamp format: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 	
-	snapshot, err := h.lineageService.GetSnapshotAtTime(ctx, graphID, timestamp)
+	snapshot, err := h.lineageService.GetSnapshotAtTime(ctx, graphID, ts)
 	if err != nil {
 		http.Error(w, "Failed to get snapshot: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	
 	if snapshot == nil {
-		http.Error(w, "Snapshot not found", http.StatusNotFound)
+		http.Error(w, "No snapshot found at the specified time", http.StatusNotFound)
 		return
 	}
 	
@@ -311,15 +312,13 @@ func (h *LineageHandler) visualizeGraph(w http.ResponseWriter, r *http.Request) 
 	}
 	
 	if width := r.URL.Query().Get("width"); width != "" {
-		var widthVal int
-		if _, err := json.Unmarshal([]byte(width), &widthVal); err == nil && widthVal > 0 {
+		if widthVal, err := strconv.Atoi(width); err == nil && widthVal > 0 {
 			options.Width = widthVal
 		}
 	}
 	
 	if height := r.URL.Query().Get("height"); height != "" {
-		var heightVal int
-		if _, err := json.Unmarshal([]byte(height), &heightVal); err == nil && heightVal > 0 {
+		if heightVal, err := strconv.Atoi(height); err == nil && heightVal > 0 {
 			options.Height = heightVal
 		}
 	}
@@ -329,8 +328,7 @@ func (h *LineageHandler) visualizeGraph(w http.ResponseWriter, r *http.Request) 
 	}
 	
 	if maxDepth := r.URL.Query().Get("max_depth"); maxDepth != "" {
-		var maxDepthVal int
-		if _, err := json.Unmarshal([]byte(maxDepth), &maxDepthVal); err == nil && maxDepthVal > 0 {
+		if maxDepthVal, err := strconv.Atoi(maxDepth); err == nil && maxDepthVal > 0 {
 			options.MaxDepth = maxDepthVal
 		}
 	}

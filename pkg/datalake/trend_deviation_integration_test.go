@@ -1,45 +1,41 @@
+//go:build integration
+// +build integration
+
 package datalake
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
-	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/windsurf/nessi/pkg/testutil"
 )
 
 // TestTrendDeviationIntegration tests the trend deviation functionality with a more realistic setup
-func (t *testing.T) {
+func TestTrendDeviationIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}
+
+	// Use test fixtures
+	fixtures := testutil.NewTestFixtures(t)
+	defer fixtures.Cleanup()
 TestTrendDeviationIntegration(t *testing.T) {
 	// Skip in short mode
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}
 
-	// Create a temporary directory for the test
-	tempDir, err := os.MkdirTemp("", "trend-deviation-integration-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
-
-	// Create a temporary metrics directory
-	metricsDir := filepath.Join(tempDir, "metrics")
-	err = os.MkdirAll(metricsDir, 0755)
-	require.NoError(t, err)
+	// Create test metrics directory
+	metricsDir := fixtures.CreateTempDir("trend-deviation-metrics-")
 
 	// Create mock run metrics for testing
 	// Run 0 (baseline)
-	createMockRunMetrics(t, metricsDir, "sales", 0, 100.0, 200.0, 50.0, 300.0)
+	fixtures.CreateMetricsData(metricsDir, "sales", 0, 100.0, 200.0, 50.0, 300.0)
 	// Run 1 (10% increase in mean and max)
-	createMockRunMetrics(t, metricsDir, "sales", 1, 110.0, 220.0, 50.0, 330.0)
+	fixtures.CreateMetricsData(metricsDir, "sales", 1, 110.0, 220.0, 50.0, 330.0)
 	// Run 2 (20% increase in mean and max from run 0)
-	createMockRunMetrics(t, metricsDir, "sales", 2, 120.0, 240.0, 50.0, 360.0)
+	fixtures.CreateMetricsData(metricsDir, "sales", 2, 120.0, 240.0, 50.0, 360.0)
 
 	// Test basic trend deviation analysis
 	t.Run("BasicTrendDeviation", func(t *testing.T) {
@@ -188,32 +184,4 @@ TestTrendDeviationIntegration(t *testing.T) {
 	})
 }
 
-// createMockRunMetrics creates mock run metrics for testing
-func (t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
-	}
-createMockRunMetrics(t *testing.T, metricsDir string, field string, version int, mean, stdDev, min, max float64) {
-	// Create run metrics
-	runMetrics := RunMetrics{
-		Timestamp: time.Now().Add(-time.Duration(version) * 24 * time.Hour),
-		FieldMetrics: map[string]map[string]float64{
-			field: {
-				string(MeanValue):         mean,
-				string(StandardDeviation): stdDev,
-				string(MinValue):          min,
-				string(MaxValue):          max,
-				string(RecordCount):       100.0,
-			},
-		},
-	}
 
-	// Save to file
-	filename := filepath.Join(metricsDir, fmt.Sprintf("metrics_%d.json", version))
-	file, err := os.Create(filename)
-	require.NoError(t, err)
-	defer file.Close()
-
-	err = json.NewEncoder(file).Encode(runMetrics)
-	require.NoError(t, err)
-}

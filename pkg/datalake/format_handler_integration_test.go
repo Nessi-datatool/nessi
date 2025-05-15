@@ -1,3 +1,6 @@
+//go:build integration
+// +build integration
+
 package datalake
 
 import (
@@ -8,6 +11,7 @@ import (
 	"github.com/apache/arrow/go/v15/arrow"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/windsurf/nessi/pkg/testutil"
 )
 
 func (t *testing.T) {
@@ -15,10 +19,8 @@ func (t *testing.T) {
 		t.Skip("Skipping integration test in short mode")
 	}
 TestFormatDetection(t *testing.T) {
-	// Create a temporary directory for test files
-	tempDir, err := os.MkdirTemp("", "format_detection_test")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	// Create test directory
+	tempDir := fixtures.CreateTempDir("format-detection-")
 
 	// Create a Delta Lake directory
 	deltaDir := filepath.Join(tempDir, "delta_table")
@@ -63,15 +65,13 @@ TestFormatDetection(t *testing.T) {
 	assert.Equal(t, 0.9, customHandler.config.MinConfidenceThreshold)
 }
 
-func (t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
-	}
-TestCSVSchemaInference(t *testing.T) {
-	// Create a temporary directory for test files
-	tempDir, err := os.MkdirTemp("", "csv_inference_test")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+func TestCSVSchemaInference(t *testing.T) {
+	// Use test fixtures
+	fixtures := testutil.NewTestFixtures(t)
+	defer fixtures.Cleanup()
+
+	// Create test directory
+	tempDir := fixtures.CreateTempDir("csv-inference-")
 
 	// Create a CSV file with various data types
 	csvContent := `id,name,active,score,date
@@ -113,15 +113,13 @@ TestCSVSchemaInference(t *testing.T) {
 	assert.Equal(t, int64(5), record.NumRows())
 }
 
-func (t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
-	}
-TestCSVWithoutHeader(t *testing.T) {
-	// Create a temporary directory for test files
-	tempDir, err := os.MkdirTemp("", "csv_no_header_test")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+func TestCSVWithoutHeader(t *testing.T) {
+	// Use test fixtures
+	fixtures := testutil.NewTestFixtures(t)
+	defer fixtures.Cleanup()
+
+	// Create test directory
+	tempDir := fixtures.CreateTempDir("csv-no-header-")
 
 	// Create a CSV file without header
 	csvContent := `1,Alice,true,95.5,2023-01-01
@@ -156,11 +154,7 @@ TestCSVWithoutHeader(t *testing.T) {
 	assert.Equal(t, "col5", schema.Field(4).Name)
 }
 
-func (t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
-	}
-TestDataTypeInference(t *testing.T) {
+func TestDataTypeInference(t *testing.T) {
 	handler := NewFormatHandler()
 
 	// Test integer inference

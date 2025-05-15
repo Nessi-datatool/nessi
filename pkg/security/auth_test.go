@@ -4,40 +4,29 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/nessi-dev/nessi-dev/pkg/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAuthManager(t *testing.T) {
-	// Run in parallel with short timeout
-	testutil.RunInParallel(t)
-	t.Helper()
-	// Create temporary users file
-	tempFile, err := os.CreateTemp("", "users-*.json")
-	require.NoError(t, err)
-	defer os.Remove(tempFile.Name())
-	
-	// Initialize the file with empty JSON array
-	_, err = tempFile.WriteString("[]")
-	require.NoError(t, err)
-	tempFile.Close()
+	// Run in parallel for faster execution
+	t.Parallel()
 
-	// Create auth config
+	// Create a clean AuthManager for this test
 	config := AuthConfig{
 		Enabled:      true,
-		JWTSecret:    "test-secret",
-		UsersFile:    tempFile.Name(),
-		TokenExpiry:  24,
+		JWTSecret:    "test-secret-" + t.Name(),
+		UsersFile:    "/tmp/nonexistent-users-file.json",
+		TokenExpiry:  1, // 1 hour - minimum value for faster tests
 		RequireHTTPS: false,
+		InMemoryOnly: true, // Skip all file I/O for better performance
 	}
 
-	// Create auth manager
+	// Create the auth manager
 	am, err := NewAuthManager(config)
 	require.NoError(t, err)
 	require.NotNil(t, am)
@@ -71,7 +60,8 @@ func TestAuthManager(t *testing.T) {
 	// Test get users
 	users, err := am.GetUsers()
 	require.NoError(t, err)
-	assert.Len(t, users, 2) // testuser + default admin
+	// With in-memory storage, we only have the user we created
+	assert.Len(t, users, 1) // just testuser, no default admin in in-memory mode
 
 	// Test update user
 	updates := map[string]interface{}{
@@ -112,11 +102,11 @@ func TestAuthManager(t *testing.T) {
 }
 
 func TestAuthMiddleware(t *testing.T) {
-	// Skip this test in fast mode
-	testutil.SkipIfLongRunning(t)
+	// Run in parallel for faster execution
+	t.Parallel()
 	
-	// Run in parallel with short timeout
-	testutil.RunInParallel(t)
+	// Run with timeout to prevent hanging tests
+	RunWithTimeout(t, func() {
 
 	// Create a simple mock auth manager with InMemoryOnly to prevent file I/O
 	am := &AuthManager{
@@ -203,22 +193,19 @@ func TestAuthMiddleware(t *testing.T) {
 	w = httptest.NewRecorder()
 	middleware.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	})
 }
 
 func TestRoleMiddleware(t *testing.T) {
-	// Skip this test in fast mode
-	testutil.SkipIfLongRunning(t)
+	// Run in parallel for faster execution
+	t.Parallel()
 	
-	// Run in parallel with short timeout
-	testutil.RunInParallel(t)
+	// Run with timeout to prevent hanging tests
+	RunWithTimeout(t, func() {
 	
-	// Create a simple mock auth manager with in-memory configuration
-	am := &AuthManager{
-		config: AuthConfig{
-			Enabled:      true,
-			InMemoryOnly: true, // Prevent any file I/O
-		},
-	}
+	// Use the optimized test helper to create an AuthManager
+	am, err := CreateTestAuthManager()
+	require.NoError(t, err)
 
 	// Create test users directly
 	adminUser := User{
@@ -262,11 +249,12 @@ func TestRoleMiddleware(t *testing.T) {
 	w = httptest.NewRecorder()
 	adminMiddleware.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	})
 }
 
 func TestContext(t *testing.T) {
-	// Run in parallel with short timeout
-	testutil.RunInParallel(t)
+	// Run in parallel for faster execution
+	t.Parallel()
 	// Create test user
 	user := User{
 		Username: "testuser",

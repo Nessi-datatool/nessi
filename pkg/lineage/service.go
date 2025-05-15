@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/catalog"
+	"github.com/nessi-dev/nessi-dev/pkg/api/types"
 	"github.com/nessi-dev/nessi-dev/pkg/lineage/comparison"
 	"github.com/nessi-dev/nessi-dev/pkg/lineage/model"
 	"github.com/nessi-dev/nessi-dev/pkg/lineage/visualization"
@@ -17,14 +17,14 @@ type LineageService struct {
 	renderer          *visualization.GraphRenderer
 	diffGenerator     *comparison.DiffGenerator
 	diffAnalyzer      *comparison.DiffAnalyzer
-	catalogManager    *catalog.CatalogManager
+	catalogManager    *types.CatalogManager
 }
 
 // NewLineageService creates a new lineage service
 func NewLineageService(
 	storage model.LineageStorage,
 	renderer *visualization.GraphRenderer,
-	catalogManager *catalog.CatalogManager,
+	catalogManager *types.CatalogManager,
 ) *LineageService {
 	return &LineageService{
 		storage:        storage,
@@ -219,6 +219,7 @@ func (s *LineageService) ImportFromCatalog(ctx context.Context, catalogName, dat
 		upstreamNode.Catalog = ref.Catalog
 		upstreamNode.Database = ref.Database
 		upstreamNode.Table = ref.Table
+		upstreamNode.Properties = ref.Properties
 		graph.AddNode(upstreamNode)
 		
 		edge := model.NewEdge(upstreamNode.ID, targetNode.ID, model.EdgeTypeRead)
@@ -231,6 +232,7 @@ func (s *LineageService) ImportFromCatalog(ctx context.Context, catalogName, dat
 		downstreamNode.Catalog = ref.Catalog
 		downstreamNode.Database = ref.Database
 		downstreamNode.Table = ref.Table
+		downstreamNode.Properties = ref.Properties
 		graph.AddNode(downstreamNode)
 		
 		edge := model.NewEdge(targetNode.ID, downstreamNode.ID, model.EdgeTypeWrite)

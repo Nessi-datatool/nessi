@@ -4,31 +4,37 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"github.com/nessi-dev/nessi-dev/pkg/api/types"
 )
 
 // CatalogManager manages data catalog providers
+// CatalogManager manages data catalogs
 type CatalogManager struct {
-	catalogs map[string]DataCatalog
+	catalogs map[string]types.DataCatalog
 	mu       sync.RWMutex
 }
 
 // NewCatalogManager creates a new catalog manager
+// NewCatalogManager creates a new catalog manager
 func NewCatalogManager() *CatalogManager {
 	return &CatalogManager{
-		catalogs: make(map[string]DataCatalog),
+		catalogs: make(map[string]types.DataCatalog),
 	}
 }
 
 // RegisterCatalog registers a data catalog provider
-func (m *CatalogManager) RegisterCatalog(catalog DataCatalog) {
+// RegisterCatalog registers a data catalog with the manager
+func (m *CatalogManager) RegisterCatalog(catalog types.DataCatalog) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	
 	m.catalogs[catalog.Name()] = catalog
+	return nil
 }
 
 // GetCatalog returns a data catalog provider by name
-func (m *CatalogManager) GetCatalog(name string) (DataCatalog, error) {
+// GetCatalog gets a data catalog by name
+func (m *CatalogManager) GetCatalog(name string) (types.DataCatalog, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	

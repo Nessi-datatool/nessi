@@ -10,13 +10,13 @@ import (
 	"github.com/nessi-dev/nessi-dev/pkg/rca"
 )
 
-// RCAClient is an interface for Root Cause Analysis operations
-type RCAClient interface {
+// RCAHandlerClient is an interface for root cause analysis in handlers
+type RCAHandlerClient interface {
 	// AnalyzeAnomaly performs root cause analysis on an anomaly
 	AnalyzeAnomaly(anomalyID string, config *rca.Config) (*rca.RCAResult, error)
 	
-	// GetRecentAnalyses returns recent RCA results
-	GetRecentAnalyses(limit int) ([]*rca.RCAResult, error)
+	// GetRecentAnalyses returns recent RCA analyses
+	GetRecentAnalyses(limit int) ([]*rca.Analysis, error)
 	
 	// GetAnalysisResult returns a specific RCA result
 	GetAnalysisResult(anomalyID string) (*rca.RCAResult, error)
@@ -106,7 +106,7 @@ func (d *Dashboard) handleRecentRcaAPI(w http.ResponseWriter, r *http.Request) {
 	// Get recent analyses
 	results, err := d.rcaClient.GetRecentAnalyses(limit)
 	if err != nil {
-		logging.Error("Failed to get recent RCA results", err)
+		logging.Error("Failed to get recent RCA analyses", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{
 			"error": fmt.Sprintf("Failed to get recent RCA results: %v", err),
@@ -150,17 +150,15 @@ func (d *Dashboard) handleAnalyzeRcaAPI(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	
-	// Create RCA config
+	// Create RCA configuration
 	config := &rca.Config{
-		OutputFormat: request.Format,
-		MaxDepth:     3,
-		Timeout:      30 * time.Second,
+		// Use basic configuration
 	}
 	
 	// Perform RCA
 	result, err := d.rcaClient.AnalyzeAnomaly(request.AnomalyID, config)
 	if err != nil {
-		logging.Error("Failed to analyze anomaly", err, "anomaly_id", request.AnomalyID)
+		logging.Error("Failed to analyze anomaly", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{
 			"error": fmt.Sprintf("Failed to analyze anomaly: %v", err),
@@ -184,7 +182,7 @@ func (d *Dashboard) handleRcaDetailAPI(w http.ResponseWriter, r *http.Request, a
 	// Get RCA result
 	result, err := d.rcaClient.GetAnalysisResult(anomalyID)
 	if err != nil {
-		logging.Error("Failed to get RCA result", err, "anomaly_id", anomalyID)
+		logging.Error("Failed to get RCA analysis result", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{
 			"error": fmt.Sprintf("Failed to get RCA result: %v", err),
@@ -217,7 +215,7 @@ func (d *Dashboard) handleRcaDetailExportAPI(w http.ResponseWriter, r *http.Requ
 	// Get RCA result
 	result, err := d.rcaClient.GetAnalysisResult(anomalyID)
 	if err != nil {
-		logging.Error("Failed to get RCA result", err, "anomaly_id", anomalyID)
+		logging.Error("Failed to get RCA analysis result", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{
 			"error": fmt.Sprintf("Failed to get RCA result: %v", err),
@@ -290,7 +288,7 @@ func (d *Dashboard) handleRcaExportAPI(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	// Get recent analyses
-	results, err := d.rcaClient.GetRecentAnalyses(limit)
+	analyses, err := d.rcaClient.GetRecentAnalyses(limit)
 	if err != nil {
 		logging.Error("Failed to get RCA results for export", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -308,47 +306,24 @@ func (d *Dashboard) handleRcaExportAPI(w http.ResponseWriter, r *http.Request) {
 		// Export as JSON
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(results)
+		json.NewEncoder(w).Encode(analyses)
 	} else {
 		// Export as CSV
 		w.Header().Set("Content-Type", "text/csv")
 		w.WriteHeader(http.StatusOK)
 		
 		// Write CSV header
-		fmt.Fprintf(w, "AnomalyID,AnalysisTime,PrimaryRootCause,Confidence,AffectedTables,RelatedAnomalies\n")
+		fmt.Fprintf(w, "AnomalyID,AnalysisTime,Status,StartTime,EndTime,ResultID\n")
 		
-		// Write CSV rows
-		for _, result := range results {
-			primaryCause := "N/A"
-			confidence := "0"
-			if result.PrimaryRootCause != nil {
-				primaryCause = result.PrimaryRootCause.Description
-				confidence = fmt.Sprintf("%.2f", result.PrimaryRootCause.Confidence)
-			}
-			
-			affectedTables := ""
-			if len(result.AffectedTables) > 0 {
-				affectedTables = fmt.Sprintf("\"%s\"", result.AffectedTables[0])
-				for i := 1; i < len(result.AffectedTables); i++ {
-					affectedTables += fmt.Sprintf(";%s", result.AffectedTables[i])
-				}
-			}
-			
-			relatedAnomalies := ""
-			if len(result.RelatedAnomalies) > 0 {
-				relatedAnomalies = fmt.Sprintf("\"%s\"", result.RelatedAnomalies[0])
-				for i := 1; i < len(result.RelatedAnomalies); i++ {
-					relatedAnomalies += fmt.Sprintf(";%s", result.RelatedAnomalies[i])
-				}
-			}
-			
-			fmt.Fprintf(w, "%s,%s,\"%s\",%s,%s,%s\n",
-				result.AnomalyID,
-				result.AnalysisTime.Format(time.RFC3339),
-				primaryCause,
-				confidence,
-				affectedTables,
-				relatedAnomalies,
+		// Write CSV rows for analyses
+		for _, analysis := range analyses {
+			fmt.Fprintf(w, "%s,%s,%s,%s,%s,%s\n",
+				analysis.AnomalyID,
+				analysis.StartTime.Format(time.RFC3339),
+				analysis.Status,
+				analysis.StartTime.Format(time.RFC3339),
+				analysis.EndTime.Format(time.RFC3339),
+				analysis.ResultID,
 			)
 		}
 	}

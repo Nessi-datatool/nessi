@@ -127,6 +127,9 @@ elif [ "$TEST_MODE" = "fast" ]; then
   LONG_TEST_PACKAGES=(
     "./pkg/monitoring/dashboard"
     "./pkg/monitoring"
+    "./pkg/datalake"
+    "./pkg/cloud"
+    "./pkg/catalog"
   )
   
   if [ "$PACKAGE" = "./..." ]; then

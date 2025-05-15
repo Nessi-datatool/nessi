@@ -121,12 +121,18 @@ func (am *AuthManager) saveUsers() error {
 	if am.config.InMemoryOnly {
 		return nil // skip file I/O for tests
 	}
-	am.mu.Lock()
-	defer am.mu.Unlock()
+	
+	// Create a copy of the users map to avoid holding the lock during I/O operations
+	am.mu.RLock() // Use read lock first to make a copy
+	usersCopy := make(map[string]User, len(am.users))
+	for k, v := range am.users {
+		usersCopy[k] = v
+	}
+	am.mu.RUnlock()
 
 	// Convert users map to slice
 	var users []User
-	for _, user := range am.users {
+	for _, user := range usersCopy {
 		users = append(users, user)
 	}
 
@@ -136,7 +142,7 @@ func (am *AuthManager) saveUsers() error {
 		return fmt.Errorf("failed to marshal users: %w", err)
 	}
 
-	// Write to file
+	// Write to file - this is done outside the lock to prevent deadlocks
 	if err := os.WriteFile(am.config.UsersFile, data, 0600); err != nil {
 		return fmt.Errorf("failed to write users file: %w", err)
 	}
@@ -150,26 +156,28 @@ func (am *AuthManager) Authenticate(username, password string) (string, error) {
 		return "", fmt.Errorf("authentication is disabled")
 	}
 
+	// Use read lock to check if user exists and get their password
 	am.mu.RLock()
 	user, ok := am.users[username]
+	passHash := user.Password // Copy password hash while under read lock
 	am.mu.RUnlock()
 
 	if !ok {
 		return "", fmt.Errorf("invalid username or password")
 	}
 
-	// Check password
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+	// Check password - do this outside the lock for better performance
+	if err := bcrypt.CompareHashAndPassword([]byte(passHash), []byte(password)); err != nil {
 		return "", fmt.Errorf("invalid username or password")
 	}
 
-	// Update last login time
+	// Update last login time - use write lock only for the update
 	am.mu.Lock()
 	user.LastLogin = time.Now()
 	am.users[username] = user
 	am.mu.Unlock()
 
-	// Generate JWT token
+	// Generate token - this doesn't need a lock
 	token, err := am.generateToken(user)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate token: %w", err)
@@ -208,14 +216,20 @@ func (am *AuthManager) AuthenticateWithAPIKey(apiKey string) (User, error) {
 	}
 
 	am.mu.RLock()
+	// Check if API key exists
 	username, ok := am.apiKeys[apiKey]
 	if !ok {
 		am.mu.RUnlock()
 		return User{}, fmt.Errorf("invalid API key")
 	}
 
-	user := am.users[username]
+	// Get user
+	user, ok := am.users[username]
 	am.mu.RUnlock()
+	
+	if !ok {
+		return User{}, fmt.Errorf("user not found")
+	}
 
 	return user, nil
 }
@@ -226,30 +240,29 @@ func (am *AuthManager) CreateUser(user User, password string) error {
 		return fmt.Errorf("authentication is disabled")
 	}
 
-	am.mu.Lock()
-	defer am.mu.Unlock()
+	// Check if user already exists
+	am.mu.RLock()
+	_, exists := am.users[user.Username]
+	am.mu.RUnlock()
 
-	// Check if username already exists
-	if _, ok := am.users[user.Username]; ok {
-		return fmt.Errorf("username already exists")
+	if exists {
+		return fmt.Errorf("user already exists")
 	}
 
-	// Hash password
+	// Set password and API key
 	user.Password = hashPassword(password)
-
-	// Generate API key if not provided
-	if user.APIKey == "" {
-		user.APIKey = generateAPIKey()
-	}
+	user.APIKey = generateAPIKey()
 
 	// Set creation date
 	user.DateCreated = time.Now()
 
-	// Store user
+	// Add user to map
+	am.mu.Lock()
 	am.users[user.Username] = user
 	am.apiKeys[user.APIKey] = user.Username
+	am.mu.Unlock()
 
-	// Save users to file
+	// Save users to file - this is done outside the lock to prevent deadlocks
 	return am.saveUsers()
 }
 
@@ -259,37 +272,39 @@ func (am *AuthManager) UpdateUser(username string, updates map[string]interface{
 		return fmt.Errorf("authentication is disabled")
 	}
 
-	am.mu.Lock()
-	defer am.mu.Unlock()
-
-	// Check if user exists
+	// First check if user exists with read lock
+	am.mu.RLock()
 	user, ok := am.users[username]
+	am.mu.RUnlock()
+
 	if !ok {
 		return fmt.Errorf("user not found")
 	}
 
-	// Update fields
+	// Apply updates to a local copy
 	for key, value := range updates {
 		switch key {
 		case "email":
-			user.Email = value.(string)
+			if email, ok := value.(string); ok {
+				user.Email = email
+			}
 		case "role":
-			user.Role = value.(string)
+			if role, ok := value.(string); ok {
+				user.Role = role
+			}
 		case "password":
-			user.Password = hashPassword(value.(string))
-		case "api_key":
-			// Remove old API key
-			delete(am.apiKeys, user.APIKey)
-			// Set new API key
-			user.APIKey = value.(string)
-			am.apiKeys[user.APIKey] = username
+			if password, ok := value.(string); ok {
+				user.Password = hashPassword(password)
+			}
 		}
 	}
 
-	// Store updated user
+	// Update user with write lock
+	am.mu.Lock()
 	am.users[username] = user
+	am.mu.Unlock()
 
-	// Save users to file
+	// Save users to file - this happens outside the lock
 	return am.saveUsers()
 }
 
@@ -365,31 +380,37 @@ func (am *AuthManager) RegenerateAPIKey(username string) (string, error) {
 		return "", fmt.Errorf("authentication is disabled")
 	}
 
-	am.mu.Lock()
-	defer am.mu.Unlock()
-
-	// Check if user exists
+	// First check if user exists with read lock
+	am.mu.RLock()
 	user, ok := am.users[username]
+	am.mu.RUnlock()
+	
 	if !ok {
 		return "", fmt.Errorf("user not found")
 	}
 
+	// Now update with write lock
+	am.mu.Lock()
 	// Remove old API key
-	delete(am.apiKeys, user.APIKey)
-
-	// Generate new API key
-	user.APIKey = generateAPIKey()
-	am.apiKeys[user.APIKey] = username
-
-	// Store updated user
-	am.users[username] = user
-
-	// Save users to file
-	if err := am.saveUsers(); err != nil {
-		return "", err
+	if user.APIKey != "" {
+		delete(am.apiKeys, user.APIKey)
 	}
 
-	return user.APIKey, nil
+	// Generate new API key
+	newAPIKey := generateAPIKey()
+	user.APIKey = newAPIKey
+
+	// Update user and API key map
+	am.users[username] = user
+	am.apiKeys[newAPIKey] = username
+	am.mu.Unlock()
+
+	// Save users to file - this happens outside the lock
+	if err := am.saveUsers(); err != nil {
+		return "", fmt.Errorf("failed to save users: %w", err)
+	}
+
+	return newAPIKey, nil
 }
 
 // generateToken generates a JWT token for a user

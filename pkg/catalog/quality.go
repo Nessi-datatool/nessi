@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"time"
-
 	"github.com/nessi-dev/nessi-dev/pkg/quality"
 )
 
@@ -36,25 +35,7 @@ func (p *QualityMetricsPublisher) PublishQualityMetrics(
 	}
 	
 	// Convert profile and validation results to QualityMetrics
-	metrics := &QualityMetrics{
-		OverallScore: calculateOverallScore(profile, results),
-		Completeness: calculateCompleteness(profile),
-		Accuracy: calculateAccuracy(results),
-		Consistency: calculateConsistency(results),
-		Timeliness: calculateTimeliness(profile),
-		LastUpdated: time.Now(),
-	}
-	
-	// Add rule results
-	for _, result := range results.RuleResults {
-		metrics.RuleResults = append(metrics.RuleResults, RuleResult{
-			RuleName: result.Rule.Name,
-			RuleType: result.Rule.Type,
-			Passed: result.Passed,
-			Score: result.Score,
-			Details: result.Details,
-		})
-	}
+	metrics := quality.ToQualityMetrics(profile, results)
 	
 	// Publish to catalog
 	return catalog.PublishQualityMetrics(ctx, database, table, metrics)

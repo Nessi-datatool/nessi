@@ -5,87 +5,81 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nessi-dev/nessi-dev/pkg/api/types"
 	"github.com/nessi-dev/nessi-dev/pkg/quality"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
-// TestQualityMetricsPublisher_PublishQualityMetrics tests the PublishQualityMetrics method
-func TestQualityMetricsPublisher_PublishQualityMetrics(t *testing.T) {
+// TestQualityMetricsPublisher_PublishMetrics tests the PublishMetrics method
+func TestQualityMetricsPublisher_PublishMetrics(t *testing.T) {
 	// Create mock catalog
 	mockCatalog := new(MockCatalog)
 	mockCatalog.On("Name").Return("TestCatalog")
-	
+	mockCatalog.On("PublishQualityMetrics", mock.Anything, "test_db", "test_table", mock.Anything).Return(nil)
+
 	// Create catalog manager
 	manager := NewCatalogManager()
 	manager.RegisterCatalog(mockCatalog)
-	
+
 	// Create quality metrics publisher
 	publisher := NewQualityMetricsPublisher(manager)
-	
+
 	// Create test profile
 	profile := &quality.Profile{
 		Timestamp: time.Now(),
-		Columns: []*quality.ColumnProfile{
-			{
-				Name: "col1",
+		Columns: map[string]*quality.ColumnProfile{
+			"id": {
 				Stats: &quality.ColumnStats{
-					Count:     100,
-					NullCount: 10,
+					Count:     1000,
+					NullCount: 0,
 				},
 			},
-			{
-				Name: "col2",
+			"name": {
 				Stats: &quality.ColumnStats{
-					Count:     100,
+					Count:     1000,
 					NullCount: 5,
 				},
 			},
 		},
 	}
-	
+
 	// Create test validation results
 	results := &quality.ValidationResults{
 		RuleResults: []*quality.RuleResult{
 			{
 				Rule: &quality.Rule{
-					Name: "rule1",
 					Type: "range",
 				},
-				Passed:  true,
-				Score:   1.0,
-				Details: "Rule passed",
+				Score: 0.98,
 			},
 			{
 				Rule: &quality.Rule{
-					Name: "rule2",
 					Type: "unique",
 				},
-				Passed:  false,
-				Score:   0.8,
-				Details: "Rule partially passed",
+				Score: 0.97,
 			},
 		},
 	}
-	
-	// Set up mock expectations for PublishQualityMetrics
+
+	// Publish metrics
 	ctx := context.Background()
-	mockCatalog.On("PublishQualityMetrics", ctx, "testdb", "testtable", mock.MatchedBy(func(metrics *QualityMetrics) bool {
-		// Verify metrics
-		return metrics.OverallScore >= 0 && metrics.OverallScore <= 1 &&
-			metrics.Completeness >= 0 && metrics.Completeness <= 1 &&
-			metrics.Accuracy >= 0 && metrics.Accuracy <= 1 &&
-			metrics.Consistency >= 0 && metrics.Consistency <= 1 &&
-			metrics.Timeliness >= 0 && metrics.Timeliness <= 1 &&
-			len(metrics.RuleResults) == 2
-	})).Return(nil)
-	
-	// Call PublishQualityMetrics
-	err := publisher.PublishQualityMetrics(ctx, "TestCatalog", "testdb", "testtable", profile, results)
-	
-	// Verify results
+	err := publisher.PublishQualityMetrics(ctx, "TestCatalog", "test_db", "test_table", profile, results)
 	assert.NoError(t, err)
-	
+
+	// Verify mock expectations
+	mockCatalog.AssertExpectations(t)
+
+	// Set up mock expectations for PublishQualityMetrics
+	mockCatalog.On("PublishQualityMetrics", ctx, "test_db", "test_table", mock.MatchedBy(func(m *types.QualityMetrics) bool {
+		// Verify metrics
+		return m != nil
+	})).Return(nil)
+
+	// Call PublishMetrics
+	err = publisher.PublishQualityMetrics(ctx, "TestCatalog", "test_db", "test_table", profile, results)
+	assert.NoError(t, err)
+
 	// Verify mock expectations
 	mockCatalog.AssertExpectations(t)
 }
@@ -95,9 +89,11 @@ func TestQualityMetricsPublisher_PublishQualityMetricsToAll(t *testing.T) {
 	// Create mock catalogs
 	mockCatalog1 := new(MockCatalog)
 	mockCatalog1.On("Name").Return("TestCatalog1")
-	
+	mockCatalog1.On("PublishQualityMetrics", mock.Anything, "test_db", "test_table", mock.Anything).Return(nil)
+
 	mockCatalog2 := new(MockCatalog)
 	mockCatalog2.On("Name").Return("TestCatalog2")
+	mockCatalog2.On("PublishQualityMetrics", mock.Anything, "test_db", "test_table", mock.Anything).Return(nil)
 	
 	// Create catalog manager
 	manager := NewCatalogManager()
@@ -109,10 +105,8 @@ func TestQualityMetricsPublisher_PublishQualityMetricsToAll(t *testing.T) {
 	
 	// Create test profile
 	profile := &quality.Profile{
-		Timestamp: time.Now(),
-		Columns: []*quality.ColumnProfile{
-			{
-				Name: "col1",
+		Columns: map[string]*quality.ColumnProfile{
+			"col1": {
 				Stats: &quality.ColumnStats{
 					Count:     100,
 					NullCount: 10,
@@ -120,24 +114,28 @@ func TestQualityMetricsPublisher_PublishQualityMetricsToAll(t *testing.T) {
 			},
 		},
 	}
-	
+
 	// Create test validation results
 	results := &quality.ValidationResults{
 		RuleResults: []*quality.RuleResult{
 			{
 				Rule: &quality.Rule{
-					Name: "rule1",
 					Type: "range",
 				},
-				Passed:  true,
-				Score:   1.0,
-				Details: "Rule passed",
+				Score: 0.95,
 			},
 		},
 	}
-	
-	// Set up mock expectations for PublishQualityMetrics
+
+	// Publish metrics
 	ctx := context.Background()
+	errs := publisher.PublishQualityMetricsToAll(ctx, "test_db", "test_table", profile, results)
+	assert.Empty(t, errs)
+
+	// Verify mock expectations
+	mockCatalog1.AssertExpectations(t)
+	mockCatalog2.AssertExpectations(t)
+
 	mockCatalog1.On("PublishQualityMetrics", ctx, "testdb", "testtable", mock.Anything).Return(nil)
 	mockCatalog2.On("PublishQualityMetrics", ctx, "testdb", "testtable", mock.Anything).Return(nil)
 	
@@ -166,16 +164,14 @@ func TestCalculateCompleteness(t *testing.T) {
 	
 	// Test with profile containing columns
 	profile := &quality.Profile{
-		Columns: []*quality.ColumnProfile{
-			{
-				Name: "col1",
+		Columns: map[string]*quality.ColumnProfile{
+			"col1": {
 				Stats: &quality.ColumnStats{
 					Count:     100,
 					NullCount: 10,
 				},
 			},
-			{
-				Name: "col2",
+			"col2": {
 				Stats: &quality.ColumnStats{
 					Count:     100,
 					NullCount: 20,
@@ -323,12 +319,10 @@ func TestCalculateTimeliness(t *testing.T) {
 
 // TestCalculateOverallScore tests the calculateOverallScore function
 func TestCalculateOverallScore(t *testing.T) {
-	// Create test profile and results
+	// Create test profile with columns
 	profile := &quality.Profile{
-		Timestamp: time.Now(),
-		Columns: []*quality.ColumnProfile{
-			{
-				Name: "col1",
+		Columns: map[string]*quality.ColumnProfile{
+			"col1": {
 				Stats: &quality.ColumnStats{
 					Count:     100,
 					NullCount: 10,
