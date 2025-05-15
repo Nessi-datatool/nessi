@@ -13,9 +13,6 @@ A comprehensive test runner with multiple modes and options:
 ```
 
 Options:
-- `--fast` - Run only fast tests (< 5 seconds)
-- `--short` - Run only specific short test files
-- `--all` - Run all tests including long-running ones
 - `--package PKG` - Specify a package to test (e.g., ./pkg/dbt/...)
 - `--no-cache` - Disable test caching (adds -count=1)
 - `--files FILES` - Run specific test files (comma-separated)
@@ -23,28 +20,28 @@ Options:
 
 Examples:
 ```bash
-# Run fast tests only
-./scripts/run_tests.sh --fast
+# Run all tests
+./scripts/run_tests.sh
 
-# Run all tests for a specific package
-./scripts/run_tests.sh --all --package="./pkg/freshness"
+# Run tests for a specific package
+./scripts/run_tests.sh --package="./pkg/freshness"
 
 # Run specific test files
-./scripts/run_tests.sh --short --files="./pkg/monitoring/export_short_test.go,./pkg/monitoring/dashboard/alerts_short_test.go"
+./scripts/run_tests.sh --files="./pkg/monitoring/export_test.go,./pkg/monitoring/dashboard/alerts_test.go"
 ```
 
-### debug_long_tests.sh
+### debug_tests.sh
 
-A script specifically for debugging long-running tests with verbose output, timeouts, and race detection:
+A script for debugging tests with verbose output, timeouts, and race detection:
 
 ```bash
-./scripts/debug_long_tests.sh
+./scripts/debug_tests.sh
 ```
 
 This script:
 - Sets environment variables for debugging
 - Creates log files for test output
-- Runs specific long-running packages with verbose output
+- Runs packages with verbose output
 - Performs race detection on critical packages
 - Saves all logs to the `./logs` directory
 
@@ -112,12 +109,9 @@ A test script that runs a series of tests on the security package and reports de
 
 A comprehensive test runner script that consolidates all testing functionality. It supports multiple test modes, package selection, and other options.
 
-#### Test Modes
+#### Test Execution
 
-- **Standard Tests**: Run tests that complete in under 30 seconds (default)
-- **Fast Tests**: Run only tests that complete in under 5 seconds, skipping known long-running packages
-- **Short Tests**: Run only specific short test files with minimal timeout settings
-- **All Tests**: Run all tests including long-running ones
+The test runner executes tests with appropriate timeout settings and provides detailed output for debugging purposes.
 
 #### Options
 
@@ -128,17 +122,11 @@ A comprehensive test runner script that consolidates all testing functionality. 
 #### Usage Examples
 
 ```bash
-# Run standard tests (default)
+# Run all tests
 ./scripts/run_tests.sh
 
-# Run only fast tests
-./scripts/run_tests.sh --fast
-
-# Run specific short test files
-./scripts/run_tests.sh --short
-
-# Run specific short test files with custom file list
-./scripts/run_tests.sh --short --files="./pkg/dbt/alert_test.go,./pkg/dbt/config_test.go"
+# Run specific test files
+./scripts/run_tests.sh --files="./pkg/dbt/alert_test.go,./pkg/dbt/config_test.go"
 
 # Run tests for a specific package
 ./scripts/run_tests.sh --package="./pkg/dbt/..."
@@ -146,25 +134,17 @@ A comprehensive test runner script that consolidates all testing functionality. 
 # Run tests without caching
 ./scripts/run_tests.sh --no-cache
 
-# Run all tests including long-running ones
-./scripts/run_tests.sh --all
-
 # Show help
 ./scripts/run_tests.sh --help
 ```
 
-This script replaces all previous test scripts, including:
-- `run_fast_tests.sh`
-- `run_only_fast_tests.sh`
-- `run_short_tests.sh`
-- `fast_tests.sh`
-- `fix_tests.sh`
+This script provides a unified interface for running all tests in the project.
 
 All test-related functionality has been consolidated into this single script for easier maintenance and usage.
 
-### debug_long_tests.sh
+### debug_tests.sh
 
-A specialized script for debugging long-running tests in the monitoring packages. This script:
+A specialized script for debugging tests in the monitoring packages. This script:
 
 - Runs tests with verbose output
 - Enables race detection
@@ -173,10 +153,10 @@ A specialized script for debugging long-running tests in the monitoring packages
 
 Usage:
 ```bash
-./scripts/debug_long_tests.sh
+./scripts/debug_tests.sh
 ```
 
-This script is particularly useful when investigating timeouts or race conditions in the long-running tests.
+This script is particularly useful when investigating timeouts or race conditions in tests.
 
 ## Test Data
 

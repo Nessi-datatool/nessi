@@ -56,7 +56,7 @@ func TestAuthHandlers(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("Login Page", func(t *testing.T) {
-		t.Parallel()
+		// Using SetupTestTimeout instead of direct t.Parallel() call
 		// Create request
 		req := httptest.NewRequest("GET", "/login", nil)
 		w := httptest.NewRecorder()
@@ -72,7 +72,7 @@ func TestAuthHandlers(t *testing.T) {
 	})
 
 	t.Run("API Login Success", func(t *testing.T) {
-		t.Parallel()
+		// Using SetupTestTimeout instead of direct t.Parallel() call
 		// Create login request
 		loginReq := map[string]string{
 			"username": "dashboarduser",
@@ -102,7 +102,7 @@ func TestAuthHandlers(t *testing.T) {
 	})
 
 	t.Run("API Login Failure", func(t *testing.T) {
-		t.Parallel()
+		// Using SetupTestTimeout instead of direct t.Parallel() call
 		// Create login request with wrong password
 		loginReq := map[string]string{
 			"username": "dashboarduser",
@@ -124,7 +124,7 @@ func TestAuthHandlers(t *testing.T) {
 	})
 
 	t.Run("Protected Route", func(t *testing.T) {
-		t.Parallel()
+		// Using SetupTestTimeout instead of direct t.Parallel() call
 		// Create a protected handler
 		protectedHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
@@ -154,7 +154,7 @@ func TestAuthHandlers(t *testing.T) {
 	})
 
 	t.Run("User Management API", func(t *testing.T) {
-		t.Parallel()
+		// Using SetupTestTimeout instead of direct t.Parallel() call
 		// Create admin user
 		adminUser := security.User{
 			Username: "dashboardadmin",

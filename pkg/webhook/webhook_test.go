@@ -1,281 +1,316 @@
 package webhook
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/nessi-dev/nessi-dev/pkg/testutil"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWebhookManager(t *testing.T) {
-	// Skip this test in fast mode
-	testutil.SkipIfLongRunning(t)
+	// No longer using testutil.RunInParallel(t) to avoid duplicate t.Parallel() calls
+	// Tests will still run efficiently with the Go test runner
 	
-	// Run in parallel with other tests and set short timeout
-	testutil.RunInParallel(t)
-	manager := NewWebhookManager()
+	// Run test with timeout
+	testutil.RunWithTimeout(t, func() {
+		manager := NewWebhookManager()
 
-	// Test RegisterWebhook
-	webhook := &WebhookConfig{
-		ID:          "test-webhook",
-		Name:        "Test Webhook",
-		URL:         "http://example.com/webhook",
-		Events:      []string{"test.event"},
-		Enabled:     true,
-		RetryCount:  1, // Reduce retries for faster tests
-		RetryDelay:  1, // Reduce delay for faster tests
-		Description: "Test webhook for unit tests",
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
+		// Test RegisterWebhook
+		webhook := &WebhookConfig{
+			ID:          "test-webhook",
+			Name:        "Test Webhook",
+			URL:         "http://example.com/webhook",
+			Events:      []string{"test.event"},
+			Enabled:     true,
+			RetryCount:  1, // Minimal retry count
+			RetryDelay:  1, // Minimal retry delay
+			Description: "Test webhook for unit tests",
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		}
 
-	err := manager.RegisterWebhook(webhook)
-	if err != nil {
-		t.Fatalf("Failed to register webhook: %v", err)
-	}
+		err := manager.RegisterWebhook(webhook)
+		require.NoError(t, err, "Failed to register webhook")
 
-	// Test GetWebhook
-	retrievedWebhook, err := manager.GetWebhook("test-webhook")
-	if err != nil {
-		t.Fatalf("Failed to get webhook: %v", err)
-	}
+		// Test GetWebhook
+		retrievedWebhook, err := manager.GetWebhook("test-webhook")
+		require.NoError(t, err, "Failed to get webhook")
+		assert.Equal(t, webhook.ID, retrievedWebhook.ID, "Webhook ID mismatch")
+		assert.Equal(t, webhook.Name, retrievedWebhook.Name, "Webhook Name mismatch")
 
-	if retrievedWebhook.ID != webhook.ID || retrievedWebhook.Name != webhook.Name {
-		t.Errorf("Retrieved webhook does not match original: got %v, want %v", retrievedWebhook, webhook)
-	}
+		// Test ListWebhooks
+		webhooks := manager.ListWebhooks()
+		assert.Len(t, webhooks, 1, "Expected 1 webhook")
 
-	// Test ListWebhooks
-	webhooks := manager.ListWebhooks()
-	if len(webhooks) != 1 {
-		t.Errorf("Expected 1 webhook, got %d", len(webhooks))
-	}
+		// Test UpdateWebhook
+		updates := map[string]interface{}{
+			"name":        "Updated Webhook",
+			"description": "Updated description",
+		}
 
-	// Test UpdateWebhook
-	updates := map[string]interface{}{
-		"name":        "Updated Webhook",
-		"description": "Updated description",
-	}
+		err = manager.UpdateWebhook("test-webhook", updates)
+		require.NoError(t, err, "Failed to update webhook")
 
-	err = manager.UpdateWebhook("test-webhook", updates)
-	if err != nil {
-		t.Fatalf("Failed to update webhook: %v", err)
-	}
+		updatedWebhook, err := manager.GetWebhook("test-webhook")
+		require.NoError(t, err, "Failed to get updated webhook")
+		assert.Equal(t, "Updated Webhook", updatedWebhook.Name, "Webhook name not updated correctly")
+		assert.Equal(t, "Updated description", updatedWebhook.Description, "Webhook description not updated correctly")
 
-	updatedWebhook, err := manager.GetWebhook("test-webhook")
-	if err != nil {
-		t.Fatalf("Failed to get updated webhook: %v", err)
-	}
+		// Test UnregisterWebhook
+		err = manager.UnregisterWebhook("test-webhook")
+		require.NoError(t, err, "Failed to unregister webhook")
 
-	if updatedWebhook.Name != "Updated Webhook" || updatedWebhook.Description != "Updated description" {
-		t.Errorf("Webhook not updated correctly: got %v", updatedWebhook)
-	}
+		webhooks = manager.ListWebhooks()
+		assert.Len(t, webhooks, 0, "Expected 0 webhooks after unregistering")
 
-	// Test UnregisterWebhook
-	err = manager.UnregisterWebhook("test-webhook")
-	if err != nil {
-		t.Fatalf("Failed to unregister webhook: %v", err)
-	}
+		// Test error cases
+		_, err = manager.GetWebhook("non-existent")
+		assert.Error(t, err, "Expected error when getting non-existent webhook")
 
-	webhooks = manager.ListWebhooks()
-	if len(webhooks) != 0 {
-		t.Errorf("Expected 0 webhooks after unregistering, got %d", len(webhooks))
-	}
+		err = manager.UnregisterWebhook("non-existent")
+		assert.Error(t, err, "Expected error when unregistering non-existent webhook")
 
-	// Test error cases
-	_, err = manager.GetWebhook("non-existent")
-	if err == nil {
-		t.Error("Expected error when getting non-existent webhook, got nil")
-	}
-
-	err = manager.UnregisterWebhook("non-existent")
-	if err == nil {
-		t.Error("Expected error when unregistering non-existent webhook, got nil")
-	}
-
-	err = manager.UpdateWebhook("non-existent", updates)
-	if err == nil {
-		t.Error("Expected error when updating non-existent webhook, got nil")
-	}
+		err = manager.UpdateWebhook("non-existent", updates)
+		assert.Error(t, err, "Expected error when updating non-existent webhook")
+	})
 }
 
 func TestTriggerEvent(t *testing.T) {
-	// Skip this test in fast mode
-	testutil.SkipIfLongRunning(t)
+	// No longer using testutil.RunInParallel(t) to avoid duplicate t.Parallel() calls
+	// Tests will still run efficiently with the Go test runner
 	
-	// Run in parallel with other tests and set short timeout
-	testutil.RunInParallel(t)
+	// Run test with timeout
+	testutil.RunWithTimeout(t, func() {
+		// Create a test server to receive webhook events with minimal processing
+		var receivedPayload []byte
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Quick header checks
+			if r.Method != "POST" || r.Header.Get("Content-Type") != "application/json" || 
+			   r.Header.Get("User-Agent") != "Nessi-Webhook-Client/1.0" {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
 
-	// Create a test server to receive webhook events with minimal processing
-	var receivedPayload []byte
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Quick header checks
-		if r.Method != "POST" || r.Header.Get("Content-Type") != "application/json" || 
-		   r.Header.Get("User-Agent") != "Nessi-Webhook-Client/1.0" {
-			w.WriteHeader(http.StatusBadRequest)
-			return
+			// Read body directly without decoding
+			receivedPayload, _ = io.ReadAll(r.Body)
+			defer r.Body.Close()
+
+			// Return success immediately
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(`{"status":"success"}`))  
+		}))
+		defer server.Close()
+
+		// Create a webhook manager
+		manager := NewWebhookManager()
+
+		// Register a webhook pointing to our test server
+		webhook := &WebhookConfig{
+			ID:          "test-webhook",
+			Name:        "Test Webhook",
+			URL:         server.URL,
+			Events:      []string{"test.event"},
+			Enabled:     true,
+			RetryCount:  1,
+			RetryDelay:  1,
+			Description: "Test webhook for unit tests",
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
 		}
 
-		// Read body directly without decoding
-		receivedPayload, _ = io.ReadAll(r.Body)
-		defer r.Body.Close()
+		err := manager.RegisterWebhook(webhook)
+		require.NoError(t, err, "Failed to register webhook")
 
-		// Return success immediately
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{"status":"success"}`))
-	}))
-	defer server.Close()
+		// Create an event to trigger
+		event := &WebhookEvent{
+			ID:        "test-event",
+			EventType: "test.event",
+			Timestamp: time.Now(),
+			Payload: map[string]interface{}{
+				"message": "Hello, webhook!",
+				"value":   42,
+			},
+		}
 
-	// Create a webhook manager
-	manager := NewWebhookManager()
+		// Trigger the event
+		results := manager.TriggerEvent(event)
 
-	// Register a webhook pointing to our test server
-	webhook := &WebhookConfig{
-		ID:          "test-webhook",
-		Name:        "Test Webhook",
-		URL:         server.URL,
-		Events:      []string{"test.event"},
-		Enabled:     true,
-		RetryCount:  1,
-		RetryDelay:  1,
-		Description: "Test webhook for unit tests",
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
+		// Verify the results
+		result, ok := results["test-webhook"]
+		require.True(t, ok, "Expected result for test-webhook, got none")
+		assert.True(t, result.Success, "Expected webhook trigger to succeed, got failure: %v", result.Error)
+		assert.Equal(t, http.StatusOK, result.StatusCode, "Status code mismatch")
 
-	err := manager.RegisterWebhook(webhook)
-	if err != nil {
-		t.Fatalf("Failed to register webhook: %v", err)
-	}
+		// Verify the payload was received correctly
+		var receivedEvent WebhookEvent
+		err = json.Unmarshal(receivedPayload, &receivedEvent)
+		require.NoError(t, err, "Failed to unmarshal received payload")
+		assert.Equal(t, event.ID, receivedEvent.ID, "Event ID mismatch")
+		assert.Equal(t, event.EventType, receivedEvent.EventType, "Event type mismatch")
 
-	// Create an event to trigger
-	event := &WebhookEvent{
-		ID:        "test-event",
-		EventType: "test.event",
-		Timestamp: time.Now(),
-		Payload: map[string]interface{}{
-			"message": "Hello, webhook!",
-			"value":   42,
-		},
-	}
+		// Test event filtering
+		// Create a webhook for a different event type
+		webhookOther := &WebhookConfig{
+			ID:          "other-webhook",
+			Name:        "Other Webhook",
+			URL:         server.URL,
+			Events:      []string{"other.event"},
+			Enabled:     true,
+			RetryCount:  1,
+			RetryDelay:  1,
+			Description: "Test webhook for other events",
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		}
 
-	// Trigger the event
-	results := manager.TriggerEvent(event)
+		err = manager.RegisterWebhook(webhookOther)
+		require.NoError(t, err, "Failed to register other webhook")
 
-	// Verify the results
-	result, ok := results["test-webhook"]
-	if !ok {
-		t.Fatal("Expected result for test-webhook, got none")
-	}
+		// Trigger the same event
+		results = manager.TriggerEvent(event)
 
-	if !result.Success {
-		t.Errorf("Expected webhook trigger to succeed, got failure: %v", result.Error)
-	}
+		// Verify only the first webhook was triggered
+		_, ok = results["test-webhook"]
+		assert.True(t, ok, "Expected result for test-webhook, got none")
 
-	if result.StatusCode != http.StatusOK {
-		t.Errorf("Expected status code %d, got %d", http.StatusOK, result.StatusCode)
-	}
+		_, ok = results["other-webhook"]
+		assert.False(t, ok, "Expected no result for other-webhook, got one")
 
-	// Verify the payload was received correctly
-	var receivedEvent WebhookEvent
-	err = json.Unmarshal(receivedPayload, &receivedEvent)
-	if err != nil {
-		t.Fatalf("Failed to unmarshal received payload: %v", err)
-	}
+		// Test wildcard event subscription
+		webhookWildcard := &WebhookConfig{
+			ID:          "wildcard-webhook",
+			Name:        "Wildcard Webhook",
+			URL:         server.URL,
+			Events:      []string{"*"},
+			Enabled:     true,
+			RetryCount:  1,
+			RetryDelay:  1,
+			Description: "Test webhook for all events",
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		}
 
-	if receivedEvent.ID != event.ID || receivedEvent.EventType != event.EventType {
-		t.Errorf("Received event does not match sent event: got %v, want %v", receivedEvent, event)
-	}
+		err = manager.RegisterWebhook(webhookWildcard)
+		require.NoError(t, err, "Failed to register wildcard webhook")
 
-	// Test event filtering
-	// Create a webhook for a different event type
-	webhookOther := &WebhookConfig{
-		ID:          "other-webhook",
-		Name:        "Other Webhook",
-		URL:         server.URL,
-		Events:      []string{"other.event"},
-		Enabled:     true,
-		RetryCount:  1,
-		RetryDelay:  1,
-		Description: "Test webhook for other events",
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
+		// Trigger the event
+		results = manager.TriggerEvent(event)
 
-	err = manager.RegisterWebhook(webhookOther)
-	if err != nil {
-		t.Fatalf("Failed to register other webhook: %v", err)
-	}
+		// Verify both the specific and wildcard webhooks were triggered
+		_, ok = results["test-webhook"]
+		assert.True(t, ok, "Expected result for test-webhook, got none")
 
-	// Trigger the same event
-	results = manager.TriggerEvent(event)
+		_, ok = results["wildcard-webhook"]
+		assert.True(t, ok, "Expected result for wildcard-webhook, got none")
 
-	// Verify only the first webhook was triggered
-	_, ok = results["test-webhook"]
-	if !ok {
-		t.Error("Expected result for test-webhook, got none")
-	}
+		// Test disabled webhook
+		err = manager.UpdateWebhook("test-webhook", map[string]interface{}{
+			"enabled": false,
+		})
+		require.NoError(t, err, "Failed to disable webhook")
 
-	_, ok = results["other-webhook"]
-	if ok {
-		t.Error("Expected no result for other-webhook, got one")
-	}
+		// Trigger the event
+		results = manager.TriggerEvent(event)
 
-	// Test wildcard event subscription
-	webhookWildcard := &WebhookConfig{
-		ID:          "wildcard-webhook",
-		Name:        "Wildcard Webhook",
-		URL:         server.URL,
-		Events:      []string{"*"},
-		Enabled:     true,
-		RetryCount:  1,
-		RetryDelay:  1,
-		Description: "Test webhook for all events",
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
+		// Verify the disabled webhook was not triggered
+		_, ok = results["test-webhook"]
+		assert.False(t, ok, "Expected no result for disabled webhook, got one")
 
-	err = manager.RegisterWebhook(webhookWildcard)
-	if err != nil {
-		t.Fatalf("Failed to register wildcard webhook: %v", err)
-	}
-
-	// Trigger the event
-	results = manager.TriggerEvent(event)
-
-	// Verify both the specific and wildcard webhooks were triggered
-	_, ok = results["test-webhook"]
-	if !ok {
-		t.Error("Expected result for test-webhook, got none")
-	}
-
-	_, ok = results["wildcard-webhook"]
-	if !ok {
-		t.Error("Expected result for wildcard-webhook, got none")
-	}
-
-	// Test disabled webhook
-	err = manager.UpdateWebhook("test-webhook", map[string]interface{}{
-		"enabled": false,
+		_, ok = results["wildcard-webhook"]
+		assert.True(t, ok, "Expected result for wildcard-webhook, got none")
 	})
-	if err != nil {
-		t.Fatalf("Failed to disable webhook: %v", err)
-	}
+}
 
-	// Trigger the event
-	results = manager.TriggerEvent(event)
+// TestWebhookManagerMinimal tests the webhook manager with minimal configuration
+func TestWebhookManagerMinimal(t *testing.T) {
+	// No longer using testutil.RunInParallel(t) to avoid duplicate t.Parallel() calls
+	// Tests will still run efficiently with the Go test runner
+	
+	// Run test with timeout
+	testutil.RunWithTimeout(t, func() {
+		// Create a test server with minimal response time
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"status":"success"}`))  
+		}))
+		defer server.Close()
 
-	// Verify the disabled webhook was not triggered
-	_, ok = results["test-webhook"]
-	if ok {
-		t.Error("Expected no result for disabled webhook, got one")
-	}
+		// Create webhook manager with minimal timeout
+		manager := &WebhookManager{
+			webhooks: map[string]*WebhookConfig{
+				"test-webhook": {
+					ID:          "test-webhook",
+					Name:        "Test Webhook",
+					URL:         server.URL,
+					Events:      []string{"test-event"},
+					Enabled:     true,
+					Headers:     map[string]string{},
+					RetryCount:  1,
+					RetryDelay:  1,
+				},
+			},
+			client: &http.Client{
+				Timeout: 100 * time.Millisecond, // Very short timeout
+			},
+			mu:     sync.RWMutex{},
+		}
 
-	_, ok = results["wildcard-webhook"]
-	if !ok {
-		t.Error("Expected result for wildcard-webhook, got none")
-	}
+		// Create test event
+		event := &WebhookEvent{
+			ID:        "test-event-id",
+			EventType: "test-event",
+			Timestamp: time.Now(),
+			Payload:   map[string]interface{}{"message": "Test message"},
+		}
+
+		// Trigger event
+		results := manager.TriggerEvent(event)
+		require.NotNil(t, results)
+		require.Len(t, results, 1)
+
+		// Check the result
+		result := results["test-webhook"]
+		require.NotNil(t, result)
+		assert.Equal(t, true, result.Success)
+		assert.Equal(t, http.StatusOK, result.StatusCode)
+	})
+}
+
+// TestWebhookNotifierMinimal tests the webhook notifier with minimal configuration
+func TestWebhookNotifierMinimal(t *testing.T) {
+	// No longer using testutil.RunInParallel(t) to avoid duplicate t.Parallel() calls
+	// Tests will still run efficiently with the Go test runner
+	
+	// Run test with timeout
+	testutil.RunWithTimeout(t, func() {
+		// Create a test server with minimal response time
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"status":"success"}`))  
+		}))
+		defer server.Close()
+
+		// Create webhook notifier with minimal timeout
+		notifier := NewWebhookNotifier(
+			server.URL,
+			"POST",
+			map[string]string{},
+			100 * time.Millisecond, // Very short timeout
+		)
+
+		// Test sending a notification with a context that has a short timeout
+		ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+		defer cancel()
+
+		err := notifier.SendWithContext(ctx, map[string]interface{}{"message": "Test message"})
+		require.NoError(t, err)
+	})
 }

@@ -21,8 +21,7 @@ func (m *mainMockMonitor) GetMetricsPort() int {
 }
 
 func TestDashboard(t *testing.T) {
-	t.Skip("Skipping dashboard tests while fixing GCP Data Catalog")
-	t.Parallel()
+	// No longer skipping tests
 	// Create a mock alert manager
 	alertManager, err := alerts.NewAlertManager("/tmp/dashboard-test")
 	require.NoError(t, err)
@@ -50,8 +49,7 @@ func TestDashboard(t *testing.T) {
 }
 
 func TestDashboardNotFound(t *testing.T) {
-	t.Skip("Skipping dashboard tests while fixing GCP Data Catalog")
-	t.Parallel()
+	// No longer skipping tests
 	// Create a mock alert manager
 	alertManager, err := alerts.NewAlertManager("/tmp/dashboard-test")
 	require.NoError(t, err)
@@ -78,8 +76,7 @@ func TestDashboardNotFound(t *testing.T) {
 }
 
 func TestMetricsHandler(t *testing.T) {
-	t.Skip("Skipping dashboard tests while fixing GCP Data Catalog")
-	t.Parallel()
+	// No longer skipping tests
 	// Create a test HTTP server to mock the metrics server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Return mock metrics data
@@ -137,8 +134,7 @@ func TestMetricsHandler(t *testing.T) {
 }
 
 func TestAlertsHandler(t *testing.T) {
-	t.Skip("Skipping dashboard tests while fixing GCP Data Catalog")
-	t.Parallel()
+	// No longer skipping tests
 	// Create a test HTTP server to mock the alerts API
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Return mock alerts data

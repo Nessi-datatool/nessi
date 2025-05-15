@@ -5,7 +5,7 @@ find /Users/meisi/Documents/nessi-dev/pkg/security -name "*_integration_test.go"
   # Check if the file already has a build tag
   if ! grep -q "//go:build" "$file"; then
     # Add the build tag at the top of the file
-    sed -i '' '1s/^/\/\/go:build !fast_tests\n\npackage/' "$file"
+    sed -i '' '1s/^/\/\/go:build integration\n\npackage/' "$file"
     # Fix the package line (remove the added "package" from the sed command)
     sed -i '' 's/package security_test/package security_test/' "$file"
   fi

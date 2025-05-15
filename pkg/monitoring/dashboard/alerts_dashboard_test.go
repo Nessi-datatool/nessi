@@ -16,7 +16,7 @@ import (
 
 // TestAlertsDashboardPage tests the alerts dashboard page
 func TestAlertsDashboardPage(t *testing.T) {
-	t.Parallel()
+	// No longer skipping tests
 	// Initialize test environment
 	TestCleanup()
 	

@@ -4,11 +4,11 @@ This document outlines the testing strategy for Nessi.dev, focusing on improving
 
 ## Test Categories
 
-Tests are categorized into three tiers:
+Tests are categorized based on their scope:
 
-1. **Fast Tests**: Run in < 5 seconds, test core functionality only
-2. **Standard Tests**: Run in < 30 seconds, test integration between components
-3. **Long Tests**: May take minutes to run, test end-to-end functionality
+1. **Unit Tests**: Test individual components in isolation
+2. **Integration Tests**: Test interaction between components
+3. **End-to-End Tests**: Test complete workflows
 
 ## Component Test Coverage
 
@@ -24,23 +24,20 @@ The dbt plugin has comprehensive test coverage for the following components:
 
 ## Running Tests
 
-We provide a unified test script (`scripts/run_tests.sh`) that supports multiple test modes:
+We provide a unified test script (`scripts/run_tests.sh`) that supports various options:
 
 ```bash
-# Run standard tests (default)
+# Run all tests
 ./scripts/run_tests.sh
-
-# Run only fast tests
-./scripts/run_tests.sh --fast
-
-# Run specific short test files
-./scripts/run_tests.sh --short
 
 # Run tests for a specific package
 ./scripts/run_tests.sh --package="./pkg/dbt/..."
 
-# Run all tests including long-running ones
-./scripts/run_tests.sh --all
+# Run specific test files
+./scripts/run_tests.sh --files="path/to/file1_test.go,path/to/file2_test.go"
+
+# Run tests without caching
+./scripts/run_tests.sh --no-cache
 ```
 
 All test scripts are located in the `scripts/` directory, and test data files are in the `test_data/` directory.
@@ -48,8 +45,8 @@ All test scripts are located in the `scripts/` directory, and test data files ar
 ## CI/CD Integration
 
 For CI/CD pipelines:
-- PR validation: Run fast and standard tests
-- Nightly builds: Run all tests including long-running ones
+- PR validation: Run unit and integration tests
+- Nightly builds: Run all tests including end-to-end tests
 - Release validation: Run all tests with additional validation
 
 ## Test Optimization Techniques
@@ -67,16 +64,14 @@ The test optimization includes:
 - Proper resource management with `t.Cleanup()`
 - Test timeouts to prevent hanging
 - Environment variables to control test behavior
-- Build tags to separate long and short tests
+- Standardized test helpers for consistent execution
 
 ## Environment Variables
 
-- `NESSI_SKIP_LONG_TESTS`: Set to "true" to skip long-running tests
 - `NESSI_TEST_TIMEOUT_MS`: Set timeout for tests in milliseconds
 - `NESSI_TEST_DEBUG`: Set to "true" for verbose debug output
 
 ## Build Tags
 
-- `skiplong`: Skip long-running tests
 - `integration`: Only run integration tests
 - `e2e`: Only run end-to-end tests

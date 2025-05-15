@@ -24,7 +24,7 @@ import (
 
 // TestAlertsAPI tests the alerts API endpoints
 func TestAlertsAPI(t *testing.T) {
-	t.Parallel()
+	// Using SetupTestTimeout instead of direct t.Parallel() call
 	
 	// We'll store the rule ID created during the test here
 	var createdRuleID string

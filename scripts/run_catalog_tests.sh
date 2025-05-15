@@ -11,7 +11,6 @@ NC="\033[0m" # No Color
 # Common environment variables
 export NESSI_TEST_DEBUG=true
 export GO_TEST=true
-export NESSI_SKIP_LONG_TESTS=true
 export NESSI_TEST_TIMEOUT_MS=30000
 
 # Skip the dashboard package but run the catalog package

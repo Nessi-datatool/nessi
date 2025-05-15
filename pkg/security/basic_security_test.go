@@ -5,17 +5,18 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/nessi-dev/nessi-dev/pkg/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // TestBasicSecurity tests the core security features
 func TestBasicSecurity(t *testing.T) {
-	// Run in parallel for faster execution
-	t.Parallel()
+	// No longer using testutil.RunInParallel(t) to avoid duplicate t.Parallel() calls
+	// Tests will still run efficiently with the Go test runner
 
 	// Use the helper to run with timeout
-	RunWithTimeout(t, func() {
+	testutil.RunWithTimeout(t, func() {
 	// Use the optimized test helper to create an AuthManager
 	am, err := CreateTestAuthManager()
 	require.NoError(t, err)
