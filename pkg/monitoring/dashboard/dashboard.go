@@ -47,9 +47,10 @@ type Dashboard struct {
 	secureMode   bool
 	mux          *http.ServeMux
 
-	profiler      Profiler
-	ruleValidator RuleValidator
-	rcaClient     RCAClient
+	profiler        Profiler
+	ruleValidator   RuleValidator
+	rcaClient       RCAClient
+	freshnessManager FreshnessManager
 }
 
 // DashboardOptions represents dashboard configuration options
@@ -60,9 +61,10 @@ type DashboardOptions struct {
 	SecureMode  bool
 
 	// Dependency injection for tests
-	Profiler      Profiler
-	RuleValidator RuleValidator
-	RCAClient     RCAClient
+	Profiler        Profiler
+	RuleValidator   RuleValidator
+	RCAClient       RCAClient
+	FreshnessManager FreshnessManager
 }
 
 // New creates a new Dashboard instance
@@ -85,6 +87,7 @@ func New(monitor *monitoring.Monitor, options DashboardOptions) (*Dashboard, err
 		profiler:     options.Profiler,
 		ruleValidator: options.RuleValidator,
 		rcaClient:     options.RCAClient,
+		freshnessManager: options.FreshnessManager,
 	}
 	return dash, nil
 }
@@ -103,6 +106,7 @@ func (d *Dashboard) Start() error {
 	d.mux.HandleFunc("/data-quality", d.handleDataQualityDashboard)
 	d.mux.HandleFunc("/alerts", d.handleAlertsDashboard)
 	d.mux.HandleFunc("/rca", d.handleRcaDashboard)
+	d.mux.HandleFunc("/freshness", d.handleFreshnessDashboard)
 	
 	// Authentication routes
 	if d.authManager != nil {
@@ -123,6 +127,12 @@ func (d *Dashboard) Start() error {
 		d.mux.Handle("/api/rca/analyze", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleRcaAPI)))
 		d.mux.Handle("/api/rca/insights", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleRcaAPI)))
 		d.mux.Handle("/api/rca/export", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleRcaAPI)))
+		
+		// Freshness API routes
+		d.mux.Handle("/api/freshness/status", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleFreshnessStatusAPI)))
+		d.mux.Handle("/api/freshness/sla", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleFreshnessSLAAPI)))
+		d.mux.Handle("/api/freshness/trends", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleFreshnessTrendsAPI)))
+		d.mux.Handle("/api/freshness/export", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleFreshnessExportAPI)))
 		d.mux.Handle("/api/alerts/{id}/acknowledge", d.authManager.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			d.handleAlertAction(w, r, "acknowledge")
 		})))

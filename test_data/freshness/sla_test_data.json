@@ -1,0 +1,57 @@
+[
+  {
+    "table_name": "customer_orders",
+    "table_path": "/data/warehouse/customer_orders",
+    "expected_frequency": 3600,
+    "warning_threshold": 150,
+    "critical_threshold": 200,
+    "enabled": true,
+    "description": "Customer orders table with hourly updates",
+    "tags": ["sales", "core", "production"],
+    "grafana_dashboard_url": "https://grafana.example.com/d/abc123/customer-orders"
+  },
+  {
+    "table_name": "product_inventory",
+    "table_path": "/data/warehouse/product_inventory",
+    "expected_frequency": 86400,
+    "warning_threshold": 125,
+    "critical_threshold": 150,
+    "enabled": true,
+    "description": "Product inventory table with daily updates",
+    "tags": ["inventory", "core", "production"],
+    "grafana_dashboard_url": "https://grafana.example.com/d/def456/product-inventory"
+  },
+  {
+    "table_name": "marketing_campaigns",
+    "table_path": "/data/warehouse/marketing_campaigns",
+    "expected_frequency": 604800,
+    "warning_threshold": 120,
+    "critical_threshold": 150,
+    "enabled": true,
+    "description": "Marketing campaigns table with weekly updates",
+    "tags": ["marketing", "non-critical"],
+    "grafana_dashboard_url": "https://grafana.example.com/d/ghi789/marketing-campaigns"
+  },
+  {
+    "table_name": "financial_reports",
+    "table_path": "/data/warehouse/financial_reports",
+    "expected_frequency": 2592000,
+    "warning_threshold": 110,
+    "critical_threshold": 125,
+    "enabled": true,
+    "description": "Financial reports table with monthly updates",
+    "tags": ["finance", "reporting", "compliance"],
+    "grafana_dashboard_url": "https://grafana.example.com/d/jkl012/financial-reports"
+  },
+  {
+    "table_name": "user_activity",
+    "table_path": "/data/warehouse/user_activity",
+    "expected_frequency": 900,
+    "warning_threshold": 200,
+    "critical_threshold": 300,
+    "enabled": true,
+    "description": "User activity table with 15-minute updates",
+    "tags": ["user", "activity", "high-frequency"],
+    "grafana_dashboard_url": "https://grafana.example.com/d/mno345/user-activity"
+  }
+]

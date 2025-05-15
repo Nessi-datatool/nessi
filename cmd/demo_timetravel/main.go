@@ -51,8 +51,8 @@ func main() {
 		firstVersion := history[len(history)-1].Version
 		fmt.Printf("Time traveling to version %d...\n", firstVersion)
 		
-		version := firstVersion
-		result, err := manager.TimeTravel(datalake.TimeTravelOptions{Version: &version})
+		version := int64(firstVersion)
+		result, err := manager.TimeTravel(datalake.DeltaTimeTravelOptions{Version: &version})
 		if err != nil {
 			fmt.Printf("Error time traveling to version %d: %v\n", version, err)
 		} else {
@@ -64,8 +64,8 @@ func main() {
 		latestVersion := history[0].Version
 		fmt.Printf("Time traveling to version %d...\n", latestVersion)
 		
-		version = latestVersion
-		result, err = manager.TimeTravel(datalake.TimeTravelOptions{Version: &version})
+		version = int64(latestVersion)
+		result, err = manager.TimeTravel(datalake.DeltaTimeTravelOptions{Version: &version})
 		if err != nil {
 			fmt.Printf("Error time traveling to version %d: %v\n", version, err)
 		} else {
@@ -85,7 +85,7 @@ func main() {
 		
 		fmt.Printf("Time traveling to timestamp %s...\n", midTimestamp.Format(time.RFC3339))
 		
-		result, err := manager.TimeTravel(datalake.TimeTravelOptions{Timestamp: &midTimestamp})
+		result, err := manager.TimeTravel(datalake.DeltaTimeTravelOptions{Timestamp: &midTimestamp})
 		if err != nil {
 			fmt.Printf("Error time traveling to timestamp %s: %v\n", midTimestamp.Format(time.RFC3339), err)
 		} else {
@@ -132,7 +132,7 @@ func main() {
 }
 
 // printTimeTravelResult prints the time travel result
-func printTimeTravelResult(result *datalake.TimeTravelResult) {
+func printTimeTravelResult(result *datalake.DeltaTimeTravelResult) {
 	fmt.Printf("Time Travel Result:\n")
 	fmt.Printf("Version: %d\n", result.Version)
 	fmt.Printf("Timestamp: %s\n", result.Timestamp.Format(time.RFC3339))

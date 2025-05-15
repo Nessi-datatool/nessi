@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 
@@ -39,7 +40,8 @@ func TestWebhookManagerFast(t *testing.T) {
 		},
 		client: &http.Client{
 			Timeout: 100 * time.Millisecond, // Very short timeout
-		}
+		},
+		mu:     sync.RWMutex{},
 	}
 
 	// Create test event
@@ -75,13 +77,12 @@ func TestWebhookNotifierFast(t *testing.T) {
 	defer server.Close()
 
 	// Create webhook notifier with minimal timeout
-	notifier := &WebhookNotifier{
-		url:         server.URL,
-		method:      "POST",
-		contentType: "application/json",
-		headers:     map[string]string{},
-		timeout:     100 * time.Millisecond, // Very short timeout
-	}
+	notifier := NewWebhookNotifier(
+		server.URL,
+		"POST",
+		map[string]string{},
+		100 * time.Millisecond, // Very short timeout
+	)
 
 	// Test sending a notification with a context that has a short timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)

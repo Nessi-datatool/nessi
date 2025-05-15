@@ -12,11 +12,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func (t *testing.T) {
+func TestSecurityIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}
-TestSecurityIntegration(t *testing.T) {
 	// Create temporary directory for test files
 	tempDir, err := os.MkdirTemp("", "security-integration-")
 	require.NoError(t, err)

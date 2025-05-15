@@ -262,7 +262,7 @@ func TestYAMLLoader(t *testing.T) {
 	loader := NewRuleLoader()
 	
 	// Load rules from the test file
-	err := loader.LoadFromYAML("/Users/meisi/Documents/nessi-dev/test_rules.yaml")
+	err := loader.LoadFromYAML("/Users/meisi/Documents/nessi-dev/test_data/rules/test_rules.yaml")
 	if err != nil {
 		t.Fatalf("Failed to load rules from YAML: %v", err)
 	}

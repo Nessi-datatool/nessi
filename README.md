@@ -34,6 +34,7 @@ Nessi.dev is a powerful data quality and Delta Lake management tool that helps o
   - Intelligent alerting with pattern recognition
   - Automated rule creation based on historical data
   - Anomaly and trend deviation detection
+  - **Freshness SLA Monitoring**: Track data freshness with configurable SLAs, compliance tracking, and historical trend analysis
 
 - **Report Generation**
   - Customizable report templates
@@ -49,6 +50,13 @@ Nessi.dev is a powerful data quality and Delta Lake management tool that helps o
   - Rate limiting
   - IP allowlist
   - Security headers
+
+- **Testing Framework**
+  - Comprehensive unit and integration tests
+  - In-memory testing for performance-critical components
+  - Mock connectors for external dependencies
+  - Test data generation utilities
+  - Configurable test runners
 
 ## Developer Experience
 

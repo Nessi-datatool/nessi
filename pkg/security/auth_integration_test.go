@@ -14,11 +14,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func (t *testing.T) {
+func TestAuthIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}
-TestAuthIntegration(t *testing.T) {
 	// Create temporary users file
 	tempFile, err := os.CreateTemp("", "users-*.json")
 	require.NoError(t, err)
@@ -218,11 +217,10 @@ TestAuthIntegration(t *testing.T) {
 	})
 }
 
-func (t *testing.T) {
+func TestAuthManagerPersistence(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}
-TestAuthManagerPersistence(t *testing.T) {
 	// Create temporary users file
 	tempFile, err := os.CreateTemp("", "users-persistence-*.json")
 	require.NoError(t, err)
@@ -271,11 +269,10 @@ TestAuthManagerPersistence(t *testing.T) {
 	assert.Equal(t, "persistenceuser", authUser.Username)
 }
 
-func (t *testing.T) {
+func TestRequireHTTPS(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}
-TestRequireHTTPS(t *testing.T) {
 	// Create temporary users file
 	tempFile, err := os.CreateTemp("", "users-https-*.json")
 	require.NoError(t, err)

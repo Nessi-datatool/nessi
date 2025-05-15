@@ -10,7 +10,11 @@ This is a Parquet file used for testing the Delta Lake and Parquet file handling
 
 ### rules/test_rules.yaml
 
-This YAML file contains sample validation rules used for testing the rule engine in Nessi.dev. It includes examples of regex and enum validation rules that are used by the test suite to verify the correct functioning of the rule validation system.
+This YAML file contains sample validation rules used for testing the rule engine in Nessi.dev. It includes examples of regex, enum, length, and date format validation rules that are used by the test suite to verify the correct functioning of the rule validation system.
+
+### test_rules.yaml
+
+This YAML file in the root test_data directory contains a simplified set of test rules used by the quality rules tests. It includes basic validation rules for testing the YAML loader functionality without requiring the full rule set.
 
 ### rca/sample_anomaly.json
 
@@ -31,6 +35,23 @@ This JSON file contains sample RCA results used for testing the RCA dashboard in
 ### rca/insights_test_data.json
 
 This JSON file contains sample RCA insights data used for testing the dashboard's insights feature. It includes aggregated statistics about root cause distributions, affected tables, and common root causes for testing the charts and visualizations.
+
+### freshness/sla_test_data.json
+
+This JSON file contains sample SLA configurations used for testing the data freshness monitoring feature. It includes various tables with different expected update frequencies, warning and critical thresholds, and metadata for testing the SLA management functionality.
+
+### freshness/status_test_data.json
+
+This JSON file contains sample freshness status data used for testing the freshness dashboard. It includes current status information for tables with different freshness levels (up-to-date, warning, critical) to test the dashboard's visualization and alerting capabilities.
+
+## Test Data Structure
+
+The test data is organized into the following directories:
+
+- `dq/`: Contains data quality test data
+- `metrics/`: Contains metrics test data
+- `rca/`: Contains root cause analysis test data
+- `freshness/`: Contains data freshness and SLA test data
 
 ## Usage
 

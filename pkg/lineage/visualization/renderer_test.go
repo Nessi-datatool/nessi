@@ -245,21 +245,38 @@ func TestGetNodeColor(t *testing.T) {
 func TestCreateDefaultTemplates(t *testing.T) {
 	// Create a temporary directory
 	tempDir, err := os.MkdirTemp("", "templates")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create temp directory: %v", err)
+	}
 	defer os.RemoveAll(tempDir)
+
+	// Print temp directory for debugging
+	t.Logf("Using temp directory: %s", tempDir)
 
 	// Create default templates
 	err = createDefaultTemplates(tempDir)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to create default templates: %v", err)
+	}
 
 	// Check that the HTML template was created
 	htmlTemplatePath := filepath.Join(tempDir, "html_template.html")
 	_, err = os.Stat(htmlTemplatePath)
-	assert.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Failed to stat HTML template file: %v", err)
+	}
 
 	// Check the content of the HTML template
 	content, err := os.ReadFile(htmlTemplatePath)
-	require.NoError(t, err)
-	assert.Contains(t, string(content), "<!DOCTYPE html>")
-	assert.Contains(t, string(content), "d3.js")
+	if err != nil {
+		t.Fatalf("Failed to read HTML template file: %v", err)
+	}
+
+	// Check template content
+	if !strings.Contains(string(content), "<!DOCTYPE html>") {
+		t.Errorf("HTML template does not contain DOCTYPE")
+	}
+	if !strings.Contains(string(content), "d3js.org/d3.v7.min.js") {
+		t.Errorf("HTML template does not contain d3.js reference")
+	}
 }

@@ -1,18 +1,14 @@
 package webhook
 
 import (
-	"context"
 	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 	"time"
 
 	"github.com/nessi-dev/nessi-dev/pkg/testutil"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestWebhookManager(t *testing.T) {

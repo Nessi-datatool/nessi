@@ -26,10 +26,10 @@ type Insights struct {
 
 // CommonRootCause represents a common root cause with occurrence count
 type CommonRootCause struct {
-	Description string  `json:"description"`
-	Details     string  `json:"details,omitempty"`
-	Count       int     `json:"count"`
-	AvgConfidence float64 `json:"avg_confidence"`
+	Description string                 `json:"description"`
+	Details     map[string]interface{} `json:"details,omitempty"`
+	Count       int                    `json:"count"`
+	AvgConfidence float64              `json:"avg_confidence"`
 }
 
 // GenerateInsights generates insights from a list of RCA results

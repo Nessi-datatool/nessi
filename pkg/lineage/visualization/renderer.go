@@ -460,6 +460,11 @@ func createDefaultTemplates(templateDir string) error {
 </body>
 </html>`
 	
+	// Ensure the template directory exists
+	if err := os.MkdirAll(templateDir, 0755); err != nil {
+		return fmt.Errorf("failed to create template directory: %w", err)
+	}
+	
 	htmlTemplatePath := filepath.Join(templateDir, "html_template.html")
 	if err := os.WriteFile(htmlTemplatePath, []byte(htmlTemplate), 0644); err != nil {
 		return fmt.Errorf("failed to write HTML template: %w", err)

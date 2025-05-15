@@ -38,7 +38,7 @@ func (c *Client) AnalyzeAnomaly(anomalyID string, config *Config) (*RCAResult, e
 	}
 
 	// Perform analysis
-	result, err := c.analyzer.AnalyzeAnomaly(anomalyID, config)
+	result, err := c.analyzer.AnalyzeAnomaly(anomalyID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to analyze anomaly: %w", err)
 	}

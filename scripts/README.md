@@ -2,6 +2,38 @@
 
 This directory contains utility scripts for the Nessi.dev project.
 
+## Security Verification Scripts
+
+The security verification scripts have been organized into separate directories to avoid package conflicts:
+
+### verify_security_pkg/verify_security.go
+
+A simple script that verifies the basic SSL certificate generation functionality. It creates a temporary directory, generates SSL certificates, and verifies that the certificate files were created successfully.
+
+### verify_security_features_pkg/verify_security_features.go
+
+A comprehensive script that verifies all security features including:
+- Authentication manager creation
+- Certificate manager creation
+- User management (creation, listing)
+- Authentication (username/password, token validation)
+- API key management (generation, authentication)
+- SSL certificate generation
+
+### test_security_pkg/test_security.go
+
+A test script that runs a series of tests on the security package and reports detailed results. It tests:
+- Auth manager creation
+- Cert manager creation
+- User creation
+- Authentication
+- Token validation
+- API key generation
+- API key authentication
+- Admin user creation
+- Role middleware
+- SSL certificate generation
+
 ## Testing Scripts
 
 ### run_tests.sh
