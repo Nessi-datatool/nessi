@@ -2,14 +2,12 @@ package dashboard
 
 import (
 	"encoding/csv"
-	"encoding/json"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/meisi/nessi-dev/pkg/freshness"
-	"github.com/meisi/nessi-dev/pkg/logger"
+	"github.com/nessi-dev/nessi-dev/pkg/monitoring/freshness"
 )
 
 // FreshnessHandler handles the freshness dashboard route
@@ -21,13 +19,13 @@ func (d *Dashboard) FreshnessHandler(c *gin.Context) {
 
 // FreshnessStatusAPI handles the API endpoint for freshness status
 func (d *Dashboard) FreshnessStatusAPI(c *gin.Context) {
-	log := logger.FromContext(c.Request.Context())
+	// log := logger.FromContext(c.Request.Context())
 	tableName := c.Query("table")
 
 	// Get freshness manager
 	freshnessManager, err := d.getFreshnessManager()
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get freshness manager")
+		// log.Error().Err(err).Msg("Failed to get freshness manager")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get freshness manager"})
 		return
 	}
@@ -37,7 +35,7 @@ func (d *Dashboard) FreshnessStatusAPI(c *gin.Context) {
 		// Get status for specific table
 		status, err := freshnessManager.GetTableStatus(tableName)
 		if err != nil {
-			log.Error().Err(err).Str("table", tableName).Msg("Failed to get table freshness status")
+			// log.Error().Err(err).Str("table", tableName).Msg("Failed to get table freshness status")
 			c.JSON(http.StatusNotFound, gin.H{"error": "Table not found or error retrieving status"})
 			return
 		}
@@ -46,7 +44,7 @@ func (d *Dashboard) FreshnessStatusAPI(c *gin.Context) {
 		// Get status for all tables
 		statuses, err = freshnessManager.GetAllTableStatuses()
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to get all table freshness statuses")
+			// log.Error().Err(err).Msg("Failed to get all table freshness statuses")
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get freshness statuses"})
 			return
 		}
@@ -57,13 +55,13 @@ func (d *Dashboard) FreshnessStatusAPI(c *gin.Context) {
 
 // FreshnessSLAAPI handles the API endpoint for SLA configurations
 func (d *Dashboard) FreshnessSLAAPI(c *gin.Context) {
-	log := logger.FromContext(c.Request.Context())
+	// log := logger.FromContext(c.Request.Context())
 	tableName := c.Query("table")
 
 	// Get freshness manager
 	freshnessManager, err := d.getFreshnessManager()
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get freshness manager")
+		// log.Error().Err(err).Msg("Failed to get freshness manager")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get freshness manager"})
 		return
 	}
@@ -76,7 +74,7 @@ func (d *Dashboard) FreshnessSLAAPI(c *gin.Context) {
 			// Get SLA for specific table
 			sla, err := freshnessManager.GetSLAConfig(tableName)
 			if err != nil {
-				log.Error().Err(err).Str("table", tableName).Msg("Failed to get SLA configuration")
+				// log.Error().Err(err).Str("table", tableName).Msg("Failed to get SLA configuration")
 				c.JSON(http.StatusNotFound, gin.H{"error": "SLA configuration not found"})
 				return
 			}
@@ -85,7 +83,7 @@ func (d *Dashboard) FreshnessSLAAPI(c *gin.Context) {
 			// Get all SLA configurations
 			slas, err := freshnessManager.GetAllSLAConfigs()
 			if err != nil {
-				log.Error().Err(err).Msg("Failed to get all SLA configurations")
+				// log.Error().Err(err).Msg("Failed to get all SLA configurations")
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get SLA configurations"})
 				return
 			}
@@ -96,13 +94,14 @@ func (d *Dashboard) FreshnessSLAAPI(c *gin.Context) {
 		// POST: Create or update SLA configuration
 		var slaConfig freshness.SLAConfig
 		if err := c.ShouldBindJSON(&slaConfig); err != nil {
-			log.Error().Err(err).Msg("Invalid SLA configuration format")
+			// log.Error().Err(err).Msg("Invalid SLA configuration format")
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid SLA configuration format"})
 			return
 		}
 
-		// Parse expected frequency if it's a string
-		if frequencyStr, ok := c.PostForm("expected_frequency").(string); ok {
+		// Parse expected frequency
+		frequencyStr := c.PostForm("expected_frequency")
+		if frequencyStr != "" {
 			// Handle predefined frequencies
 			switch frequencyStr {
 			case "hourly":
@@ -117,7 +116,7 @@ func (d *Dashboard) FreshnessSLAAPI(c *gin.Context) {
 				// Try to parse custom duration
 				duration, err := time.ParseDuration(frequencyStr)
 				if err != nil {
-					log.Error().Err(err).Str("frequency", frequencyStr).Msg("Invalid frequency format")
+					// log.Error().Err(err).Str("frequency", frequencyStr).Msg("Invalid frequency format")
 					c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid frequency format"})
 					return
 				}
@@ -127,7 +126,7 @@ func (d *Dashboard) FreshnessSLAAPI(c *gin.Context) {
 
 		// Save SLA configuration
 		if err := freshnessManager.SetSLAConfig(slaConfig); err != nil {
-			log.Error().Err(err).Interface("config", slaConfig).Msg("Failed to save SLA configuration")
+			// log.Error().Err(err).Interface("config", slaConfig).Msg("Failed to save SLA configuration")
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save SLA configuration"})
 			return
 		}
@@ -142,7 +141,7 @@ func (d *Dashboard) FreshnessSLAAPI(c *gin.Context) {
 		}
 
 		if err := freshnessManager.DeleteSLAConfig(tableName); err != nil {
-			log.Error().Err(err).Str("table", tableName).Msg("Failed to delete SLA configuration")
+			// log.Error().Err(err).Str("table", tableName).Msg("Failed to delete SLA configuration")
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete SLA configuration"})
 			return
 		}
@@ -156,13 +155,13 @@ func (d *Dashboard) FreshnessSLAAPI(c *gin.Context) {
 
 // FreshnessTrendsAPI handles the API endpoint for freshness trends
 func (d *Dashboard) FreshnessTrendsAPI(c *gin.Context) {
-	log := logger.FromContext(c.Request.Context())
+	// log := logger.FromContext(c.Request.Context())
 	tableName := c.Query("table")
 
 	// Get freshness manager
 	freshnessManager, err := d.getFreshnessManager()
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get freshness manager")
+		// log.Error().Err(err).Msg("Failed to get freshness manager")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get freshness manager"})
 		return
 	}
@@ -178,7 +177,7 @@ func (d *Dashboard) FreshnessTrendsAPI(c *gin.Context) {
 	}
 
 	if err != nil {
-		log.Error().Err(err).Str("table", tableName).Msg("Failed to get freshness trends")
+		// log.Error().Err(err).Str("table", tableName).Msg("Failed to get freshness trends")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get freshness trends"})
 		return
 	}
@@ -188,7 +187,7 @@ func (d *Dashboard) FreshnessTrendsAPI(c *gin.Context) {
 
 // FreshnessExportAPI handles the API endpoint for exporting freshness data
 func (d *Dashboard) FreshnessExportAPI(c *gin.Context) {
-	log := logger.FromContext(c.Request.Context())
+	// log := logger.FromContext(c.Request.Context())
 	format := c.Query("format")
 	if format == "" {
 		format = "csv" // Default format
@@ -197,7 +196,7 @@ func (d *Dashboard) FreshnessExportAPI(c *gin.Context) {
 	// Get freshness manager
 	freshnessManager, err := d.getFreshnessManager()
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get freshness manager")
+		// log.Error().Err(err).Msg("Failed to get freshness manager")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get freshness manager"})
 		return
 	}
@@ -205,7 +204,7 @@ func (d *Dashboard) FreshnessExportAPI(c *gin.Context) {
 	// Get all table statuses
 	statuses, err := freshnessManager.GetAllTableStatuses()
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get all table freshness statuses")
+		// log.Error().Err(err).Msg("Failed to get all table freshness statuses")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get freshness statuses"})
 		return
 	}
@@ -241,7 +240,7 @@ func (d *Dashboard) FreshnessExportAPI(c *gin.Context) {
 			"Enabled",
 		}
 		if err := writer.Write(header); err != nil {
-			log.Error().Err(err).Msg("Failed to write CSV header")
+			// log.Error().Err(err).Msg("Failed to write CSV header")
 			return
 		}
 
@@ -260,7 +259,7 @@ func (d *Dashboard) FreshnessExportAPI(c *gin.Context) {
 				strconv.FormatBool(status.SLAConfig.Enabled),
 			}
 			if err := writer.Write(row); err != nil {
-				log.Error().Err(err).Msg("Failed to write CSV row")
+				// log.Error().Err(err).Msg("Failed to write CSV row")
 				return
 			}
 		}

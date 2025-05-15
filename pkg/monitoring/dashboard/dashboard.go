@@ -12,8 +12,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/nessi-dev/nessi-dev/pkg/logging"
 	"github.com/nessi-dev/nessi-dev/pkg/monitoring"
+	"github.com/nessi-dev/nessi-dev/pkg/monitoring/freshness"
+	"github.com/nessi-dev/nessi-dev/pkg/monitoring/service"
+	"github.com/nessi-dev/nessi-dev/pkg/rca"
 	"github.com/nessi-dev/nessi-dev/pkg/security"
 	"github.com/nessi-dev/nessi-dev/pkg/quality/profile"
 	"github.com/nessi-dev/nessi-dev/pkg/quality/rules"
@@ -35,10 +39,36 @@ type RuleValidator interface {
 	Validate(record interface{}) []rules.ValidationError
 }
 
+// RCAClient is an interface for root cause analysis
+type RCAClient interface {
+	// AnalyzeAnomaly performs root cause analysis on an anomaly
+	AnalyzeAnomaly(anomalyID string, config *rca.Config) (*rca.RCAResult, error)
+	// GetRecentAnalyses gets recent RCA analyses
+	GetRecentAnalyses(limit int) ([]*rca.Analysis, error)
+	// GetAnalysisResult gets the result of an RCA analysis
+	GetAnalysisResult(analysisID string) (*rca.RCAResult, error)
+	// GetInsights gets aggregated insights from RCA results
+	GetInsights() (*rca.Insights, error)
+}
+
+// FreshnessManager is an interface for data freshness monitoring
+type FreshnessManager interface {
+	GetTableStatus(tableName string) (freshness.TableFreshnessStatus, error)
+	GetAllTableStatuses() ([]freshness.TableFreshnessStatus, error)
+	GetSLAConfig(tableName string) (freshness.SLAConfig, error)
+	GetAllSLAConfigs() ([]freshness.SLAConfig, error)
+	SetSLAConfig(config freshness.SLAConfig) error
+	DeleteSLAConfig(tableName string) error
+	GetTableTrends(tableName string) (*freshness.FreshnessTrends, error)
+	GetAllTablesTrends() (*freshness.FreshnessTrends, error)
+}
+
 // Dashboard represents a monitoring dashboard
 // Now supports dependency injection for Profiler and RuleValidator
 // so tests can inject fast mocks.
 type Dashboard struct {
+	serviceProvider *service.Provider
+	authRequiredFlag bool
 	monitor      *monitoring.Monitor
 	templates    *template.Template
 	listenAddr   string
@@ -425,4 +455,15 @@ func isTestMode() bool {
 	}
 	
 	return testEnvSet
+}
+
+// authRequired returns a middleware function that checks if authentication is required
+func (d *Dashboard) authRequired() func(*gin.Context) {
+	return func(c *gin.Context) {
+		if d.authRequiredFlag {
+			// Authentication logic would go here
+			// For now, just continue without authentication
+		}
+		c.Next()
+	}
 }
