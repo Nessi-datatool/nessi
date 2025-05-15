@@ -88,8 +88,8 @@ The test data in this directory is used by various test scripts. To run tests th
 # Run specific tests that use test data
 ./scripts/run_tests.sh --package="./pkg/delta/..."
 
-# Run only fast tests (some may use test data)
-./scripts/run_tests.sh --fast
+# Run tests for a specific component
+./scripts/run_tests.sh --package="./pkg/quality/..."
 ```
 
 For more information about our testing strategy and available options, see:
