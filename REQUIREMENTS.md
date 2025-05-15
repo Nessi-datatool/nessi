@@ -200,3 +200,11 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
 - ✅ Dynamic configuration loading
 - ✅ Custom rule extensions
 - ✅ Integration points for external systems
+
+### Testing & Quality Assurance
+- ✅ Comprehensive unit test coverage
+- ✅ Integration tests for key components
+- ✅ DBT plugin test coverage (AlertManager, selection system, validator functions)
+- ✅ Profiler test coverage
+- ✅ Artifacts generation test coverage
+- ✅ Test strategy documentation

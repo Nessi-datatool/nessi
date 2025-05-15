@@ -10,6 +10,18 @@ Tests are categorized into three tiers:
 2. **Standard Tests**: Run in < 30 seconds, test integration between components
 3. **Long Tests**: May take minutes to run, test end-to-end functionality
 
+## Component Test Coverage
+
+### DBT Plugin
+
+The dbt plugin has comprehensive test coverage for the following components:
+
+1. **AlertManager**: Tests for creating alert managers, sending alerts, and formatting failed rules
+2. **Selection System**: Tests for applying modifiers, upstream/downstream selection, and parent/child model relationships
+3. **Validator Functions**: Tests for finding dbt project paths, validating models, and handling edge cases
+4. **Profiler**: Tests for setting profile types, detecting failures, and handling edge cases
+5. **Artifacts**: Tests for generating different types of artifacts
+
 ## Running Tests
 
 We provide several scripts to run different test categories:
