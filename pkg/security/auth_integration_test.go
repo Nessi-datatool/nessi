@@ -15,8 +15,8 @@ import (
 )
 
 func TestAuthIntegration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
+	if security.ShouldSkipIntegrationTests(t) {
+		return
 	}
 	// Create temporary users file
 	tempFile, err := os.CreateTemp("", "users-*.json")
@@ -24,12 +24,12 @@ func TestAuthIntegration(t *testing.T) {
 	defer os.Remove(tempFile.Name())
 	tempFile.Close()
 
-	// Create auth config
+	// Create auth config with minimal token expiry for faster tests
 	config := security.AuthConfig{
 		Enabled:      true,
 		JWTSecret:    "test-integration-secret",
 		UsersFile:    tempFile.Name(),
-		TokenExpiry:  24,
+		TokenExpiry:  1, // Reduced from 24 to 1 for faster tests
 		RequireHTTPS: false,
 	}
 
@@ -218,8 +218,8 @@ func TestAuthIntegration(t *testing.T) {
 }
 
 func TestAuthManagerPersistence(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
+	if security.ShouldSkipIntegrationTests(t) {
+		return
 	}
 	// Create temporary users file
 	tempFile, err := os.CreateTemp("", "users-persistence-*.json")
@@ -227,12 +227,12 @@ func TestAuthManagerPersistence(t *testing.T) {
 	defer os.Remove(tempFile.Name())
 	tempFile.Close()
 
-	// Create auth config
+	// Create auth config with minimal token expiry for faster tests
 	config := security.AuthConfig{
 		Enabled:      true,
 		JWTSecret:    "test-persistence-secret",
 		UsersFile:    tempFile.Name(),
-		TokenExpiry:  24,
+		TokenExpiry:  1, // Reduced from 24 to 1 for faster tests
 		RequireHTTPS: false,
 	}
 
@@ -270,8 +270,8 @@ func TestAuthManagerPersistence(t *testing.T) {
 }
 
 func TestRequireHTTPS(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
+	if security.ShouldSkipIntegrationTests(t) {
+		return
 	}
 	// Create temporary users file
 	tempFile, err := os.CreateTemp("", "users-https-*.json")
@@ -279,12 +279,12 @@ func TestRequireHTTPS(t *testing.T) {
 	defer os.Remove(tempFile.Name())
 	tempFile.Close()
 
-	// Create auth config with HTTPS required
+	// Create auth config with HTTPS required and minimal token expiry
 	config := security.AuthConfig{
 		Enabled:      true,
 		JWTSecret:    "test-https-secret",
 		UsersFile:    tempFile.Name(),
-		TokenExpiry:  24,
+		TokenExpiry:  1, // Reduced from 24 to 1 for faster tests
 		RequireHTTPS: true,
 	}
 

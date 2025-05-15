@@ -13,9 +13,11 @@ import (
 )
 
 func TestSecurityIntegration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
+	if security.ShouldSkipIntegrationTests(t) {
+		return
 	}
+	// Run tests in parallel for faster execution
+	t.Parallel()
 	// Create temporary directory for test files
 	tempDir, err := os.MkdirTemp("", "security-integration-")
 	require.NoError(t, err)
@@ -35,12 +37,12 @@ func TestSecurityIntegration(t *testing.T) {
 	certFile := tempDir + "/cert.pem"
 	keyFile := tempDir + "/key.pem"
 
-	// Create auth config
+	// Create auth config with minimal token expiry for faster tests
 	authConfig := security.AuthConfig{
 		Enabled:      true,
 		JWTSecret:    "integration-test-secret",
 		UsersFile:    usersFilePath,
-		TokenExpiry:  24,
+		TokenExpiry:  1, // Reduced from 24 to 1 for faster tests
 		RequireHTTPS: false,
 	}
 

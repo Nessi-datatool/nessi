@@ -15,9 +15,11 @@ import (
 )
 
 func TestSSLIntegration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
+	if security.ShouldSkipIntegrationTests(t) {
+		return
 	}
+	// Run tests in parallel for faster execution
+	t.Parallel()
 	// Create temporary directory for certificates
 	tempDir, err := os.MkdirTemp("", "ssl-integration-")
 	require.NoError(t, err)
@@ -118,9 +120,11 @@ func TestSSLIntegration(t *testing.T) {
 }
 
 func TestSSLWithExistingCertificates(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
+	if security.ShouldSkipIntegrationTests(t) {
+		return
 	}
+	// Run tests in parallel for faster execution
+	t.Parallel()
 	// Create temporary directory for certificates
 	tempDir, err := os.MkdirTemp("", "ssl-existing-")
 	require.NoError(t, err)
