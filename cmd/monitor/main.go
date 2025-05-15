@@ -22,7 +22,14 @@ func main() {
 	flag.Parse()
 
 	// Initialize monitor
-	monitor := monitoring.New()
+	monitor, err := monitoring.New(monitoring.MonitorOptions{
+		MetricsPort: *metricsPort,
+		EnableIntelligentAlerting: true,
+	})
+	if err != nil {
+		logging.Error("Failed to create monitoring service", err)
+		os.Exit(1)
+	}
 	monitor.SetConfigPath(*configPath)
 
 	// Load configuration

@@ -31,8 +31,8 @@ var (
 	validateThreshold float64
 )
 
-// validateCmd represents the validate command
-var validateCmd = &cobra.Command{
+// deltaValidateCmd represents the delta validate command
+var deltaValidateCmd = &cobra.Command{
 	Use:   "validate [table_path]",
 	Short: "One-line validation of a Delta table",
 	Long: `The validate command performs a quick validation of a Delta table using default rules.
@@ -266,11 +266,11 @@ func outputText(result *ValidationResult) {
 }
 
 func init() {
-	rootCmd.AddCommand(validateCmd)
+	rootCmd.AddCommand(deltaValidateCmd)
 	
 	// Add flags to the validate command
-	validateCmd.Flags().StringVar(&validateFormat, "format", "text", "Output format (text, json)")
-	validateCmd.Flags().StringVar(&validateOutputFile, "output-file", "", "File to write output to")
-	validateCmd.Flags().BoolVar(&validateVerbose, "verbose", false, "Show detailed output")
-	validateCmd.Flags().Float64Var(&validateThreshold, "threshold", 1.0, "Threshold for validation (0.0-1.0)")
+	deltaValidateCmd.Flags().StringVar(&validateFormat, "format", "text", "Output format (text, json)")
+	deltaValidateCmd.Flags().StringVar(&validateOutputFile, "output-file", "", "File to write output to")
+	deltaValidateCmd.Flags().BoolVar(&validateVerbose, "verbose", false, "Show detailed output")
+	deltaValidateCmd.Flags().Float64Var(&validateThreshold, "threshold", 1.0, "Threshold for validation (0.0-1.0)")
 }

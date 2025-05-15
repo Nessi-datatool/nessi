@@ -42,7 +42,7 @@ func init() {
 			outputFormat, _ := cmd.Flags().GetString("format")
 
 			manager := datalake.NewMetadataManager(tablePath)
-			result, err := manager.TimeTravel(datalake.TimeTravelOptions{Version: &version})
+			result, err := manager.TimeTravel(datalake.DeltaTimeTravelOptions{Version: &version})
 			if err != nil {
 				return fmt.Errorf("time travel failed: %w", err)
 			}
@@ -75,7 +75,7 @@ func init() {
 			outputFormat, _ := cmd.Flags().GetString("format")
 
 			manager := datalake.NewMetadataManager(tablePath)
-			result, err := manager.TimeTravel(datalake.TimeTravelOptions{Timestamp: &timestamp})
+			result, err := manager.TimeTravel(datalake.DeltaTimeTravelOptions{Timestamp: &timestamp})
 			if err != nil {
 				return fmt.Errorf("time travel failed: %w", err)
 			}
@@ -95,7 +95,7 @@ func init() {
 }
 
 // printTimeTravelResult prints the time travel result in the specified format
-func printTimeTravelResult(result *datalake.TimeTravelResult, format string) {
+func printTimeTravelResult(result *datalake.DeltaTimeTravelResult, format string) {
 	switch format {
 	case "json":
 		// Create a simplified result for JSON output

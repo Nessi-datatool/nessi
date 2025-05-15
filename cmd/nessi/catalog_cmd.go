@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/nessi-dev/nessi-dev/pkg/api/types"
 	"github.com/nessi-dev/nessi-dev/pkg/catalog"
 	"github.com/spf13/cobra"
 )
@@ -479,13 +480,20 @@ Example:
 		}
 
 		// Create quality metrics
-		metrics := &catalog.QualityMetrics{
-			OverallScore: 0.0,
-			Completeness: 0.0,
-			Accuracy:     0.0,
-			Consistency:  0.0,
-			Timeliness:   0.0,
-			LastUpdated:  time.Now(),
+		// Calculate total rows from profile
+		totalRows := int64(0)
+		if len(profile.Columns) > 0 && profile.Columns[0].Stats.Count > 0 {
+			totalRows = profile.Columns[0].Stats.Count
+		}
+		
+		metrics := &types.QualityMetrics{
+			TotalRows:        totalRows,
+			LastUpdated:      time.Now(),
+			SchemaVersion:    "1.0",
+			DataCompleteness: 0.0,
+			DataAccuracy:     0.0,
+			DataConsistency:  0.0,
+			ColumnMetrics:    make(map[string]*types.ColumnQualityMetrics),
 		}
 
 		// Calculate completeness
@@ -497,7 +505,7 @@ Example:
 					totalCompleteness += completeness
 				}
 			}
-			metrics.Completeness = totalCompleteness / float64(len(profile.Columns))
+			metrics.DataCompleteness = totalCompleteness / float64(len(profile.Columns))
 		}
 
 		// Calculate accuracy and consistency
@@ -507,13 +515,22 @@ Example:
 
 			for _, result := range validation.RuleResults {
 				// Add rule result
-				metrics.RuleResults = append(metrics.RuleResults, catalog.RuleResult{
-					RuleName: result.Rule.Name,
-					RuleType: result.Rule.Type,
-					Passed:   result.Passed,
-					Score:    result.Score,
-					Details:  result.Details,
-				})
+				// Add column-level metrics if not already present
+				// Use rule name as column name if not specified
+				colName := result.Rule.Name
+				if _, exists := metrics.ColumnMetrics[colName]; !exists {
+					metrics.ColumnMetrics[colName] = &types.ColumnQualityMetrics{
+						CustomMetrics: make(map[string]interface{}),
+					}
+				}
+				
+				// Store rule result in custom metrics
+				metrics.ColumnMetrics[colName].CustomMetrics[result.Rule.Name] = map[string]interface{}{
+					"type":    result.Rule.Type,
+					"passed":  result.Passed,
+					"score":   result.Score,
+					"details": result.Details,
+				}
 
 				// Calculate accuracy and consistency
 				switch result.Rule.Type {
@@ -527,15 +544,15 @@ Example:
 			}
 
 			if accuracyRules > 0 {
-				metrics.Accuracy = accuracyScore / float64(accuracyRules)
+				metrics.DataAccuracy = accuracyScore / float64(accuracyRules)
 			} else {
-				metrics.Accuracy = 1.0
+				metrics.DataAccuracy = 1.0
 			}
 
 			if consistencyRules > 0 {
-				metrics.Consistency = consistencyScore / float64(consistencyRules)
+				metrics.DataConsistency = consistencyScore / float64(consistencyRules)
 			} else {
-				metrics.Consistency = 1.0
+				metrics.DataConsistency = 1.0
 			}
 		}
 
@@ -544,23 +561,63 @@ Example:
 			timestamp, err := time.Parse(time.RFC3339, profile.Timestamp)
 			if err == nil {
 				ageHours := time.Since(timestamp).Hours()
+				// Store timeliness as a custom metric
+				timeliness := 0.0
 				if ageHours <= 24.0 {
-					metrics.Timeliness = 1.0
+					timeliness = 1.0
 				} else if ageHours <= 168.0 {
-					metrics.Timeliness = 0.8
+					timeliness = 0.8
 				} else if ageHours <= 720.0 {
-					metrics.Timeliness = 0.6
+					timeliness = 0.6
 				} else {
-					metrics.Timeliness = 0.4
+					timeliness = 0.4
 				}
+				
+				// Store in custom metrics
+				if metrics.ColumnMetrics == nil {
+					metrics.ColumnMetrics = make(map[string]*types.ColumnQualityMetrics)
+				}
+				if _, exists := metrics.ColumnMetrics["_table"]; !exists {
+					metrics.ColumnMetrics["_table"] = &types.ColumnQualityMetrics{
+						CustomMetrics: make(map[string]interface{}),
+					}
+				}
+				metrics.ColumnMetrics["_table"].CustomMetrics["timeliness"] = timeliness
 			}
 		} else {
-			metrics.Timeliness = 1.0
+			// Store default timeliness as custom metric
+			if metrics.ColumnMetrics == nil {
+				metrics.ColumnMetrics = make(map[string]*types.ColumnQualityMetrics)
+			}
+			if _, exists := metrics.ColumnMetrics["_table"]; !exists {
+				metrics.ColumnMetrics["_table"] = &types.ColumnQualityMetrics{
+					CustomMetrics: make(map[string]interface{}),
+				}
+			}
+			metrics.ColumnMetrics["_table"].CustomMetrics["timeliness"] = 1.0
 		}
 
-		// Calculate overall score
-		metrics.OverallScore = (metrics.Completeness*0.25 + metrics.Accuracy*0.35 +
-			metrics.Consistency*0.25 + metrics.Timeliness*0.15)
+		// Calculate overall score - store as custom metric
+		scoreValue := (metrics.DataCompleteness*0.25 + metrics.DataAccuracy*0.35 +
+			metrics.DataConsistency*0.25)
+		
+		// Add timeliness component if available
+		if metrics.ColumnMetrics != nil && metrics.ColumnMetrics["_table"] != nil {
+			if timeliness, ok := metrics.ColumnMetrics["_table"].CustomMetrics["timeliness"].(float64); ok {
+				scoreValue += timeliness * 0.15
+			}
+		}
+		
+		// Store overall score
+		if metrics.ColumnMetrics == nil {
+			metrics.ColumnMetrics = make(map[string]*types.ColumnQualityMetrics)
+		}
+		if _, exists := metrics.ColumnMetrics["_table"]; !exists {
+			metrics.ColumnMetrics["_table"] = &types.ColumnQualityMetrics{
+				CustomMetrics: make(map[string]interface{}),
+			}
+		}
+		metrics.ColumnMetrics["_table"].CustomMetrics["overall_score"] = scoreValue
 
 		// Publish quality metrics
 		if err := cat.PublishQualityMetrics(ctx, database, table, metrics); err != nil {
@@ -568,11 +625,25 @@ Example:
 		}
 
 		fmt.Printf("Successfully published quality metrics to %s for %s.%s\n", cat.Name(), database, table)
-		fmt.Printf("Overall Score: %.2f\n", metrics.OverallScore)
-		fmt.Printf("Completeness: %.2f\n", metrics.Completeness)
-		fmt.Printf("Accuracy: %.2f\n", metrics.Accuracy)
-		fmt.Printf("Consistency: %.2f\n", metrics.Consistency)
-		fmt.Printf("Timeliness: %.2f\n", metrics.Timeliness)
+		// Get overall score from custom metrics
+		var overallScore float64
+		if metrics.ColumnMetrics != nil && metrics.ColumnMetrics["_table"] != nil {
+			if score, ok := metrics.ColumnMetrics["_table"].CustomMetrics["overall_score"].(float64); ok {
+				overallScore = score
+			}
+		}
+		fmt.Printf("Overall Score: %.2f\n", overallScore)
+		fmt.Printf("Completeness: %.2f\n", metrics.DataCompleteness)
+		fmt.Printf("Accuracy: %.2f\n", metrics.DataAccuracy)
+		fmt.Printf("Consistency: %.2f\n", metrics.DataConsistency)
+		// Get timeliness from custom metrics
+		timeliness := 0.0
+		if metrics.ColumnMetrics != nil && metrics.ColumnMetrics["_table"] != nil {
+			if t, ok := metrics.ColumnMetrics["_table"].CustomMetrics["timeliness"].(float64); ok {
+				timeliness = t
+			}
+		}
+		fmt.Printf("Timeliness: %.2f\n", timeliness)
 
 		return nil
 	},

@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/nessi-dev/nessi-dev/pkg/plugin"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var pluginCmd = &cobra.Command{

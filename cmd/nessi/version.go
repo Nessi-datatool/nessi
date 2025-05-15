@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -90,7 +89,13 @@ func init() {
 				fmt.Println("  No schema changes")
 			} else {
 				for _, change := range comparison.SchemaChanges {
-					fmt.Printf("  %s: %s\n", change.Type, change.Description)
+					fmt.Printf("  Field: %s, Type: %s\n", change.FieldName, change.Type)
+					if change.OldType != nil {
+						fmt.Printf("    Old Type: %v\n", change.OldType)
+					}
+					if change.NewType != nil {
+						fmt.Printf("    New Type: %v\n", change.NewType)
+					}
 				}
 			}
 

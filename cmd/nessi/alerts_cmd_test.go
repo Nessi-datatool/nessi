@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/nessi-dev/nessi/pkg/monitoring/alerts"
+	"github.com/nessi-dev/nessi-dev/pkg/monitoring/alerts"
 )
 
 func setupTestAlertManager(t *testing.T) (*alerts.AlertManager, string) {

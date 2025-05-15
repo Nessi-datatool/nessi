@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
-	"github.com/nessi-dev/nessi/pkg/monitoring/alerts"
+	"github.com/nessi-dev/nessi-dev/pkg/monitoring/alerts"
 )
 
 // alertsRulesCmd represents the alerts rules command
@@ -33,7 +33,7 @@ var alertsRulesListCmd = &cobra.Command{
 		outputFormat, _ := cmd.Flags().GetString("output")
 
 		// Create alert manager
-		manager, err := alerts.NewAlertManager(config.DataDir)
+		manager, err := alerts.NewAlertManager(appConfig.DataDir)
 		if err != nil {
 			fmt.Printf("Error creating alert manager: %v\n", err)
 			os.Exit(1)
@@ -105,7 +105,7 @@ var alertsRulesGetCmd = &cobra.Command{
 		outputFormat, _ := cmd.Flags().GetString("output")
 
 		// Create alert manager
-		manager, err := alerts.NewAlertManager(config.DataDir)
+		manager, err := alerts.NewAlertManager(appConfig.DataDir)
 		if err != nil {
 			fmt.Printf("Error creating alert manager: %v\n", err)
 			os.Exit(1)
@@ -144,7 +144,7 @@ var alertsRulesGetCmd = &cobra.Command{
 			fmt.Printf("Created At:          %s\n", rule.CreatedAt.Format(time.RFC3339))
 			fmt.Printf("Created By:          %s\n", rule.CreatedBy)
 			
-			if rule.UpdatedAt != nil {
+			if !rule.UpdatedAt.IsZero() {
 				fmt.Printf("Updated At:          %s\n", rule.UpdatedAt.Format(time.RFC3339))
 			}
 			if rule.UpdatedBy != "" {
@@ -214,7 +214,7 @@ var alertsRulesCreateCmd = &cobra.Command{
 		}
 
 		// Create alert manager
-		manager, err := alerts.NewAlertManager(config.DataDir)
+		manager, err := alerts.NewAlertManager(appConfig.DataDir)
 		if err != nil {
 			fmt.Printf("Error creating alert manager: %v\n", err)
 			os.Exit(1)
@@ -265,7 +265,7 @@ var alertsRulesUpdateCmd = &cobra.Command{
 		user, _ := cmd.Flags().GetString("user")
 
 		// Create alert manager
-		manager, err := alerts.NewAlertManager(config.DataDir)
+		manager, err := alerts.NewAlertManager(appConfig.DataDir)
 		if err != nil {
 			fmt.Printf("Error creating alert manager: %v\n", err)
 			os.Exit(1)
@@ -341,8 +341,7 @@ var alertsRulesUpdateCmd = &cobra.Command{
 		}
 
 		// Update metadata
-		now := time.Now()
-		rule.UpdatedAt = &now
+		rule.UpdatedAt = time.Now()
 		rule.UpdatedBy = user
 
 		// Save updated rule
@@ -367,7 +366,7 @@ var alertsRulesDeleteCmd = &cobra.Command{
 		ruleID := args[0]
 
 		// Create alert manager
-		manager, err := alerts.NewAlertManager(config.DataDir)
+		manager, err := alerts.NewAlertManager(appConfig.DataDir)
 		if err != nil {
 			fmt.Printf("Error creating alert manager: %v\n", err)
 			os.Exit(1)
@@ -396,7 +395,7 @@ var alertsRulesEnableCmd = &cobra.Command{
 		user, _ := cmd.Flags().GetString("user")
 
 		// Create alert manager
-		manager, err := alerts.NewAlertManager(config.DataDir)
+		manager, err := alerts.NewAlertManager(appConfig.DataDir)
 		if err != nil {
 			fmt.Printf("Error creating alert manager: %v\n", err)
 			os.Exit(1)
@@ -417,8 +416,7 @@ var alertsRulesEnableCmd = &cobra.Command{
 
 		// Enable rule
 		rule.Enabled = true
-		now := time.Now()
-		rule.UpdatedAt = &now
+		rule.UpdatedAt = time.Now()
 		rule.UpdatedBy = user
 
 		// Save updated rule
@@ -444,7 +442,7 @@ var alertsRulesDisableCmd = &cobra.Command{
 		user, _ := cmd.Flags().GetString("user")
 
 		// Create alert manager
-		manager, err := alerts.NewAlertManager(config.DataDir)
+		manager, err := alerts.NewAlertManager(appConfig.DataDir)
 		if err != nil {
 			fmt.Printf("Error creating alert manager: %v\n", err)
 			os.Exit(1)
@@ -465,8 +463,7 @@ var alertsRulesDisableCmd = &cobra.Command{
 
 		// Disable rule
 		rule.Enabled = false
-		now := time.Now()
-		rule.UpdatedAt = &now
+		rule.UpdatedAt = time.Now()
 		rule.UpdatedBy = user
 
 		// Save updated rule

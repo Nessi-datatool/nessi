@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 
 	"github.com/spf13/cobra"
 )
@@ -28,8 +27,8 @@ or command-line flags.`,
 		// In a real implementation, this would download the plugin from a repository
 		// For now, we'll just enable the built-in plugin
 		
-		// Create config directory if it doesn't exist
-		configDir := getConfigDir()
+		// Get config directory
+		configDir := GetConfigDir()
 		if err := os.MkdirAll(configDir, 0755); err != nil {
 			fmt.Printf("Error creating config directory: %v\n", err)
 			os.Exit(1)
@@ -63,22 +62,7 @@ or command-line flags.`,
 	},
 }
 
-// getConfigDir returns the configuration directory for Nessi
-func getConfigDir() string {
-	// Use platform-specific config directory
-	var configDir string
-	
-	switch runtime.GOOS {
-	case "windows":
-		configDir = filepath.Join(os.Getenv("APPDATA"), "nessi")
-	case "darwin":
-		configDir = filepath.Join(os.Getenv("HOME"), "Library", "Application Support", "nessi")
-	default: // linux and others
-		configDir = filepath.Join(os.Getenv("HOME"), ".config", "nessi")
-	}
-	
-	return configDir
-}
+// Note: getConfigDir function has been moved to utils.go as GetConfigDir
 
 // enableDBTPluginInConfig enables the dbt plugin in the configuration file
 func enableDBTPluginInConfig(configPath string) error {

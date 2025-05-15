@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/nessi-dev/nessi/pkg/monitoring/alerts"
+	"github.com/nessi-dev/nessi-dev/pkg/monitoring/alerts"
 )
 
 // alertsAckCmd represents the alerts acknowledge command
@@ -23,7 +23,7 @@ var alertsAckCmd = &cobra.Command{
 		user, _ := cmd.Flags().GetString("user")
 
 		// Create alert manager
-		manager, err := alerts.NewAlertManager(config.DataDir)
+		manager, err := alerts.NewAlertManager(appConfig.DataDir)
 		if err != nil {
 			fmt.Printf("Error creating alert manager: %v\n", err)
 			os.Exit(1)
@@ -51,7 +51,7 @@ var alertsResolveCmd = &cobra.Command{
 		alertID := args[0]
 
 		// Create alert manager
-		manager, err := alerts.NewAlertManager(config.DataDir)
+		manager, err := alerts.NewAlertManager(appConfig.DataDir)
 		if err != nil {
 			fmt.Printf("Error creating alert manager: %v\n", err)
 			os.Exit(1)
@@ -82,7 +82,7 @@ var alertsSilenceCmd = &cobra.Command{
 		duration, _ := cmd.Flags().GetDuration("duration")
 
 		// Create alert manager
-		manager, err := alerts.NewAlertManager(config.DataDir)
+		manager, err := alerts.NewAlertManager(appConfig.DataDir)
 		if err != nil {
 			fmt.Printf("Error creating alert manager: %v\n", err)
 			os.Exit(1)
@@ -112,7 +112,7 @@ var alertsDeleteCmd = &cobra.Command{
 		force, _ := cmd.Flags().GetBool("force")
 
 		// Create alert manager
-		manager, err := alerts.NewAlertManager(config.DataDir)
+		manager, err := alerts.NewAlertManager(appConfig.DataDir)
 		if err != nil {
 			fmt.Printf("Error creating alert manager: %v\n", err)
 			os.Exit(1)
@@ -161,7 +161,7 @@ var alertsNotifyCmd = &cobra.Command{
 		}
 
 		// Create alert manager
-		manager, err := alerts.NewAlertManager(config.DataDir)
+		manager, err := alerts.NewAlertManager(appConfig.DataDir)
 		if err != nil {
 			fmt.Printf("Error creating alert manager: %v\n", err)
 			os.Exit(1)
@@ -172,32 +172,36 @@ var alertsNotifyCmd = &cobra.Command{
 		case "email":
 			// Configure email notifier
 			emailConfig := alerts.EmailConfig{
-				Host:     config.SMTP.Host,
-				Port:     config.SMTP.Port,
-				Username: config.SMTP.Username,
-				Password: config.SMTP.Password,
-				From:     config.SMTP.From,
+				Host:     appConfig.SMTP.Host,
+				Port:     appConfig.SMTP.Port,
+				Username: appConfig.SMTP.Username,
+				Password: appConfig.SMTP.Password,
+				From:     appConfig.SMTP.From,
 				UseHTML:  true,
 			}
-			emailNotifier := alerts.NewEmailNotifier(emailConfig)
+			emailNotifier, err := alerts.NewEmailNotifier(emailConfig)
+			if err != nil {
+				fmt.Printf("Error creating email notifier: %v\n", err)
+				os.Exit(1)
+			}
 			manager.RegisterNotifier(emailNotifier)
 		case "slack":
 			// Configure Slack notifier
 			slackConfig := alerts.SlackConfig{
-				WebhookURL: config.Slack.WebhookURL,
-				Channel:    config.Slack.Channel,
-				Username:   config.Slack.Username,
-				IconEmoji:  config.Slack.IconEmoji,
+				WebhookURL: appConfig.Slack.WebhookURL,
+				Channel:    appConfig.Slack.Channel,
+				Username:   appConfig.Slack.Username,
+				IconEmoji:  appConfig.Slack.IconEmoji,
 			}
 			slackNotifier := alerts.NewSlackNotifier(slackConfig)
 			manager.RegisterNotifier(slackNotifier)
 		case "webhook":
 			// Configure webhook notifier
 			webhookConfig := alerts.WebhookConfig{
-				URL:     config.Webhook.URL,
-				Method:  config.Webhook.Method,
-				Headers: config.Webhook.Headers,
-				Timeout: time.Duration(config.Webhook.TimeoutSeconds) * time.Second,
+				URL:     appConfig.Webhook.URL,
+				Method:  appConfig.Webhook.Method,
+				Headers: appConfig.Webhook.Headers,
+				Timeout: time.Duration(appConfig.Webhook.TimeoutSeconds) * time.Second,
 			}
 			webhookNotifier := alerts.NewWebhookNotifier(webhookConfig)
 			manager.RegisterNotifier(webhookNotifier)

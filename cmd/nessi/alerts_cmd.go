@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
-	"github.com/nessi-dev/nessi/pkg/monitoring/alerts"
+	"github.com/nessi-dev/nessi-dev/pkg/monitoring/alerts"
 )
 
 // alertsCmd represents the alerts command
@@ -35,7 +35,7 @@ var alertsListCmd = &cobra.Command{
 		outputFormat, _ := cmd.Flags().GetString("output")
 
 		// Create alert manager
-		manager, err := alerts.NewAlertManager(config.DataDir)
+		manager, err := alerts.NewAlertManager(appConfig.DataDir)
 		if err != nil {
 			fmt.Printf("Error creating alert manager: %v\n", err)
 			os.Exit(1)
@@ -97,7 +97,7 @@ var alertsGetCmd = &cobra.Command{
 		outputFormat, _ := cmd.Flags().GetString("output")
 
 		// Create alert manager
-		manager, err := alerts.NewAlertManager(config.DataDir)
+		manager, err := alerts.NewAlertManager(appConfig.DataDir)
 		if err != nil {
 			fmt.Printf("Error creating alert manager: %v\n", err)
 			os.Exit(1)
@@ -211,7 +211,7 @@ var alertsCreateCmd = &cobra.Command{
 		}
 
 		// Create alert manager
-		manager, err := alerts.NewAlertManager(config.DataDir)
+		manager, err := alerts.NewAlertManager(appConfig.DataDir)
 		if err != nil {
 			fmt.Printf("Error creating alert manager: %v\n", err)
 			os.Exit(1)
