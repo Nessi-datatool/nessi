@@ -25,8 +25,17 @@ func RunTestWithContext(t *testing.T, testFunc func(ctx context.Context)) {
 }
 
 // RunInParallel marks a test to run in parallel with other tests
+// WARNING: Do not use this function if the test already calls t.Parallel() directly,
+// as this will cause conflicts and potentially lead to test failures.
+// Instead, either use this function OR call t.Parallel() directly, but not both.
 func RunInParallel(t *testing.T) {
-	testutil.RunInParallel(t)
+	t.Helper() // Mark as test helper for better error reporting
+	
+	// Check if this function is being called from a test that might also call t.Parallel()
+	t.Log("WARNING: Using testutil.RunInParallel() - do not also call t.Parallel() directly in the same test")
+	
+	// Mark the test as parallel
+	t.Parallel()
 }
 
 // CreateMockMonitor creates a mock monitor for testing
