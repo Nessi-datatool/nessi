@@ -245,19 +245,35 @@ api:
 
 ## Test Strategy
 
+We use a unified test script that supports multiple test modes:
+
 ### Fast/unit tests
 Run locally for rapid feedback:
 
 ```sh
-./scripts/run_fast_tests.sh
+./scripts/run_tests.sh --fast
 ```
 This skips all integration/long-running tests.
 
-### Integration/slow tests
-Run only in CI (or with the full suite, no `-short` flag):
+### Short tests
+Run specific test files:
 
 ```sh
-go test ./...
+./scripts/run_tests.sh --short
+```
+
+### Standard tests
+Run tests that complete in under 30 seconds (default):
+
+```sh
+./scripts/run_tests.sh
+```
+
+### Integration/slow tests
+Run all tests including long-running ones:
+
+```sh
+./scripts/run_tests.sh --all
 ```
 
 All integration/slow tests use the Go convention:
@@ -265,6 +281,11 @@ All integration/slow tests use the Go convention:
 if testing.Short() {
     t.Skip("Skipping integration test in short mode")
 }
+```
+
+For more options, see the help:
+```sh
+./scripts/run_tests.sh --help
 ```
 
 ## Contributing

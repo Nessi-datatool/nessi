@@ -24,11 +24,26 @@ The dbt plugin has comprehensive test coverage for the following components:
 
 ## Running Tests
 
-We provide several scripts to run different test categories:
+We provide a unified test script (`scripts/run_tests.sh`) that supports multiple test modes:
 
-- `run_fast_tests.sh`: Runs only the fast tests (< 5 seconds)
-- `run_standard_tests.sh`: Runs fast and standard tests (< 30 seconds)
-- `run_all_tests.sh`: Runs all tests including long-running ones
+```bash
+# Run standard tests (default)
+./scripts/run_tests.sh
+
+# Run only fast tests
+./scripts/run_tests.sh --fast
+
+# Run specific short test files
+./scripts/run_tests.sh --short
+
+# Run tests for a specific package
+./scripts/run_tests.sh --package="./pkg/dbt/..."
+
+# Run all tests including long-running ones
+./scripts/run_tests.sh --all
+```
+
+All test scripts are located in the `scripts/` directory, and test data files are in the `test_data/` directory.
 
 ## CI/CD Integration
 

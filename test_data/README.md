@@ -13,3 +13,22 @@ This is a Parquet file used for testing the Delta Lake and Parquet file handling
 Test files in this directory are referenced by the test suite and should not be modified or deleted unless you are also updating the corresponding tests.
 
 When adding new test data files, please document them in this README.md file with a brief description of their purpose and the tests that use them.
+
+## Running Tests with This Data
+
+The test data in this directory is used by various test scripts. To run tests that use this data, use our unified test script:
+
+```bash
+# Run all tests including those that use test data
+./scripts/run_tests.sh --all
+
+# Run specific tests that use test data
+./scripts/run_tests.sh --package="./pkg/delta/..."
+
+# Run only fast tests (some may use test data)
+./scripts/run_tests.sh --fast
+```
+
+For more information about our testing strategy and available options, see:
+- `./scripts/run_tests.sh --help`
+- `./docs/test_strategy.md`
