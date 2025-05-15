@@ -72,6 +72,13 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
   - ✅ Seasonal pattern recognition (hourly, daily, weekly)
   - ✅ Automatic rule creation and updating based on historical data
   - ✅ Self-tuning sensitivity configuration
+  - ✅ Root Cause Analysis (RCA) for anomaly diagnosis
+    - ✅ Schema change detection and impact analysis
+    - ✅ Data quality rule failure correlation
+    - ✅ Lineage-based upstream issue detection
+    - ✅ System performance correlation
+    - ✅ Actionable recommendations based on findings
+    - ✅ Integration with Grafana dashboards
 
 ### Monitoring History
 - ✅ 30-day metrics retention
@@ -186,6 +193,11 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
 8. ✅ Alerting System
    - ✅ Standard alerting with multiple notification channels
    - ✅ Intelligent alerting with pattern recognition
+9. ✅ Root Cause Analysis (RCA) Service
+   - ✅ CLI accessibility via `nessi rca <anomaly_id>`
+   - ✅ Feature flag control with `--enable-rca`
+   - ✅ Structured JSON reports and HTML dashboard integration
+   - ✅ Grafana dashboard linking for contextual metrics
 
 ### Optional Python Extensions
 1. ✅ Advanced Delta Lake Features
