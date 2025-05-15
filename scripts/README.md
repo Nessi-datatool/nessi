@@ -1,6 +1,78 @@
 # Nessi.dev Scripts
 
-This directory contains utility scripts for the Nessi.dev project.
+This directory contains utility scripts for the Nessi.dev project. These scripts help with development, testing, and verification of various features.
+
+## Testing Scripts
+
+### run_tests.sh
+
+A comprehensive test runner with multiple modes and options:
+
+```bash
+./scripts/run_tests.sh [options]
+```
+
+Options:
+- `--fast` - Run only fast tests (< 5 seconds)
+- `--short` - Run only specific short test files
+- `--all` - Run all tests including long-running ones
+- `--package PKG` - Specify a package to test (e.g., ./pkg/dbt/...)
+- `--no-cache` - Disable test caching (adds -count=1)
+- `--files FILES` - Run specific test files (comma-separated)
+- `--help` - Show help message
+
+Examples:
+```bash
+# Run fast tests only
+./scripts/run_tests.sh --fast
+
+# Run all tests for a specific package
+./scripts/run_tests.sh --all --package="./pkg/freshness"
+
+# Run specific test files
+./scripts/run_tests.sh --short --files="./pkg/monitoring/export_short_test.go,./pkg/monitoring/dashboard/alerts_short_test.go"
+```
+
+### debug_long_tests.sh
+
+A script specifically for debugging long-running tests with verbose output, timeouts, and race detection:
+
+```bash
+./scripts/debug_long_tests.sh
+```
+
+This script:
+- Sets environment variables for debugging
+- Creates log files for test output
+- Runs specific long-running packages with verbose output
+- Performs race detection on critical packages
+- Saves all logs to the `./logs` directory
+
+## Development Scripts
+
+### run-dev.sh
+
+A script for setting up and running the development environment:
+
+```bash
+./scripts/run-dev.sh
+```
+
+This script:
+- Installs air for hot reloading (if not already installed)
+- Creates necessary directories for data, logs, and certificates
+- Generates self-signed certificates if they don't exist
+- Starts the monitoring stack with docker-compose (if available)
+- Sets development environment variables
+- Runs the application with hot reloading
+
+### generate_certs.sh
+
+Generates self-signed SSL certificates for development:
+
+```bash
+./scripts/generate_certs.sh
+```
 
 ## Security Verification Scripts
 
