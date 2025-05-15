@@ -8,6 +8,10 @@ This directory contains test data files used by the Nessi.dev test suite.
 
 This is a Parquet file used for testing the Delta Lake and Parquet file handling capabilities of Nessi.dev. It contains sample data that is used by various tests to verify the correct functioning of data loading, schema inference, and data quality validation features.
 
+### Test Rules
+
+The `test_rules.yaml` file contains sample quality rules used for testing the quality rules functionality. These rules are loaded by the `TestYAMLLoader` function in the quality rules tests.
+
 ### rules/test_rules.yaml
 
 This YAML file contains sample validation rules used for testing the rule engine in Nessi.dev. It includes examples of regex, enum, length, and date format validation rules that are used by the test suite to verify the correct functioning of the rule validation system.
@@ -27,6 +31,20 @@ This JSON file contains sample schema change records used for testing the RCA fe
 ### rca/data_quality_issues.json
 
 This JSON file contains sample data quality issues used for testing the RCA feature's ability to correlate anomalies with data quality rule failures in both the target table and upstream data sources.
+
+## Freshness SLA Testing
+
+The Freshness SLA testing now uses an in-memory approach with the following components:
+
+### BetterMockDeltaConnector
+
+A mock implementation of the Delta connector interface that doesn't rely on file operations and can be configured with predefined responses. This connector allows tests to simulate Delta Lake tables with configurable last modified times without requiring actual table files.
+
+### TestSLAManager
+
+A simplified version of the SLAManager specifically designed for testing. It works with the BetterMockDeltaConnector to provide a complete in-memory testing environment for the Freshness SLA functionality.
+
+This in-memory testing approach avoids potential deadlocks and timeouts caused by file I/O operations during testing, making the tests more reliable and faster to execute.
 
 ### rca/dashboard_test_data.json
 
