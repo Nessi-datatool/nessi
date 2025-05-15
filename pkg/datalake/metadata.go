@@ -6,35 +6,82 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"sync"
 	"time"
 
 	"github.com/apache/arrow/go/v15/arrow"
+	"github.com/nessi-dev/nessi-dev/pkg/logging"
 )
 
 // MetadataManager handles Delta table metadata operations
 type MetadataManager struct {
 	tablePath string
+	mutex     sync.RWMutex
+	cache     *DeltaTable // In-memory cache of the latest table metadata
+	versions  []int64    // Cached list of available versions
 }
 
 // NewMetadataManager creates a new metadata manager
 func NewMetadataManager(tablePath string) *MetadataManager {
+	logger := logging.GetLogger()
+	logger.Debug("Creating new MetadataManager", "tablePath", tablePath)
 	return &MetadataManager{
 		tablePath: tablePath,
+		cache:     nil,
+		versions:  nil,
 	}
 }
 
 // ReadTableMetadata reads the latest table metadata from the transaction log
 func (m *MetadataManager) ReadTableMetadata() (*DeltaTable, error) {
+	logger := logging.GetLogger()
+	logger.Debug("Reading table metadata", "tablePath", m.tablePath)
+
+	// Check cache first
+	m.mutex.RLock()
+	if m.cache != nil {
+		deferred := m.cache
+		m.mutex.RUnlock()
+		logger.Debug("Using cached table metadata", "version", deferred.Version)
+		return deferred, nil
+	}
+	m.mutex.RUnlock()
+
 	// Get latest version
 	version, err := m.getLatestVersion()
 	if err != nil {
-		return nil, err
+		logger.Error("Failed to get latest version", "error", err)
+		return nil, fmt.Errorf("failed to get latest version: %w", err)
+	}
+
+	// If no versions exist yet, return empty table
+	if version == 0 && err == nil {
+		logger.Info("No versions found, returning empty table")
+		emptyTable := &DeltaTable{
+			Path:         m.tablePath,
+			Version:      0,
+			LastModified: time.Now(),
+			Schema:       arrow.NewSchema([]arrow.Field{}, nil),
+			Files:        []string{},
+			Partitions:   make(map[string][]string),
+			Stats:        nil,
+			Metadata:     make(map[string]interface{}),
+		}
+
+		// Update cache
+		m.mutex.Lock()
+		m.cache = emptyTable
+		m.mutex.Unlock()
+
+		return emptyTable, nil
 	}
 
 	// Read transaction log
 	logFile := filepath.Join(m.tablePath, "_delta_log", fmt.Sprintf("%020d.json", version))
+	logger.Debug("Reading transaction log", "file", logFile)
 	data, err := os.ReadFile(logFile)
 	if err != nil {
+		logger.Error("Failed to read transaction log", "error", err)
 		return nil, fmt.Errorf("failed to read transaction log: %w", err)
 	}
 
@@ -50,12 +97,14 @@ func (m *MetadataManager) ReadTableMetadata() (*DeltaTable, error) {
 	}
 
 	if err := json.Unmarshal(data, &metadata); err != nil {
+		logger.Error("Failed to parse metadata", "error", err)
 		return nil, fmt.Errorf("failed to parse metadata: %w", err)
 	}
 
 	// Parse schema
 	fields, ok := metadata.Schema["fields"].([]interface{})
 	if !ok {
+		logger.Error("Invalid schema format")
 		return nil, fmt.Errorf("invalid schema format")
 	}
 
@@ -63,16 +112,19 @@ func (m *MetadataManager) ReadTableMetadata() (*DeltaTable, error) {
 	for i, field := range fields {
 		fieldMap, ok := field.(map[string]interface{})
 		if !ok {
+			logger.Error("Invalid field format", "field", field)
 			return nil, fmt.Errorf("invalid field format")
 		}
 
 		name, ok := fieldMap["name"].(string)
 		if !ok {
+			logger.Error("Invalid field name", "field", fieldMap)
 			return nil, fmt.Errorf("invalid field name")
 		}
 
 		typeStr, ok := fieldMap["type"].(string)
 		if !ok {
+			logger.Error("Invalid field type", "field", fieldMap)
 			return nil, fmt.Errorf("invalid field type")
 		}
 
@@ -84,8 +136,19 @@ func (m *MetadataManager) ReadTableMetadata() (*DeltaTable, error) {
 			dataType = &arrow.StringType{}
 		case "double", "float64":
 			dataType = &arrow.Float64Type{}
+		case "boolean":
+			dataType = &arrow.BooleanType{}
+		case "int64":
+			dataType = &arrow.Int64Type{}
+		case "float32":
+			dataType = &arrow.Float32Type{}
+		case "date":
+			dataType = &arrow.Date32Type{}
+		case "timestamp":
+			dataType = &arrow.TimestampType{Unit: arrow.Microsecond}
 		default:
-			return nil, fmt.Errorf("unsupported field type: %s", typeStr)
+			logger.Warn("Unsupported field type, using string as fallback", "type", typeStr, "field", name)
+			dataType = &arrow.StringType{}
 		}
 
 		arrowFields[i] = arrow.Field{Name: name, Type: dataType}
@@ -103,12 +166,22 @@ func (m *MetadataManager) ReadTableMetadata() (*DeltaTable, error) {
 		Metadata:     metadata.Metadata,
 	}
 
+	// Update cache
+	m.mutex.Lock()
+	m.cache = table
+	m.mutex.Unlock()
+
+	logger.Debug("Successfully read table metadata", "version", table.Version)
 	return table, nil
 }
 
 // WriteTableMetadata writes table metadata to the transaction log
 func (m *MetadataManager) WriteTableMetadata(table *DeltaTable) error {
+	logger := logging.GetLogger()
+	logger.Debug("Writing table metadata", "tablePath", m.tablePath, "version", table.Version)
+
 	if table == nil {
+		logger.Error("Table cannot be nil")
 		return fmt.Errorf("table cannot be nil")
 	}
 
@@ -123,8 +196,19 @@ func (m *MetadataManager) WriteTableMetadata(table *DeltaTable) error {
 			typeStr = "utf8"
 		case *arrow.Float64Type:
 			typeStr = "float64"
+		case *arrow.BooleanType:
+			typeStr = "boolean"
+		case *arrow.Int64Type:
+			typeStr = "int64"
+		case *arrow.Float32Type:
+			typeStr = "float32"
+		case *arrow.Date32Type:
+			typeStr = "date"
+		case *arrow.TimestampType:
+			typeStr = "timestamp"
 		default:
-			return fmt.Errorf("unsupported field type: %T", field.Type)
+			logger.Warn("Unsupported field type, using string as fallback", "type", fmt.Sprintf("%T", field.Type), "field", field.Name)
+			typeStr = "utf8"
 		}
 
 		fields[i] = map[string]interface{}{
@@ -146,58 +230,86 @@ func (m *MetadataManager) WriteTableMetadata(table *DeltaTable) error {
 	// Convert to JSON
 	data, err := json.Marshal(metadata)
 	if err != nil {
+		logger.Error("Failed to marshal metadata", "error", err)
 		return fmt.Errorf("failed to marshal metadata: %w", err)
 	}
 
+	// Create _delta_log directory if it doesn't exist
+	logDir := filepath.Join(m.tablePath, "_delta_log")
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		logger.Error("Failed to create _delta_log directory", "error", err)
+		return fmt.Errorf("failed to create _delta_log directory: %w", err)
+	}
+
 	// Write to transaction log
-	logFile := filepath.Join(m.tablePath, "_delta_log", fmt.Sprintf("%020d.json", table.Version))
+	logFile := filepath.Join(logDir, fmt.Sprintf("%020d.json", table.Version))
 	if err := os.WriteFile(logFile, data, 0644); err != nil {
+		logger.Error("Failed to write transaction log", "error", err, "file", logFile)
 		return fmt.Errorf("failed to write transaction log: %w", err)
 	}
 
+	// Update cache
+	m.mutex.Lock()
+	m.cache = table
+	// Invalidate versions cache since we've added a new version
+	m.versions = nil
+	m.mutex.Unlock()
+
+	logger.Info("Successfully wrote table metadata", "version", table.Version, "file", logFile)
 	return nil
 }
 
 // getLatestVersion gets the latest version from the transaction log
 func (m *MetadataManager) getLatestVersion() (int64, error) {
-	// Read _delta_log directory
-	logDir := filepath.Join(m.tablePath, "_delta_log")
-	entries, err := os.ReadDir(logDir)
+	logger := logging.GetLogger()
+	logger.Debug("Getting latest version", "tablePath", m.tablePath)
+
+	// Get all versions
+	versions, err := m.GetVersions()
 	if err != nil {
-		if os.IsNotExist(err) {
-			return 0, nil
-		}
-		return 0, fmt.Errorf("failed to read _delta_log directory: %w", err)
+		logger.Error("Failed to get versions", "error", err)
+		return 0, fmt.Errorf("failed to get versions: %w", err)
 	}
 
-	if len(entries) == 0 {
+	if len(versions) == 0 {
+		logger.Debug("No versions found")
 		return 0, nil
 	}
 
-	// Sort entries by name (which contains version number)
-	sort.Slice(entries, func(i, j int) bool {
-		return entries[i].Name() > entries[j].Name()
-	})
-
-	// Parse version from filename
-	var version int64
-	_, err = fmt.Sscanf(entries[0].Name(), "%020d.json", &version)
-	if err != nil {
-		return 0, fmt.Errorf("failed to parse version from filename: %w", err)
-	}
-
-	return version, nil
+	// Versions are sorted in descending order, so the first one is the latest
+	latestVersion := versions[0]
+	logger.Debug("Found latest version", "version", latestVersion)
+	return latestVersion, nil
 }
 
 // GetVersions returns all available versions
 func (m *MetadataManager) GetVersions() ([]int64, error) {
+	logger := logging.GetLogger()
+	logger.Debug("Getting all versions", "tablePath", m.tablePath)
+
+	// Check cache first
+	m.mutex.RLock()
+	if m.versions != nil {
+		deferred := m.versions
+		m.mutex.RUnlock()
+		logger.Debug("Using cached versions", "count", len(deferred))
+		return deferred, nil
+	}
+	m.mutex.RUnlock()
+
 	// Read _delta_log directory
 	logDir := filepath.Join(m.tablePath, "_delta_log")
 	entries, err := os.ReadDir(logDir)
 	if err != nil {
 		if os.IsNotExist(err) {
+			logger.Debug("_delta_log directory does not exist")
+			// Update cache
+			m.mutex.Lock()
+			m.versions = []int64{}
+			m.mutex.Unlock()
 			return []int64{}, nil
 		}
+		logger.Error("Failed to read _delta_log directory", "error", err)
 		return nil, fmt.Errorf("failed to read _delta_log directory: %w", err)
 	}
 
@@ -214,16 +326,83 @@ func (m *MetadataManager) GetVersions() ([]int64, error) {
 		return versions[i] > versions[j]
 	})
 
+	// Update cache
+	m.mutex.Lock()
+	m.versions = versions
+	m.mutex.Unlock()
+
+	logger.Debug("Found versions", "count", len(versions))
 	return versions, nil
+}
+
+// GetSchemaHistory returns the schema history for a table
+func (m *MetadataManager) GetSchemaHistory() (*SchemaHistory, error) {
+	logger := logging.GetLogger()
+	logger.Debug("Getting schema history", "tablePath", m.tablePath)
+
+	// Get all versions
+	versions, err := m.GetVersions()
+	if err != nil {
+		logger.Error("Failed to get versions", "error", err)
+		return nil, fmt.Errorf("failed to get versions: %w", err)
+	}
+
+	// Create schema history
+	history := &SchemaHistory{
+		Versions: make([]SchemaVersion, 0, len(versions)),
+	}
+
+	// Get schema for each version
+	for _, version := range versions {
+		table, err := m.GetTableAtVersion(version)
+		if err != nil {
+			logger.Error("Failed to get table at version", "error", err, "version", version)
+			continue
+		}
+
+		// Create schema version
+		schemaVersion := SchemaVersion{
+			Version:      version,
+			Timestamp:    table.LastModified,
+			Schema:       table.Schema,
+			SchemaFields: table.Schema.Fields(),
+		}
+
+		// Add to history
+		history.Versions = append(history.Versions, schemaVersion)
+	}
+
+	// Sort versions in descending order (newest first)
+	sort.Slice(history.Versions, func(i, j int) bool {
+		return history.Versions[i].Version > history.Versions[j].Version
+	})
+
+	logger.Debug("Successfully retrieved schema history", "versions", len(history.Versions))
+	return history, nil
 }
 
 // GetTableAtVersion returns the table metadata at a specific version
 func (m *MetadataManager) GetTableAtVersion(version int64) (*DeltaTable, error) {
+	logger := logging.GetLogger()
+	logger.Debug("Getting table at version", "tablePath", m.tablePath, "version", version)
+
+	// Check if the requested version is the latest and we have it cached
+	m.mutex.RLock()
+	if m.cache != nil && m.cache.Version == version {
+		deferred := m.cache
+		m.mutex.RUnlock()
+		logger.Debug("Using cached table for requested version", "version", version)
+		return deferred, nil
+	}
+	m.mutex.RUnlock()
+
 	// Read transaction log
 	logFile := filepath.Join(m.tablePath, "_delta_log", fmt.Sprintf("%020d.json", version))
+	logger.Debug("Reading transaction log for version", "file", logFile)
 	data, err := os.ReadFile(logFile)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read transaction log: %w", err)
+		logger.Error("Failed to read transaction log", "error", err, "file", logFile)
+		return nil, fmt.Errorf("failed to read transaction log for version %d: %w", version, err)
 	}
 
 	// Parse metadata
@@ -238,30 +417,40 @@ func (m *MetadataManager) GetTableAtVersion(version int64) (*DeltaTable, error) 
 	}
 
 	if err := json.Unmarshal(data, &metadata); err != nil {
-		return nil, fmt.Errorf("failed to parse metadata: %w", err)
+		logger.Error("Failed to parse metadata", "error", err)
+		return nil, fmt.Errorf("failed to parse metadata for version %d: %w", version, err)
+	}
+
+	// Verify version matches
+	if metadata.Version != version {
+		logger.Warn("Version mismatch in transaction log", "expected", version, "actual", metadata.Version)
 	}
 
 	// Parse schema
 	fields, ok := metadata.Schema["fields"].([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("invalid schema format")
+		logger.Error("Invalid schema format")
+		return nil, fmt.Errorf("invalid schema format for version %d", version)
 	}
 
 	arrowFields := make([]arrow.Field, len(fields))
 	for i, field := range fields {
 		fieldMap, ok := field.(map[string]interface{})
 		if !ok {
-			return nil, fmt.Errorf("invalid field format")
+			logger.Error("Invalid field format", "field", field)
+			return nil, fmt.Errorf("invalid field format for version %d", version)
 		}
 
 		name, ok := fieldMap["name"].(string)
 		if !ok {
-			return nil, fmt.Errorf("invalid field name")
+			logger.Error("Invalid field name", "field", fieldMap)
+			return nil, fmt.Errorf("invalid field name for version %d", version)
 		}
 
 		typeStr, ok := fieldMap["type"].(string)
 		if !ok {
-			return nil, fmt.Errorf("invalid field type")
+			logger.Error("Invalid field type", "field", fieldMap)
+			return nil, fmt.Errorf("invalid field type for version %d", version)
 		}
 
 		var dataType arrow.DataType
@@ -272,8 +461,19 @@ func (m *MetadataManager) GetTableAtVersion(version int64) (*DeltaTable, error) 
 			dataType = &arrow.StringType{}
 		case "double", "float64":
 			dataType = &arrow.Float64Type{}
+		case "boolean":
+			dataType = &arrow.BooleanType{}
+		case "int64":
+			dataType = &arrow.Int64Type{}
+		case "float32":
+			dataType = &arrow.Float32Type{}
+		case "date":
+			dataType = &arrow.Date32Type{}
+		case "timestamp":
+			dataType = &arrow.TimestampType{Unit: arrow.Microsecond}
 		default:
-			return nil, fmt.Errorf("unsupported field type: %s", typeStr)
+			logger.Warn("Unsupported field type, using string as fallback", "type", typeStr, "field", name)
+			dataType = &arrow.StringType{}
 		}
 
 		arrowFields[i] = arrow.Field{Name: name, Type: dataType}
@@ -291,5 +491,15 @@ func (m *MetadataManager) GetTableAtVersion(version int64) (*DeltaTable, error) 
 		Metadata:     metadata.Metadata,
 	}
 
+	// If this is the latest version, update the cache
+	latestVersion, err := m.getLatestVersion()
+	if err == nil && version == latestVersion {
+		m.mutex.Lock()
+		m.cache = table
+		m.mutex.Unlock()
+		logger.Debug("Updated cache with latest version", "version", version)
+	}
+
+	logger.Debug("Successfully retrieved table at version", "version", version)
 	return table, nil
 }

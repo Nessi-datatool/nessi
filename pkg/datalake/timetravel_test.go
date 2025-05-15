@@ -64,8 +64,8 @@ func (s *stubMetadataManager) TimeTravel(options DeltaTimeTravelOptions) (*TimeT
 	result := &TimeTravelResult{
 		Version:   int(version),
 		Timestamp: time.Now(),
-		Schema: &Schema{
-			Fields: []Field{
+		Schema: &DeltaSchema{
+			Fields: []DeltaField{
 				{Name: "id", Type: "integer", Nullable: false},
 				{Name: "name", Type: "string", Nullable: true},
 				{Name: "created_at", Type: "timestamp", Nullable: false},
@@ -109,11 +109,11 @@ func initializeTestTable(tablePath string) error {
 	vm := NewVersionManager(tablePath)
 
 	// Create schema manager
-	sm := NewSchemaManager(tablePath)
+	sm := NewDeltaSchemaManager(tablePath)
 
 	// Initialize schema
-	schema := &Schema{
-		Fields: []Field{
+	schema := &DeltaSchema{
+		Fields: []DeltaField{
 			{Name: "id", Type: "INTEGER", Nullable: false},
 			{Name: "name", Type: "STRING", Nullable: true},
 			{Name: "created_at", Type: "TIMESTAMP", Nullable: false},

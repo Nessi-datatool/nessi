@@ -17,11 +17,11 @@ func TestTimeTravel(t *testing.T) {
 
 	// Create version manager and schema manager
 	vm := NewVersionManager(tempDir)
-	sm := NewSchemaManager(tempDir)
+	sm := NewDeltaSchemaManager(tempDir)
 
 	// Initialize schema
-	schema := &Schema{
-		Fields: []Field{
+	schema := &DeltaSchema{
+		Fields: []DeltaField{
 			{Name: "id", Type: "integer", Nullable: false},
 			{Name: "name", Type: "string", Nullable: true},
 			{Name: "age", Type: "integer", Nullable: true},
@@ -51,8 +51,8 @@ func TestTimeTravel(t *testing.T) {
 	time.Sleep(10 * time.Millisecond)
 
 	// Record second transaction - add a column and some files
-	updatedSchema := &Schema{
-		Fields: []Field{
+	updatedSchema := &DeltaSchema{
+		Fields: []DeltaField{
 			{Name: "id", Type: "integer", Nullable: false},
 			{Name: "name", Type: "string", Nullable: true},
 			{Name: "age", Type: "integer", Nullable: true},

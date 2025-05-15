@@ -1,3 +1,4 @@
+// Package datalake provides Delta Lake table management functionality
 package datalake
 
 import (
@@ -5,14 +6,19 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/nessi-dev/nessi-dev/pkg/logging"
 )
 
-// VersionManager handles Delta Lake version control operations
+// VersionManager handles Delta Lake version control operations including
+// transaction recording, version history management, and time travel capabilities.
 type VersionManager struct {
 	tablePath string
+	mutex     sync.RWMutex
+	cache     *TransactionHistory // In-memory cache of transaction history
 }
 
 // TransactionHistory represents the history of transactions in a Delta Lake table
@@ -61,14 +67,20 @@ type TransactionSummary struct {
 	ToTimestamp   int64          `json:"to_timestamp"`
 }
 
-// NewVersionManager creates a new version manager
+// NewVersionManager creates a new version manager for the specified Delta Lake table path.
+// It initializes the manager with an empty cache that will be populated on first use.
 func NewVersionManager(tablePath string) *VersionManager {
 	return &VersionManager{
 		tablePath: tablePath,
+		mutex:     sync.RWMutex{},
+		cache:     nil,
 	}
 }
 
-// RecordTransaction records a new transaction in the Delta Lake log
+// RecordTransaction records a new transaction in the Delta Lake log.
+// It creates a new transaction entry with the provided details and appends it to the transaction history.
+// The transaction is assigned a new version number and timestamp.
+// Returns the created transaction and any error that occurred.
 func (vm *VersionManager) RecordTransaction(
 	operation string,
 	commitInfo map[string]string,
@@ -77,10 +89,22 @@ func (vm *VersionManager) RecordTransaction(
 	metadataChange *MetadataChange,
 	stats map[string]interface{},
 ) (*Transaction, error) {
+	if operation == "" {
+		return nil, fmt.Errorf("operation cannot be empty")
+	}
+
+	logger := logging.GetLogger()
+	logger.WithFields(map[string]interface{}{
+		"tablePath":    vm.tablePath,
+		"operation":    operation,
+		"addedFiles":   len(addedFiles),
+		"removedFiles": len(removedFiles),
+	}).Info("Recording transaction")
+
 	// Get current transaction history
 	history, err := vm.getTransactionHistory()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get transaction history: %w", err)
 	}
 
 	// Determine next version
@@ -109,8 +133,15 @@ func (vm *VersionManager) RecordTransaction(
 	// Save transaction history
 	err = vm.saveTransactionHistory(history)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to save transaction history: %w", err)
 	}
+
+	// Use the existing logger from the beginning of the function
+	logging.GetLogger().WithFields(map[string]interface{}{
+		"tablePath": vm.tablePath,
+		"version":   version,
+		"txId":      transaction.ID,
+	}).Info("Transaction recorded successfully")
 
 	return transaction, nil
 }
@@ -280,56 +311,121 @@ func (tx *Transaction) GetSummary() string {
 	return summary
 }
 
-// getTransactionHistory gets the transaction history from disk
+// getTransactionHistory gets the transaction history from disk or cache.
+// It uses a read-write mutex to ensure thread safety when accessing the cache.
 func (vm *VersionManager) getTransactionHistory() (*TransactionHistory, error) {
+	// Check cache first with a read lock
+	vm.mutex.RLock()
+	if vm.cache != nil {
+		defer vm.mutex.RUnlock()
+		return vm.cache, nil
+	}
+	vm.mutex.RUnlock()
+
+	// Cache miss, acquire write lock
+	vm.mutex.Lock()
+	defer vm.mutex.Unlock()
+
+	// Double-check cache after acquiring write lock
+	if vm.cache != nil {
+		return vm.cache, nil
+	}
+
 	// Create transaction history file path
 	historyPath := filepath.Join(vm.tablePath, "_delta_log", "transaction_history.json")
+	logger := logging.GetLogger()
+	logger.WithField("path", historyPath).Debug("Reading transaction history")
 
 	// Check if file exists
 	_, err := os.Stat(historyPath)
 	if os.IsNotExist(err) {
 		// Create empty history
-		return &TransactionHistory{
+		vm.cache = &TransactionHistory{
 			Transactions: []*Transaction{},
 			CurrentIndex: -1,
-		}, nil
+		}
+		return vm.cache, nil
 	} else if err != nil {
-		return nil, err
+		logger := logging.GetLogger()
+		logger.WithField("path", historyPath).WithError(err).Error("Failed to stat transaction history file")
+		return nil, fmt.Errorf("failed to access transaction history: %w", err)
 	}
 
 	// Read file
 	data, err := os.ReadFile(historyPath)
 	if err != nil {
-		return nil, err
+		logger := logging.GetLogger()
+		logger.WithField("path", historyPath).WithError(err).Error("Failed to read transaction history file")
+		return nil, fmt.Errorf("failed to read transaction history: %w", err)
 	}
 
 	// Parse JSON
 	var history TransactionHistory
 	err = json.Unmarshal(data, &history)
 	if err != nil {
-		return nil, err
+		logger := logging.GetLogger()
+		logger.WithField("path", historyPath).WithError(err).Error("Failed to parse transaction history")
+		return nil, fmt.Errorf("failed to parse transaction history: %w", err)
 	}
 
-	return &history, nil
+	// Update cache
+	vm.cache = &history
+	return vm.cache, nil
 }
 
-// saveTransactionHistory saves the transaction history to disk
+// saveTransactionHistory saves the transaction history to disk and updates the cache.
+// It acquires a write lock to ensure thread safety when updating the cache.
 func (vm *VersionManager) saveTransactionHistory(history *TransactionHistory) error {
+	vm.mutex.Lock()
+	defer vm.mutex.Unlock()
+
 	// Create transaction history file path
 	historyPath := filepath.Join(vm.tablePath, "_delta_log", "transaction_history.json")
+	logger := logging.GetLogger()
+	logger.WithFields(map[string]interface{}{
+		"path":      historyPath,
+		"txCount":   len(history.Transactions),
+		"curIndex":  history.CurrentIndex,
+	}).Debug("Saving transaction history")
 
 	// Create directory if it doesn't exist
-	err := os.MkdirAll(filepath.Join(vm.tablePath, "_delta_log"), 0755)
+	logDir := filepath.Join(vm.tablePath, "_delta_log")
+	err := os.MkdirAll(logDir, 0755)
 	if err != nil {
-		return err
+		logger := logging.GetLogger()
+		logger.WithField("dir", logDir).WithError(err).Error("Failed to create _delta_log directory")
+		return fmt.Errorf("failed to create transaction log directory: %w", err)
 	}
 
 	// Convert to JSON
 	data, err := json.MarshalIndent(history, "", "  ")
 	if err != nil {
-		return err
+		logger := logging.GetLogger()
+		logger.WithError(err).Error("Failed to marshal transaction history")
+		return fmt.Errorf("failed to serialize transaction history: %w", err)
 	}
 
-	// Write file
-	return os.WriteFile(historyPath, data, 0644)
+	// Write file atomically by writing to a temporary file first and then renaming
+	tempFile := historyPath + ".tmp"
+	err = os.WriteFile(tempFile, data, 0644)
+	if err != nil {
+		logger := logging.GetLogger()
+		logger.WithField("path", tempFile).WithError(err).Error("Failed to write transaction history")
+		return fmt.Errorf("failed to write transaction history: %w", err)
+	}
+
+	// Rename temp file to actual file (atomic operation)
+	err = os.Rename(tempFile, historyPath)
+	if err != nil {
+		logger := logging.GetLogger()
+		logger.WithFields(map[string]interface{}{
+			"from": tempFile,
+			"to":   historyPath,
+		}).WithError(err).Error("Failed to rename transaction history file")
+		return fmt.Errorf("failed to finalize transaction history: %w", err)
+	}
+
+	// Update cache
+	vm.cache = history
+	return nil
 }

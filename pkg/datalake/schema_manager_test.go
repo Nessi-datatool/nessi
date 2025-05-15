@@ -15,13 +15,13 @@ func TestSchemaManager(t *testing.T) {
 	defer os.RemoveAll(tempDir)
 
 	// Create a schema manager
-	sm := NewSchemaManager(tempDir)
+	sm := NewDeltaSchemaManager(tempDir)
 
 	// Test initializing a schema
 	t.Run("InitializeSchema", func(t *testing.T) {
 		// Create a simple schema
-		schema := &Schema{
-			Fields: []Field{
+		schema := &DeltaSchema{
+			Fields: []DeltaField{
 				{Name: "id", Type: "INTEGER", Nullable: false},
 				{Name: "name", Type: "STRING", Nullable: true},
 				{Name: "created_at", Type: "TIMESTAMP", Nullable: false},
@@ -64,8 +64,8 @@ func TestSchemaManager(t *testing.T) {
 	// Test updating schema
 	t.Run("UpdateSchema", func(t *testing.T) {
 		// Create a new schema with an additional field
-		updatedSchema := &Schema{
-			Fields: []Field{
+		updatedSchema := &DeltaSchema{
+			Fields: []DeltaField{
 				{Name: "id", Type: "INTEGER", Nullable: false},
 				{Name: "name", Type: "STRING", Nullable: true},
 				{Name: "created_at", Type: "TIMESTAMP", Nullable: false},
