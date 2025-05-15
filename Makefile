@@ -97,6 +97,12 @@ test-unit:
 	@echo "Running unit tests..."
 	$(GOTEST) $(TEST_FLAGS) ./...
 
+# Run short tests (skips long-running tests)
+.PHONY: test-short
+test-short:
+	@echo "Running short tests (skipping long-running tests)..."
+	$(GOTEST) -short -v ./...
+
 # Run integration tests
 .PHONY: test-integration
 test-integration:
@@ -197,6 +203,7 @@ help:
 	@echo "  clean          - Clean build artifacts"
 	@echo "  test           - Run all tests"
 	@echo "  test-unit      - Run unit tests"
+	@echo "  test-short     - Run tests with -short flag (skips long-running tests)"
 	@echo "  test-integration - Run integration tests"
 	@echo "  test-coverage  - Generate test coverage report"
 	@echo "  lint           - Run all linters"
