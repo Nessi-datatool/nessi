@@ -6,22 +6,70 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
-	"github.com/aws/aws-sdk-go-v2/service/glue/types"
-	"github.com/nessi-dev/nessi-dev/pkg/catalog"
+	gluetypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
+	nessitypes "github.com/nessi-dev/nessi-dev/pkg/api/types"
 )
+
+// GlueAPI defines the interface for the AWS Glue client.
+// This interface is used to abstract the AWS SDK's Glue client for testing purposes.
+type GlueAPI interface {
+	GetDatabases(ctx context.Context, params *glue.GetDatabasesInput, optFns ...func(*glue.Options)) (*glue.GetDatabasesOutput, error)
+	GetTables(ctx context.Context, params *glue.GetTablesInput, optFns ...func(*glue.Options)) (*glue.GetTablesOutput, error)
+	GetTable(ctx context.Context, params *glue.GetTableInput, optFns ...func(*glue.Options)) (*glue.GetTableOutput, error)
+	GetTableDetails(ctx context.Context, database, table string) (*nessitypes.TableDetails, error)
+	UpdateTable(ctx context.Context, params *glue.UpdateTableInput, optFns ...func(*glue.Options)) (*glue.UpdateTableOutput, error)
+}
+
+type glueAPIImpl struct {
+	*glue.Client
+}
+
+func (g *glueAPIImpl) GetTableDetails(ctx context.Context, database, table string) (*nessitypes.TableDetails, error) {
+	output, err := g.GetTable(ctx, &glue.GetTableInput{
+		DatabaseName: aws.String(database),
+		Name:         aws.String(table),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get table details: %w", err)
+	}
+	
+	// Convert AWS Glue Table to nessitypes.TableDetails
+	tableDetails := &nessitypes.TableDetails{
+		Info: nessitypes.TableInfo{
+			Name:        aws.ToString(output.Table.Name),
+			Type:        output.Table.Parameters["table_type"],
+			Description: aws.ToString(output.Table.Description),
+			Location:    aws.ToString(output.Table.StorageDescriptor.Location),
+		},
+		Schema: &nessitypes.TableSchema{
+			Format: aws.ToString(output.Table.StorageDescriptor.InputFormat),
+		},
+		Metadata: &nessitypes.TableMetadata{
+			Owner:     aws.ToString(output.Table.Owner),
+			CreatedAt: time.Now(), // AWS Glue doesn't provide creation time
+			UpdatedAt: time.Now(),
+		},
+	}
+	
+	return tableDetails, nil
+}
+
+func init() {
+	nessitypes.GetCatalogFactory().RegisterProvider(nessitypes.AWSGlue, NewGlueCatalog)
+}
 
 // GlueCatalog implements the DataCatalog interface for AWS Glue Data Catalog
 type GlueCatalog struct {
-	client      *glue.Client
+	client      GlueAPI
 	connected   bool
 	region      string
 }
 
 // NewGlueCatalog creates a new AWS Glue Data Catalog client
-func NewGlueCatalog() *GlueCatalog {
+func NewGlueCatalog() nessitypes.DataCatalog {
 	return &GlueCatalog{
 		connected: false,
 	}
@@ -41,20 +89,22 @@ func (c *GlueCatalog) Connect(ctx context.Context, config map[string]interface{}
 	useIAMRole, _ := config["use_iam_role"].(bool)
 	
 	// Create AWS configuration
-	var cfg aws.Config
+	var awsCfg aws.Config
 	var err error
 	
 	if accessKey != "" && secretKey != "" {
 		// Use access key and secret key
-		cfg, err = config.LoadDefaultConfig(ctx,
-			config.WithRegion(region),
-			config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(
-				accessKey, secretKey, "",
-			)),
+		awsCfg, err = awsconfig.LoadDefaultConfig(ctx,
+			awsconfig.WithRegion(region),
+			awsconfig.WithCredentialsProvider(
+				credentials.NewStaticCredentialsProvider(accessKey, secretKey, ""),
+			),
 		)
 	} else if useIAMRole {
 		// Use IAM role
-		cfg, err = config.LoadDefaultConfig(ctx, config.WithRegion(region))
+		awsCfg, err = awsconfig.LoadDefaultConfig(ctx,
+			awsconfig.WithRegion(region),
+		)
 	} else {
 		return fmt.Errorf("no valid authentication method provided")
 	}
@@ -64,7 +114,7 @@ func (c *GlueCatalog) Connect(ctx context.Context, config map[string]interface{}
 	}
 	
 	// Create Glue client
-	c.client = glue.NewFromConfig(cfg)
+	c.client = &glueAPIImpl{glue.NewFromConfig(awsCfg)}
 	c.connected = true
 	c.region = region
 	
@@ -78,7 +128,7 @@ func (c *GlueCatalog) Disconnect(ctx context.Context) error {
 }
 
 // ListDatabases lists all databases in the Glue Data Catalog
-func (c *GlueCatalog) ListDatabases(ctx context.Context) ([]catalog.DatabaseInfo, error) {
+func (c *GlueCatalog) ListDatabases(ctx context.Context) ([]nessitypes.DatabaseInfo, error) {
 	if !c.connected {
 		return nil, fmt.Errorf("not connected to AWS Glue Data Catalog")
 	}
@@ -90,9 +140,9 @@ func (c *GlueCatalog) ListDatabases(ctx context.Context) ([]catalog.DatabaseInfo
 	}
 	
 	// Convert to DatabaseInfo
-	databases := make([]catalog.DatabaseInfo, 0, len(result.DatabaseList))
+	databases := make([]nessitypes.DatabaseInfo, 0, len(result.DatabaseList))
 	for _, db := range result.DatabaseList {
-		databases = append(databases, catalog.DatabaseInfo{
+		databases = append(databases, nessitypes.DatabaseInfo{
 			Name:        *db.Name,
 			Description: aws.ToString(db.Description),
 			Properties:  convertMapToStringMap(db.Parameters),
@@ -103,7 +153,7 @@ func (c *GlueCatalog) ListDatabases(ctx context.Context) ([]catalog.DatabaseInfo
 }
 
 // ListTables lists all tables in a database
-func (c *GlueCatalog) ListTables(ctx context.Context, database string) ([]catalog.TableInfo, error) {
+func (c *GlueCatalog) ListTables(ctx context.Context, database string) ([]nessitypes.TableInfo, error) {
 	if !c.connected {
 		return nil, fmt.Errorf("not connected to AWS Glue Data Catalog")
 	}
@@ -117,21 +167,19 @@ func (c *GlueCatalog) ListTables(ctx context.Context, database string) ([]catalo
 	}
 	
 	// Convert to TableInfo
-	tables := make([]catalog.TableInfo, 0, len(result.TableList))
+	tables := make([]nessitypes.TableInfo, 0, len(result.TableList))
 	for _, table := range result.TableList {
 		location := ""
 		if table.StorageDescriptor != nil && table.StorageDescriptor.Location != nil {
 			location = *table.StorageDescriptor.Location
 		}
 		
-		tableType := "unknown"
+		tableType := ""
 		if table.Parameters != nil {
-			if format, ok := table.Parameters["table_type"]; ok {
-				tableType = format
-			}
+			tableType = table.Parameters["table_type"]
 		}
 		
-		tables = append(tables, catalog.TableInfo{
+		tables = append(tables, nessitypes.TableInfo{
 			Name:        *table.Name,
 			Type:        tableType,
 			Description: aws.ToString(table.Description),
@@ -143,85 +191,17 @@ func (c *GlueCatalog) ListTables(ctx context.Context, database string) ([]catalo
 	return tables, nil
 }
 
-// GetTableDetails gets detailed information about a table
-func (c *GlueCatalog) GetTableDetails(ctx context.Context, database, table string) (*catalog.TableDetails, error) {
+// GetTableDetails retrieves detailed information about a table
+func (c *GlueCatalog) GetTableDetails(ctx context.Context, database, table string) (*nessitypes.TableDetails, error) {
 	if !c.connected {
 		return nil, fmt.Errorf("not connected to AWS Glue Data Catalog")
 	}
 	
-	// Call Glue API to get table
-	result, err := c.client.GetTable(ctx, &glue.GetTableInput{
-		DatabaseName: aws.String(database),
-		Name:         aws.String(table),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to get table %s in database %s: %w", table, database, err)
-	}
-	
-	if result.Table == nil {
-		return nil, fmt.Errorf("table %s not found in database %s", table, database)
-	}
-	
-	// Get table info
-	location := ""
-	if result.Table.StorageDescriptor != nil && result.Table.StorageDescriptor.Location != nil {
-		location = *result.Table.StorageDescriptor.Location
-	}
-	
-	tableType := "unknown"
-	if result.Table.Parameters != nil {
-		if format, ok := result.Table.Parameters["table_type"]; ok {
-			tableType = format
-		}
-	}
-	
-	tableInfo := catalog.TableInfo{
-		Name:        *result.Table.Name,
-		Type:        tableType,
-		Description: aws.ToString(result.Table.Description),
-		Location:    location,
-		Properties:  convertMapToStringMap(result.Table.Parameters),
-	}
-	
-	// Get schema
-	schema := &catalog.TableSchema{
-		Format:  tableType,
-		Version: 1, // Glue doesn't have schema versioning
-	}
-	
-	if result.Table.StorageDescriptor != nil && result.Table.StorageDescriptor.Columns != nil {
-		for _, col := range result.Table.StorageDescriptor.Columns {
-			field := catalog.FieldInfo{
-				Name:        *col.Name,
-				Type:        *col.Type,
-				Description: aws.ToString(col.Comment),
-				Nullable:    true, // Glue doesn't store nullability
-				Properties:  convertMapToStringMap(col.Parameters),
-			}
-			schema.Fields = append(schema.Fields, field)
-		}
-	}
-	
-	// Get metadata
-	metadata := &catalog.TableMetadata{
-		Owner:      aws.ToString(result.Table.Owner),
-		CreatedAt:  aws.ToTime(result.Table.CreateTime),
-		UpdatedAt:  aws.ToTime(result.Table.UpdateTime),
-		Properties: convertMapToStringMap(result.Table.Parameters),
-	}
-	
-	// Create TableDetails
-	details := &catalog.TableDetails{
-		Info:     tableInfo,
-		Schema:   schema,
-		Metadata: metadata,
-	}
-	
-	return details, nil
+	return c.client.GetTableDetails(ctx, database, table)
 }
 
 // GetTableMetadata gets metadata for a table
-func (c *GlueCatalog) GetTableMetadata(ctx context.Context, database, table string) (*catalog.TableMetadata, error) {
+func (c *GlueCatalog) GetTableMetadata(ctx context.Context, database, table string) (*nessitypes.TableMetadata, error) {
 	details, err := c.GetTableDetails(ctx, database, table)
 	if err != nil {
 		return nil, err
@@ -230,7 +210,7 @@ func (c *GlueCatalog) GetTableMetadata(ctx context.Context, database, table stri
 }
 
 // UpdateTableMetadata updates metadata for a table
-func (c *GlueCatalog) UpdateTableMetadata(ctx context.Context, database, table string, metadata *catalog.TableMetadata) error {
+func (c *GlueCatalog) UpdateTableMetadata(ctx context.Context, database, table string, metadata *nessitypes.TableMetadata) error {
 	if !c.connected {
 		return fmt.Errorf("not connected to AWS Glue Data Catalog")
 	}
@@ -262,7 +242,7 @@ func (c *GlueCatalog) UpdateTableMetadata(ctx context.Context, database, table s
 	// Create update input
 	updateInput := &glue.UpdateTableInput{
 		DatabaseName: aws.String(database),
-		TableInput: &types.TableInput{
+		TableInput: &gluetypes.TableInput{
 			Name:        getResult.Table.Name,
 			Description: aws.String(metadata.Properties["description"]),
 			Owner:       aws.String(metadata.Owner),
@@ -284,20 +264,20 @@ func (c *GlueCatalog) UpdateTableMetadata(ctx context.Context, database, table s
 }
 
 // GetTableLineage gets lineage information for a table
-func (c *GlueCatalog) GetTableLineage(ctx context.Context, database, table string) (*catalog.LineageInfo, error) {
+func (c *GlueCatalog) GetTableLineage(ctx context.Context, database, table string) (*nessitypes.LineageInfo, error) {
 	// AWS Glue doesn't have built-in lineage capabilities
 	// This would require integration with AWS Lake Formation or custom implementation
 	return nil, fmt.Errorf("lineage information not available in AWS Glue Data Catalog")
 }
 
 // UpdateTableLineage updates lineage information for a table
-func (c *GlueCatalog) UpdateTableLineage(ctx context.Context, database, table string, lineage *catalog.LineageInfo) error {
+func (c *GlueCatalog) UpdateTableLineage(ctx context.Context, database, table string, lineage *nessitypes.LineageInfo) error {
 	// AWS Glue doesn't have built-in lineage capabilities
 	return fmt.Errorf("lineage update not supported in AWS Glue Data Catalog")
 }
 
 // PublishQualityMetrics publishes data quality metrics for a table
-func (c *GlueCatalog) PublishQualityMetrics(ctx context.Context, database, table string, metrics *catalog.QualityMetrics) error {
+func (c *GlueCatalog) PublishQualityMetrics(ctx context.Context, database, table string, metrics *nessitypes.QualityMetrics) error {
 	if !c.connected {
 		return fmt.Errorf("not connected to AWS Glue Data Catalog")
 	}
@@ -324,17 +304,20 @@ func (c *GlueCatalog) PublishQualityMetrics(ctx context.Context, database, table
 	}
 	
 	// Add quality metrics as parameters
-	parameters["quality:overall_score"] = fmt.Sprintf("%.2f", metrics.OverallScore)
-	parameters["quality:completeness"] = fmt.Sprintf("%.2f", metrics.Completeness)
-	parameters["quality:accuracy"] = fmt.Sprintf("%.2f", metrics.Accuracy)
-	parameters["quality:consistency"] = fmt.Sprintf("%.2f", metrics.Consistency)
-	parameters["quality:timeliness"] = fmt.Sprintf("%.2f", metrics.Timeliness)
+	parameters["quality:total_rows"] = fmt.Sprintf("%d", metrics.TotalRows)
+	parameters["quality:null_rows"] = fmt.Sprintf("%d", metrics.NullRows)
+	parameters["quality:duplicate_rows"] = fmt.Sprintf("%d", metrics.DuplicateRows)
+	parameters["quality:invalid_rows"] = fmt.Sprintf("%d", metrics.InvalidRows)
+	parameters["quality:data_completeness"] = fmt.Sprintf("%.2f", metrics.DataCompleteness)
+	parameters["quality:data_accuracy"] = fmt.Sprintf("%.2f", metrics.DataAccuracy)
+	parameters["quality:data_consistency"] = fmt.Sprintf("%.2f", metrics.DataConsistency)
+	parameters["quality:schema_version"] = metrics.SchemaVersion
 	parameters["quality:last_updated"] = metrics.LastUpdated.Format(time.RFC3339)
 	
 	// Create update input
 	updateInput := &glue.UpdateTableInput{
 		DatabaseName: aws.String(database),
-		TableInput: &types.TableInput{
+		TableInput: &gluetypes.TableInput{
 			Name:              getResult.Table.Name,
 			Description:       getResult.Table.Description,
 			Owner:             getResult.Table.Owner,
@@ -355,7 +338,7 @@ func (c *GlueCatalog) PublishQualityMetrics(ctx context.Context, database, table
 }
 
 // GetQualityMetrics gets data quality metrics for a table
-func (c *GlueCatalog) GetQualityMetrics(ctx context.Context, database, table string) (*catalog.QualityMetrics, error) {
+func (c *GlueCatalog) GetQualityMetrics(ctx context.Context, database, table string) (*nessitypes.QualityMetrics, error) {
 	if !c.connected {
 		return nil, fmt.Errorf("not connected to AWS Glue Data Catalog")
 	}
@@ -372,35 +355,47 @@ func (c *GlueCatalog) GetQualityMetrics(ctx context.Context, database, table str
 	if getResult.Table == nil || getResult.Table.Parameters == nil {
 		return nil, fmt.Errorf("table %s not found in database %s or has no parameters", table, database)
 	}
-	
+
 	// Extract quality metrics from parameters
 	params := getResult.Table.Parameters
-	metrics := &catalog.QualityMetrics{}
-	
-	if score, ok := params["quality:overall_score"]; ok {
-		fmt.Sscanf(score, "%f", &metrics.OverallScore)
+	metrics := &nessitypes.QualityMetrics{}
+
+	if totalRows, ok := params["quality:total_rows"]; ok {
+		fmt.Sscanf(totalRows, "%d", &metrics.TotalRows)
 	}
-	
-	if completeness, ok := params["quality:completeness"]; ok {
-		fmt.Sscanf(completeness, "%f", &metrics.Completeness)
+
+	if nullRows, ok := params["quality:null_rows"]; ok {
+		fmt.Sscanf(nullRows, "%d", &metrics.NullRows)
 	}
-	
-	if accuracy, ok := params["quality:accuracy"]; ok {
-		fmt.Sscanf(accuracy, "%f", &metrics.Accuracy)
+
+	if duplicateRows, ok := params["quality:duplicate_rows"]; ok {
+		fmt.Sscanf(duplicateRows, "%d", &metrics.DuplicateRows)
 	}
-	
-	if consistency, ok := params["quality:consistency"]; ok {
-		fmt.Sscanf(consistency, "%f", &metrics.Consistency)
+
+	if invalidRows, ok := params["quality:invalid_rows"]; ok {
+		fmt.Sscanf(invalidRows, "%d", &metrics.InvalidRows)
 	}
-	
-	if timeliness, ok := params["quality:timeliness"]; ok {
-		fmt.Sscanf(timeliness, "%f", &metrics.Timeliness)
+
+	if dataCompleteness, ok := params["quality:data_completeness"]; ok {
+		fmt.Sscanf(dataCompleteness, "%f", &metrics.DataCompleteness)
 	}
-	
+
+	if dataAccuracy, ok := params["quality:data_accuracy"]; ok {
+		fmt.Sscanf(dataAccuracy, "%f", &metrics.DataAccuracy)
+	}
+
+	if dataConsistency, ok := params["quality:data_consistency"]; ok {
+		fmt.Sscanf(dataConsistency, "%f", &metrics.DataConsistency)
+	}
+
+	if schemaVersion, ok := params["quality:schema_version"]; ok {
+		metrics.SchemaVersion = schemaVersion
+	}
+
 	if lastUpdated, ok := params["quality:last_updated"]; ok {
 		metrics.LastUpdated, _ = time.Parse(time.RFC3339, lastUpdated)
 	}
-	
+
 	return metrics, nil
 }
 
