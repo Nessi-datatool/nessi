@@ -1,0 +1,11 @@
+{
+  "id": "anom-20250514-001",
+  "timestamp": "2025-05-14T15:30:45Z",
+  "metric": "null_percentage",
+  "value": 0.15,
+  "threshold": 0.05,
+  "severity": 2,
+  "description": "High percentage of NULL values detected",
+  "table_path": "sales/transactions",
+  "column_name": "customer_id"
+}

@@ -12,6 +12,18 @@ This is a Parquet file used for testing the Delta Lake and Parquet file handling
 
 This YAML file contains sample validation rules used for testing the rule engine in Nessi.dev. It includes examples of regex and enum validation rules that are used by the test suite to verify the correct functioning of the rule validation system.
 
+### rca/sample_anomaly.json
+
+This JSON file contains a sample anomaly record used for testing the Root Cause Analysis (RCA) feature. It includes metadata about a detected anomaly such as timestamp, metric, threshold, and severity.
+
+### rca/schema_changes.json
+
+This JSON file contains sample schema change records used for testing the RCA feature's ability to detect and analyze schema changes as potential root causes for anomalies.
+
+### rca/data_quality_issues.json
+
+This JSON file contains sample data quality issues used for testing the RCA feature's ability to correlate anomalies with data quality rule failures in both the target table and upstream data sources.
+
 ## Usage
 
 Test files in this directory are referenced by the test suite and should not be modified or deleted unless you are also updating the corresponding tests.
