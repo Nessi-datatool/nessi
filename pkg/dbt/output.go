@@ -223,8 +223,8 @@ func outputProfileResultsTable(results *ProfileResults, w io.Writer) error {
 	return tw.Flush()
 }
 
-// GenerateDBTArtifacts generates artifacts for dbt Docs integration
-func GenerateDBTArtifacts(results interface{}, artifactsPath string) error {
+// GenerateDBTDocsArtifacts generates artifacts for dbt Docs integration
+func GenerateDBTDocsArtifacts(results interface{}, artifactsPath string) error {
 	// This is a simplified implementation
 	// In a real implementation, you would:
 	// 1. Generate artifacts in a format compatible with dbt Docs

@@ -343,6 +343,11 @@ func (v *Validator) getDBTTestResults(model *DBTModel) ([]ValidationResult, erro
 
 // findDBTProjectPath finds the dbt project path by looking for dbt_project.yml
 func findDBTProjectPath(startDir string) (string, error) {
+	// First check if the startDir exists
+	if _, err := os.Stat(startDir); os.IsNotExist(err) {
+		return "", fmt.Errorf("directory does not exist: %s", startDir)
+	}
+
 	// Check if dbt_project.yml exists in current directory
 	projectFile := filepath.Join(startDir, "dbt_project.yml")
 	if _, err := os.Stat(projectFile); err == nil {
@@ -363,5 +368,5 @@ func findDBTProjectPath(startDir string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("dbt_project.yml not found in current directory or parent directories")
+	return "", fmt.Errorf("dbt_project.yml not found in directory or parent directories: %s", startDir)
 }

@@ -121,13 +121,19 @@ func (m *AlertManager) sendEmailAlert(channel AlertChannel, results *ValidationR
 func (m *AlertManager) formatFailedRules(results *ValidationResults) string {
 	var builder strings.Builder
 
+	failureFound := false
 	for _, result := range results.Results {
 		if result.Status == "failed" {
+			failureFound = true
 			builder.WriteString(fmt.Sprintf("• Model: %s, Rule: %s\n  %s\n", 
 				result.ModelName, 
 				result.RuleName, 
 				result.Message))
 		}
+	}
+
+	if !failureFound {
+		return "All data quality rules passed successfully."
 	}
 
 	return builder.String()

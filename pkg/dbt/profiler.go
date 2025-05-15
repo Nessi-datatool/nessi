@@ -101,7 +101,13 @@ func NewProfiler(configPath string) (*Profiler, error) {
 
 // SetProfileType sets the profile type (basic or enhanced)
 func (p *Profiler) SetProfileType(profileType string) {
-	p.profileType = profileType
+	// Only accept valid profile types, default to basic for invalid types
+	switch profileType {
+	case "basic", "enhanced":
+		p.profileType = profileType
+	default:
+		p.profileType = "basic"
+	}
 }
 
 // Profile profiles dbt models
@@ -156,8 +162,21 @@ func (p *Profiler) Profile(modelSelection []string) (*ProfileResults, error) {
 }
 
 // HasFailures returns true if any profiling operations failed
-// For profiling, we don't have failures in the same way as validation
+// For profiling, we consider a table with 0 rows as a failure
 func (r *ProfileResults) HasFailures() bool {
+	for _, result := range r.Results {
+		// Consider a table with 0 rows as a failure
+		if result.RowCount == 0 {
+			return true
+		}
+		
+		// Check for columns with 100% null values
+		for _, stats := range result.ColumnProfiles {
+			if stats.NullPercent == 100 {
+				return true
+			}
+		}
+	}
 	return false
 }
 
