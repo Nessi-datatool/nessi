@@ -6,19 +6,41 @@ This directory contains utility scripts for the Nessi.dev project.
 
 ### run_tests.sh
 
-A unified test runner script that supports different test modes:
+A comprehensive test runner script that consolidates all testing functionality. It supports multiple test modes, package selection, and other options.
 
-- **Fast Tests**: Run only tests that complete in under 5 seconds
+#### Test Modes
+
 - **Standard Tests**: Run tests that complete in under 30 seconds (default)
+- **Fast Tests**: Run only tests that complete in under 5 seconds, skipping known long-running packages
+- **Short Tests**: Run only specific short test files with minimal timeout settings
 - **All Tests**: Run all tests including long-running ones
 
-Usage:
+#### Options
+
+- `--package PKG`: Specify a package to test (e.g., `./pkg/dbt/...`)
+- `--no-cache`: Disable test caching (adds `-count=1`)
+- `--files FILES`: Run specific test files (comma-separated)
+
+#### Usage Examples
+
 ```bash
 # Run standard tests (default)
 ./scripts/run_tests.sh
 
 # Run only fast tests
 ./scripts/run_tests.sh --fast
+
+# Run specific short test files
+./scripts/run_tests.sh --short
+
+# Run specific short test files with custom file list
+./scripts/run_tests.sh --short --files="./pkg/dbt/alert_test.go,./pkg/dbt/config_test.go"
+
+# Run tests for a specific package
+./scripts/run_tests.sh --package="./pkg/dbt/..."
+
+# Run tests without caching
+./scripts/run_tests.sh --no-cache
 
 # Run all tests including long-running ones
 ./scripts/run_tests.sh --all
@@ -27,13 +49,14 @@ Usage:
 ./scripts/run_tests.sh --help
 ```
 
-This script replaces the older `run_fast_tests.sh`, `run_only_fast_tests.sh`, `run_short_tests.sh`, and `fix_tests.sh` scripts.
+This script replaces all previous test scripts, including:
+- `run_fast_tests.sh`
+- `run_only_fast_tests.sh`
+- `run_short_tests.sh`
+- `fast_tests.sh`
+- `fix_tests.sh`
 
-### run_short_tests.sh
-
-**Note**: This script is kept for historical reference but is deprecated. Please use `run_tests.sh --fast` instead.
-
-A specialized script that runs only specific short test files with minimal timeout settings. It directly targets individual test files rather than using Go's package-based test discovery.
+All test-related functionality has been consolidated into this single script for easier maintenance and usage.
 
 ## Test Data
 
