@@ -1,0 +1,86 @@
+[
+  {
+    "anomaly_id": "anom-20250514-001",
+    "analysis_time": "2025-05-14T15:30:45Z",
+    "primary_root_cause": {
+      "type": "schema_change",
+      "description": "Schema change detected in table 'users'",
+      "details": "Column 'user_id' type changed from INT to STRING",
+      "confidence": 0.85
+    },
+    "other_causes": [
+      {
+        "type": "data_quality",
+        "description": "Increased null values in 'email' column",
+        "details": "Null values increased from 2% to 15% in the last 24 hours",
+        "confidence": 0.65
+      },
+      {
+        "type": "lineage",
+        "description": "Upstream table 'user_profiles' had failed validation",
+        "details": "Validation rule 'valid_email_format' failed for 23% of records",
+        "confidence": 0.45
+      }
+    ],
+    "affected_tables": ["users", "orders", "user_profiles"],
+    "related_anomalies": ["anom-20250513-002"],
+    "recommended_actions": [
+      "Verify schema change was intentional",
+      "Check data pipeline for user_profiles table",
+      "Review email validation rules"
+    ],
+    "grafana_dashboard_url": "https://grafana.example.com/d/abc123/users-monitoring"
+  },
+  {
+    "anomaly_id": "anom-20250513-002",
+    "analysis_time": "2025-05-13T09:15:22Z",
+    "primary_root_cause": {
+      "type": "data_quality",
+      "description": "Data quality issue detected in 'products' table",
+      "details": "Price values outside expected range (negative prices found)",
+      "confidence": 0.92
+    },
+    "other_causes": [
+      {
+        "type": "system",
+        "description": "Recent deployment may have affected data validation",
+        "details": "Deployment v2.3.1 at 2025-05-13T08:30:00Z modified price validation logic",
+        "confidence": 0.55
+      }
+    ],
+    "affected_tables": ["products", "inventory"],
+    "related_anomalies": [],
+    "recommended_actions": [
+      "Fix price validation logic",
+      "Verify all product prices are positive",
+      "Run data quality validation on inventory table"
+    ],
+    "grafana_dashboard_url": "https://grafana.example.com/d/def456/products-monitoring"
+  },
+  {
+    "anomaly_id": "anom-20250512-003",
+    "analysis_time": "2025-05-12T14:22:18Z",
+    "primary_root_cause": {
+      "type": "system",
+      "description": "System resource constraint detected",
+      "details": "Delta Lake writer process exceeded memory allocation during large batch processing",
+      "confidence": 0.78
+    },
+    "other_causes": [
+      {
+        "type": "data_volume",
+        "description": "Unusual increase in data volume",
+        "details": "Data volume increased by 300% compared to normal daily average",
+        "confidence": 0.72
+      }
+    ],
+    "affected_tables": ["transactions", "daily_summary"],
+    "related_anomalies": ["anom-20250512-004"],
+    "recommended_actions": [
+      "Increase memory allocation for Delta Lake writer",
+      "Implement batch size limits for large data processing",
+      "Monitor system resources during peak processing times"
+    ],
+    "grafana_dashboard_url": "https://grafana.example.com/d/ghi789/system-resources"
+  }
+]

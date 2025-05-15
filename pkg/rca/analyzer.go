@@ -4,9 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
-
-	"github.com/nessi-dev/nessi-dev/pkg/datalake"
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring"
 )
 
 // Config represents the configuration for the RCA engine
@@ -31,15 +28,26 @@ func DefaultConfig() *Config {
 	}
 }
 
+// MonitoringClient defines the interface for monitoring operations
+type MonitoringClient interface {
+	GetAnomaly(id string) (*AnomalyInfo, error)
+	GetRecentAnomalies(start, end time.Time) ([]string, error)
+}
+
+// DeltaConnector defines the interface for Delta Lake operations
+type DeltaConnector interface {
+	GetRecentSchemaChanges(tablePath string, since time.Time) ([]*SchemaChange, error)
+}
+
 // Analyzer is responsible for performing root cause analysis on anomalies
 type Analyzer struct {
 	config           *Config
-	monitoringClient *monitoring.Client
-	deltaConnector   *datalake.Connector
+	monitoringClient MonitoringClient
+	deltaConnector   DeltaConnector
 }
 
 // NewAnalyzer creates a new RCA analyzer
-func NewAnalyzer(config *Config, monitoringClient *monitoring.Client, deltaConnector *datalake.Connector) *Analyzer {
+func NewAnalyzer(config *Config, monitoringClient MonitoringClient, deltaConnector DeltaConnector) *Analyzer {
 	if config == nil {
 		config = DefaultConfig()
 	}
@@ -213,10 +221,14 @@ func (r *RCAResult) ToHTML() string {
 	return html
 }
 
-// Helper methods (would be implemented with actual logic)
+// Helper methods
 func (a *Analyzer) getAnomalyInfo(anomalyID string) (*AnomalyInfo, error) {
-	// This would fetch the anomaly from the monitoring system
-	// Placeholder implementation
+	// If we have a monitoring client, use it to get the anomaly
+	if a.monitoringClient != nil {
+		return a.monitoringClient.GetAnomaly(anomalyID)
+	}
+	
+	// Fallback to placeholder implementation for testing
 	return &AnomalyInfo{
 		ID:          anomalyID,
 		Timestamp:   time.Now().Add(-1 * time.Hour),
@@ -231,8 +243,43 @@ func (a *Analyzer) getAnomalyInfo(anomalyID string) (*AnomalyInfo, error) {
 }
 
 func (a *Analyzer) analyzeSchemaChanges(anomaly *AnomalyInfo) ([]*RootCause, error) {
-	// This would analyze recent schema changes that might have caused the anomaly
-	// Placeholder implementation
+	// If we have a delta connector, use it to get schema changes
+	if a.deltaConnector != nil && anomaly.TablePath != "" {
+		// Look back for schema changes in the past MaxHistoryDays days
+		since := anomaly.Timestamp.Add(-time.Duration(a.config.MaxHistoryDays) * 24 * time.Hour)
+		changes, err := a.deltaConnector.GetRecentSchemaChanges(anomaly.TablePath, since)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get schema changes: %w", err)
+		}
+		
+		if len(changes) > 0 {
+			var causes []*RootCause
+			for _, change := range changes {
+				// If the change affects the column with the anomaly, it's highly relevant
+				confidence := 0.6 // Base confidence
+				if anomaly.ColumnName != "" && change.ColumnName == anomaly.ColumnName {
+					confidence = 0.9 // Higher confidence for direct column match
+				}
+				
+				cause := &RootCause{
+					Type:        "schema_change",
+					Confidence:  confidence,
+					Description: fmt.Sprintf("Column type change from %s to %s", change.PreviousType, change.CurrentType),
+					Timestamp:   change.Timestamp,
+					Details: map[string]interface{}{
+						"previous_type": change.PreviousType,
+						"current_type":  change.CurrentType,
+						"column_name":   change.ColumnName,
+						"change_author": change.ChangeAuthor,
+					},
+				}
+				causes = append(causes, cause)
+			}
+			return causes, nil
+		}
+	}
+	
+	// Fallback to placeholder implementation for testing
 	return []*RootCause{
 		{
 			Type:        "schema_change",

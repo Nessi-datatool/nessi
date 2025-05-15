@@ -24,6 +24,14 @@ This JSON file contains sample schema change records used for testing the RCA fe
 
 This JSON file contains sample data quality issues used for testing the RCA feature's ability to correlate anomalies with data quality rule failures in both the target table and upstream data sources.
 
+### rca/dashboard_test_data.json
+
+This JSON file contains sample RCA results used for testing the RCA dashboard integration. It includes multiple analysis results with various root causes, confidence scores, and affected tables for testing the dashboard's visualization capabilities.
+
+### rca/insights_test_data.json
+
+This JSON file contains sample RCA insights data used for testing the dashboard's insights feature. It includes aggregated statistics about root cause distributions, affected tables, and common root causes for testing the charts and visualizations.
+
 ## Usage
 
 Test files in this directory are referenced by the test suite and should not be modified or deleted unless you are also updating the corresponding tests.

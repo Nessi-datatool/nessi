@@ -49,6 +49,7 @@ type Dashboard struct {
 
 	profiler      Profiler
 	ruleValidator RuleValidator
+	rcaClient     RCAClient
 }
 
 // DashboardOptions represents dashboard configuration options
@@ -61,6 +62,7 @@ type DashboardOptions struct {
 	// Dependency injection for tests
 	Profiler      Profiler
 	RuleValidator RuleValidator
+	RCAClient     RCAClient
 }
 
 // New creates a new Dashboard instance
@@ -82,6 +84,7 @@ func New(monitor *monitoring.Monitor, options DashboardOptions) (*Dashboard, err
 		mux:          http.NewServeMux(),
 		profiler:     options.Profiler,
 		ruleValidator: options.RuleValidator,
+		rcaClient:     options.RCAClient,
 	}
 	return dash, nil
 }
@@ -99,6 +102,7 @@ func (d *Dashboard) Start() error {
 	d.mux.HandleFunc("/health", d.handleHealth)
 	d.mux.HandleFunc("/data-quality", d.handleDataQualityDashboard)
 	d.mux.HandleFunc("/alerts", d.handleAlertsDashboard)
+	d.mux.HandleFunc("/rca", d.handleRcaDashboard)
 	
 	// Authentication routes
 	if d.authManager != nil {
@@ -112,6 +116,13 @@ func (d *Dashboard) Start() error {
 		d.mux.Handle("/api/metrics", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleMetrics)))
 		d.mux.Handle("/api/alerts", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleAlerts)))
 		d.mux.Handle("/api/alerts/rules", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleAlertRulesAPI)))
+		
+		// RCA API routes
+		d.mux.Handle("/api/rca/", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleRcaAPI)))
+		d.mux.Handle("/api/rca/recent", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleRcaAPI)))
+		d.mux.Handle("/api/rca/analyze", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleRcaAPI)))
+		d.mux.Handle("/api/rca/insights", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleRcaAPI)))
+		d.mux.Handle("/api/rca/export", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleRcaAPI)))
 		d.mux.Handle("/api/alerts/{id}/acknowledge", d.authManager.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			d.handleAlertAction(w, r, "acknowledge")
 		})))

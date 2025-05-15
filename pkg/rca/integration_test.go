@@ -1,13 +1,9 @@
-package rca_test
+package rca
 
 import (
 	"os"
 	"testing"
 	"time"
-
-	"github.com/nessi-dev/nessi-dev/pkg/datalake"
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring"
-	"github.com/nessi-dev/nessi-dev/pkg/rca"
 )
 
 // TestRCAIntegration tests the integration of the RCA service with other components
@@ -21,12 +17,12 @@ func TestRCAIntegration(t *testing.T) {
 	setupTestEnvironment(t)
 	defer cleanupTestEnvironment(t)
 
-	// Create dependencies
+	// Create mock dependencies
 	monitoringClient := createTestMonitoringClient(t)
 	deltaConnector := createTestDeltaConnector(t)
 
 	// Create RCA analyzer with dependencies
-	config := &rca.Config{
+	config := &Config{
 		EnableRCA:           true,
 		MaxHistoryDays:      7,
 		DetailLevel:         "detailed",
@@ -34,7 +30,7 @@ func TestRCAIntegration(t *testing.T) {
 		IncludeSchemaChange: true,
 		AlertThreshold:      2,
 	}
-	analyzer := rca.NewAnalyzer(config, monitoringClient, deltaConnector)
+	analyzer := NewAnalyzer(config, monitoringClient, deltaConnector)
 
 	// Test analyzing an anomaly
 	anomalyID := "test-integration-anomaly-1"
@@ -85,12 +81,12 @@ func TestRCAWithRealAnomalyData(t *testing.T) {
 		t.Skip("Skipping test with real data outside of CI environment")
 	}
 
-	// Create dependencies
+	// Create mock dependencies for real data test
 	monitoringClient := createRealMonitoringClient(t)
 	deltaConnector := createRealDeltaConnector(t)
 
 	// Create RCA analyzer with dependencies
-	config := &rca.Config{
+	config := &Config{
 		EnableRCA:           true,
 		MaxHistoryDays:      30,
 		DetailLevel:         "detailed",
@@ -98,7 +94,7 @@ func TestRCAWithRealAnomalyData(t *testing.T) {
 		IncludeSchemaChange: true,
 		AlertThreshold:      2,
 	}
-	analyzer := rca.NewAnalyzer(config, monitoringClient, deltaConnector)
+	analyzer := NewAnalyzer(config, monitoringClient, deltaConnector)
 
 	// Get a list of real anomalies from the monitoring system
 	anomalies, err := monitoringClient.GetRecentAnomalies(time.Now().Add(-24*time.Hour), time.Now())
@@ -184,30 +180,104 @@ func cleanupTestEnvironment(t *testing.T) {
 	}
 }
 
-func createTestMonitoringClient(t *testing.T) *monitoring.Client {
-	// In a real implementation, this would create a monitoring client
-	// with mock data for testing
-	// For now, we'll return nil as the analyzer implementation handles this
-	return nil
+func createTestMonitoringClient(t *testing.T) *MockMonitoringClient {
+	// Create a mock monitoring client with test data
+	client := NewMockMonitoringClient()
+	
+	// Add a test anomaly
+	testTime := time.Now().Add(-1 * time.Hour)
+	client.AddMockAnomaly(&AnomalyInfo{
+		ID:          "test-integration-anomaly-1",
+		Timestamp:   testTime,
+		Metric:      "null_percentage",
+		Value:       0.15,
+		Threshold:   0.05,
+		Severity:    2,
+		Description: "High percentage of NULL values detected",
+		TablePath:   "sales/transactions",
+		ColumnName:  "customer_id",
+	})
+	
+	return client
 }
 
-func createTestDeltaConnector(t *testing.T) *datalake.Connector {
-	// In a real implementation, this would create a delta connector
-	// with mock data for testing
-	// For now, we'll return nil as the analyzer implementation handles this
-	return nil
+func createTestDeltaConnector(t *testing.T) *MockDeltaConnector {
+	// Create a mock delta connector with test data
+	connector := NewMockDeltaConnector()
+	
+	// Add a test schema change
+	testTime := time.Now().Add(-2 * time.Hour)
+	connector.AddMockSchemaChange(&SchemaChange{
+		TablePath:    "sales/transactions",
+		Timestamp:    testTime,
+		ColumnName:   "customer_id",
+		PreviousType: "string",
+		CurrentType:  "integer",
+		ChangeAuthor: "data_pipeline_job",
+	})
+	
+	return connector
 }
 
-func createRealMonitoringClient(t *testing.T) *monitoring.Client {
+func createRealMonitoringClient(t *testing.T) *MockMonitoringClient {
 	// In a real implementation, this would create a monitoring client
 	// connected to a real monitoring system
-	// For now, we'll return nil as the analyzer implementation handles this
-	return nil
+	// For now, we'll use a mock with more realistic data
+	client := NewMockMonitoringClient()
+	
+	// Add some realistic anomalies
+	baseTime := time.Now().Add(-12 * time.Hour)
+	client.AddMockAnomaly(&AnomalyInfo{
+		ID:          "anom-20250514-001",
+		Timestamp:   baseTime,
+		Metric:      "null_percentage",
+		Value:       0.15,
+		Threshold:   0.05,
+		Severity:    2,
+		Description: "High percentage of NULL values detected",
+		TablePath:   "sales/transactions",
+		ColumnName:  "customer_id",
+	})
+	
+	client.AddMockAnomaly(&AnomalyInfo{
+		ID:          "anom-20250514-002",
+		Timestamp:   baseTime.Add(1 * time.Hour),
+		Metric:      "row_count",
+		Value:       500,
+		Threshold:   1000,
+		Severity:    1,
+		Description: "Low row count detected",
+		TablePath:   "reporting/metrics",
+	})
+	
+	return client
 }
 
-func createRealDeltaConnector(t *testing.T) *datalake.Connector {
+func createRealDeltaConnector(t *testing.T) *MockDeltaConnector {
 	// In a real implementation, this would create a delta connector
 	// connected to a real Delta Lake
-	// For now, we'll return nil as the analyzer implementation handles this
-	return nil
+	// For now, we'll use a mock with more realistic data
+	connector := NewMockDeltaConnector()
+	
+	// Add some realistic schema changes
+	baseTime := time.Now().Add(-24 * time.Hour)
+	connector.AddMockSchemaChange(&SchemaChange{
+		TablePath:    "sales/transactions",
+		Timestamp:    baseTime.Add(10 * time.Hour),
+		ColumnName:   "customer_id",
+		PreviousType: "string",
+		CurrentType:  "integer",
+		ChangeAuthor: "data_pipeline_job",
+	})
+	
+	connector.AddMockSchemaChange(&SchemaChange{
+		TablePath:    "reporting/metrics",
+		Timestamp:    baseTime.Add(12 * time.Hour),
+		ColumnName:   "transaction_date",
+		PreviousType: "string",
+		CurrentType:  "timestamp",
+		ChangeAuthor: "schema_migration_v2",
+	})
+	
+	return connector
 }

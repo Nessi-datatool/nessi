@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nessi - Root Cause Analysis Dashboard</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body>
+    <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
+        <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/">Nessi Monitoring</a>
+        <ul class="navbar-nav px-3">
+            <li class="nav-item text-nowrap">
+                <a class="nav-link" href="/logout">Sign out</a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+                <div class="sidebar-sticky">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">
+                                <span data-feather="home"></span>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/data-quality">
+                                <span data-feather="check-circle"></span>
+                                Data Quality
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/metrics">
+                                <span data-feather="bar-chart-2"></span>
+                                Metrics
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/alerts">
+                                <span data-feather="alert-triangle"></span>
+                                Alerts
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/rca">
+                                <span data-feather="search"></span>
+                                Root Cause Analysis <span class="sr-only">(current)</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Root Cause Analysis Dashboard</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group mr-2">
+                            <button class="btn btn-sm btn-outline-secondary" id="refreshRcaBtn">Refresh</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="exportRcaBtn">Export</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs for different RCA views -->
+                <ul class="nav nav-tabs" id="rcaTabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="recent-tab" data-toggle="tab" href="#recent" role="tab" aria-controls="recent" aria-selected="true">Recent Analyses</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="run-rca-tab" data-toggle="tab" href="#run-rca" role="tab" aria-controls="run-rca" aria-selected="false">Run Analysis</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="insights-tab" data-toggle="tab" href="#insights" role="tab" aria-controls="insights" aria-selected="false">Insights</a>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="rcaTabContent">
+                    <!-- Recent Analyses Tab -->
+                    <div class="tab-pane fade show active" id="recent" role="tabpanel" aria-labelledby="recent-tab">
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Recent Root Cause Analyses</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped table-sm" id="rcaTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Anomaly ID</th>
+                                                        <th>Analysis Time</th>
+                                                        <th>Primary Root Cause</th>
+                                                        <th>Confidence</th>
+                                                        <th>Affected Tables</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="rcaTableBody">
+                                                    <!-- RCA data will be populated here -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Run Analysis Tab -->
+                    <div class="tab-pane fade" id="run-rca" role="tabpanel" aria-labelledby="run-rca-tab">
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Run Root Cause Analysis</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="rcaForm">
+                                            <div class="form-group">
+                                                <label for="anomalyId">Anomaly ID</label>
+                                                <select class="form-control" id="anomalyId" required>
+                                                    <!-- Anomaly IDs will be populated here -->
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="outputFormat">Output Format</label>
+                                                <select class="form-control" id="outputFormat">
+                                                    <option value="html" selected>HTML</option>
+                                                    <option value="json">JSON</option>
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">Run Analysis</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Insights Tab -->
+                    <div class="tab-pane fade" id="insights" role="tabpanel" aria-labelledby="insights-tab">
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Root Cause Insights</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <canvas id="rootCauseDistributionChart"></canvas>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <canvas id="affectedTablesChart"></canvas>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-4">
+                                            <div class="col-12">
+                                                <h5>Common Root Causes</h5>
+                                                <div id="commonRootCauses">
+                                                    <!-- Common root causes will be populated here -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RCA Detail Modal -->
+                <div class="modal fade" id="rcaDetailModal" tabindex="-1" role="dialog" aria-labelledby="rcaDetailModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="rcaDetailModalLabel">Root Cause Analysis Details</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body" id="rcaDetailContent">
+                                <!-- RCA details will be populated here -->
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary" id="exportDetailBtn">Export</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="/static/js/jquery-3.6.0.min.js"></script>
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/feather.min.js"></script>
+    <script src="/static/js/chart.js"></script>
+    <script src="/static/js/rca-dashboard.js"></script>
+</body>
+</html>
