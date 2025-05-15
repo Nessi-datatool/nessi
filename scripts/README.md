@@ -58,6 +58,22 @@ This script replaces all previous test scripts, including:
 
 All test-related functionality has been consolidated into this single script for easier maintenance and usage.
 
+### debug_long_tests.sh
+
+A specialized script for debugging long-running tests in the monitoring packages. This script:
+
+- Runs tests with verbose output
+- Enables race detection
+- Saves detailed logs to the `logs` directory
+- Uses the unified test runner with appropriate options
+
+Usage:
+```bash
+./scripts/debug_long_tests.sh
+```
+
+This script is particularly useful when investigating timeouts or race conditions in the long-running tests.
+
 ## Test Data
 
 Test data files have been moved to the `/test_data` directory for better organization.
