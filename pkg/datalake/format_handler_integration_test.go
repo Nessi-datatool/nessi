@@ -10,7 +10,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFormatDetection(t *testing.T) {
+func (t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+TestFormatDetection(t *testing.T) {
 	// Create a temporary directory for test files
 	tempDir, err := os.MkdirTemp("", "format_detection_test")
 	require.NoError(t, err)
@@ -59,7 +63,11 @@ func TestFormatDetection(t *testing.T) {
 	assert.Equal(t, 0.9, customHandler.config.MinConfidenceThreshold)
 }
 
-func TestCSVSchemaInference(t *testing.T) {
+func (t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+TestCSVSchemaInference(t *testing.T) {
 	// Create a temporary directory for test files
 	tempDir, err := os.MkdirTemp("", "csv_inference_test")
 	require.NoError(t, err)
@@ -105,7 +113,11 @@ func TestCSVSchemaInference(t *testing.T) {
 	assert.Equal(t, int64(5), record.NumRows())
 }
 
-func TestCSVWithoutHeader(t *testing.T) {
+func (t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+TestCSVWithoutHeader(t *testing.T) {
 	// Create a temporary directory for test files
 	tempDir, err := os.MkdirTemp("", "csv_no_header_test")
 	require.NoError(t, err)
@@ -144,7 +156,11 @@ func TestCSVWithoutHeader(t *testing.T) {
 	assert.Equal(t, "col5", schema.Field(4).Name)
 }
 
-func TestDataTypeInference(t *testing.T) {
+func (t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+TestDataTypeInference(t *testing.T) {
 	handler := NewFormatHandler()
 
 	// Test integer inference

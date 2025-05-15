@@ -14,7 +14,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSSLIntegration(t *testing.T) {
+func (t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+TestSSLIntegration(t *testing.T) {
 	// Create temporary directory for certificates
 	tempDir, err := os.MkdirTemp("", "ssl-integration-")
 	require.NoError(t, err)
@@ -114,7 +118,11 @@ func TestSSLIntegration(t *testing.T) {
 	})
 }
 
-func TestSSLWithExistingCertificates(t *testing.T) {
+func (t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+TestSSLWithExistingCertificates(t *testing.T) {
 	// Create temporary directory for certificates
 	tempDir, err := os.MkdirTemp("", "ssl-existing-")
 	require.NoError(t, err)

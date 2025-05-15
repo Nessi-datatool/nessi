@@ -13,7 +13,11 @@ import (
 )
 
 // TestTrendDeviationIntegration tests the trend deviation functionality with a more realistic setup
-func TestTrendDeviationIntegration(t *testing.T) {
+func (t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+TestTrendDeviationIntegration(t *testing.T) {
 	// Skip in short mode
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
@@ -185,7 +189,11 @@ func TestTrendDeviationIntegration(t *testing.T) {
 }
 
 // createMockRunMetrics creates mock run metrics for testing
-func createMockRunMetrics(t *testing.T, metricsDir string, field string, version int, mean, stdDev, min, max float64) {
+func (t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+createMockRunMetrics(t *testing.T, metricsDir string, field string, version int, mean, stdDev, min, max float64) {
 	// Create run metrics
 	runMetrics := RunMetrics{
 		Timestamp: time.Now().Add(-time.Duration(version) * 24 * time.Hour),

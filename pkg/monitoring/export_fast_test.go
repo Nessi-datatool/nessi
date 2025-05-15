@@ -1,6 +1,3 @@
-//go:build skiplong
-// +build skiplong
-
 package monitoring
 
 import (
@@ -9,21 +6,17 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
-
+	
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestExportMetricsToCSV(t *testing.T) {
-	// Skip this test if we're in a mode that should skip long tests
-	if os.Getenv("NESSI_SKIP_LONG_TESTS") != "" {
-		t.Skip("Skipping long test")
-	}
-	
+// TestExportMetricsToCSVOptimized is a fast version of the export test
+func TestExportMetricsToCSVOptimized(t *testing.T) {
 	// Make this test run in parallel with other tests
 	t.Parallel()
 	
-	// Set up test timeout to prevent hanging - reduced for faster tests
+	// Set up test timeout to prevent hanging - using a very short timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
 	
@@ -41,7 +34,7 @@ func TestExportMetricsToCSV(t *testing.T) {
 	defer close(done)
 	
 	// Create a temporary directory for test output
-	tempDir, err := os.MkdirTemp("", "metrics-export-test")
+	tempDir, err := os.MkdirTemp("", "metrics-export-fast-test")
 	require.NoError(t, err)
 	
 	// Use t.Cleanup for more reliable cleanup
@@ -79,63 +72,12 @@ func TestExportMetricsToCSV(t *testing.T) {
 	done <- true
 }
 
-func TestExportMetricsInvalidFormat(t *testing.T) {
-	// Skip this test if we're in a mode that should skip long tests
-	if os.Getenv("NESSI_SKIP_LONG_TESTS") != "" {
-		t.Skip("Skipping long test")
-	}
-	
+// TestExportMetricsNoDataOptimized is a fast version of the no data export test
+func TestExportMetricsNoDataOptimized(t *testing.T) {
 	// Make this test run in parallel with other tests
 	t.Parallel()
 	
-	// Set up test timeout to prevent hanging - reduced for faster tests
-	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-	defer cancel()
-	
-	// Use context to ensure test doesn't hang
-	done := make(chan bool)
-	go func() {
-		select {
-		case <-done:
-			return
-		case <-ctx.Done():
-			t.Error("Test timed out")
-			t.FailNow()
-		}
-	}()
-	defer close(done)
-	
-	// Create a monitor
-	options := MonitorOptions{
-		MetricsPort: 9090,
-	}
-	monitor, err := New(options)
-	require.NoError(t, err)
-	
-	// Try to export with an invalid format
-	exportOptions := ExportOptions{
-		Format:     "invalid_format",
-		OutputPath: "test_output.txt",
-	}
-	
-	_, err = monitor.ExportMetrics(exportOptions)
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "unsupported export format")
-	
-	// Signal test completion
-	done <- true
-}
-
-func TestExportMetricsNoData(t *testing.T) {
-	// Skip this test if we're in a mode that should skip long tests
-	if os.Getenv("NESSI_SKIP_LONG_TESTS") != "" {
-		t.Skip("Skipping long test")
-	}
-	
-	// Make this test run in parallel with other tests
-	t.Parallel()
-	
-	// Set up test timeout to prevent hanging - reduced for faster tests
+	// Set up test timeout to prevent hanging - using a very short timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
 	
@@ -153,7 +95,7 @@ func TestExportMetricsNoData(t *testing.T) {
 	defer close(done)
 	
 	// Create a temporary directory for test output
-	tempDir, err := os.MkdirTemp("", "metrics-export-test")
+	tempDir, err := os.MkdirTemp("", "metrics-export-fast-test")
 	require.NoError(t, err)
 	
 	// Use t.Cleanup for more reliable cleanup
