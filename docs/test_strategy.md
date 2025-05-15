@@ -56,15 +56,20 @@ For CI/CD pipelines:
 3. **Timeouts**: All tests should have appropriate timeouts
 4. **Resource Cleanup**: Ensure proper cleanup of resources
 5. **Parallel Execution**: Tests should be designed to run in parallel when possible
+   - Use Go's built-in `t.Parallel()` for parallel test execution
+   - Do not mix `t.Parallel()` with `testutil.RunInParallel(t)` in the same test
+   - Be aware of potential race conditions when running tests in parallel
 
 ## Implementation Details
 
 The test optimization includes:
+- Standardized test approach without fast/long test distinctions
 - Reduced sleep times in cleanup routines
 - Proper resource management with `t.Cleanup()`
 - Test timeouts to prevent hanging
 - Environment variables to control test behavior
 - Standardized test helpers for consistent execution
+- Improved parallel test execution with clear warnings about potential conflicts
 
 ## Environment Variables
 

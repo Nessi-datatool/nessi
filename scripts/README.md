@@ -107,7 +107,7 @@ A test script that runs a series of tests on the security package and reports de
 
 ### run_tests.sh
 
-A comprehensive test runner script that consolidates all testing functionality. It supports multiple test modes, package selection, and other options.
+A comprehensive test runner script that consolidates all testing functionality. It supports package selection and other options. All tests now run uniformly without fast/long test distinctions.
 
 #### Test Execution
 
@@ -157,6 +157,20 @@ Usage:
 ```
 
 This script is particularly useful when investigating timeouts or race conditions in tests.
+
+### run_security_tests.sh
+
+A specialized script for running security-related tests with optimized test helpers:
+
+```bash
+./scripts/run_security_tests.sh
+```
+
+This script:
+- Runs tests for the security package
+- Runs tests for the webhook package (which use security components)
+- Runs tests for the monitoring package (which were also optimized)
+- Uses the updated test helpers that avoid parallel execution conflicts
 
 ## Test Data
 
