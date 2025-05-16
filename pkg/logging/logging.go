@@ -48,3 +48,8 @@ func Info(msg string) {
 func Debug(msg string) {
 	Logger.Debug(msg)
 }
+
+// GetLogger returns the global logger instance
+func GetLogger() *logrus.Logger {
+	return Logger
+}

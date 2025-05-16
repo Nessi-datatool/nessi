@@ -5,9 +5,7 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/rca"
 	"github.com/spf13/cobra"
 )
 

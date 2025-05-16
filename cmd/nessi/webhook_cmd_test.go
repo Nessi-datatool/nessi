@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/nessi-dev/nessi-dev/cmd/nessi/cli"
+
 	"github.com/nessi-dev/nessi-dev/pkg/webhook"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

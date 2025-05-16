@@ -1,3 +1,4 @@
+// Package main implements the Nessi CLI commands for Delta Lake management
 package main
 
 import (
@@ -8,8 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
 	"github.com/nessi-dev/nessi-dev/pkg/datalake"
+	"github.com/nessi-dev/nessi-dev/pkg/logging"
+	"github.com/spf13/cobra"
 )
 
 // versionCmd represents the version command
@@ -143,35 +145,36 @@ var logTransactionCmd = &cobra.Command{
 	},
 }
 
-// historyCmd represents the history command
+// versionHistoryCmd represents the history command for Delta Lake tables
 var versionHistoryCmd = &cobra.Command{
 	Use:   "history [table_path]",
 	Short: "Show transaction history",
-	Long:  `Show the history of transactions for a Delta Lake table.`,
+	Long:  `Show the history of transactions for a Delta Lake table, including version, timestamp, and operation details.`,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Get the table path from arguments
 		tablePath := args[0]
+		logging.Info(fmt.Sprintf("Getting version history for table: %s", tablePath))
 
 		// Get version history
 		vm := datalake.NewMetadataManager(tablePath)
 		history, err := vm.GetVersionHistory()
 		if err != nil {
-			fmt.Printf("Error getting transaction history: %v\n", err)
+			logging.Error(fmt.Sprintf("Failed to get version history for table: %s", tablePath), err)
+			fmt.Printf("Error getting version history: %v\n", err)
 			os.Exit(1)
 		}
 		
-		// Get format
+		// Check output format
 		format, _ := cmd.Flags().GetString("format")
-		
 		if format == "json" {
 			// Output as JSON
 			jsonData, err := json.MarshalIndent(history, "", "  ")
 			if err != nil {
+				logging.Error("Failed to marshal version entry to JSON", err)
 				fmt.Printf("Error marshaling history to JSON: %v\n", err)
 				os.Exit(1)
 			}
-			
 			fmt.Println(string(jsonData))
 			return
 		}
@@ -218,27 +221,31 @@ var versionHistoryCmd = &cobra.Command{
 	},
 }
 
-// showVersionCmd represents the show command
+// showVersionCmd represents the show command for displaying detailed version information
 var showVersionCmd = &cobra.Command{
 	Use:   "show [table_path] [version]",
 	Short: "Show details of a specific version",
-	Long:  `Show detailed information about a specific version of a Delta Lake table.`,
+	Long:  `Show detailed information about a specific version of a Delta Lake table, including operation, timestamp, and user details.`,
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		tablePath := args[0]
 		versionStr := args[1]
 		
+		logging.Info(fmt.Sprintf("Showing version details for table: %s, version: %s", tablePath, versionStr))
+		
 		// Parse version
 		version, err := strconv.Atoi(versionStr)
 		if err != nil {
+			logging.Error(fmt.Sprintf("Failed to parse version: %s", versionStr), err)
 			fmt.Printf("Error parsing version: %v\n", err)
+			fmt.Println("Version must be a valid integer.")
 			os.Exit(1)
 		}
-		
 		// Get version manager
 		vm := datalake.NewMetadataManager(tablePath)
 		history, err := vm.GetVersionHistory()
 		if err != nil {
+			logging.Error(fmt.Sprintf("Failed to get version history for table: %s", tablePath), err)
 			fmt.Printf("Error getting version history: %v\n", err)
 			os.Exit(1)
 		}
@@ -253,9 +260,13 @@ var showVersionCmd = &cobra.Command{
 		}
 		
 		if versionEntry == nil {
-			fmt.Printf("Version %d not found\n", version)
+			logging.Error(fmt.Sprintf("Version %d not found in table %s", version, tablePath), nil)
+			fmt.Printf("Version %d not found in table %s\n", version, tablePath)
 			os.Exit(1)
 		}
+		
+		logging.Info(fmt.Sprintf("Found version entry for table: %s, version: %d, timestamp: %s", 
+			tablePath, version, time.Unix(0, versionEntry.Timestamp*int64(time.Millisecond)).Format(time.RFC3339)))
 		
 		// Get format
 		format, _ := cmd.Flags().GetString("format")
@@ -319,11 +330,14 @@ var showVersionCmd = &cobra.Command{
 	},
 }
 
-// rollbackCmd represents the rollback command
+// rollbackCmd represents the rollback command for Delta Lake tables
 var rollbackCmd = &cobra.Command{
 	Use:   "rollback [table_path] [version]",
 	Short: "Rollback to a specific version",
-	Long:  `Rollback a Delta Lake table to a specific version.`,
+	Long:  `Rollback a Delta Lake table to a specific version, creating a new commit that reverts the table state.
+
+This command will create a new version that matches the state of the specified version.
+The rollback operation is recorded in the table's transaction log.`,
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		tablePath := args[0]
@@ -419,11 +433,18 @@ var rollbackCmd = &cobra.Command{
 	},
 }
 
-// compareCmd represents the compare command
+// compareCmd represents the compare command for Delta Lake tables
 var compareCmd = &cobra.Command{
 	Use:   "compare [table_path] [from_version] [to_version]",
 	Short: "Compare two versions",
-	Long:  `Compare two versions of a Delta Lake table and show the differences.`,
+	Long:  `Compare two versions of a Delta Lake table and show the differences.
+
+This command analyzes the changes between two versions, including:
+- Schema changes (added, removed, or modified columns)
+- Data changes (added or removed files, records)
+- Metadata changes (properties, partitioning)
+
+The output can be formatted as text or JSON.`,
 	Args:  cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
 		tablePath := args[0]
@@ -491,11 +512,15 @@ var compareCmd = &cobra.Command{
 	},
 }
 
-// timeVersionCmd represents the time-version command
+// timeVersionCmd represents the time-version command for Delta Lake time travel
 var timeVersionCmd = &cobra.Command{
 	Use:   "time-version [table_path] [timestamp]",
 	Short: "Get version at a specific timestamp",
-	Long:  `Get the version of a Delta Lake table that was current at a specific timestamp.`,
+	Long:  `Get the version of a Delta Lake table that was current at a specific timestamp.
+
+This command implements Delta Lake's time travel capability, allowing you to
+identify which version was active at a specific point in time. The timestamp
+must be provided in RFC3339 format (e.g., 2023-01-01T12:00:00Z).`,
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		tablePath := args[0]
@@ -587,6 +612,7 @@ func formatDuration(d time.Duration) string {
 	return fmt.Sprintf("%.2f seconds", d.Seconds())
 }
 
+// init registers all version-related commands and their flags
 func init() {
 	rootCmd.AddCommand(versionCmd)
 	

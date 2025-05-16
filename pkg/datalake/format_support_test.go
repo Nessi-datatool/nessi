@@ -56,7 +56,7 @@ func testHasCSVExtension(path string) bool {
 }
 
 // Schema inference helpers
-func inferSchema(path string) (*Schema, error) {
+func inferSchema(path string) (*DeltaSchema, error) {
 	// Check format
 	if testHasDeltaLogDirectory(path) {
 		return inferDeltaSchema(path)
@@ -68,11 +68,11 @@ func inferSchema(path string) (*Schema, error) {
 	return nil, os.ErrNotExist
 }
 
-func inferDeltaSchema(path string) (*Schema, error) {
+func inferDeltaSchema(path string) (*DeltaSchema, error) {
 	// In a real implementation, this would parse the Delta transaction log
 	// For testing, we'll return a mock schema
-	return &Schema{
-		Fields: []Field{
+	return &DeltaSchema{
+		Fields: []DeltaField{
 			{Name: "id", Type: "INTEGER", Nullable: false},
 			{Name: "name", Type: "STRING", Nullable: true},
 			{Name: "value", Type: "FLOAT", Nullable: true},
@@ -80,11 +80,11 @@ func inferDeltaSchema(path string) (*Schema, error) {
 	}, nil
 }
 
-func inferParquetSchema(path string) (*Schema, error) {
+func inferParquetSchema(path string) (*DeltaSchema, error) {
 	// In a real implementation, this would parse the Parquet file
 	// For testing, we'll return a mock schema
-	return &Schema{
-		Fields: []Field{
+	return &DeltaSchema{
+		Fields: []DeltaField{
 			{Name: "id", Type: "INTEGER", Nullable: false},
 			{Name: "name", Type: "STRING", Nullable: true},
 			{Name: "value", Type: "FLOAT", Nullable: true},
@@ -92,41 +92,41 @@ func inferParquetSchema(path string) (*Schema, error) {
 	}, nil
 }
 
-func inferCSVSchema(path string, delimiter rune, hasHeader bool, maxRows int) (*Schema, error) {
+func inferCSVSchema(path string, delimiter rune, hasHeader bool, maxRows int) (*DeltaSchema, error) {
 	// In a real implementation, this would parse the CSV file
 	// For testing, we'll return a mock schema
-	return &Schema{
-		Fields: []Field{},
+	return &DeltaSchema{
+		Fields: []DeltaField{},
 	}, nil
 }
 
 // Test schema field creation
 func TestSchemaFieldCreation(t *testing.T) {
 	// Create a schema with fields
-	schema := &Schema{
-		Fields: []Field{},
+	schema := &DeltaSchema{
+		Fields: []DeltaField{},
 	}
 
 	// Add fields
-	schema.Fields = append(schema.Fields, Field{
+	schema.Fields = append(schema.Fields, DeltaField{
 		Name:     "id",
 		Type:     "INTEGER",
 		Nullable: false,
 	})
 
-	schema.Fields = append(schema.Fields, Field{
+	schema.Fields = append(schema.Fields, DeltaField{
 		Name:     "name",
 		Type:     "STRING",
 		Nullable: true,
 	})
 
-	schema.Fields = append(schema.Fields, Field{
+	schema.Fields = append(schema.Fields, DeltaField{
 		Name:     "active",
 		Type:     "BOOLEAN",
 		Nullable: false,
 	})
 
-	schema.Fields = append(schema.Fields, Field{
+	schema.Fields = append(schema.Fields, DeltaField{
 		Name:     "timestamp",
 		Type:     "TIMESTAMP",
 		Nullable: true,

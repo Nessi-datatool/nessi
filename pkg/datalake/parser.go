@@ -13,9 +13,9 @@ import (
 
 // ParsedData represents parsed data from a Reader
 type ParsedData struct {
-	Records []map[string]interface{} `json:"records"`
-	Schema  map[string]string        `json:"schema"`
-	Count   int                      `json:"count"`
+	Data   []map[string]interface{} `json:"data"`
+	Schema *DeltaSchema             `json:"schema"`
+	Count  int                      `json:"count"`
 }
 
 // ParseReadCloser parses data from an io.ReadCloser into a structured format
@@ -43,13 +43,14 @@ func parseParquet(r io.ReadCloser) (*ParsedData, error) {
 
 	// Initialize result with empty data
 	result := &ParsedData{
-		Records: make([]map[string]interface{}, 0),
-		Schema:  make(map[string]string),
-		Count:   0,
+		Data:  make([]map[string]interface{}, 0),
+		Schema: &DeltaSchema{
+			Fields: []DeltaField{
+				{Name: "placeholder", Type: "string", Nullable: true},
+			},
+		},
+		Count: 0,
 	}
-
-	// Add a placeholder schema field
-	result.Schema["placeholder"] = "string"
 
 	return result, nil
 }
@@ -114,15 +115,22 @@ func parseJSON(r io.ReadCloser) (*ParsedData, error) {
 	
 	// Initialize result
 	result := &ParsedData{
-		Records: rawData,
-		Schema:  make(map[string]string),
-		Count:   len(rawData),
+		Data:  rawData,
+		Schema: &DeltaSchema{
+			Fields: []DeltaField{},
+		},
+		Count: len(rawData),
 	}
 	
 	// Extract schema information from the first record
 	if len(rawData) > 0 {
 		for key, value := range rawData[0] {
-			result.Schema[key] = inferJSONType(value)
+			dataType := inferJSONType(value)
+			result.Schema.Fields = append(result.Schema.Fields, DeltaField{
+				Name:     key,
+				Type:     dataType,
+				Nullable: true,
+			})
 		}
 	}
 	
@@ -202,10 +210,15 @@ func parseCSV(r io.ReadCloser) (*ParsedData, error) {
 	
 	// Initialize result
 	result := &ParsedData{
-		Records: make([]map[string]interface{}, 0, len(lines)-1),
-		Schema:  make(map[string]string),
-		Count:   len(lines) - 1,
+		Data:   make([]map[string]interface{}, 0, len(lines)-1),
+		Schema: &DeltaSchema{
+			Fields: []DeltaField{},
+		},
+		Count:  len(lines) - 1,
 	}
+	
+	// Create schema fields based on header
+	schemaFields := make(map[string]string)
 	
 	// Process data rows
 	for i := 1; i < len(lines); i++ {
@@ -234,11 +247,20 @@ func parseCSV(r io.ReadCloser) (*ParsedData, error) {
 			
 			// For the first row, infer schema
 			if i == 1 {
-				result.Schema[header[j]] = inferJSONType(value)
+				schemaFields[header[j]] = inferJSONType(value)
 			}
 		}
 		
-		result.Records = append(result.Records, record)
+		result.Data = append(result.Data, record)
+	}
+	
+	// Convert schema map to DeltaSchema
+	for field, dataType := range schemaFields {
+		result.Schema.Fields = append(result.Schema.Fields, DeltaField{
+			Name:     field,
+			Type:     dataType,
+			Nullable: true,
+		})
 	}
 	
 	return result, nil

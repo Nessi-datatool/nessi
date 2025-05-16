@@ -34,7 +34,6 @@ func TestConfigExportImport(t *testing.T) {
 
 	// Create test config files
 	jsonFile := filepath.Join(tempDir, "config.json")
-	yamlFile := filepath.Join(tempDir, "config.yaml")
 
 	// Test exporting to JSON
 	jsonData, err := json.MarshalIndent(v.AllSettings(), "", "  ")

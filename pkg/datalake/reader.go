@@ -20,7 +20,7 @@ type DeltaReader interface {
 	ReadPartitionParsed(partition string) (*ParsedData, error)
 	
 	// GetSchema returns the schema of the table
-	GetSchema() (*Schema, error)
+	GetSchema() (*DeltaSchema, error)
 	
 	// GetPartitions returns the list of partitions in the table
 	GetPartitions() ([]string, error)
@@ -85,15 +85,16 @@ func (r *DeltaTableReader) ReadPartitionParsed(partition string) (*ParsedData, e
 }
 
 // GetSchema returns the schema of the table
-func (r *DeltaTableReader) GetSchema() (*Schema, error) {
+func (r *DeltaTableReader) GetSchema() (*DeltaSchema, error) {
 	// This is a simplified implementation
 	// In a real implementation, this would read the schema from the Delta Lake metadata
 	
 	// For now, just return a dummy schema
-	return &Schema{
-		Fields: []Field{
+	return &DeltaSchema{
+		Fields: []DeltaField{
 			{Name: "id", Type: "integer", Nullable: false},
 			{Name: "name", Type: "string", Nullable: true},
+			{Name: "value", Type: "double", Nullable: true},
 		},
 	}, nil
 }
@@ -107,14 +108,4 @@ func (r *DeltaTableReader) GetPartitions() ([]string, error) {
 	return []string{"year=2023", "year=2022"}, nil
 }
 
-// Schema represents a data schema
-type Schema struct {
-	Fields []Field `json:"fields"`
-}
-
-// Field represents a field in a schema
-type Field struct {
-	Name     string `json:"name"`
-	Type     string `json:"type"`
-	Nullable bool   `json:"nullable"`
-}
+// Import the ParsedData struct from parser.go

@@ -132,7 +132,7 @@ func TestOutputValidationResult(t *testing.T) {
 
 	// Capture stdout
 	oldStdout := os.Stdout
-	r, w, _ := os.Pipe()
+	_, w, _ := os.Pipe()
 	os.Stdout = w
 
 	// Output the result

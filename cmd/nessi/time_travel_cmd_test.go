@@ -1,17 +1,21 @@
 package main
 
 import (
-	"bytes"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/nessi-dev/nessi-dev/cmd/nessi/testing"
 	"github.com/nessi-dev/nessi-dev/pkg/datalake"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+
+
+
 
 func TestTimeTravelCommands(t *testing.T) {
 	// Create a temporary directory for the test
@@ -26,17 +30,17 @@ func TestTimeTravelCommands(t *testing.T) {
 
 	// Create version manager and schema manager
 	vm := datalake.NewVersionManager(tablePath)
-	sm := datalake.NewSchemaManager(tablePath)
+	sm := datalake.NewDeltaSchemaManager(tablePath)
 
 	// Initialize schema
-	schema := &datalake.Schema{
-		Fields: []datalake.Field{
+	schema := &datalake.DeltaSchema{
+		Fields: []datalake.DeltaField{
 			{Name: "id", Type: "integer", Nullable: false},
 			{Name: "name", Type: "string", Nullable: true},
 			{Name: "age", Type: "integer", Nullable: true},
 		},
 	}
-	err = sm.InitializeSchema(schema)
+	_, err = sm.InitializeSchema(schema, []string{}, []string{})
 	require.NoError(t, err)
 
 	// Record initial transaction
@@ -58,15 +62,15 @@ func TestTimeTravelCommands(t *testing.T) {
 	time.Sleep(10 * time.Millisecond)
 
 	// Record second transaction - add a column and some files
-	updatedSchema := &datalake.Schema{
-		Fields: []datalake.Field{
+	updatedSchema := &datalake.DeltaSchema{
+		Fields: []datalake.DeltaField{
 			{Name: "id", Type: "integer", Nullable: false},
 			{Name: "name", Type: "string", Nullable: true},
 			{Name: "age", Type: "integer", Nullable: true},
 			{Name: "email", Type: "string", Nullable: true},
 		},
 	}
-	err = sm.UpdateSchema(updatedSchema)
+	_, err = sm.UpdateSchema(updatedSchema, map[string]string{"message": "Add email column"})
 	require.NoError(t, err)
 
 	additionalFiles := []string{"part-00002.parquet", "part-00003.parquet"}
@@ -76,10 +80,11 @@ func TestTimeTravelCommands(t *testing.T) {
 		additionalFiles,
 		nil,
 		&datalake.MetadataChange{
-			SchemaChange:    true,
-			AddedColumns:    []string{"email"},
-			RemovedColumns:  nil,
-			ModifiedColumns: nil,
+			Name:        "Schema Change",
+			Description: "Added email column",
+			Properties: map[string]string{
+				"added_columns": "email",
+			},
 		},
 		map[string]interface{}{"numRecords": float64(50)},
 	)
@@ -88,94 +93,103 @@ func TestTimeTravelCommands(t *testing.T) {
 
 	// Helper function to execute a command and capture its output
 	executeCommand := func(cmd *cobra.Command, args ...string) (string, error) {
-		buf := new(bytes.Buffer)
-		cmd.SetOut(buf)
-		cmd.SetErr(buf)
-		cmd.SetArgs(args)
-		err := cmd.Execute()
-		return buf.String(), err
+		return testing.ExecuteCommand(cmd, args...)
 	}
+
+	// Create time travel commands for testing
+	timeTravelCmd := testing.CreateTimeTravelCommand()
+	
+	// Get the subcommands
+	queryVersionCmd := timeTravelCmd.Commands()[0]      // query-version
+	queryTimestampCmd := timeTravelCmd.Commands()[1]    // query-timestamp
+	versionsInRangeCmd := timeTravelCmd.Commands()[2]   // versions-in-range
+	exportSnapshotCmd := timeTravelCmd.Commands()[3]    // export-snapshot
+	reconstructStateCmd := timeTravelCmd.Commands()[4]  // reconstruct-state
 
 	// Test query-version command
 	t.Run("QueryVersion", func(t *testing.T) {
-		// Create a new command for testing
-		cmd := &cobra.Command{Use: "test"}
-		cmd.AddCommand(queryVersionCmd)
+		// Create a new root command for testing
+		rootCmd := testing.CreateTestRootCommand()
+		rootCmd.AddCommand(timeTravelCmd)
 
 		// Test with text format
-		output, err := executeCommand(cmd, "query-version", tablePath, "0")
+		output, err := executeCommand(rootCmd, "time-travel", "query-version", tablePath, "0")
 		assert.NoError(t, err)
 		assert.Contains(t, output, "Query result for version 0")
 		assert.Contains(t, output, "Initial data load")
 		assert.Contains(t, output, "Files: 2")
 
 		// Test with JSON format
-		output, err = executeCommand(cmd, "query-version", tablePath, "1", "--format", "json")
+		output, err = executeCommand(rootCmd, "time-travel", "query-version", tablePath, "1", "--format", "json")
 		assert.NoError(t, err)
 		assert.Contains(t, output, "\"version\": 1")
 		assert.Contains(t, output, "\"message\": \"Add email column\"")
 		assert.Contains(t, output, "\"email\"")
 
 		// Test with show-files flag
-		output, err = executeCommand(cmd, "query-version", tablePath, "1", "--show-files")
+		output, err = executeCommand(rootCmd, "time-travel", "query-version", tablePath, "1", "--show-files")
 		assert.NoError(t, err)
 		assert.Contains(t, output, "Files:")
 		assert.Contains(t, output, "part-00000.parquet")
 		assert.Contains(t, output, "part-00002.parquet")
 
 		// Test with show-schema flag
-		output, err = executeCommand(cmd, "query-version", tablePath, "1", "--show-schema")
+		output, err = executeCommand(rootCmd, "time-travel", "query-version", tablePath, "1", "--show-schema")
 		assert.NoError(t, err)
 		assert.Contains(t, output, "Schema:")
 		assert.Contains(t, output, "id: integer (not null)")
 		assert.Contains(t, output, "email: string")
 
 		// Test with invalid version
-		output, err = executeCommand(cmd, "query-version", tablePath, "99")
+		output, err = executeCommand(rootCmd, "time-travel", "query-version", tablePath, "99")
 		assert.Error(t, err)
 		assert.Contains(t, output, "Error querying version")
 	})
 
 	// Test query-timestamp command
 	t.Run("QueryTimestamp", func(t *testing.T) {
-		// Create a new command for testing
-		cmd := &cobra.Command{Use: "test"}
-		cmd.AddCommand(queryTimestampCmd)
+		// Create a new root command for testing
+		rootCmd := testing.CreateTestRootCommand()
+		rootCmd.AddCommand(timeTravelCmd)
 
 		// Test with timestamp of first transaction
-		output, err := executeCommand(cmd, "query-timestamp", tablePath, tx1.Timestamp.Format(time.RFC3339))
+		tx1Time := time.Unix(0, tx1.Timestamp * int64(time.Millisecond))
+		output, err := executeCommand(rootCmd, "time-travel", "query-timestamp", tablePath, tx1Time.Format(time.RFC3339))
 		assert.NoError(t, err)
 		assert.Contains(t, output, "Query result for timestamp")
 		assert.Contains(t, output, "Actual version: 0")
 		assert.Contains(t, output, "Initial data load")
 
 		// Test with timestamp between transactions
-		output, err = executeCommand(cmd, "query-timestamp", tablePath, timestamp1.Format(time.RFC3339))
+		output, err = executeCommand(rootCmd, "time-travel", "query-timestamp", tablePath, timestamp1.Format(time.RFC3339))
 		assert.NoError(t, err)
 		assert.Contains(t, output, "Actual version: 0")
 
 		// Test with timestamp of second transaction
-		output, err = executeCommand(cmd, "query-timestamp", tablePath, tx2.Timestamp.Format(time.RFC3339))
+		tx2Time := time.Unix(0, tx2.Timestamp * int64(time.Millisecond))
+		output, err = executeCommand(rootCmd, "time-travel", "query-timestamp", tablePath, tx2Time.Format(time.RFC3339))
 		assert.NoError(t, err)
 		assert.Contains(t, output, "Actual version: 1")
 		assert.Contains(t, output, "Add email column")
 
 		// Test with invalid timestamp format
-		output, err = executeCommand(cmd, "query-timestamp", tablePath, "2023-01-01")
+		output, err = executeCommand(rootCmd, "time-travel", "query-timestamp", tablePath, "2023-01-01")
 		assert.Error(t, err)
 		assert.Contains(t, output, "Error parsing timestamp")
 	})
 
 	// Test versions-in-range command
 	t.Run("VersionsInRange", func(t *testing.T) {
-		// Create a new command for testing
-		cmd := &cobra.Command{Use: "test"}
-		cmd.AddCommand(versionsInRangeCmd)
+		// Create a new root command for testing
+		rootCmd := testing.CreateTestRootCommand()
+		rootCmd.AddCommand(timeTravelCmd)
 
 		// Test with range including both transactions
-		startTime := tx1.Timestamp.Add(-1 * time.Second)
-		endTime := tx2.Timestamp.Add(1 * time.Second)
-		output, err := executeCommand(cmd, "versions-in-range", tablePath, 
+		tx1Time := time.Unix(0, tx1.Timestamp * int64(time.Millisecond))
+		tx2Time := time.Unix(0, tx2.Timestamp * int64(time.Millisecond))
+		startTime := tx1Time.Add(-1 * time.Second)
+		endTime := tx2Time.Add(1 * time.Second)
+		output, err := executeCommand(rootCmd, "time-travel", "versions-in-range", tablePath, 
 			startTime.Format(time.RFC3339), 
 			endTime.Format(time.RFC3339))
 		assert.NoError(t, err)
@@ -185,7 +199,7 @@ func TestTimeTravelCommands(t *testing.T) {
 		assert.Contains(t, output, "Version 1")
 
 		// Test with range including only first transaction
-		endTime = tx1.Timestamp.Add(1 * time.Millisecond)
+		endTime = tx1Time.Add(1 * time.Millisecond)
 		output, err = executeCommand(cmd, "versions-in-range", tablePath, 
 			startTime.Format(time.RFC3339), 
 			endTime.Format(time.RFC3339))
@@ -195,8 +209,8 @@ func TestTimeTravelCommands(t *testing.T) {
 		assert.NotContains(t, output, "Version 1")
 
 		// Test with empty range
-		startTime = tx2.Timestamp.Add(1 * time.Second)
-		endTime = tx2.Timestamp.Add(2 * time.Second)
+		startTime = tx2Time.Add(1 * time.Second)
+		endTime = tx2Time.Add(2 * time.Second)
 		output, err = executeCommand(cmd, "versions-in-range", tablePath, 
 			startTime.Format(time.RFC3339), 
 			endTime.Format(time.RFC3339))
@@ -206,15 +220,15 @@ func TestTimeTravelCommands(t *testing.T) {
 
 	// Test export-snapshot command
 	t.Run("ExportSnapshot", func(t *testing.T) {
-		// Create a new command for testing
-		cmd := &cobra.Command{Use: "test"}
-		cmd.AddCommand(exportSnapshotCmd)
+		// Create a new root command for testing
+		rootCmd := testing.CreateTestRootCommand()
+		rootCmd.AddCommand(timeTravelCmd)
 
 		// Create a directory for the snapshot
 		snapshotDir := filepath.Join(tempDir, "snapshot")
 
 		// Test exporting version 1
-		output, err := executeCommand(cmd, "export-snapshot", tablePath, "1", snapshotDir)
+		output, err := executeCommand(rootCmd, "time-travel", "export-snapshot", tablePath, "1", snapshotDir)
 		assert.NoError(t, err)
 		assert.Contains(t, output, "Successfully exported snapshot of version 1")
 		
@@ -227,22 +241,22 @@ func TestTimeTravelCommands(t *testing.T) {
 
 		// Test with invalid version
 		invalidDir := filepath.Join(tempDir, "invalid-snapshot")
-		output, err = executeCommand(cmd, "export-snapshot", tablePath, "99", invalidDir)
+		output, err = executeCommand(rootCmd, "time-travel", "export-snapshot", tablePath, "99", invalidDir)
 		assert.Error(t, err)
 		assert.Contains(t, output, "Error exporting snapshot")
 	})
 
 	// Test reconstruct-state command
 	t.Run("ReconstructState", func(t *testing.T) {
-		// Create a new command for testing
-		cmd := &cobra.Command{Use: "test"}
-		cmd.AddCommand(reconstructStateCmd)
+		// Create a new root command for testing
+		rootCmd := testing.CreateTestRootCommand()
+		rootCmd.AddCommand(timeTravelCmd)
 
 		// Create a directory for the reconstruction
 		reconstructDir := filepath.Join(tempDir, "reconstruct")
 
 		// Test reconstructing version 0
-		output, err := executeCommand(cmd, "reconstruct-state", tablePath, "0", reconstructDir)
+		output, err := executeCommand(rootCmd, "time-travel", "reconstruct-state", tablePath, "0", reconstructDir)
 		assert.NoError(t, err)
 		assert.Contains(t, output, "Successfully reconstructed state at version 0")
 		
@@ -257,8 +271,9 @@ func TestTimeTravelCommands(t *testing.T) {
 		timestampDir := filepath.Join(tempDir, "timestamp-reconstruct")
 
 		// Test reconstructing at timestamp
-		output, err = executeCommand(cmd, "reconstruct-state", tablePath, 
-			tx1.Timestamp.Format(time.RFC3339), timestampDir, "--timestamp")
+		tx1Time := time.Unix(0, tx1.Timestamp * int64(time.Millisecond))
+		output, err = executeCommand(rootCmd, "time-travel", "reconstruct-state", tablePath, 
+			tx1Time.Format(time.RFC3339), timestampDir, "--timestamp")
 		assert.NoError(t, err)
 		assert.Contains(t, output, "Successfully reconstructed state at timestamp")
 		
@@ -271,7 +286,7 @@ func TestTimeTravelCommands(t *testing.T) {
 
 		// Test with invalid version
 		invalidDir := filepath.Join(tempDir, "invalid-reconstruct")
-		output, err = executeCommand(cmd, "reconstruct-state", tablePath, "99", invalidDir)
+		output, err = executeCommand(rootCmd, "time-travel", "reconstruct-state", tablePath, "99", invalidDir)
 		assert.Error(t, err)
 		assert.Contains(t, output, "Error reconstructing state")
 	})
