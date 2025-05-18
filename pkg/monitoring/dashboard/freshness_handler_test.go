@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/freshness"
+	"github.com/nessi-dev/nessi/pkg/monitoring/freshness"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"

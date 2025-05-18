@@ -1,3 +1,5 @@
+// [REMOVED FOR OSS]: alerting and advanced dashboards are only available in LakeDiff Enterprise.
+
 package testutil
 
 import (
@@ -5,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring"
-	"github.com/nessi-dev/nessi-dev/pkg/testutil"
+	"github.com/nessi-dev/nessi/pkg/monitoring"
+	"github.com/nessi-dev/nessi/pkg/testutil"
 )
 
 // GetTestTimeout returns an appropriate timeout duration for tests

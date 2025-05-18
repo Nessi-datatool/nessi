@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/alerts"
+	"github.com/nessi-dev/nessi/pkg/monitoring/alerts"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

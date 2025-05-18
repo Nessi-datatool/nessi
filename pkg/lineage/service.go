@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/api/types"
-	"github.com/nessi-dev/nessi-dev/pkg/lineage/comparison"
-	"github.com/nessi-dev/nessi-dev/pkg/lineage/model"
-	"github.com/nessi-dev/nessi-dev/pkg/lineage/visualization"
+	"github.com/nessi-dev/nessi/pkg/api/types"
+	"github.com/nessi-dev/nessi/pkg/lineage/comparison"
+	"github.com/nessi-dev/nessi/pkg/lineage/model"
+	"github.com/nessi-dev/nessi/pkg/lineage/visualization"
 )
 
 // LineageService provides high-level operations for data lineage

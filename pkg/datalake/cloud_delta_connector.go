@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/cloud/common"
+	"github.com/nessi-dev/nessi/pkg/cloud/common"
 )
 
 // CloudDeltaConnector provides access to Delta Lake tables stored in cloud storage

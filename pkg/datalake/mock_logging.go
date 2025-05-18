@@ -3,7 +3,7 @@ package datalake
 import (
 	"io"
 
-	"github.com/nessi-dev/nessi-dev/pkg/logging"
+	"github.com/nessi-dev/nessi/pkg/logging"
 	"github.com/sirupsen/logrus"
 )
 

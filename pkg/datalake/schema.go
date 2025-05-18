@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/apache/arrow/go/v15/arrow"
-	"github.com/nessi-dev/nessi-dev/pkg/logging"
+	"github.com/nessi-dev/nessi/pkg/logging"
 )
 
 // SchemaManager handles schema operations for Delta Lake tables

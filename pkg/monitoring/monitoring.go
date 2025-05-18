@@ -11,8 +11,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/nessi-dev/nessi-dev/pkg/logging"
-	"github.com/nessi-dev/nessi-dev/pkg/security"
+	"github.com/nessi-dev/nessi/pkg/logging"
+	"github.com/nessi-dev/nessi/pkg/security"
 )
 
 // Config represents the monitoring configuration
@@ -100,7 +100,7 @@ func NewMonitoringSystem() (*Monitor, error) {
 	}
 
 	// Initialize metric store
-	m.metricStore = NewPrometheusMetricStore(m)
+	m.metricStore = NewMetricStore(m)
 
 	// Initialize metric retention if enabled
 	if config.Retention.Enabled {

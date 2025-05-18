@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/datalake"
+	"github.com/nessi-dev/nessi/pkg/datalake"
 )
 
 // This demo uses the SimpleTrendAnalyzer from the datalake package

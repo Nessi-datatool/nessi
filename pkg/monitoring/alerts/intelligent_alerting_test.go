@@ -1,3 +1,5 @@
+// [REMOVED FOR OSS]: Intelligent alerting tests are only available in LakeDiff Enterprise.
+
 package alerts
 
 import (

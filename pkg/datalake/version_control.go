@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/nessi-dev/nessi-dev/pkg/logging"
+	"github.com/nessi-dev/nessi/pkg/logging"
 )
 
 // VersionManager handles Delta Lake version control operations including

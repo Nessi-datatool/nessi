@@ -1,7 +1,7 @@
 package comparison
 
 import (
-	"github.com/nessi-dev/nessi-dev/pkg/lineage/model"
+	"github.com/nessi-dev/nessi/pkg/lineage/model"
 )
 
 // DiffGenerator generates diffs between lineage graphs

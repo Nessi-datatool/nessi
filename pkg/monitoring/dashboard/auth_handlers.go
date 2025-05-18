@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/logging"
-	"github.com/nessi-dev/nessi-dev/pkg/security"
+	"github.com/nessi-dev/nessi/pkg/logging"
+	"github.com/nessi-dev/nessi/pkg/security"
 )
 
 // LoginRequest represents a login request

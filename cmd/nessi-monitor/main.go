@@ -10,7 +10,7 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring"
+	"github.com/nessi-dev/nessi/pkg/monitoring"
 )
 
 // Command represents a CLI command

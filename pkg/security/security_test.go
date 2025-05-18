@@ -3,7 +3,7 @@ package security
 import (
 	"testing"
 
-	"github.com/nessi-dev/nessi-dev/pkg/testutil"
+	"github.com/nessi-dev/nessi/pkg/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

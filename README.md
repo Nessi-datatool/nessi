@@ -29,8 +29,6 @@ Nessi.dev is a powerful data quality and Delta Lake management tool that helps o
   - Performance tracking
   - Resource utilization monitoring
   - Health checks
-  - **Root Cause Analysis (RCA)**: Automatically diagnose the underlying causes of data quality anomalies with lineage tracking, schema change detection, and actionable recommendations
-  - **RCA Dashboard**: Interactive visualization of root causes, affected tables, and recommended actions with confidence scoring and historical insights
   - Intelligent alerting with pattern recognition
   - Automated rule creation based on historical data
   - Anomaly and trend deviation detection

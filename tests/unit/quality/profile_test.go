@@ -14,7 +14,7 @@ import (
 	"github.com/apache/arrow/go/v15/arrow/array"
 	"github.com/apache/arrow/go/v15/arrow/memory"
 
-	"github.com/nessi-dev/nessi-dev/pkg/quality/profile"
+	"github.com/nessi-dev/nessi/pkg/quality/profile"
 )
 
 // mockReader is a test helper for reading test data

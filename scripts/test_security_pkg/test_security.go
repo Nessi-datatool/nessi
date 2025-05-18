@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/nessi-dev/nessi-dev/pkg/security"
+	"github.com/nessi-dev/nessi/pkg/security"
 )
 
 // TestResult represents the result of a test

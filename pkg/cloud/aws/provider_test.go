@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/cloud/common"
+	"github.com/nessi-dev/nessi/pkg/cloud/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

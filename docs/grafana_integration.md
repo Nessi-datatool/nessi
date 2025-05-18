@@ -1,4 +1,9 @@
-# Nessi Grafana Integration
+# Grafana and Prometheus Dashboarding in Nessi OSS
+
+Advanced dashboarding and monitoring features (Grafana and Prometheus integration) are only available in the LakeDiff Enterprise version of Nessi. The open-source version provides a basic built-in dashboard for core monitoring functionality.
+
+For advanced visualization, alerting, and analytics, please contact the LakeDiff team for enterprise licensing and support.
+
 
 This document explains how to use the Grafana dashboards included with Nessi for monitoring alerts and metrics.
 

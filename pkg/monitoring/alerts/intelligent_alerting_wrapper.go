@@ -1,3 +1,5 @@
+// [REMOVED FOR OSS]: Intelligent alerting wrappers are only available in LakeDiff Enterprise.
+
 package alerts
 
 // createRule is a wrapper for the AlertManager.CreateRule method

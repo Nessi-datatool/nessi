@@ -6,7 +6,7 @@ import (
 	"testing"
 
 
-	"github.com/nessi-dev/nessi-dev/pkg/webhook"
+	"github.com/nessi-dev/nessi/pkg/webhook"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/spf13/viper"

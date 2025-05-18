@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/security"
+	"github.com/nessi-dev/nessi/pkg/security"
 )
 
 // loadConfig loads the monitoring configuration from a file

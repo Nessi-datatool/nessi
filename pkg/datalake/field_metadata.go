@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/apache/arrow/go/v15/arrow"
-	"github.com/nessi-dev/nessi-dev/pkg/logging"
+	"github.com/nessi-dev/nessi/pkg/logging"
 )
 
 // FieldMetadata represents metadata for a field in a schema

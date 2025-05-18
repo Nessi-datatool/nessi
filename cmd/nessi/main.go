@@ -30,9 +30,9 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/nessi-dev/nessi-dev/cmd/nessi/cli"
-	"github.com/nessi-dev/nessi-dev/internal/extensions"
-	"github.com/nessi-dev/nessi-dev/pkg"
+	"github.com/nessi-dev/nessi/cmd/nessi/cli"
+	"github.com/nessi-dev/nessi/internal/extensions"
+	"github.com/nessi-dev/nessi/pkg"
 )
 
 var (

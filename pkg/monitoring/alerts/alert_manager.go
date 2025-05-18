@@ -1,3 +1,5 @@
+// [REMOVED FOR OSS]: AlertManager and alerting features are only available in LakeDiff Enterprise.
+
 package alerts
 
 import (

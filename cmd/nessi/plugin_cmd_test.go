@@ -5,7 +5,7 @@ import (
 	"testing"
 
 
-	"github.com/nessi-dev/nessi-dev/pkg/plugin"
+	"github.com/nessi-dev/nessi/pkg/plugin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

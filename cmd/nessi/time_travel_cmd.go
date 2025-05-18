@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/logging"
+	"github.com/nessi-dev/nessi/pkg/logging"
 	"github.com/spf13/cobra"
 )
 

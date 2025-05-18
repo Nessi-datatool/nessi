@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/datalake"
+	"github.com/nessi-dev/nessi/pkg/datalake"
 	"github.com/spf13/cobra"
 )
 

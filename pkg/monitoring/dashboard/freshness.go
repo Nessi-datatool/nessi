@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/freshness"
+	"github.com/nessi-dev/nessi/pkg/monitoring/freshness"
 )
 
 // FreshnessHandler handles the freshness dashboard route

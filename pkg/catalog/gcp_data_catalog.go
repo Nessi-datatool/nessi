@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/api/types"
+	"github.com/nessi-dev/nessi/pkg/api/types"
 )
 
 // GCPDataCatalogImpl implements the DataCatalog interface for Google Cloud Data Catalog

@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/nessi-dev/nessi-dev/pkg/lineage"
-	"github.com/nessi-dev/nessi-dev/pkg/lineage/model"
-	"github.com/nessi-dev/nessi-dev/pkg/lineage/visualization"
+	"github.com/nessi-dev/nessi/pkg/lineage"
+	"github.com/nessi-dev/nessi/pkg/lineage/model"
+	"github.com/nessi-dev/nessi/pkg/lineage/visualization"
 )
 
 // LineageHandler handles lineage API requests

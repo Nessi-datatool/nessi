@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/alerts"
+	"github.com/nessi-dev/nessi/pkg/monitoring/alerts"
 )
 
 // MockMetricStore is a mock implementation of the alerts.MetricStore interface for testing

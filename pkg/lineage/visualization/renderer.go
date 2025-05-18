@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/nessi-dev/nessi-dev/pkg/lineage/model"
+	"github.com/nessi-dev/nessi/pkg/lineage/model"
 )
 
 // GraphFormat represents the output format for lineage graph visualization

@@ -144,7 +144,7 @@ For a complete example, see [airflow_integration.py](../examples/integrations/ai
 3. **Use XComs for passing results**: Use Airflow's XComs to pass validation results between tasks.
 4. **Handle failures appropriately**: Configure your DAG to handle validation failures according to your requirements.
 5. **Use Airflow variables for configuration**: Store Nessi configuration in Airflow variables for flexibility.
-6. **Set up alerting**: Configure Airflow to send alerts when data quality checks fail.
+
 
 ## Prefect Integration
 
@@ -420,7 +420,7 @@ For more details, see the [Workflow Orchestration Integration Guide](./workflow_
 2. **Leverage Dagster resources**: Use the Nessi resource to configure the API connection once and reuse it across ops.
 3. **Use Dagster schedules**: Schedule your jobs to run on a regular basis.
 4. **Configure appropriate retries**: Set up retries for ops that might fail due to transient issues.
-5. **Use Dagster alerts**: Configure alerts for job run failures.
+
 
 ## GitHub Actions Integration
 
@@ -560,6 +560,8 @@ fi
 For a complete example, see [shell_script_integration.sh](../examples/integrations/shell_script_integration.sh).
 
 ## Integration Best Practices
+
+
 
 When integrating Nessi with external systems, follow these best practices:
 

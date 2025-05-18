@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/logging"
+	"github.com/nessi-dev/nessi/pkg/logging"
 )
 
 // ExportFormat defines the format for metric exports

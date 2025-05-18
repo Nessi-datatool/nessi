@@ -20,17 +20,13 @@ This YAML file contains sample validation rules used for testing the rule engine
 
 This YAML file in the root test_data directory contains a simplified set of test rules used by the quality rules tests. It includes basic validation rules for testing the YAML loader functionality without requiring the full rule set.
 
-### rca/sample_anomaly.json
+### freshness/sla_test_data.json
 
-This JSON file contains a sample anomaly record used for testing the Root Cause Analysis (RCA) feature. It includes metadata about a detected anomaly such as timestamp, metric, threshold, and severity.
+This JSON file contains sample SLA configurations used for testing the data freshness monitoring feature. It includes various tables with different expected update frequencies, warning and critical thresholds, and metadata for testing the SLA management functionality.
 
-### rca/schema_changes.json
+### freshness/status_test_data.json
 
-This JSON file contains sample schema change records used for testing the RCA feature's ability to detect and analyze schema changes as potential root causes for anomalies.
-
-### rca/data_quality_issues.json
-
-This JSON file contains sample data quality issues used for testing the RCA feature's ability to correlate anomalies with data quality rule failures in both the target table and upstream data sources.
+This JSON file contains sample freshness status data used for testing the freshness dashboard. It includes current status information for tables with different freshness levels (up-to-date, warning, critical) to test the dashboard's visualization and alerting capabilities.
 
 ## Freshness SLA Testing
 
@@ -68,7 +64,6 @@ The test data is organized into the following directories:
 
 - `dq/`: Contains data quality test data
 - `metrics/`: Contains metrics test data
-- `rca/`: Contains root cause analysis test data
 - `freshness/`: Contains data freshness and SLA test data
 
 ## Usage

@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/nessi-dev/nessi-dev/pkg/plugin"
+	"github.com/nessi-dev/nessi/pkg/plugin"
 	"github.com/spf13/cobra"
 )
 

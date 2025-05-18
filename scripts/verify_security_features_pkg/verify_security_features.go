@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/nessi-dev/nessi-dev/pkg/security"
+	"github.com/nessi-dev/nessi/pkg/security"
 )
 
 // This script provides a quick verification of the security features

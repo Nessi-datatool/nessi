@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/quality/anomaly"
+	"github.com/nessi-dev/nessi/pkg/quality/anomaly"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

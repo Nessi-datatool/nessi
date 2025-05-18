@@ -5,8 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/alerts"
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/testutil"
+	"github.com/nessi-dev/nessi/pkg/monitoring/alerts"
+	"github.com/nessi-dev/nessi/pkg/monitoring/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

@@ -1,8 +1,8 @@
 package dashboard
 
 import (
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring"
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/alerts"
+	"github.com/nessi-dev/nessi/pkg/monitoring"
+	"github.com/nessi-dev/nessi/pkg/monitoring/alerts"
 )
 
 // mockMonitor implements a minimal mock for the monitoring.Monitor interface

@@ -35,7 +35,7 @@ import (
 	"plugin"
 	"sync"
 
-	"github.com/nessi-dev/nessi-dev/pkg"
+	"github.com/nessi-dev/nessi/pkg"
 )
 
 // ExtensionInterface defines the interface that all extensions must implement

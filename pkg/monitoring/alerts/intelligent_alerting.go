@@ -1,3 +1,5 @@
+// [REMOVED FOR OSS]: IntelligentAlertManager and intelligent alerting features are only available in LakeDiff Enterprise.
+
 package alerts
 
 import (
@@ -5,7 +7,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/logging"
+	"github.com/nessi-dev/nessi/pkg/logging"
 )
 
 // IntelligentAlertingConfig represents the configuration for intelligent alerting

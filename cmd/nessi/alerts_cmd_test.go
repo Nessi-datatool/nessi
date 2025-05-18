@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/nessi-dev/nessi-dev/cmd/nessi/testing"
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/alerts"
+
+	"github.com/nessi-dev/nessi/pkg/monitoring/alerts"
 )
 
 // TestConfig holds configuration for testing

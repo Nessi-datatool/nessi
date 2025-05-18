@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	nessitypes "github.com/nessi-dev/nessi-dev/pkg/api/types"
+	nessitypes "github.com/nessi-dev/nessi/pkg/api/types"
 	"github.com/stretchr/testify/assert"
 )
 

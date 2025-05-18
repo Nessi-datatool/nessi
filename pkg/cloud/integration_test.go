@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/cloud/aws"
-	"github.com/nessi-dev/nessi-dev/pkg/cloud/azure"
-	"github.com/nessi-dev/nessi-dev/pkg/cloud/common"
-	"github.com/nessi-dev/nessi-dev/pkg/cloud/gcp"
-	"github.com/nessi-dev/nessi-dev/pkg/datalake"
+	"github.com/nessi-dev/nessi/pkg/cloud/aws"
+	"github.com/nessi-dev/nessi/pkg/cloud/azure"
+	"github.com/nessi-dev/nessi/pkg/cloud/common"
+	"github.com/nessi-dev/nessi/pkg/cloud/gcp"
+	"github.com/nessi-dev/nessi/pkg/datalake"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

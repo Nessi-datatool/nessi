@@ -13,9 +13,9 @@ import (
 	"github.com/apache/arrow/go/v15/arrow/array"
 	"github.com/apache/arrow/go/v15/arrow/memory"
 
-	"github.com/nessi-dev/nessi-dev/internal/quality"
-	"github.com/nessi-dev/nessi-dev/internal/quality/profile"
-	"github.com/nessi-dev/nessi-dev/internal/quality/rules"
+	"github.com/nessi-dev/nessi/internal/quality"
+	"github.com/nessi-dev/nessi/internal/quality/profile"
+	"github.com/nessi-dev/nessi/internal/quality/rules"
 )
 
 // TimeTravelOptions defines options for time travel operations

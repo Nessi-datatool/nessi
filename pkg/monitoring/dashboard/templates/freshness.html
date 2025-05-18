@@ -47,12 +47,6 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/rca">
-                                <span data-feather="search"></span>
-                                Root Cause Analysis
-                            </a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link active" href="/freshness">
                                 <span data-feather="clock"></span>
                                 Data Freshness <span class="sr-only">(current)</span>
@@ -239,10 +233,7 @@
                                         <label for="tags">Tags (comma-separated)</label>
                                         <input type="text" class="form-control" id="tags">
                                     </div>
-                                    <div class="form-group">
-                                        <label for="grafanaDashboardURL">Grafana Dashboard URL</label>
-                                        <input type="text" class="form-control" id="grafanaDashboardURL">
-                                    </div>
+                                    
                                     <div class="form-check">
                                         <input type="checkbox" class="form-check-input" id="enabled" checked>
                                         <label class="form-check-label" for="enabled">Enabled</label>
@@ -272,7 +263,7 @@
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                <a href="#" class="btn btn-primary" id="viewGrafanaBtn" target="_blank">View in Grafana</a>
+                                
                             </div>
                         </div>
                     </div>
@@ -287,4 +278,8 @@
     <script src="/static/js/chart.js"></script>
     <script src="/static/js/freshness-dashboard.js"></script>
 </body>
+<footer style="margin-top:2em;text-align:center;font-size:1em;color:#888;">
+  Want live dashboards, team alerts, and RCA?<br>
+  Try LakeDiff for Teams → <a href="https://lakediff.com" target="_blank">https://lakediff.com</a>
+</footer>
 </html>

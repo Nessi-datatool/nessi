@@ -1,3 +1,5 @@
+// [REMOVED FOR OSS]: alerting and advanced dashboards are only available in LakeDiff Enterprise.
+
 package dashboard
 
 import (
@@ -6,10 +8,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/alerts"
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/testutil"
-	"github.com/nessi-dev/nessi-dev/pkg/quality/profile"
-	"github.com/nessi-dev/nessi-dev/pkg/quality/rules"
+	"github.com/nessi-dev/nessi/pkg/monitoring/alerts"
+	"github.com/nessi-dev/nessi/pkg/monitoring/testutil"
+	"github.com/nessi-dev/nessi/pkg/quality/profile"
+	"github.com/nessi-dev/nessi/pkg/quality/rules"
 	"github.com/stretchr/testify/require"
 )
 

@@ -72,20 +72,11 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
   - ✅ Seasonal pattern recognition (hourly, daily, weekly)
   - ✅ Automatic rule creation and updating based on historical data
   - ✅ Self-tuning sensitivity configuration
-  - ✅ Root Cause Analysis (RCA) for anomaly diagnosis
-    - ✅ Schema change detection and impact analysis
-    - ✅ Interactive RCA dashboard with visualization of root causes, confidence scoring, and insights
-    - ✅ Data quality rule failure correlation
-    - ✅ Lineage-based upstream issue detection
-    - ✅ System performance correlation
-    - ✅ Actionable recommendations based on findings
-    - ✅ Integration with Grafana dashboards
 
 ### Monitoring History
 - ✅ 30-day metrics retention
 - ✅ Trend visualization and comparison
 - ✅ Performance impact analysis
-- ✅ Historical data analysis for intelligent alerting
 
 ### Interactive Reports
 - ✅ Quality score cards with drill-down
@@ -161,7 +152,6 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
 - ✅ Execute Nessi.dev data quality rules against dbt models
 - ✅ Enhanced model selection with dbt syntax (e.g., tag:daily,+downstream)
 - ✅ Generate data profiles for Delta tables associated with dbt models
-- ✅ Lineage-aware validation for root cause analysis
 - ✅ Automatic mapping between dbt models and Delta tables
 - ✅ Export results in various formats (JSON, CSV, table)
 - ✅ Generate artifacts for dbt Docs integration
@@ -194,14 +184,6 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
 8. ✅ Alerting System
    - ✅ Standard alerting with multiple notification channels
    - ✅ Intelligent alerting with pattern recognition
-9. ✅ Root Cause Analysis (RCA) Service
-   - ✅ Anomaly diagnosis engine
-   - ✅ Interactive dashboard integration
-   - ✅ Historical insights and trend analysis
-   - ✅ CLI accessibility via `nessi rca <anomaly_id>`
-   - ✅ Feature flag control with `--enable-rca`
-   - ✅ Structured JSON reports and HTML dashboard integration
-   - ✅ Grafana dashboard linking for contextual metrics
 
 ### Optional Python Extensions
 1. ✅ Advanced Delta Lake Features

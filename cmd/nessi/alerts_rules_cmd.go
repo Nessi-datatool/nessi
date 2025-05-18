@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/alerts"
+	"github.com/nessi-dev/nessi/pkg/monitoring/alerts"
 )
 
 // alertsRulesCmd represents the alerts rules command

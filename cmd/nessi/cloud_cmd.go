@@ -7,8 +7,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/nessi-dev/nessi-dev/pkg/cloud"
-	"github.com/nessi-dev/nessi-dev/pkg/cloud/common"
+	"github.com/nessi-dev/nessi/pkg/cloud"
+	"github.com/nessi-dev/nessi/pkg/cloud/common"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )

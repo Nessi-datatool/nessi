@@ -49,8 +49,6 @@ type SLAConfig struct {
 	// Tags are optional tags for filtering and grouping
 	Tags []string `json:"tags,omitempty"`
 	
-	// GrafanaDashboardURL is an optional URL to a Grafana dashboard for this table
-	GrafanaDashboardURL string `json:"grafana_dashboard_url,omitempty"`
 }
 
 // Validate validates the SLA configuration

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/webhook"
+	"github.com/nessi-dev/nessi/pkg/webhook"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

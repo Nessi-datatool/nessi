@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/nessi-dev/nessi-dev/pkg/lineage/model"
+	"github.com/nessi-dev/nessi/pkg/lineage/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

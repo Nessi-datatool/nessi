@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	nessitypes "github.com/nessi-dev/nessi-dev/pkg/api/types"
+	nessitypes "github.com/nessi-dev/nessi/pkg/api/types"
 )
 
 //go:generate mockgen -destination mock_glue_client.go -package aws -source glue.go GlueAPI

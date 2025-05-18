@@ -1,4 +1,205 @@
-# Nessi Monitoring System User Guide
+# Nessi OSS User Guide
+
+> **Note:** This documentation is for the open-source (OSS) version of Nessi. Features marked as “Enterprise” are only available in LakeDiff Enterprise.
+
+---
+
+## Feature Matrix
+
+| Feature                     | OSS | Enterprise |
+|-----------------------------|:---:|:----------:|
+| Data Quality Checks         | ✔️  | ✔️         |
+| System Metrics              | ✔️  | ✔️         |
+| Web Dashboard (Basic)       | ✔️  | ✔️         |
+| CLI & Python API            | ✔️  | ✔️         |
+| Custom Rule Extensions      | ✔️  | ✔️         |
+| Data Profiling              | ✔️  | ✔️         |
+| Freshness Monitoring        | ✔️  | ✔️         |
+| Workflow Integrations       | ✔️  | ✔️         |
+| Alerting                    |     | ✔️         |
+| Advanced Dashboards         |     | ✔️         |
+| Grafana/Prometheus Support  |     | ✔️         |
+| RBAC/SSO/IAM                |     | ✔️         |
+| Cloud Integrations          |     | ✔️         |
+
+---
+
+## Table of Contents
+
+1. Introduction
+2. Installation & Quickstart
+3. Core Concepts
+4. Security Features (OSS)
+5. Web Dashboard (Basic)
+6. Command-Line Interface
+7. Python API
+8. Data Quality Features
+9. Monitoring (OSS)
+10. Integrations
+11. Configuration
+12. Best Practices
+13. Troubleshooting
+14. FAQ
+
+---
+
+## Introduction
+
+Nessi is a comprehensive monitoring system designed for data quality and system monitoring. It provides tools for profiling data, validating data against rules, and monitoring system metrics.
+
+### Key Features
+
+- **Data Quality Monitoring**: Profile your data, detect outliers, and validate against rules
+- **System Monitoring**: Track system metrics like CPU, memory, and disk usage
+- **Security**: Role-based access control (OSS: basic authentication only)
+- **Multiple Interfaces**: Web dashboard (basic), command-line tools, and Python API
+- **Extensibility**: Plug in custom data sources and rules
+
+---
+
+## Installation & Quickstart
+
+### Prerequisites
+- Go 1.16 or later
+- Python 3.7 or later (for Python API)
+- PostgreSQL or SQLite (for persistent storage)
+
+### Quick Start
+```bash
+# Clone the repository
+$ git clone https://github.com/nessi-dev/nessi-dev.git
+$ cd nessi-dev
+
+# Build the binaries
+$ go build -o nessi cmd/nessi/main.go
+
+# Start the server
+$ ./nessi server start
+```
+The server will be available at http://localhost:8080 by default.
+
+### Docker Installation
+```bash
+# Pull the Docker image
+$ docker pull nessi-dev/nessi:latest
+
+# Run the container
+$ docker run -p 8080:8080 -v nessi-data:/data nessi-dev/nessi:latest
+```
+
+---
+
+## Core Concepts
+
+### Metrics
+Metrics are the fundamental unit of monitoring in Nessi. A metric consists of:
+- **Name**: Identifier for the metric (e.g., `cpu_usage`, `row_count`)
+- **Value**: Numeric or string value
+- **Timestamp**: When the metric was recorded
+- **Tags**: Key-value pairs for categorization
+- **Metadata**: Additional information about the metric
+
+### Data Profiles
+Data profiles provide statistical information about datasets, including:
+- **Column Types**: Data types detected for each column
+- **Basic Statistics**: Min, max, mean, median, etc. for numeric columns
+- **Categorical Statistics**: Frequency counts for categorical columns
+- **Null Values**: Percentage of null values per column
+- **Outliers**: Detected outliers using Z-score or IQR methods
+
+### Rules
+Rules define expectations for data quality. A rule includes:
+- **Name**: Identifier for the rule
+- **Description**: Human-readable description
+- **Severity**: Importance level when violated
+- **Field**: The data field to validate
+- **Rule Type**: The type of validation (e.g., `range`, `regex`, `enum`)
+- **Configuration**: Type-specific configuration
+
+---
+
+## Security Features (OSS)
+
+### Authentication
+Nessi OSS supports basic username and password authentication. Advanced security features (RBAC, SSO, IAM) are only available in LakeDiff Enterprise.
+
+> _Advanced security features (RBAC, SSO, IAM) are only available in LakeDiff Enterprise._
+
+---
+
+## Web Dashboard (Basic)
+
+The OSS version includes a basic web dashboard for viewing metrics and data quality results. Advanced dashboards and alerting are only available in LakeDiff Enterprise.
+
+> _Advanced dashboards and alerting are only available in LakeDiff Enterprise._
+
+---
+
+## Command-Line Interface
+
+The CLI allows you to interact with Nessi for running scans, exporting reports, and managing configuration.
+
+---
+
+## Python API
+
+The Python API provides programmatic access for running scans, retrieving results, and integrating with data pipelines.
+
+---
+
+## Data Quality Features
+
+- Profiling
+- Rule validation
+- Outlier detection
+- Data completeness/accuracy/consistency checks
+
+---
+
+## Monitoring (OSS)
+
+- System metrics (CPU, memory, disk, etc.)
+- Data quality monitoring
+- Freshness monitoring
+
+> _Alerting and advanced monitoring integrations (Grafana, Prometheus) are only available in LakeDiff Enterprise._
+
+---
+
+## Integrations
+
+Nessi OSS supports integration with workflow orchestration tools and basic script-based automation:
+- **Airflow, Prefect, Dagster, Kubernetes**: Use the Python API or CLI in your DAGs/pipelines.
+- **GitHub Actions, Shell Scripts**: Call the CLI or Python API as part of your CI/CD or ETL jobs.
+
+> _Native integrations with cloud platforms, advanced dashboards, and monitoring tools are only available in LakeDiff Enterprise._
+
+---
+
+## Configuration
+
+Document how to configure Nessi for common OSS use cases (database connections, scan schedules, etc.).
+
+---
+
+## Best Practices
+
+Tips for running Nessi effectively in OSS environments.
+
+---
+
+## Troubleshooting
+
+Common issues and solutions for OSS users.
+
+---
+
+## FAQ
+
+Frequently asked questions about the OSS version.
+
+> _For questions about enterprise features, visit the LakeDiff Enterprise documentation._
+
 
 ## Table of Contents
 

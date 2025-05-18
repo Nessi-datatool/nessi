@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/nessi-dev/nessi-dev/pkg/cloud/aws"
-	"github.com/nessi-dev/nessi-dev/pkg/cloud/azure"
-	"github.com/nessi-dev/nessi-dev/pkg/cloud/common"
-	"github.com/nessi-dev/nessi-dev/pkg/cloud/gcp"
+	"github.com/nessi-dev/nessi/pkg/cloud/aws"
+	"github.com/nessi-dev/nessi/pkg/cloud/azure"
+	"github.com/nessi-dev/nessi/pkg/cloud/common"
+	"github.com/nessi-dev/nessi/pkg/cloud/gcp"
 )
 
 // CloudManager manages cloud provider instances

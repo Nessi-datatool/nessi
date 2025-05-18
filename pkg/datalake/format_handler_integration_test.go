@@ -11,7 +11,7 @@ import (
 	"github.com/apache/arrow/go/v15/arrow"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/windsurf/nessi/pkg/testutil"
+	"github.com/nessi-dev/nessi/pkg/testutil"
 )
 
 func (t *testing.T) {

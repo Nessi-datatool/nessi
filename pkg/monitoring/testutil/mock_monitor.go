@@ -1,10 +1,12 @@
+// [REMOVED FOR OSS]: alerting and advanced dashboards are only available in LakeDiff Enterprise.
+
 package testutil
 
 import (
 	"os"
 
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring"
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/alerts"
+	"github.com/nessi-dev/nessi/pkg/monitoring"
+	"github.com/nessi-dev/nessi/pkg/monitoring/alerts"
 )
 
 // CreateTestMonitor creates a monitoring.Monitor instance for testing

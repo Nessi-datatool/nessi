@@ -1,16 +1,5 @@
-// Alerts Dashboard JavaScript
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize the dashboard
-    initAlertsDashboard();
-    
-    // Set up event listeners
-    document.getElementById('refresh-btn').addEventListener('click', refreshAlerts);
-    document.getElementById('create-alert-btn').addEventListener('click', showCreateAlertModal);
-    document.getElementById('create-rule-btn').addEventListener('click', showCreateRuleModal);
-    
-    // Filter event listeners
-    document.getElementById('status-filter').addEventListener('change', applyFilters);
+// This file has been removed in the OSS version.
+// Alerting and advanced dashboards are only available in LakeDiff Enterprise.
     document.getElementById('type-filter').addEventListener('change', applyFilters);
     document.getElementById('severity-filter').addEventListener('change', applyFilters);
     document.getElementById('search-input').addEventListener('input', applyFilters);

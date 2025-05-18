@@ -1,3 +1,5 @@
+// [REMOVED FOR OSS]: alerting and advanced dashboards are only available in LakeDiff Enterprise.
+
 package dashboard
 
 import (
@@ -9,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/logging"
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/alerts"
+	"github.com/nessi-dev/nessi/pkg/logging"
+	"github.com/nessi-dev/nessi/pkg/monitoring/alerts"
 )
 
 // handleAlertsDashboard handles the alerts dashboard page

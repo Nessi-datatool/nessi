@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/alerts"
-	"github.com/nessi-dev/nessi-dev/pkg/security"
+	"github.com/nessi-dev/nessi/pkg/monitoring/alerts"
+	"github.com/nessi-dev/nessi/pkg/security"
 )
 
 // Monitor represents a monitoring system
@@ -16,7 +16,7 @@ type Monitor struct {
 	metricsPort            int
 	alertManager           *alerts.AlertManager
 	intelligentAlertManager *alerts.IntelligentAlertManager
-	metricStore            *PrometheusMetricStore
+	metricStore            *MetricStore
 	authManager            *security.AuthManager
 	certManager            *security.CertManager
 	config                 *Config
@@ -51,7 +51,7 @@ func New(options MonitorOptions) (*Monitor, error) {
 	}
 	
 	// Create metric store
-	monitor.metricStore = NewPrometheusMetricStore(monitor)
+	monitor.metricStore = NewMetricStore(monitor)
 	
 	// Initialize intelligent alerting if enabled
 	if options.EnableIntelligentAlerting {

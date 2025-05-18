@@ -11,7 +11,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-	nessitypes "github.com/nessi-dev/nessi-dev/pkg/api/types"
+	nessitypes "github.com/nessi-dev/nessi/pkg/api/types"
 )
 
 // PurviewClient is a simple client for Azure Purview API

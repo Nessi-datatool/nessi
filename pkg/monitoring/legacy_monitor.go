@@ -8,7 +8,7 @@ import (
 	"time"
 	
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/nessi-dev/nessi-dev/pkg/security"
+	"github.com/nessi-dev/nessi/pkg/security"
 )
 
 // LegacyMonitor represents a monitoring instance from the old implementation

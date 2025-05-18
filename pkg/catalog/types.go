@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/api/types"
+	"github.com/nessi-dev/nessi/pkg/api/types"
 )
 
 // CatalogType represents the type of data catalog
