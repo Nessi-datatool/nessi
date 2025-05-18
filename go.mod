@@ -1,4 +1,4 @@
-module github.com/nessi-dev/nessi-dev
+module github.com/nessi-dev/nessi
 
 go 1.23.0
 
