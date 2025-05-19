@@ -10,8 +10,11 @@ echo "Fixing dependency issues for Databricks integration..."
 # Explicitly downgrade dependencies that require newer Go versions
 echo "Downgrading dependencies that require Go 1.23+..."
 go get github.com/apache/arrow/go/v15/arrow/ipc@v15.0.2
+go get github.com/apache/arrow/go/v15/arrow/memory@v15.0.2
 go get github.com/klauspost/compress/zstd@v1.16.7
-go get golang.org/x/sys@v0.15.0
+go get golang.org/x/sys/cpu@v0.15.0
+go get golang.org/x/sys/unix@v0.15.0
+go get github.com/sirupsen/logrus@v1.9.3
 
 # Pin specific versions of problematic dependencies
 echo "Pinning specific versions of dependencies..."
