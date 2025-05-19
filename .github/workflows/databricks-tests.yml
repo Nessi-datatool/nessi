@@ -1,0 +1,53 @@
+name: Databricks Integration Tests
+
+on:
+  push:
+    branches: [ main, fresh-ci-pipeline, databricks-ci ]
+    paths:
+      - 'pkg/catalog/databricks/**'
+      - 'pkg/datalake/**'
+      - '.github/workflows/databricks-tests.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'pkg/catalog/databricks/**'
+      - 'pkg/datalake/**'
+      - '.github/workflows/databricks-tests.yml'
+
+jobs:
+  test:
+    name: Test Databricks Integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.24'
+          cache: true
+      
+      - name: Install dependencies
+        run: |
+          go mod download
+      
+      - name: Run Databricks integration tests
+        run: |
+          # Test only the Databricks integration and Delta Lake packages
+          go test -v ./pkg/catalog/databricks/... -short
+          go test -v ./pkg/datalake/... -short
+      
+      - name: Check test coverage
+        run: |
+          # Generate coverage report for Databricks packages only
+          go test -coverprofile=coverage.out ./pkg/catalog/databricks/... ./pkg/datalake/...
+          go tool cover -func=coverage.out
+      
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: databricks-coverage-report
+          path: coverage.out
+          retention-days: 5
