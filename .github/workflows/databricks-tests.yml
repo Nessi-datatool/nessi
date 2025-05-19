@@ -19,15 +19,15 @@ jobs:
     name: Test Databricks Integration
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
         with:
           fetch-depth: 0
       
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v2
         with:
           go-version: '1.24'
-          cache: true
+          check-latest: true
       
       - name: Install dependencies
         run: |
@@ -46,7 +46,7 @@ jobs:
           go tool cover -func=coverage.out
       
       - name: Upload coverage report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: databricks-coverage-report
           path: coverage.out
