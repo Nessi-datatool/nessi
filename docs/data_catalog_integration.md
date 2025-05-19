@@ -187,7 +187,7 @@ One of the key features of the Data Catalog Integration is the ability to publis
 
 1. Track data quality over time
 2. Share quality information with other teams
-3. Build data quality dashboards using your data catalog
+3. Generate comprehensive data quality reports
 
 To publish quality metrics, you need to:
 
@@ -236,7 +236,7 @@ This creates a continuous feedback loop that helps maintain and improve data qua
 2. **Publish quality metrics regularly** to track trends over time
 3. **Use tags in your data catalog** to categorize and filter data assets
 4. **Leverage existing metadata** to generate validation rules
-5. **Share quality dashboards** with stakeholders to promote data quality awareness
+5. **Share quality reports** with stakeholders to promote data quality awareness
 
 ## Troubleshooting
 

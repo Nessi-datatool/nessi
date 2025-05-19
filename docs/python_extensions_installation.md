@@ -84,9 +84,9 @@ When enabled, the following features become available:
    - Performance optimization recommendations
 
 3. **Advanced Visualization Components**
-   - Interactive data visualizations
-   - Custom dashboards with Python-powered charts
-   - Export capabilities for reports
+   - Terminal-based data visualizations
+   - Rich text output for CLI reports
+   - Export capabilities for reports in various formats
 
 ## Configuration
 

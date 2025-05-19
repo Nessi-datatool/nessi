@@ -98,13 +98,13 @@ The freshness monitoring system integrates with the Delta Lake connector to retr
 - Cloud-hosted Delta Lake tables (via the CloudDeltaConnector)
 - Time travel operations for historical analysis
 
-### Dashboard Integration
+### Output Formats
 
-The freshness monitoring system integrates with the Nessi.dev dashboard to provide:
+The freshness monitoring system provides multiple output formats for reporting:
 
-- Visual representation of freshness status
-- Trend graphs and compliance reports
-- SLA management interface
+- JSON output for programmatic consumption and integration with other tools
+- Table format for terminal viewing with color-coded status indicators
+- CSV export for further analysis and reporting
 
 ### CLI Integration
 
@@ -122,7 +122,7 @@ nessi freshness status --all
 
 The freshness monitoring system integrates with the Nessi.dev security system:
 
-- API endpoints are protected by authentication
+- CLI commands are protected by API key authentication
 - Role-based access control for SLA management
 - Audit logging for SLA changes and status checks
 
