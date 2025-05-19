@@ -3,7 +3,7 @@ name: Databricks Integration Pipeline
 # Created on 2025-05-19 - Fresh pipeline for Databricks integration
 on:
   push:
-    branches: [ main ]
+    branches: [ main, fresh-ci-pipeline ]
   pull_request:
     branches: [ main ]
 
@@ -21,6 +21,11 @@ jobs:
         with:
           go-version: '1.20'
           cache: false
+      
+      - name: Fix dependencies
+        run: |
+          chmod +x ./scripts/fix-dependencies.sh
+          ./scripts/fix-dependencies.sh
       
       - name: Format Check
         run: |
@@ -54,12 +59,18 @@ jobs:
           go-version: '1.20'
           cache: true
       
-      - name: Install dependencies
-        run: go mod download
+      - name: Fix dependencies
+        run: |
+          chmod +x ./scripts/fix-dependencies.sh
+          ./scripts/fix-dependencies.sh
       
       - name: Run Databricks tests
         run: |
           go test -v ./pkg/catalog/databricks/... -short
+      
+      - name: Run Delta Lake tests
+        run: |
+          go test -v ./pkg/datalake/... -short
       
       - name: Run visualization tests
         run: |
@@ -67,7 +78,7 @@ jobs:
       
       - name: Generate coverage report
         run: |
-          go test -coverprofile=coverage.out ./pkg/catalog/databricks/... ./pkg/visualization/...
+          go test -coverprofile=coverage.out ./pkg/catalog/databricks/... ./pkg/datalake/... ./pkg/visualization/...
           go tool cover -func=coverage.out
       
       - name: Upload coverage report
