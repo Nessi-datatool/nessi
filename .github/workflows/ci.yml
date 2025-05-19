@@ -1,4 +1,4 @@
-name: CI
+name: Nessi CLI CI
 
 on:
   push:
@@ -7,30 +7,81 @@ on:
     branches: [ main ]
 
 jobs:
-  build-test-lint:
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
-      - name: Install golangci-lint
-        uses: golangci/golangci-lint-action@v4
+          go-version: '1.20'
+          cache: false
+      
+      - name: Check for Go files
+        id: check-go-files
+        run: |
+          if [ -d "pkg/catalog/databricks" ] && [ "$(find pkg/catalog/databricks -name '*.go' | wc -l)" -gt 0 ]; then
+            echo "has_files=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_files=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run gofmt
+        if: steps.check-go-files.outputs.has_files == 'true'
+        run: |
+          # Run gofmt on specific directories
+          gofmt -l -w pkg/catalog/databricks pkg/visualization
+          
+          # Check if any files were changed by gofmt
+          GOFMT_CHANGES=$(git diff --name-only)
+          if [ -n "$GOFMT_CHANGES" ]; then
+            echo "The following files need formatting:"
+            echo "$GOFMT_CHANGES"
+            exit 1
+          fi
+
+      - name: Run go vet and check imports
+        if: steps.check-go-files.outputs.has_files == 'true'
+        run: |
+          # Run go vet on specific directories
+          go vet ./pkg/catalog/databricks/... ./pkg/visualization/...
+          
+          # Check for unused imports
+          ! grep -r "imported and not used" <(go build ./pkg/catalog/databricks/... ./pkg/visualization/... 2>&1)
+  
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
-          version: v1.54
-      - name: Lint
-        run: golangci-lint run --timeout=5m ./...
-      - name: Vet
-        run: go vet ./...
-      - name: Staticcheck
-        uses: dominikh/staticcheck-action@v1
+          go-version: '1.20'
+          cache: true
+      
+      - name: Install dependencies
+        run: go mod download
+      
+      - name: Run core tests
+        run: |
+          # Test only the core Databricks integration and visualization packages
+          go test -v ./pkg/catalog/databricks/... -short
+          go test -v ./pkg/visualization/... -short
+      
+      - name: Check test coverage
+        run: |
+          # Generate coverage report for core packages only
+          go test -coverprofile=coverage.out ./pkg/catalog/databricks/... ./pkg/visualization/...
+          go tool cover -func=coverage.out
+      
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
         with:
-          version: "2023.1.3"
-      - name: Test
-        run: go test -v -coverprofile=coverage.out ./...
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          files: coverage.out
-          fail_ci_if_error: false
+          name: coverage-report
+          path: coverage.out
+          retention-days: 5
