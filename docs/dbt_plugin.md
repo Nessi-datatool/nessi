@@ -11,8 +11,7 @@ The Nessi.dev dbt Plugin offers dbt users the ability to seamlessly integrate Ne
 - Execute Nessi.dev data quality rules against dbt models using the `nessi dbt validate` command, with enhanced model selection leveraging dbt's standard syntax (e.g., `tag:daily,+downstream`).
 - Generate data profiles for Delta tables associated with dbt models using the `nessi dbt profile` command.
 - Optionally integrate dbt's native test results into Nessi's quality assessment for a unified view.
-- Enable lineage-aware validation to propagate quality issues to upstream dbt models, facilitating root cause analysis.
-
+- Enable lineage-aware validation to propagate quality issues to upstream dbt models.
 ### Core Functionality
 
 - Automatic mapping between dbt models and their underlying Delta tables.
@@ -29,9 +28,11 @@ The Nessi.dev dbt Plugin offers dbt users the ability to seamlessly integrate Ne
 
 - Generate an automated data quality score based on rule execution results for trend analysis and monitoring.
 - Provide CI/CD-friendly output modes and exit codes for easy integration into automated pipelines.
-- Offer alerting capabilities to notify users of failed validations via channels like Slack or email.
+
 
 ## Opt-In Configuration
+
+
 
 Users have explicit control over whether to enable and utilize this dbt plugin through the `enable_dbt_plugin` configuration flag in the nessi.yaml file or by using the `--enable-dbt-plugin` flag with CLI commands. This ensures it doesn't impose any burden on users who do not require this integration.
 
@@ -50,11 +51,6 @@ The dbt plugin is included in the main Nessi.dev installation. No additional ins
 dbt:
   enable_dbt_plugin: true
   project_path: "/path/to/your/dbt/project"
-  alert:
-    slack:
-      webhook_url: "https://hooks.slack.com/services/your/webhook/url"
-      channel: "#data-quality"
-    email:
       smtp_host: "smtp.example.com"
       smtp_port: 587
       username: "your-email@example.com"
@@ -141,6 +137,6 @@ The dbt plugin is designed to work seamlessly with CI/CD pipelines. It provides 
   continue-on-error: false
 ```
 
-## Alerting
 
-The dbt plugin can send alerts when validation rules fail. Configure the alerting settings in your Nessi.dev configuration file to receive notifications via Slack or email.
+
+

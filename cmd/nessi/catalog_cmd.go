@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/api/types"
-	"github.com/nessi-dev/nessi-dev/pkg/catalog"
+	"github.com/nessi-dev/nessi/pkg/api/types"
+	"github.com/nessi-dev/nessi/pkg/catalog"
 	"github.com/spf13/cobra"
 )
 

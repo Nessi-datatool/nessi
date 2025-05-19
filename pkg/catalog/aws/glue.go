@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	gluetypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
-	nessitypes "github.com/nessi-dev/nessi-dev/pkg/api/types"
+	nessitypes "github.com/nessi-dev/nessi/pkg/api/types"
 )
 
 // GlueAPI defines the interface for the AWS Glue client.

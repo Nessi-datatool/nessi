@@ -13,14 +13,14 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/nessi-dev/nessi-dev/pkg/logging"
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring"
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/freshness"
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/service"
-	"github.com/nessi-dev/nessi-dev/pkg/rca"
-	"github.com/nessi-dev/nessi-dev/pkg/security"
-	"github.com/nessi-dev/nessi-dev/pkg/quality/profile"
-	"github.com/nessi-dev/nessi-dev/pkg/quality/rules"
+	"github.com/nessi-dev/nessi/pkg/logging"
+	"github.com/nessi-dev/nessi/pkg/monitoring"
+	"github.com/nessi-dev/nessi/pkg/monitoring/freshness"
+	"github.com/nessi-dev/nessi/pkg/monitoring/service"
+
+	"github.com/nessi-dev/nessi/pkg/security"
+	"github.com/nessi-dev/nessi/pkg/quality/profile"
+	"github.com/nessi-dev/nessi/pkg/quality/rules"
 )
 
 //go:embed templates
@@ -37,18 +37,6 @@ type Profiler interface {
 // RuleValidator is an interface for rule validation (for dependency injection)
 type RuleValidator interface {
 	Validate(record interface{}) []rules.ValidationError
-}
-
-// RCAClient is an interface for root cause analysis
-type RCAClient interface {
-	// AnalyzeAnomaly performs root cause analysis on an anomaly
-	AnalyzeAnomaly(anomalyID string, config *rca.Config) (*rca.RCAResult, error)
-	// GetRecentAnalyses gets recent RCA analyses
-	GetRecentAnalyses(limit int) ([]*rca.Analysis, error)
-	// GetAnalysisResult gets the result of an RCA analysis
-	GetAnalysisResult(analysisID string) (*rca.RCAResult, error)
-	// GetInsights gets aggregated insights from RCA results
-	GetInsights() (*rca.Insights, error)
 }
 
 // FreshnessManager is an interface for data freshness monitoring
@@ -79,7 +67,6 @@ type Dashboard struct {
 
 	profiler        Profiler
 	ruleValidator   RuleValidator
-	rcaClient       RCAClient
 	freshnessManager FreshnessManager
 }
 
@@ -93,7 +80,6 @@ type DashboardOptions struct {
 	// Dependency injection for tests
 	Profiler        Profiler
 	RuleValidator   RuleValidator
-	RCAClient       RCAClient
 	FreshnessManager FreshnessManager
 }
 
@@ -116,7 +102,7 @@ func New(monitor *monitoring.Monitor, options DashboardOptions) (*Dashboard, err
 		mux:          http.NewServeMux(),
 		profiler:     options.Profiler,
 		ruleValidator: options.RuleValidator,
-		rcaClient:     options.RCAClient,
+	
 		freshnessManager: options.FreshnessManager,
 	}
 	return dash, nil
@@ -134,100 +120,40 @@ func (d *Dashboard) Start() error {
 	d.mux.HandleFunc("/", d.handleIndex)
 	d.mux.HandleFunc("/health", d.handleHealth)
 	d.mux.HandleFunc("/data-quality", d.handleDataQualityDashboard)
-	d.mux.HandleFunc("/alerts", d.handleAlertsDashboard)
-	d.mux.HandleFunc("/rca", d.handleRcaDashboard)
 	d.mux.HandleFunc("/freshness", d.handleFreshnessDashboard)
 	
 	// Authentication routes
 	if d.authManager != nil {
 		d.mux.HandleFunc("/login", d.handleLogin)
-		d.mux.HandleFunc("/auth/login", d.handleAPILogin)
+		d.mux.HandleFunc("/auth/login", nil)
 	}
 	
 	// Protected routes
 	if d.authManager != nil {
 		// Apply authentication middleware to API routes
 		d.mux.Handle("/api/metrics", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleMetrics)))
-		d.mux.Handle("/api/alerts", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleAlerts)))
-		d.mux.Handle("/api/alerts/rules", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleAlertRulesAPI)))
-		
-		// RCA API routes
-		d.mux.Handle("/api/rca/", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleRcaAPI)))
-		d.mux.Handle("/api/rca/recent", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleRcaAPI)))
-		d.mux.Handle("/api/rca/analyze", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleRcaAPI)))
-		d.mux.Handle("/api/rca/insights", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleRcaAPI)))
-		d.mux.Handle("/api/rca/export", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleRcaAPI)))
-		
-		// Freshness API routes
 		d.mux.Handle("/api/freshness/status", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleFreshnessStatusAPI)))
 		d.mux.Handle("/api/freshness/sla", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleFreshnessSLAAPI)))
 		d.mux.Handle("/api/freshness/trends", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleFreshnessTrendsAPI)))
 		d.mux.Handle("/api/freshness/export", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleFreshnessExportAPI)))
-		d.mux.Handle("/api/alerts/{id}/acknowledge", d.authManager.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			d.handleAlertAction(w, r, "acknowledge")
-		})))
-		d.mux.Handle("/api/alerts/{id}/resolve", d.authManager.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			d.handleAlertAction(w, r, "resolve")
-		})))
-		d.mux.Handle("/api/alerts/{id}/silence", d.authManager.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			d.handleAlertAction(w, r, "silence")
-		})))
-		d.mux.Handle("/api/alerts/rules/{id}/enable", d.authManager.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			d.handleAlertRuleAction(w, r, "enable")
-		})))
-		d.mux.Handle("/api/alerts/rules/{id}/disable", d.authManager.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			d.handleAlertRuleAction(w, r, "disable")
-		})))
-		d.mux.Handle("/api/alerts/rules/{id}", d.authManager.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.Method == http.MethodDelete {
-				d.handleAlertRuleAction(w, r, "delete")
-			} else {
-				w.WriteHeader(http.StatusMethodNotAllowed)
-			}
-		})))
 		d.mux.Handle("/api/export", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleExport)))
-		
-		// Data quality routes with authentication
 		d.mux.Handle("/api/profiles", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleGetProfiles)))
 		d.mux.Handle("/api/profiles/summary", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleGetProfileSummaries)))
 		d.mux.Handle("/api/rules", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleGetRules)))
 		d.mux.Handle("/api/rules/validate", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleValidateRules)))
 		d.mux.Handle("/api/rules/history", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleGetRuleHistory)))
 		d.mux.Handle("/api/rules/trends", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleGetExecutionTrends)))
-		
 		// Admin routes
 		adminHandler := d.authManager.RoleMiddleware(security.RoleAdmin)
 		d.mux.Handle("/admin/users", adminHandler(http.HandlerFunc(d.handleUsers)))
 	} else {
 		// No authentication, routes are public
 		d.mux.HandleFunc("/api/metrics", d.handleMetrics)
-		d.mux.HandleFunc("/api/alerts", d.handleAlertsAPI)
-		d.mux.HandleFunc("/api/alerts/rules", d.handleAlertRulesAPI)
-		d.mux.HandleFunc("/api/alerts/{id}/acknowledge", func(w http.ResponseWriter, r *http.Request) {
-			d.handleAlertAction(w, r, "acknowledge")
-		})
-		d.mux.HandleFunc("/api/alerts/{id}/resolve", func(w http.ResponseWriter, r *http.Request) {
-			d.handleAlertAction(w, r, "resolve")
-		})
-		d.mux.HandleFunc("/api/alerts/{id}/silence", func(w http.ResponseWriter, r *http.Request) {
-			d.handleAlertAction(w, r, "silence")
-		})
-		d.mux.HandleFunc("/api/alerts/rules/{id}/enable", func(w http.ResponseWriter, r *http.Request) {
-			d.handleAlertRuleAction(w, r, "enable")
-		})
-		d.mux.HandleFunc("/api/alerts/rules/{id}/disable", func(w http.ResponseWriter, r *http.Request) {
-			d.handleAlertRuleAction(w, r, "disable")
-		})
-		d.mux.HandleFunc("/api/alerts/rules/{id}", func(w http.ResponseWriter, r *http.Request) {
-			if r.Method == http.MethodDelete {
-				d.handleAlertRuleAction(w, r, "delete")
-			} else {
-				w.WriteHeader(http.StatusMethodNotAllowed)
-			}
-		})
+		d.mux.HandleFunc("/api/freshness/status", d.handleFreshnessStatusAPI)
+		d.mux.HandleFunc("/api/freshness/sla", d.handleFreshnessSLAAPI)
+		d.mux.HandleFunc("/api/freshness/trends", d.handleFreshnessTrendsAPI)
+		d.mux.HandleFunc("/api/freshness/export", d.handleFreshnessExportAPI)
 		d.mux.HandleFunc("/api/export", d.handleExport)
-		
-		// Data quality routes without authentication
 		d.mux.HandleFunc("/api/profiles", d.handleGetProfiles)
 		d.mux.HandleFunc("/api/profiles/summary", d.handleGetProfileSummaries)
 		d.mux.HandleFunc("/api/rules", d.handleGetRules)
@@ -293,36 +219,6 @@ func (d *Dashboard) handleMetrics(w http.ResponseWriter, r *http.Request) {
 	
 	if _, err := w.Write(respBody); err != nil {
 		logging.Error("Failed to write metrics response", err)
-	}
-}
-
-// handleAlertsAPI handles alerts API requests
-func (d *Dashboard) handleAlertsAPI(w http.ResponseWriter, r *http.Request) {
-	// Set content type
-	w.Header().Set("Content-Type", "application/json")
-
-	// Forward to alerts endpoint
-	resp, err := http.Get(fmt.Sprintf("http://localhost:%d/alerts", 
-		d.monitor.GetMetricsPort()))
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{
-			"error": fmt.Sprintf("Failed to get alerts: %v", err),
-		})
-		return
-	}
-	defer resp.Body.Close()
-
-	// Copy response
-	w.WriteHeader(resp.StatusCode)
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		logging.Error("Failed to read alerts response", err)
-		return
-	}
-	
-	if _, err := w.Write(respBody); err != nil {
-		logging.Error("Failed to write alerts response", err)
 	}
 }
 

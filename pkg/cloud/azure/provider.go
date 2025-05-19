@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/cloud/common"
+	"github.com/nessi-dev/nessi/pkg/cloud/common"
 )
 
 // AzureProvider implements the CloudProvider interface for Azure

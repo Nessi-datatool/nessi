@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/api/types"
+	"github.com/nessi-dev/nessi/pkg/api/types"
 )
 
 // AzurePurviewCatalog implements the DataCatalog interface for Azure Purview

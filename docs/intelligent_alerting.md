@@ -1,4 +1,4 @@
-# Intelligent Alerting System
+
 
 The Nessi Intelligent Alerting System automatically creates and manages alert rules based on historical data patterns, trends, and anomalies. This document explains how the system works and how to use it effectively.
 

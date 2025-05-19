@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/quality/profile"
-	"github.com/nessi-dev/nessi-dev/pkg/quality/rules"
+	"github.com/nessi-dev/nessi/pkg/quality/profile"
+	"github.com/nessi-dev/nessi/pkg/quality/rules"
 )
 
 // sendJSONResponse sends a JSON response with the given status code and data

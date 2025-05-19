@@ -1,3 +1,5 @@
+// Implementation of monitoring and alerting features.
+
 package alerts
 
 import (
@@ -5,7 +7,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/logging"
+	"github.com/nessi-dev/nessi/pkg/logging"
 )
 
 // IntelligentAlertingConfig represents the configuration for intelligent alerting

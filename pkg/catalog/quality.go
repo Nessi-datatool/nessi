@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"time"
-	"github.com/nessi-dev/nessi-dev/pkg/quality"
+	"github.com/nessi-dev/nessi/pkg/quality"
 )
 
 // QualityMetricsPublisher handles publishing quality metrics to data catalogs

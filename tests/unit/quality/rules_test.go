@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/nessi-dev/nessi-dev/internal/quality/rules"
+	"github.com/nessi-dev/nessi/internal/quality/rules"
 )
 
 func TestRuleValidation(t *testing.T) {

@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/logging"
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/freshness"
+	"github.com/nessi-dev/nessi/pkg/logging"
+	"github.com/nessi-dev/nessi/pkg/monitoring/freshness"
 )
 
 // FreshnessHandlerManager is an interface for freshness management in handlers

@@ -1,8 +1,8 @@
-# Nessi.dev Test Status Summary
+# Nessi Test Status Summary
 
 ## Overview
 
-This document provides a summary of the test status for the Nessi.dev project, focusing on the fixes implemented to resolve test failures and the current state of the test suite.
+This document provides a summary of the test status for the Nessi project, focusing on the fixes implemented to resolve test failures and the current state of the test suite.
 
 ## Core Functionality Tests
 

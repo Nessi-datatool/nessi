@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/freshness"
+	"github.com/nessi-dev/nessi/pkg/monitoring/freshness"
 )
 
 // Provider is a service provider for the monitoring system

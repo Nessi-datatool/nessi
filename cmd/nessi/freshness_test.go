@@ -8,7 +8,7 @@ import (
 	"time"
 
 
-	"github.com/nessi-dev/nessi-dev/pkg/freshness"
+	"github.com/nessi-dev/nessi/pkg/freshness"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

@@ -49,46 +49,52 @@ if err != nil {
 }
 ```
 
-## Integration with Dashboard
+## Integration with CLI
 
-### API Endpoints
+### CLI Commands
 
-The dashboard provides the following API endpoints for freshness monitoring:
+The following CLI commands are available for freshness monitoring:
 
-- `GET /api/v1/freshness/sla` - List all SLA configurations
-- `POST /api/v1/freshness/sla` - Create a new SLA configuration
-- `GET /api/v1/freshness/sla/{tableName}` - Get SLA configuration for a table
-- `PUT /api/v1/freshness/sla/{tableName}` - Update SLA configuration for a table
-- `DELETE /api/v1/freshness/sla/{tableName}` - Delete SLA configuration for a table
-- `GET /api/v1/freshness/status` - Get freshness status for all tables
-- `GET /api/v1/freshness/status/{tableName}` - Get freshness status for a table
-- `GET /api/v1/freshness/trends` - Get freshness trends for all tables
-- `GET /api/v1/freshness/trends/{tableName}` - Get freshness trends for a table
+- `nessi freshness list-sla` - List all SLA configurations
+- `nessi freshness create-sla` - Create a new SLA configuration
+- `nessi freshness get-sla <tableName>` - Get SLA configuration for a table
+- `nessi freshness update-sla <tableName>` - Update SLA configuration for a table
+- `nessi freshness delete-sla <tableName>` - Delete SLA configuration for a table
+- `nessi freshness status` - Get freshness status for all tables
+- `nessi freshness status <tableName>` - Get freshness status for a table
+- `nessi freshness trends` - Get freshness trends for all tables
+- `nessi freshness trends <tableName>` - Get freshness trends for a table
 
-### Dashboard UI
+### Output Formats
 
-The dashboard UI provides:
+The CLI commands support various output formats:
 
-- SLA management interface
-- Freshness status visualization
-- Trend graphs and compliance reports
+- JSON output for programmatic consumption
+- Table format for terminal viewing
+- CSV export for further analysis
 
 ## Integration with Security System
 
 ### Authentication
 
-All freshness monitoring API endpoints are protected by authentication:
+All freshness monitoring CLI commands are protected by API key authentication:
 
 ```go
-// Example of securing freshness API endpoints
-func (d *Dashboard) setupFreshnessRoutes() {
-    // Secure routes with authentication middleware
-    freshnessGroup := d.router.Group("/api/v1/freshness")
-    freshnessGroup.Use(d.authMiddleware.Authenticate())
+// Example of securing freshness CLI commands
+func executeFreshnessCommand(cmd *cobra.Command, args []string) error {
+    // Verify API key from environment or config file
+    apiKey := viper.GetString("api_key")
+    if apiKey == "" {
+        return fmt.Errorf("API key is required for freshness monitoring commands")
+    }
     
-    // SLA management routes
-    freshnessGroup.GET("/sla", d.ListSLAsHandler)
-    freshnessGroup.POST("/sla", d.CreateSLAHandler)
+    // Authenticate with API key
+    user, err := authManager.ValidateAPIKey(apiKey)
+    if err != nil {
+        return fmt.Errorf("authentication failed: %w", err)
+    }
+    
+    // Continue with command execution
     // ...
 }
 ```
@@ -101,16 +107,22 @@ Different operations require different roles:
 - Managing SLA configurations: `admin` role
 
 ```go
-// Example of RBAC for SLA management
-func (d *Dashboard) CreateSLAHandler(c *gin.Context) {
-    // Check if user has admin role
-    if !d.authMiddleware.HasRole(c, "admin") {
-        c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
-        return
+// Example of RBAC for SLA management in CLI commands
+func executeSLACreateCommand(cmd *cobra.Command, args []string) error {
+    // Get user from API key authentication
+    user, err := authManager.ValidateAPIKey(apiKey)
+    if err != nil {
+        return fmt.Errorf("authentication failed: %w", err)
     }
     
-    // Process request
+    // Check if user has admin role
+    if !authManager.CheckUserRole(user, "admin") {
+        return fmt.Errorf("insufficient permissions: admin role required")
+    }
+    
+    // Process command
     // ...
+    return nil
 }
 ```
 
@@ -119,19 +131,23 @@ func (d *Dashboard) CreateSLAHandler(c *gin.Context) {
 All SLA management operations are logged for audit purposes:
 
 ```go
-// Example of audit logging for SLA management
-func (d *Dashboard) CreateSLAHandler(c *gin.Context) {
-    // Get user from context
-    user := d.authMiddleware.GetUser(c)
+// Example of audit logging for SLA management in CLI commands
+func executeSLACreateCommand(cmd *cobra.Command, args []string) error {
+    // Get user from API key authentication
+    user, err := authManager.ValidateAPIKey(apiKey)
+    if err != nil {
+        return fmt.Errorf("authentication failed: %w", err)
+    }
     
     // Log the operation
-    d.auditLogger.LogUserAction(user.Username, "create_sla", map[string]interface{}{
+    auditLogger.LogUserAction(user.Username, "create_sla", map[string]interface{}{
         "table_name": slaConfig.TableName,
         "table_path": slaConfig.TablePath,
     })
     
-    // Process request
+    // Process command
     // ...
+    return nil
 }
 ```
 

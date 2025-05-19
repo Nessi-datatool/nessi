@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/datalake"
-	"github.com/nessi-dev/nessi-dev/pkg/logging"
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring"
+	"github.com/nessi-dev/nessi/pkg/datalake"
+	"github.com/nessi-dev/nessi/pkg/logging"
+	"github.com/nessi-dev/nessi/pkg/monitoring"
 )
 
 // SLAManager handles SLA monitoring for tables

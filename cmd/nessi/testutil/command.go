@@ -4,7 +4,7 @@ import (
 	"bytes"
 	
 	"github.com/spf13/cobra"
-	"github.com/nessi-dev/nessi-dev/cmd/nessi/mocks"
+	"github.com/nessi-dev/nessi/cmd/nessi/mocks"
 )
 
 // ExecuteCommand executes a command for testing and returns its output

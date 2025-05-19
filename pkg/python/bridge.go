@@ -10,7 +10,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/nessi-dev/nessi-dev/pkg/config"
+	"github.com/nessi-dev/nessi/pkg/config"
 )
 
 var (

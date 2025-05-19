@@ -7,7 +7,7 @@ import (
 	"github.com/apache/arrow/go/v15/arrow"
 	"github.com/apache/arrow/go/v15/arrow/array"
 	"github.com/apache/arrow/go/v15/arrow/memory"
-	"github.com/nessi-dev/nessi-dev/pkg/datalake"
+	"github.com/nessi-dev/nessi/pkg/datalake"
 )
 
 // CreateTestTable creates a sample Delta table for testing

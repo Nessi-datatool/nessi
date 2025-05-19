@@ -504,12 +504,7 @@ function viewTableDetails(tableName) {
             $('#tableDetailsContent').html(html);
             $('#tableDetailsModalLabel').text(`Table Details: ${tableData.table_name}`);
             
-            // Update Grafana button
-            if (tableData.sla_config.grafana_dashboard_url) {
-                $('#viewGrafanaBtn').attr('href', tableData.sla_config.grafana_dashboard_url).show();
-            } else {
-                $('#viewGrafanaBtn').hide();
-            }
+
             
             // Show modal
             $('#tableDetailsModal').modal('show');
@@ -570,7 +565,7 @@ function editSLAConfiguration(tableName) {
             $('#criticalThreshold').val(slaConfig.critical_threshold);
             $('#description').val(slaConfig.description || '');
             $('#tags').val(slaConfig.tags ? slaConfig.tags.join(',') : '');
-            $('#grafanaDashboardURL').val(slaConfig.grafana_dashboard_url || '');
+
             $('#enabled').prop('checked', slaConfig.enabled);
             
             // Update modal title
@@ -598,7 +593,7 @@ function saveSLAConfiguration() {
     const criticalThreshold = parseInt($('#criticalThreshold').val());
     const description = $('#description').val();
     const tags = $('#tags').val() ? $('#tags').val().split(',').map(tag => tag.trim()) : [];
-    const grafanaDashboardURL = $('#grafanaDashboardURL').val();
+
     const enabled = $('#enabled').is(':checked');
     
     // Validate form
@@ -636,7 +631,7 @@ function saveSLAConfiguration() {
         critical_threshold: criticalThreshold,
         description: description,
         tags: tags,
-        grafana_dashboard_url: grafanaDashboardURL,
+
         enabled: enabled
     };
     

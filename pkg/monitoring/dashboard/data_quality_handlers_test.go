@@ -1,3 +1,5 @@
+// Implementation of monitoring and alerting features.
+
 package dashboard
 
 import (
@@ -6,21 +8,17 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/alerts"
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/testutil"
-	"github.com/nessi-dev/nessi-dev/pkg/quality/profile"
-	"github.com/nessi-dev/nessi-dev/pkg/quality/rules"
-	"github.com/stretchr/testify/require"
+	"github.com/nessi-dev/nessi/pkg/monitoring/testutil"
+	"github.com/nessi-dev/nessi/pkg/quality/profile"
+	"github.com/nessi-dev/nessi/pkg/quality/rules"
 )
 
 func TestHandleGetProfiles(t *testing.T) {
 
-	// Create a mock alert manager
-	alertManager, err := alerts.NewAlertManager("/tmp/data-quality-test")
-	require.NoError(t, err)
+	// Basic version doesn't use alert manager
 	
-	// Create a test monitor with our alert manager
-	mock := testutil.CreateTestMonitorWithAlertManager(9090, alertManager)
+	// Create a test monitor 
+	mock := testutil.CreateOSSTestMonitor(9090)
 
 	// Create a new dashboard
 	dashboard, err := New(mock, DashboardOptions{
@@ -75,12 +73,10 @@ func TestHandleGetProfiles(t *testing.T) {
 
 func TestHandleGetProfilesMissingTable(t *testing.T) {
 
-	// Create a mock alert manager
-	alertManager, err := alerts.NewAlertManager("/tmp/data-quality-test")
-	require.NoError(t, err)
+	// Basic version doesn't use alert manager
 	
-	// Create a test monitor with our alert manager
-	mock := testutil.CreateTestMonitorWithAlertManager(9090, alertManager)
+	// Create a test monitor 
+	mock := testutil.CreateOSSTestMonitor(9090)
 
 	// Create a new dashboard
 	dashboard, err := New(mock, DashboardOptions{
@@ -129,12 +125,10 @@ func TestHandleGetProfilesMissingTable(t *testing.T) {
 
 func TestHandleGetRules(t *testing.T) {
 
-	// Create a mock alert manager
-	alertManager, err := alerts.NewAlertManager("/tmp/data-quality-test")
-	require.NoError(t, err)
+	// Basic version doesn't use alert manager
 	
-	// Create a test monitor with our alert manager
-	mock := testutil.CreateTestMonitorWithAlertManager(9090, alertManager)
+	// Create a test monitor 
+	mock := testutil.CreateOSSTestMonitor(9090)
 
 	// Create a new dashboard
 	dashboard, err := New(mock, DashboardOptions{
@@ -194,12 +188,10 @@ func TestHandleGetRules(t *testing.T) {
 
 func TestHandleValidateRules(t *testing.T) {
 
-	// Create a mock alert manager
-	alertManager, err := alerts.NewAlertManager("/tmp/data-quality-test")
-	require.NoError(t, err)
+	// Basic version doesn't use alert manager
 	
-	// Create a test monitor with our alert manager
-	mock := testutil.CreateTestMonitorWithAlertManager(9090, alertManager)
+	// Create a test monitor 
+	mock := testutil.CreateOSSTestMonitor(9090)
 
 	// Create a new dashboard
 	dashboard, err := New(mock, DashboardOptions{
@@ -248,12 +240,10 @@ func TestHandleValidateRules(t *testing.T) {
 
 func TestHandleDataQualityDashboard(t *testing.T) {
 
-	// Create a mock alert manager
-	alertManager, err := alerts.NewAlertManager("/tmp/data-quality-test")
-	require.NoError(t, err)
+	// Basic version doesn't use alert manager
 	
-	// Create a test monitor with our alert manager
-	mock := testutil.CreateTestMonitorWithAlertManager(9090, alertManager)
+	// Create a test monitor 
+	mock := testutil.CreateOSSTestMonitor(9090)
 
 	// Create a new dashboard
 	dashboard, err := New(mock, DashboardOptions{

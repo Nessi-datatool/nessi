@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/nessi-dev/nessi-dev/internal/delta"
+	"github.com/nessi-dev/nessi/internal/delta"
 )
 
 func TestMergeOperation(t *testing.T) {

@@ -1,9 +1,12 @@
 # Nessi Plugin System
 
-The Nessi Plugin System allows you to extend Nessi's functionality with custom plugins. This document explains how to create, install, and use plugins with Nessi.
+Nessi supports a flexible plugin system for extending core functionality. Plugins can add new data quality rules, integrate with external systems, or provide custom reporting and analytics.
 
-## Plugin Types
+## Types of Plugins
+- **Python Extensions:** For ML, advanced analytics, and custom rules (see `docs/python_extensions.md`)
+- **Go Plugins:** For performance-critical extensions or native integrations
 
+## Building a Plugin
 Nessi supports the following types of plugins:
 
 - **Validation Plugins**: Custom validation rules for data quality checks

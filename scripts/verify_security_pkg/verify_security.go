@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/nessi-dev/nessi-dev/pkg/security"
+	"github.com/nessi-dev/nessi/pkg/security"
 )
 
 func main() {
@@ -27,10 +27,9 @@ func main() {
 	// Test SSL functionality
 	fmt.Println("\n1. Testing SSL Certificate Generation")
 	sslConfig := security.SSLConfig{
-		Enabled:      true,
-		CertFile:     certFile,
-		KeyFile:      keyFile,
-		AutoGenerate: true,
+		Enabled:  true,
+		CertFile: certFile,
+		KeyFile:  keyFile,
 	}
 	
 	certManager := security.NewCertManager(sslConfig)

@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/nessi-dev/nessi-dev/pkg/dbt"
+	"github.com/nessi-dev/nessi/pkg/dbt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/nessi-dev/nessi-dev/pkg/config"
-	"github.com/nessi-dev/nessi-dev/pkg/python"
+	"github.com/nessi-dev/nessi/pkg/config"
+	"github.com/nessi-dev/nessi/pkg/python"
 )
 
 // MLAnomalyDetector provides machine learning based anomaly detection

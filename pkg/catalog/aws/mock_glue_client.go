@@ -10,7 +10,7 @@ import (
 
 	glue "github.com/aws/aws-sdk-go-v2/service/glue"
 	gomock "github.com/golang/mock/gomock"
-	types "github.com/nessi-dev/nessi-dev/pkg/api/types"
+	types "github.com/nessi-dev/nessi/pkg/api/types"
 )
 
 // MockGlueAPI is a mock of GlueAPI interface.

@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/nessi-dev/nessi-dev/pkg/cloud/common"
+	"github.com/nessi-dev/nessi/pkg/cloud/common"
 )
 
 // AWSProvider implements the CloudProvider interface for AWS

@@ -12,6 +12,7 @@ import (
 type Config struct {
 	Server     ServerConfig     `mapstructure:"server"`
 	Extensions ExtensionsConfig `mapstructure:"extensions"`
+	Telemetry  TelemetryConfig  `mapstructure:"telemetry"`
 }
 
 // ServerConfig represents the server configuration
@@ -124,6 +125,11 @@ func GetServerConfig() ServerConfig {
 // GetExtensionsConfig returns the extensions configuration
 func GetExtensionsConfig() ExtensionsConfig {
 	return config.Extensions
+}
+
+// GetTelemetryConfig returns the telemetry configuration
+func GetTelemetryConfig() TelemetryConfig {
+	return config.Telemetry
 }
 
 // UpdateConfig updates the configuration with new values

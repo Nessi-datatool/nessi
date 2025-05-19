@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"github.com/nessi-dev/nessi-dev/pkg/api/types"
+	"github.com/nessi-dev/nessi/pkg/api/types"
 )
 
 // CatalogManager manages data catalog providers

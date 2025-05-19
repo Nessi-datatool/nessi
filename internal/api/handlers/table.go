@@ -8,9 +8,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/nessi-dev/nessi-dev/internal/delta"
-	// "github.com/nessi-dev/nessi-dev/internal/quality/profile" // Added for profile.Profile - Will be used later
-	rules "github.com/nessi-dev/nessi-dev/internal/quality/rules" // Changed for rules.Rule
+	"github.com/nessi-dev/nessi/internal/delta"
+	// "github.com/nessi-dev/nessi/internal/quality/profile" // Added for profile.Profile - Will be used later
+	rules "github.com/nessi-dev/nessi/internal/quality/rules" // Changed for rules.Rule
 )
 
 // Table represents a Delta table

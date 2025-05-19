@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 
 	"github.com/gin-gonic/gin"
-	"github.com/nessi-dev/nessi-dev/internal/quality/profile"
-	"github.com/nessi-dev/nessi-dev/pkg"
+	"github.com/nessi-dev/nessi/internal/quality/profile"
+	"github.com/nessi-dev/nessi/pkg"
 	"go.uber.org/zap"
 )
 

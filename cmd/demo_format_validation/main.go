@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/datalake"
+	"github.com/nessi-dev/nessi/pkg/datalake"
 )
 
 // mockValidator is a simplified implementation for testing format validation

@@ -226,7 +226,7 @@ nessi lineage export <graph-id> --format html --output lineage.html
 ### Impact Analysis
 
 - Assess the impact of schema changes on downstream systems
-- Identify affected reports and dashboards when source data changes
+- Identify affected reports and outputs when source data changes
 - Plan data migrations with full understanding of dependencies
 
 ### Troubleshooting

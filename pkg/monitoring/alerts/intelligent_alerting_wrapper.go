@@ -1,3 +1,5 @@
+// Implementation of monitoring and alerting features.
+
 package alerts
 
 // createRule is a wrapper for the AlertManager.CreateRule method

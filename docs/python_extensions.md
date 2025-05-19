@@ -92,10 +92,10 @@ Flexible rule execution:
 
 ### 5. Advanced Visualization Components
 
-Rich visualization options:
+Rich visualization options for CLI output:
 
-- Interactive dashboards
-- Custom chart types
+- Terminal-based visualizations
+- Custom chart types for reports
 - Exportable reports with embedded visualizations
 
 ## Troubleshooting

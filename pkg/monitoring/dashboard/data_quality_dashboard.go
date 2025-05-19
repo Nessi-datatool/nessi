@@ -3,7 +3,7 @@ package dashboard
 import (
 	"net/http"
 	
-	"github.com/nessi-dev/nessi-dev/pkg/security"
+	"github.com/nessi-dev/nessi/pkg/security"
 )
 
 // handleDataQualityDashboard handles the data quality dashboard page

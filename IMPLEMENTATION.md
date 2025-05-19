@@ -1,4 +1,6 @@
-# Nessi.dev Implementation Plan
+# Nessi Implementation Plan
+
+This document outlines the implementation plan for the Nessi open-source project.
 
 ## Architecture Overview
 
@@ -22,10 +24,9 @@ nessi/
 │   │   ├── metrics/    # Metrics collection & storage
 │   │   ├── alerts/     # Alerting system
 │   │   └── dashboard/  # Web dashboard
-│   ├── security/       # Authentication & authorization (Go)
+│   ├── security/       # Security (Go)
 │   │   ├── auth/       # Authentication system
-│   │   ├── ssl/        # SSL/TLS support
-│   │   └── audit/      # Audit logging
+│   │   └── ssl/        # SSL/TLS support
 │   └── api/            # API endpoints (Go)
 └── scripts/
     ├── delta/          # Delta Lake operations (Python)

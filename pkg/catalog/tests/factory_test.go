@@ -3,13 +3,13 @@ package tests
 import (
 	"testing"
 
-	"github.com/nessi-dev/nessi-dev/pkg/api/types"
+	"github.com/nessi-dev/nessi/pkg/api/types"
 	"github.com/stretchr/testify/assert"
 
 	// Import providers to register them
-	_ "github.com/nessi-dev/nessi-dev/pkg/catalog/aws"
-	_ "github.com/nessi-dev/nessi-dev/pkg/catalog/azure"
-	_ "github.com/nessi-dev/nessi-dev/pkg/catalog/gcp"
+	_ "github.com/nessi-dev/nessi/pkg/catalog/aws"
+	_ "github.com/nessi-dev/nessi/pkg/catalog/azure"
+	_ "github.com/nessi-dev/nessi/pkg/catalog/gcp"
 )
 
 // TestCatalogFactory_CreateCatalog tests the CreateCatalog method

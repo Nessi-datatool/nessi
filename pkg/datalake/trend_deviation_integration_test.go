@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/windsurf/nessi/pkg/testutil"
+	"github.com/nessi-dev/nessi/pkg/testutil"
 )
 
 // TestTrendDeviationIntegration tests the trend deviation functionality with a more realistic setup

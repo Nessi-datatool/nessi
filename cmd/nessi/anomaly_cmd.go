@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/nessi-dev/nessi-dev/pkg/quality/anomaly"
+	"github.com/nessi-dev/nessi/pkg/quality/anomaly"
 )
 
 // anomalyCmd represents the anomaly command

@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/api/types"
-	"github.com/nessi-dev/nessi-dev/pkg/quality"
+	"github.com/nessi-dev/nessi/pkg/api/types"
+	"github.com/nessi-dev/nessi/pkg/quality"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

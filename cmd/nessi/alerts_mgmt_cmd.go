@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/alerts"
+	"github.com/nessi-dev/nessi/pkg/monitoring/alerts"
 )
 
 // alertsAckCmd represents the alerts acknowledge command
@@ -185,16 +185,6 @@ var alertsNotifyCmd = &cobra.Command{
 				os.Exit(1)
 			}
 			manager.RegisterNotifier(emailNotifier)
-		case "slack":
-			// Configure Slack notifier
-			slackConfig := alerts.SlackConfig{
-				WebhookURL: appConfig.Slack.WebhookURL,
-				Channel:    appConfig.Slack.Channel,
-				Username:   appConfig.Slack.Username,
-				IconEmoji:  appConfig.Slack.IconEmoji,
-			}
-			slackNotifier := alerts.NewSlackNotifier(slackConfig)
-			manager.RegisterNotifier(slackNotifier)
 		case "webhook":
 			// Configure webhook notifier
 			webhookConfig := alerts.WebhookConfig{

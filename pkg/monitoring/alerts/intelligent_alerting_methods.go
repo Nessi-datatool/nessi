@@ -1,10 +1,12 @@
+// Implementation of monitoring and alerting features.
+
 package alerts
 
 import (
 	"fmt"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/logging"
+	"github.com/nessi-dev/nessi/pkg/logging"
 )
 
 // StartAnalysis starts the background analysis of metrics

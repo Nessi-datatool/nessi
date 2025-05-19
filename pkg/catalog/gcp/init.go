@@ -1,7 +1,7 @@
 package gcp
 
 import (
-	nessitypes "github.com/nessi-dev/nessi-dev/pkg/api/types"
+	nessitypes "github.com/nessi-dev/nessi/pkg/api/types"
 )
 
 func init() {

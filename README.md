@@ -1,6 +1,6 @@
-# Nessi.dev
+# Nessi
 
-Nessi.dev is a powerful data quality and Delta Lake management tool that helps organizations maintain high-quality data and efficiently manage their Delta Lake tables.
+Nessi is an open-source data quality and Delta Lake management tool that helps organizations maintain high-quality data and efficiently manage their Delta Lake tables.
 
 ## Features
 
@@ -24,16 +24,11 @@ Nessi.dev is a powerful data quality and Delta Lake management tool that helps o
   - **dbt Integration**: Seamless integration with dbt for validating and profiling models directly in your dbt workflow
 
 - **Monitoring and Alerting**
-  - Real-time monitoring with Prometheus
-  - Custom metrics and alerts
+  - Built-in monitoring dashboard
+  - Email notifications for critical issues
   - Performance tracking
   - Resource utilization monitoring
   - Health checks
-  - **Root Cause Analysis (RCA)**: Automatically diagnose the underlying causes of data quality anomalies with lineage tracking, schema change detection, and actionable recommendations
-  - **RCA Dashboard**: Interactive visualization of root causes, affected tables, and recommended actions with confidence scoring and historical insights
-  - Intelligent alerting with pattern recognition
-  - Automated rule creation based on historical data
-  - Anomaly and trend deviation detection
   - **Freshness SLA Monitoring**: Track data freshness with configurable SLAs, compliance tracking, and historical trend analysis
 
 - **Report Generation**
@@ -45,11 +40,9 @@ Nessi.dev is a powerful data quality and Delta Lake management tool that helps o
 
 - **Security**
   - JWT-based authentication
-  - Role-based access control (RBAC)
   - TLS encryption
-  - Rate limiting
-  - IP allowlist
   - Security headers
+  - API key management
 
 - **Testing Framework**
   - Comprehensive unit and integration tests

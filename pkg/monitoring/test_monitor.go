@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/alerts"
+	"github.com/nessi-dev/nessi/pkg/monitoring/alerts"
 )
 
 // TestMonitor is a simplified version of the Monitor struct for testing

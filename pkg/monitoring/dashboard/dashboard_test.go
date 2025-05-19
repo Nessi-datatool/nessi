@@ -5,8 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/alerts"
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/testutil"
+	"github.com/nessi-dev/nessi/pkg/monitoring/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -22,12 +21,10 @@ func (m *mainMockMonitor) GetMetricsPort() int {
 
 func TestDashboard(t *testing.T) {
 	// No longer skipping tests
-	// Create a mock alert manager
-	alertManager, err := alerts.NewAlertManager("/tmp/dashboard-test")
-	require.NoError(t, err)
+	// Basic version doesn't use alert manager
 	
 	// Create a test monitor with our alert manager
-	mock := testutil.CreateTestMonitorWithAlertManager(9090, alertManager)
+	mock := testutil.CreateOSSTestMonitor(9090)
 
 	// Create dashboard
 	opts := DashboardOptions{
@@ -50,12 +47,10 @@ func TestDashboard(t *testing.T) {
 
 func TestDashboardNotFound(t *testing.T) {
 	// No longer skipping tests
-	// Create a mock alert manager
-	alertManager, err := alerts.NewAlertManager("/tmp/dashboard-test")
-	require.NoError(t, err)
+	// Basic version doesn't use alert manager
 	
 	// Create a test monitor with our alert manager
-	mock := testutil.CreateTestMonitorWithAlertManager(9090, alertManager)
+	mock := testutil.CreateOSSTestMonitor(9090)
 
 	// Create dashboard
 	opts := DashboardOptions{
@@ -77,6 +72,8 @@ func TestDashboardNotFound(t *testing.T) {
 
 func TestMetricsHandler(t *testing.T) {
 	// No longer skipping tests
+	// Basic version doesn't use alert manager
+	
 	// Create a test HTTP server to mock the metrics server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Return mock metrics data
@@ -85,12 +82,8 @@ func TestMetricsHandler(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	// Create a mock alert manager
-	alertManager, err := alerts.NewAlertManager("/tmp/dashboard-test")
-	require.NoError(t, err)
-	
 	// Create a test monitor with our alert manager
-	mock := testutil.CreateTestMonitorWithAlertManager(9090, alertManager)
+	mock := testutil.CreateOSSTestMonitor(9090)
 
 	// Create dashboard
 	opts := DashboardOptions{
@@ -135,6 +128,8 @@ func TestMetricsHandler(t *testing.T) {
 
 func TestAlertsHandler(t *testing.T) {
 	// No longer skipping tests
+	// Basic version doesn't use alert manager
+	
 	// Create a test HTTP server to mock the alerts API
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Return mock alerts data
@@ -143,12 +138,8 @@ func TestAlertsHandler(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	// Create a mock alert manager
-	alertManager, err := alerts.NewAlertManager("/tmp/dashboard-test")
-	require.NoError(t, err)
-	
 	// Create a test monitor with our alert manager
-	mock := testutil.CreateTestMonitorWithAlertManager(9090, alertManager)
+	mock := testutil.CreateOSSTestMonitor(9090)
 
 	// Create dashboard
 	opts := DashboardOptions{

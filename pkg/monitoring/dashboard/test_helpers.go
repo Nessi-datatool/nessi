@@ -1,3 +1,5 @@
+// Implementation of monitoring and alerting features.
+
 package dashboard
 
 import (
@@ -6,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring"
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/alerts"
-	"github.com/nessi-dev/nessi-dev/pkg/testutil"
+	"github.com/nessi-dev/nessi/pkg/monitoring"
+	"github.com/nessi-dev/nessi/pkg/monitoring/alerts"
+	"github.com/nessi-dev/nessi/pkg/testutil"
 )
 
 // TestCleanup is a helper function to clean up resources after tests

@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -53,9 +54,10 @@ type Checkpoint struct {
 
 // Reader handles reading from Delta tables
 type Reader struct {
-	table *DeltaTable
-	files []*os.File
+	table  *DeltaTable
+	files  []*os.File
 	closed bool
+	mu     sync.Mutex
 }
 
 // NewReader creates a new Delta table reader
@@ -405,6 +407,8 @@ func (r *Reader) ReadAllParsed() ([]map[string]interface{}, error) {
 
 // Close closes the reader and releases resources
 func (r *Reader) Close() error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	if r.closed {
 		return nil // Already closed
 	}

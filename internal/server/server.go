@@ -14,12 +14,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
-	"github.com/nessi-dev/nessi-dev/internal/delta"
-	"github.com/nessi-dev/nessi-dev/internal/extensions"
-	"github.com/nessi-dev/nessi-dev/internal/monitor"
-	quality "github.com/nessi-dev/nessi-dev/internal/quality"
-	"github.com/nessi-dev/nessi-dev/internal/security"
-	"github.com/nessi-dev/nessi-dev/pkg"
+	"github.com/nessi-dev/nessi/internal/delta"
+	"github.com/nessi-dev/nessi/internal/extensions"
+	"github.com/nessi-dev/nessi/internal/monitor"
+	quality "github.com/nessi-dev/nessi/internal/quality"
+	"github.com/nessi-dev/nessi/internal/security"
+	"github.com/nessi-dev/nessi/pkg"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

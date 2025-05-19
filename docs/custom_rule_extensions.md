@@ -148,9 +148,11 @@ Rules can be stored in:
 
 ## Integration with Other Systems
 
-### RBAC Integration
 
-Access to rules and rule libraries is controlled by the RBAC system, ensuring that only authorized users can create, modify, or delete rules.
+
+
+
+
 
 ### Audit Logging Integration
 

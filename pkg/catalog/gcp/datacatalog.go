@@ -9,7 +9,7 @@ import (
 	datacatalog "cloud.google.com/go/datacatalog/apiv1"
 	datacatalogpb "cloud.google.com/go/datacatalog/apiv1/datacatalogpb"
 	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
-	nessitypes "github.com/nessi-dev/nessi-dev/pkg/api/types"
+	nessitypes "github.com/nessi-dev/nessi/pkg/api/types"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
