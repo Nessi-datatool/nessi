@@ -6,28 +6,28 @@ type FieldType string
 const (
 	// FieldTypeString represents a string field
 	FieldTypeString FieldType = "string"
-	
+
 	// FieldTypeInt32 represents a 32-bit integer field
 	FieldTypeInt32 FieldType = "int32"
-	
+
 	// FieldTypeInt64 represents a 64-bit integer field
 	FieldTypeInt64 FieldType = "int64"
-	
+
 	// FieldTypeFloat32 represents a 32-bit floating point field
 	FieldTypeFloat32 FieldType = "float32"
-	
+
 	// FieldTypeFloat64 represents a 64-bit floating point field
 	FieldTypeFloat64 FieldType = "float64"
-	
+
 	// FieldTypeBool represents a boolean field
 	FieldTypeBool FieldType = "bool"
-	
+
 	// FieldTypeTimestamp represents a timestamp field
 	FieldTypeTimestamp FieldType = "timestamp"
-	
+
 	// FieldTypeDate represents a date field
 	FieldTypeDate FieldType = "date"
-	
+
 	// FieldTypeBinary represents a binary field
 	FieldTypeBinary FieldType = "binary"
 )

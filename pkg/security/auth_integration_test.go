@@ -80,7 +80,7 @@ func TestAuthIntegration(t *testing.T) {
 
 			// 6. Test role middleware
 			// We'll manually add the user to the context for testing
-		
+
 			adminOnly := am.RoleMiddleware(security.RoleAdmin)(testHandler)
 			userOnly := am.RoleMiddleware(security.RoleUser)(testHandler)
 
@@ -89,12 +89,12 @@ func TestAuthIntegration(t *testing.T) {
 			req = httptest.NewRequest("GET", "/admin", nil)
 			req.Header.Set("Authorization", "Bearer "+token)
 			w = httptest.NewRecorder()
-		
+
 			// Manually add user to context for testing
 			user, _ := am.GetUser("integrationuser")
 			ctx := security.WithUser(req.Context(), user)
 			req = req.WithContext(ctx)
-		
+
 			adminOnly.ServeHTTP(w, req)
 			assert.Equal(t, http.StatusForbidden, w.Code)
 
@@ -102,11 +102,11 @@ func TestAuthIntegration(t *testing.T) {
 			req = httptest.NewRequest("GET", "/user", nil)
 			req.Header.Set("Authorization", "Bearer "+token)
 			w = httptest.NewRecorder()
-		
+
 			// Manually add user to context for testing
 			ctx = security.WithUser(req.Context(), user)
 			req = req.WithContext(ctx)
-		
+
 			userOnly.ServeHTTP(w, req)
 			assert.Equal(t, http.StatusOK, w.Code)
 
@@ -212,7 +212,7 @@ func TestAuthManagerPersistence(t *testing.T) {
 	if security.ShouldSkipIntegrationTests(t) {
 		return // t.Skip already called in ShouldSkipIntegrationTests
 	}
-	
+
 	// Run the test with a timeout
 	security.RunWithTimeout(t, func() {
 		// Use in-memory auth manager for faster tests
@@ -243,11 +243,11 @@ func TestAuthManagerPersistence(t *testing.T) {
 		// since they don't share storage
 		err = am2.CreateUser(testUser, "persistence123")
 		require.NoError(t, err)
-		
+
 		// Regenerate the same API key
 		apiKey2, err := am2.RegenerateAPIKey("persistenceuser")
 		require.NoError(t, err)
-		
+
 		// Verify user exists in second instance
 		user, err := am2.GetUser("persistenceuser")
 		require.NoError(t, err)
@@ -264,7 +264,7 @@ func TestRequireHTTPS(t *testing.T) {
 	if security.ShouldSkipIntegrationTests(t) {
 		return // t.Skip already called in ShouldSkipIntegrationTests
 	}
-	
+
 	// Run the test with a timeout
 	security.RunWithTimeout(t, func() {
 		// Create auth config with HTTPS required

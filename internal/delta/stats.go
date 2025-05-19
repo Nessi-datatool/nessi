@@ -258,7 +258,7 @@ func (s *StatsManager) GetNullCounts(ctx context.Context) (map[string]int64, err
 			if err != nil {
 				return fmt.Errorf("failed to create parquet reader: %w", err)
 			}
-			// pr.Close() is implicitly handled by file.Close() for underlying resources, 
+			// pr.Close() is implicitly handled by file.Close() for underlying resources,
 			// and pqarrow.FileReader doesn't own pr to close it.
 
 			arrowFileRdr, err := pqarrow.NewFileReader(pr, pqarrow.ArrowReadProperties{}, memory.DefaultAllocator)
@@ -283,8 +283,8 @@ func (s *StatsManager) GetNullCounts(ctx context.Context) (map[string]int64, err
 				batch.Release() // Release the current batch after processing
 			}
 			if recordReader.Err() != nil {
-                return fmt.Errorf("error reading records for null counts: %w", recordReader.Err())
-            }
+				return fmt.Errorf("error reading records for null counts: %w", recordReader.Err())
+			}
 		}
 		return nil
 	})

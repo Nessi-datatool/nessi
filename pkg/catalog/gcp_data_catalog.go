@@ -33,7 +33,7 @@ func (c *GCPDataCatalogImpl) Connect(ctx context.Context, config map[string]inte
 
 	// Initialize GCP Data Catalog client (placeholder)
 	// In a real implementation, this would create an actual GCP SDK client
-	
+
 	return nil
 }
 
@@ -53,7 +53,7 @@ func (c *GCPDataCatalogImpl) Name() string {
 func (c *GCPDataCatalogImpl) ListDatabases(ctx context.Context) ([]types.DatabaseInfo, error) {
 	// Placeholder implementation
 	// In a real implementation, this would call GCP Data Catalog API
-	
+
 	// Return sample data for now
 	return []types.DatabaseInfo{
 		{
@@ -72,7 +72,7 @@ func (c *GCPDataCatalogImpl) ListDatabases(ctx context.Context) ([]types.Databas
 func (c *GCPDataCatalogImpl) ListTables(ctx context.Context, database string) ([]types.TableInfo, error) {
 	// Placeholder implementation
 	// In a real implementation, this would call GCP Data Catalog API
-	
+
 	// Return sample data for now
 	return []types.TableInfo{
 		{
@@ -92,7 +92,7 @@ func (c *GCPDataCatalogImpl) ListTables(ctx context.Context, database string) ([
 func (c *GCPDataCatalogImpl) GetTableDetails(ctx context.Context, database, table string) (*types.TableDetails, error) {
 	// Placeholder implementation
 	// In a real implementation, this would call GCP Data Catalog API
-	
+
 	// Return sample data for now
 	details := &types.TableDetails{
 		Info: types.TableInfo{
@@ -142,17 +142,17 @@ func (c *GCPDataCatalogImpl) GetTableDetails(ctx context.Context, database, tabl
 			},
 		},
 		Metadata: &types.TableMetadata{
-			Owner:      "admin",
-			CreatedAt:  time.Now().Add(-24 * time.Hour),
-			UpdatedAt:  time.Now(),
-			Tags:       []string{"production", "data-quality"},
+			Owner:     "admin",
+			CreatedAt: time.Now().Add(-24 * time.Hour),
+			UpdatedAt: time.Now(),
+			Tags:      []string{"production", "data-quality"},
 			Properties: map[string]string{
 				"format":      "parquet",
 				"compression": "snappy",
 			},
 		},
 	}
-	
+
 	return details, nil
 }
 
@@ -160,19 +160,19 @@ func (c *GCPDataCatalogImpl) GetTableDetails(ctx context.Context, database, tabl
 func (c *GCPDataCatalogImpl) GetTableMetadata(ctx context.Context, database, table string) (*types.TableMetadata, error) {
 	// Placeholder implementation
 	// In a real implementation, this would call GCP Data Catalog API
-	
+
 	// Return sample data for now
 	metadata := &types.TableMetadata{
-		Owner:      "admin",
-		CreatedAt:  time.Now().Add(-24 * time.Hour),
-		UpdatedAt:  time.Now(),
-		Tags:       []string{"production", "data-quality"},
+		Owner:     "admin",
+		CreatedAt: time.Now().Add(-24 * time.Hour),
+		UpdatedAt: time.Now(),
+		Tags:      []string{"production", "data-quality"},
 		Properties: map[string]string{
 			"format":      "parquet",
 			"compression": "snappy",
 		},
 	}
-	
+
 	return metadata, nil
 }
 
@@ -187,7 +187,7 @@ func (c *GCPDataCatalogImpl) UpdateTableMetadata(ctx context.Context, database, 
 func (c *GCPDataCatalogImpl) GetTableLineage(ctx context.Context, database, table string) (*types.LineageInfo, error) {
 	// Placeholder implementation
 	// In a real implementation, this would call GCP Data Catalog API
-	
+
 	// Return sample data for now
 	lineage := &types.LineageInfo{
 		Upstream: []types.TableReference{
@@ -214,7 +214,7 @@ func (c *GCPDataCatalogImpl) GetTableLineage(ctx context.Context, database, tabl
 			"updated_by": "admin",
 		},
 	}
-	
+
 	return lineage, nil
 }
 
@@ -236,7 +236,7 @@ func (c *GCPDataCatalogImpl) PublishQualityMetrics(ctx context.Context, database
 func (c *GCPDataCatalogImpl) GetQualityMetrics(ctx context.Context, database, table string) (*types.QualityMetrics, error) {
 	// Placeholder implementation
 	// In a real implementation, this would call GCP Data Catalog API
-	
+
 	// Return sample data for now
 	metrics := &types.QualityMetrics{
 		TotalRows:        1000,
@@ -276,6 +276,6 @@ func (c *GCPDataCatalogImpl) GetQualityMetrics(ctx context.Context, database, ta
 			},
 		},
 	}
-	
+
 	return metrics, nil
 }

@@ -1,16 +1,16 @@
 package datalake
 
 import (
+	"bytes"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"time"
-	"bytes"
-	"os/exec"
 
 	"github.com/apache/arrow/go/v15/arrow"
-	"github.com/apache/arrow/go/v15/arrow/memory"
 	"github.com/apache/arrow/go/v15/arrow/ipc"
+	"github.com/apache/arrow/go/v15/arrow/memory"
 )
 
 // ParquetManager handles Parquet file operations
@@ -99,7 +99,6 @@ func (p *ParquetManager) readRecordPythonFallback(filePath string, schema *arrow
 	return reader.Record(), nil
 }
 
-
 // GetFileStats gets statistics about a Parquet file
 func (p *ParquetManager) GetFileStats(filePath string) (*FileStats, error) {
 	info, err := os.Stat(filePath)
@@ -109,11 +108,11 @@ func (p *ParquetManager) GetFileStats(filePath string) (*FileStats, error) {
 
 	// For now, return dummy stats for testing
 	stats := &FileStats{
-		Path:     filePath,
-		Size:     1024, // Fixed size for testing
-		ModTime:  info.ModTime(),
-		NumRows:  100, // TODO: Read from Parquet metadata
-		Columns:  make(map[string]*ColumnStats),
+		Path:    filePath,
+		Size:    1024, // Fixed size for testing
+		ModTime: info.ModTime(),
+		NumRows: 100, // TODO: Read from Parquet metadata
+		Columns: make(map[string]*ColumnStats),
 	}
 
 	return stats, nil
@@ -121,11 +120,11 @@ func (p *ParquetManager) GetFileStats(filePath string) (*FileStats, error) {
 
 // FileStats represents statistics about a Parquet file
 type FileStats struct {
-	Path     string
-	Size     int64
-	ModTime  time.Time
-	NumRows  int64
-	Columns  map[string]*ColumnStats
+	Path    string
+	Size    int64
+	ModTime time.Time
+	NumRows int64
+	Columns map[string]*ColumnStats
 }
 
 // ValidateSchema validates that a record matches the expected schema

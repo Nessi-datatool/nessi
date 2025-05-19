@@ -11,10 +11,10 @@ type SLALevel string
 const (
 	// SLALevelInfo represents an informational SLA level
 	SLALevelInfo SLALevel = "info"
-	
+
 	// SLALevelWarning represents a warning SLA level
 	SLALevelWarning SLALevel = "warning"
-	
+
 	// SLALevelCritical represents a critical SLA level
 	SLALevelCritical SLALevel = "critical"
 )
@@ -23,32 +23,31 @@ const (
 type SLAConfig struct {
 	// TableName is the name of the table
 	TableName string `json:"table_name"`
-	
+
 	// TablePath is the path to the table
 	TablePath string `json:"table_path"`
-	
+
 	// ExpectedFrequency is the expected update frequency for the table
 	ExpectedFrequency time.Duration `json:"expected_frequency"`
-	
+
 	// WarningThreshold is the threshold for warning alerts (as a percentage of ExpectedFrequency)
 	// For example, if ExpectedFrequency is 1h and WarningThreshold is 150, a warning will be triggered
 	// if the table hasn't been updated for 1.5 hours
 	WarningThreshold int `json:"warning_threshold"`
-	
+
 	// CriticalThreshold is the threshold for critical alerts (as a percentage of ExpectedFrequency)
 	// For example, if ExpectedFrequency is 1h and CriticalThreshold is 200, a critical alert will be triggered
 	// if the table hasn't been updated for 2 hours
 	CriticalThreshold int `json:"critical_threshold"`
-	
+
 	// Enabled indicates whether SLA monitoring is enabled for this table
 	Enabled bool `json:"enabled"`
-	
+
 	// Description provides additional context about the SLA
 	Description string `json:"description,omitempty"`
-	
+
 	// Tags are optional tags for filtering and grouping
 	Tags []string `json:"tags,omitempty"`
-	
 }
 
 // Validate validates the SLA configuration
@@ -56,32 +55,32 @@ func (c *SLAConfig) Validate() error {
 	if c.TableName == "" {
 		return fmt.Errorf("table name cannot be empty")
 	}
-	
+
 	if c.TablePath == "" {
 		return fmt.Errorf("table path cannot be empty")
 	}
-	
+
 	if c.ExpectedFrequency <= 0 {
 		return fmt.Errorf("expected frequency must be greater than zero")
 	}
-	
+
 	if c.WarningThreshold <= 0 {
 		return fmt.Errorf("warning threshold must be greater than zero")
 	}
-	
+
 	if c.CriticalThreshold <= 0 {
 		return fmt.Errorf("critical threshold must be greater than zero")
 	}
-	
+
 	// Warning threshold should be at least 100% (equal to expected frequency)
 	if c.WarningThreshold < 100 {
 		return fmt.Errorf("warning threshold must be at least 100")
 	}
-	
+
 	if c.WarningThreshold >= c.CriticalThreshold {
 		return fmt.Errorf("warning threshold must be less than critical threshold")
 	}
-	
+
 	return nil
 }
 
@@ -92,11 +91,11 @@ func ParseDuration(durationStr string) (time.Duration, error) {
 	if err == nil {
 		return duration, nil
 	}
-	
+
 	// Try custom formats with numeric prefixes
 	var value int
 	var unit string
-	
+
 	_, err = fmt.Sscanf(durationStr, "%d%s", &value, &unit)
 	if err == nil {
 		switch unit {
@@ -108,7 +107,7 @@ func ParseDuration(durationStr string) (time.Duration, error) {
 			return time.Duration(value) * 30 * 24 * time.Hour, nil
 		}
 	}
-	
+
 	// Try custom formats without numeric prefixes
 	switch durationStr {
 	case "hourly":

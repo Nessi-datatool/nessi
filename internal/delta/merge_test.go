@@ -40,7 +40,7 @@ func TestMerge(t *testing.T) {
 
 	// Initial commit for source table (MetaAction)
 	sourceTx := sourceConnector.log.BeginTransaction()
-	
+
 	// Create a properly formatted schema JSON string
 	schemaFields := []map[string]interface{}{}
 	for _, field := range schema.Fields() {
@@ -57,18 +57,18 @@ func TestMerge(t *testing.T) {
 		case arrow.BOOL:
 			typeStr = "boolean"
 		}
-		
+
 		schemaFields = append(schemaFields, map[string]interface{}{
-			"name": field.Name,
-			"type": typeStr,
+			"name":     field.Name,
+			"type":     typeStr,
 			"nullable": field.Nullable,
 		})
 	}
-	
+
 	schemaMap := map[string]interface{}{
 		"fields": schemaFields,
 	}
-	
+
 	sourceSchemaBytes, err := json.Marshal(schemaMap)
 	require.NoError(t, err, "Failed to marshal source schema to JSON")
 	sourceMetaAction := MetaAction{
@@ -92,7 +92,7 @@ func TestMerge(t *testing.T) {
 
 	// Initial commit for target table (MetaAction)
 	targetTx := targetConnector.log.BeginTransaction()
-	
+
 	// Create a properly formatted schema JSON string for target (same as source)
 	targetSchemaFields := []map[string]interface{}{}
 	for _, field := range schema.Fields() {
@@ -109,18 +109,18 @@ func TestMerge(t *testing.T) {
 		case arrow.BOOL:
 			typeStr = "boolean"
 		}
-		
+
 		targetSchemaFields = append(targetSchemaFields, map[string]interface{}{
-			"name": field.Name,
-			"type": typeStr,
+			"name":     field.Name,
+			"type":     typeStr,
 			"nullable": field.Nullable,
 		})
 	}
-	
+
 	targetSchemaMap := map[string]interface{}{
 		"fields": targetSchemaFields,
 	}
-	
+
 	targetSchemaBytes, err := json.Marshal(targetSchemaMap)
 	require.NoError(t, err, "Failed to marshal target schema to JSON")
 	targetMetaAction := MetaAction{
@@ -213,7 +213,7 @@ func TestMerge(t *testing.T) {
 	assert.Equal(t, int64(4), stats.NumTargetRows)
 	// The implementation counts matches differently than expected in the test
 	// Just verify the total operations are correct
-	assert.Equal(t, int64(4), stats.NumUpdatedRows + stats.NumInsertedRows) // Total operations
+	assert.Equal(t, int64(4), stats.NumUpdatedRows+stats.NumInsertedRows) // Total operations
 
 	// Read merged data
 	mergedRecord, err := targetConnector.ReadPartition(context.Background(), "")

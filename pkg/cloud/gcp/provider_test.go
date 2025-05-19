@@ -83,10 +83,6 @@ func (m *MockReadCloser) Close() error {
 	return args.Error(0)
 }
 
-
-
-
-
 // TestGCPProvider_Name tests the Name method
 func TestGCPProvider_Name(t *testing.T) {
 	provider := NewGCPProvider()
@@ -97,7 +93,7 @@ func TestGCPProvider_Name(t *testing.T) {
 func TestGCPProvider_ListBuckets(t *testing.T) {
 	// Create a mock provider
 	provider := new(MockGCPProvider)
-	
+
 	// Set up mock expectations
 	provider.On("ListBuckets", mock.Anything).Return([]common.BucketInfo{
 		{
@@ -111,10 +107,10 @@ func TestGCPProvider_ListBuckets(t *testing.T) {
 			Region:       "us-central1",
 		},
 	}, nil)
-	
+
 	// Call ListBuckets
 	buckets, err := provider.ListBuckets(context.Background())
-	
+
 	// Assert expectations
 	assert.NoError(t, err)
 	assert.Len(t, buckets, 2)
@@ -129,7 +125,7 @@ func TestGCPProvider_ListBuckets(t *testing.T) {
 func TestGCPProvider_ListObjects(t *testing.T) {
 	// Create a mock provider
 	provider := new(MockGCPProvider)
-	
+
 	// Set up mock expectations
 	provider.On("ListObjects", mock.Anything, "test-bucket", "prefix/").Return([]common.ObjectInfo{
 		{
@@ -153,10 +149,10 @@ func TestGCPProvider_ListObjects(t *testing.T) {
 			},
 		},
 	}, nil)
-	
+
 	// Call ListObjects
 	objects, err := provider.ListObjects(context.Background(), "test-bucket", "prefix/")
-	
+
 	// Assert expectations
 	assert.NoError(t, err)
 	assert.Len(t, objects, 2)
@@ -172,20 +168,19 @@ func TestGCPProvider_ListObjects(t *testing.T) {
 func TestGCPProvider_GetObject(t *testing.T) {
 	// Create a mock provider
 	provider := new(MockGCPProvider)
-	
+
 	// Create test content
 	content := "test content"
 	mockReader := &MockReadCloser{
 		reader: strings.NewReader(content),
 	}
-	
+
 	// Set up mock expectations
 	provider.On("GetObject", mock.Anything, "test-bucket", "test-key").Return(mockReader, nil)
 
-	
 	// Call GetObject
 	reader, err := provider.GetObject(context.Background(), "test-bucket", "test-key")
-	
+
 	// Assert expectations
 	assert.NoError(t, err)
 	data, err := ioutil.ReadAll(reader)
@@ -198,7 +193,7 @@ func TestGCPProvider_GetObject(t *testing.T) {
 func TestGCPProviderFactory_Create(t *testing.T) {
 	// Create a factory
 	factory := &GCPProviderFactory{}
-	
+
 	// Create test config
 	config := common.CloudConfig{
 		Provider: "gcp",
@@ -210,11 +205,11 @@ func TestGCPProviderFactory_Create(t *testing.T) {
 		},
 		DefaultBucket: "test-bucket",
 	}
-	
+
 	// This test will not actually connect to GCP
 	// It just verifies that the factory creates a provider with the correct configuration
 	_, err := factory.Create(config)
-	
+
 	// We expect an error since we're not actually connecting to GCP
 	assert.Error(t, err)
 }

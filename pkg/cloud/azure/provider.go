@@ -189,12 +189,12 @@ type AzureProviderFactory struct{}
 // Create creates a new Azure provider instance
 func (f *AzureProviderFactory) Create(config common.CloudConfig) (common.CloudProvider, error) {
 	provider := NewAzureProvider()
-	
+
 	// Convert CloudConfig to map for the Connect method
 	configMap := map[string]interface{}{
 		"endpoint": config.EndpointOverride,
 	}
-	
+
 	// Extract credentials if provided
 	if config.Credentials != nil {
 		if accountName, ok := config.Credentials["account_name"].(string); ok {
@@ -210,17 +210,17 @@ func (f *AzureProviderFactory) Create(config common.CloudConfig) (common.CloudPr
 			configMap["use_azure_ad"] = useAzureAD
 		}
 	}
-	
+
 	// Add any additional options
 	for k, v := range config.AdditionalOptions {
 		configMap[k] = v
 	}
-	
+
 	// Connect to Azure
 	err := provider.Connect(context.Background(), configMap)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return provider, nil
 }

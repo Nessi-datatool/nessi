@@ -2,7 +2,7 @@ package dashboard
 
 import (
 	"net/http"
-	
+
 	"github.com/nessi-dev/nessi/pkg/security"
 )
 

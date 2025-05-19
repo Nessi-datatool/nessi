@@ -18,33 +18,33 @@ type GraphFormat string
 const (
 	// FormatHTML represents HTML output format
 	FormatHTML GraphFormat = "html"
-	
+
 	// FormatJSON represents JSON output format
 	FormatJSON GraphFormat = "json"
-	
+
 	// FormatSVG represents SVG output format
 	FormatSVG GraphFormat = "svg"
-	
+
 	// FormatPNG represents PNG output format
 	FormatPNG GraphFormat = "png"
-	
+
 	// FormatDOT represents DOT (Graphviz) output format
 	FormatDOT GraphFormat = "dot"
 )
 
 // VisualizationOptions represents options for lineage graph visualization
 type VisualizationOptions struct {
-	Format           GraphFormat         `json:"format"`
+	Format           GraphFormat             `json:"format"`
 	IncludeNodeTypes map[model.NodeType]bool `json:"include_node_types,omitempty"`
 	IncludeEdgeTypes map[model.EdgeType]bool `json:"include_edge_types,omitempty"`
-	MaxDepth         int                `json:"max_depth"`
-	FocusNodeID      string             `json:"focus_node_id,omitempty"`
-	ShowProperties   bool               `json:"show_properties"`
-	ColorScheme      string             `json:"color_scheme,omitempty"`
-	LayoutAlgorithm  string             `json:"layout_algorithm,omitempty"`
-	Width            int                `json:"width"`
-	Height           int                `json:"height"`
-	Title            string             `json:"title,omitempty"`
+	MaxDepth         int                     `json:"max_depth"`
+	FocusNodeID      string                  `json:"focus_node_id,omitempty"`
+	ShowProperties   bool                    `json:"show_properties"`
+	ColorScheme      string                  `json:"color_scheme,omitempty"`
+	LayoutAlgorithm  string                  `json:"layout_algorithm,omitempty"`
+	Width            int                     `json:"width"`
+	Height           int                     `json:"height"`
+	Title            string                  `json:"title,omitempty"`
 }
 
 // NewDefaultVisualizationOptions creates default visualization options
@@ -73,12 +73,12 @@ func NewGraphRenderer(templateDir string) (*GraphRenderer, error) {
 	if err := os.MkdirAll(templateDir, 0755); err != nil {
 		return nil, fmt.Errorf("failed to create template directory: %w", err)
 	}
-	
+
 	// Create default templates if they don't exist
 	if err := createDefaultTemplates(templateDir); err != nil {
 		return nil, fmt.Errorf("failed to create default templates: %w", err)
 	}
-	
+
 	return &GraphRenderer{
 		templateDir: templateDir,
 	}, nil
@@ -459,17 +459,17 @@ func createDefaultTemplates(templateDir string) error {
     </script>
 </body>
 </html>`
-	
+
 	// Ensure the template directory exists
 	if err := os.MkdirAll(templateDir, 0755); err != nil {
 		return fmt.Errorf("failed to create template directory: %w", err)
 	}
-	
+
 	htmlTemplatePath := filepath.Join(templateDir, "html_template.html")
 	if err := os.WriteFile(htmlTemplatePath, []byte(htmlTemplate), 0644); err != nil {
 		return fmt.Errorf("failed to write HTML template: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -497,23 +497,23 @@ func (r *GraphRenderer) renderHTML(graph *model.LineageGraph, options *Visualiza
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse HTML template: %w", err)
 	}
-	
+
 	// Convert graph to D3 format
 	d3Graph, err := convertToD3Format(graph, options)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert graph to D3 format: %w", err)
 	}
-	
+
 	d3GraphJSON, err := json.Marshal(d3Graph)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal D3 graph: %w", err)
 	}
-	
+
 	// Set title if not provided
 	if options.Title == "" {
 		options.Title = graph.Name
 	}
-	
+
 	// Create template data
 	data := struct {
 		Title           string
@@ -530,13 +530,13 @@ func (r *GraphRenderer) renderHTML(graph *model.LineageGraph, options *Visualiza
 		LayoutAlgorithm: options.LayoutAlgorithm,
 		GraphData:       template.JS(d3GraphJSON),
 	}
-	
+
 	// Render template
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, data); err != nil {
 		return nil, fmt.Errorf("failed to execute HTML template: %w", err)
 	}
-	
+
 	return buf.Bytes(), nil
 }
 
@@ -547,7 +547,7 @@ func (r *GraphRenderer) renderJSON(graph *model.LineageGraph, options *Visualiza
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert graph to D3 format: %w", err)
 	}
-	
+
 	// Marshal to JSON
 	return json.MarshalIndent(d3Graph, "", "  ")
 }
@@ -562,12 +562,12 @@ func (r *GraphRenderer) renderSVG(graph *model.LineageGraph, options *Visualizat
 // renderDOT renders a lineage graph as DOT (Graphviz)
 func (r *GraphRenderer) renderDOT(graph *model.LineageGraph, options *VisualizationOptions) ([]byte, error) {
 	var buf bytes.Buffer
-	
+
 	// Write DOT header
 	buf.WriteString("digraph G {\n")
 	buf.WriteString("  rankdir=LR;\n")
 	buf.WriteString("  node [shape=box, style=filled];\n")
-	
+
 	// Write nodes
 	for _, node := range graph.Nodes {
 		// Skip node if its type is not included
@@ -576,18 +576,18 @@ func (r *GraphRenderer) renderDOT(graph *model.LineageGraph, options *Visualizat
 				continue
 			}
 		}
-		
+
 		// Get node color
 		color := getNodeColor(node.Type)
-		
+
 		// Escape node name for DOT
 		name := strings.ReplaceAll(node.Name, "\"", "\\\"")
-		
+
 		// Write node
 		buf.WriteString(fmt.Sprintf("  \"%s\" [label=\"%s\\n(%s)\", fillcolor=\"%s\"];\n",
 			node.ID, name, node.Type, color))
 	}
-	
+
 	// Write edges
 	for _, edge := range graph.Edges {
 		// Skip edge if its type is not included
@@ -596,15 +596,15 @@ func (r *GraphRenderer) renderDOT(graph *model.LineageGraph, options *Visualizat
 				continue
 			}
 		}
-		
+
 		// Write edge
 		buf.WriteString(fmt.Sprintf("  \"%s\" -> \"%s\" [label=\"%s\"];\n",
 			edge.SourceID, edge.TargetID, edge.Type))
 	}
-	
+
 	// Write DOT footer
 	buf.WriteString("}\n")
-	
+
 	return buf.Bytes(), nil
 }
 
@@ -639,14 +639,14 @@ func convertToD3Format(graph *model.LineageGraph, options *VisualizationOptions)
 		Nodes: make([]D3Node, 0, len(graph.Nodes)),
 		Links: make([]D3Link, 0, len(graph.Edges)),
 	}
-	
+
 	// Process nodes
 	nodeDepths := make(map[string]int)
 	if options.FocusNodeID != "" {
 		// Calculate node depths from focus node
 		calculateNodeDepths(graph, options.FocusNodeID, nodeDepths, 0, options.MaxDepth)
 	}
-	
+
 	for _, node := range graph.Nodes {
 		// Skip node if its type is not included
 		if len(options.IncludeNodeTypes) > 0 {
@@ -654,7 +654,7 @@ func convertToD3Format(graph *model.LineageGraph, options *VisualizationOptions)
 				continue
 			}
 		}
-		
+
 		// Skip node if it's beyond the max depth
 		if options.FocusNodeID != "" {
 			depth, exists := nodeDepths[node.ID]
@@ -662,7 +662,7 @@ func convertToD3Format(graph *model.LineageGraph, options *VisualizationOptions)
 				continue
 			}
 		}
-		
+
 		// Create D3 node
 		d3Node := D3Node{
 			ID:          node.ID,
@@ -671,21 +671,21 @@ func convertToD3Format(graph *model.LineageGraph, options *VisualizationOptions)
 			Description: node.Description,
 			Size:        10, // Default size
 		}
-		
+
 		// Include properties if requested
 		if options.ShowProperties {
 			d3Node.Properties = node.Properties
 		}
-		
+
 		// Set node depth if available
 		if depth, exists := nodeDepths[node.ID]; exists {
 			d3Node.Depth = depth
 		}
-		
+
 		// Add node to D3 graph
 		d3Graph.Nodes = append(d3Graph.Nodes, d3Node)
 	}
-	
+
 	// Process edges
 	for _, edge := range graph.Edges {
 		// Skip edge if its type is not included
@@ -694,11 +694,11 @@ func convertToD3Format(graph *model.LineageGraph, options *VisualizationOptions)
 				continue
 			}
 		}
-		
+
 		// Skip edge if source or target node is not included
 		sourceIncluded := false
 		targetIncluded := false
-		
+
 		for _, node := range d3Graph.Nodes {
 			if node.ID == edge.SourceID {
 				sourceIncluded = true
@@ -707,11 +707,11 @@ func convertToD3Format(graph *model.LineageGraph, options *VisualizationOptions)
 				targetIncluded = true
 			}
 		}
-		
+
 		if !sourceIncluded || !targetIncluded {
 			continue
 		}
-		
+
 		// Create D3 link
 		d3Link := D3Link{
 			Source: edge.SourceID,
@@ -719,11 +719,11 @@ func convertToD3Format(graph *model.LineageGraph, options *VisualizationOptions)
 			Type:   string(edge.Type),
 			Value:  1, // Default value
 		}
-		
+
 		// Add link to D3 graph
 		d3Graph.Links = append(d3Graph.Links, d3Link)
 	}
-	
+
 	return d3Graph, nil
 }
 
@@ -733,10 +733,10 @@ func calculateNodeDepths(graph *model.LineageGraph, focusNodeID string, depths m
 	if currentDepth > maxDepth {
 		return
 	}
-	
+
 	// Set depth for the current node
 	depths[focusNodeID] = currentDepth
-	
+
 	// Process upstream nodes
 	upstreamNodes := graph.GetUpstreamNodes(focusNodeID)
 	for _, node := range upstreamNodes {
@@ -744,11 +744,11 @@ func calculateNodeDepths(graph *model.LineageGraph, focusNodeID string, depths m
 		if existingDepth, exists := depths[node.ID]; exists && existingDepth <= currentDepth+1 {
 			continue
 		}
-		
+
 		// Calculate depth for upstream node
 		calculateNodeDepths(graph, node.ID, depths, currentDepth+1, maxDepth)
 	}
-	
+
 	// Process downstream nodes
 	downstreamNodes := graph.GetDownstreamNodes(focusNodeID)
 	for _, node := range downstreamNodes {
@@ -756,7 +756,7 @@ func calculateNodeDepths(graph *model.LineageGraph, focusNodeID string, depths m
 		if existingDepth, exists := depths[node.ID]; exists && existingDepth <= currentDepth+1 {
 			continue
 		}
-		
+
 		// Calculate depth for downstream node
 		calculateNodeDepths(graph, node.ID, depths, currentDepth+1, maxDepth)
 	}
@@ -773,10 +773,10 @@ func getNodeColor(nodeType model.NodeType) string {
 		model.NodeTypeAPI:         "#FF6D00", // Orange
 		model.NodeTypeApplication: "#2196F3", // Blue
 	}
-	
+
 	if color, exists := colorMap[nodeType]; exists {
 		return color
 	}
-	
+
 	return "#999999" // Default gray
 }

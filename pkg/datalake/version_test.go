@@ -125,11 +125,11 @@ func createTestVersion(t *testing.T, logDir string, version int64, operation str
 
 	// Create commit info
 	commitInfo := map[string]interface{}{
-		"timestamp":    timestamp.UnixMilli(),
-		"operation":    operation,
+		"timestamp":           timestamp.UnixMilli(),
+		"operation":           operation,
 		"operationParameters": map[string]string{},
-		"isBlindAppend": operation == "APPEND",
-		"isolationLevel": "Serializable",
+		"isBlindAppend":       operation == "APPEND",
+		"isolationLevel":      "Serializable",
 	}
 
 	// Convert to JSON

@@ -94,15 +94,15 @@ func TestQualityMetricsPublisher_PublishQualityMetricsToAll(t *testing.T) {
 	mockCatalog2 := new(MockCatalog)
 	mockCatalog2.On("Name").Return("TestCatalog2")
 	mockCatalog2.On("PublishQualityMetrics", mock.Anything, "test_db", "test_table", mock.Anything).Return(nil)
-	
+
 	// Create catalog manager
 	manager := NewCatalogManager()
 	manager.RegisterCatalog(mockCatalog1)
 	manager.RegisterCatalog(mockCatalog2)
-	
+
 	// Create quality metrics publisher
 	publisher := NewQualityMetricsPublisher(manager)
-	
+
 	// Create test profile
 	profile := &quality.Profile{
 		Columns: map[string]*quality.ColumnProfile{
@@ -138,13 +138,13 @@ func TestQualityMetricsPublisher_PublishQualityMetricsToAll(t *testing.T) {
 
 	mockCatalog1.On("PublishQualityMetrics", ctx, "testdb", "testtable", mock.Anything).Return(nil)
 	mockCatalog2.On("PublishQualityMetrics", ctx, "testdb", "testtable", mock.Anything).Return(nil)
-	
+
 	// Call PublishQualityMetricsToAll
 	errors := publisher.PublishQualityMetricsToAll(ctx, "testdb", "testtable", profile, results)
-	
+
 	// Verify results
 	assert.Empty(t, errors)
-	
+
 	// Verify mock expectations
 	mockCatalog1.AssertExpectations(t)
 	mockCatalog2.AssertExpectations(t)
@@ -157,11 +157,11 @@ func TestCalculateCompleteness(t *testing.T) {
 	// Test with nil profile
 	completeness := calculateCompleteness(nil)
 	assert.Equal(t, 0.0, completeness)
-	
+
 	// Test with empty profile
 	completeness = calculateCompleteness(&quality.Profile{})
 	assert.Equal(t, 0.0, completeness)
-	
+
 	// Test with profile containing columns
 	profile := &quality.Profile{
 		Columns: map[string]*quality.ColumnProfile{
@@ -179,7 +179,7 @@ func TestCalculateCompleteness(t *testing.T) {
 			},
 		},
 	}
-	
+
 	completeness = calculateCompleteness(profile)
 	assert.InDelta(t, 0.85, completeness, 0.001) // (0.9 + 0.8) / 2 = 0.85
 }
@@ -189,11 +189,11 @@ func TestCalculateAccuracy(t *testing.T) {
 	// Test with nil results
 	accuracy := calculateAccuracy(nil)
 	assert.Equal(t, 0.0, accuracy)
-	
+
 	// Test with empty results
 	accuracy = calculateAccuracy(&quality.ValidationResults{})
 	assert.Equal(t, 0.0, accuracy)
-	
+
 	// Test with results containing accuracy rules
 	results := &quality.ValidationResults{
 		RuleResults: []*quality.RuleResult{
@@ -226,7 +226,7 @@ func TestCalculateAccuracy(t *testing.T) {
 			},
 		},
 	}
-	
+
 	accuracy = calculateAccuracy(results)
 	assert.InDelta(t, 0.9, accuracy, 0.001) // (1.0 + 0.8) / 2 = 0.9
 }
@@ -236,11 +236,11 @@ func TestCalculateConsistency(t *testing.T) {
 	// Test with nil results
 	consistency := calculateConsistency(nil)
 	assert.Equal(t, 0.0, consistency)
-	
+
 	// Test with empty results
 	consistency = calculateConsistency(&quality.ValidationResults{})
 	assert.Equal(t, 0.0, consistency)
-	
+
 	// Test with results containing consistency rules
 	results := &quality.ValidationResults{
 		RuleResults: []*quality.RuleResult{
@@ -273,7 +273,7 @@ func TestCalculateConsistency(t *testing.T) {
 			},
 		},
 	}
-	
+
 	consistency = calculateConsistency(results)
 	assert.InDelta(t, 0.85, consistency, 0.001) // (1.0 + 0.7) / 2 = 0.85
 }
@@ -283,32 +283,32 @@ func TestCalculateTimeliness(t *testing.T) {
 	// Test with nil profile
 	timeliness := calculateTimeliness(nil)
 	assert.Equal(t, 0.0, timeliness)
-	
+
 	// Test with profile without timestamp
 	timeliness = calculateTimeliness(&quality.Profile{})
 	assert.Equal(t, 1.0, timeliness)
-	
+
 	// Test with profile with recent timestamp (less than 1 day old)
 	profile := &quality.Profile{
 		Timestamp: time.Now().Add(-12 * time.Hour),
 	}
 	timeliness = calculateTimeliness(profile)
 	assert.Equal(t, 1.0, timeliness)
-	
+
 	// Test with profile with older timestamp (less than 1 week old)
 	profile = &quality.Profile{
 		Timestamp: time.Now().Add(-72 * time.Hour),
 	}
 	timeliness = calculateTimeliness(profile)
 	assert.Equal(t, 0.8, timeliness)
-	
+
 	// Test with profile with old timestamp (less than 1 month old)
 	profile = &quality.Profile{
 		Timestamp: time.Now().Add(-500 * time.Hour),
 	}
 	timeliness = calculateTimeliness(profile)
 	assert.Equal(t, 0.6, timeliness)
-	
+
 	// Test with profile with very old timestamp (more than 1 month old)
 	profile = &quality.Profile{
 		Timestamp: time.Now().Add(-1000 * time.Hour),
@@ -330,7 +330,7 @@ func TestCalculateOverallScore(t *testing.T) {
 			},
 		},
 	}
-	
+
 	results := &quality.ValidationResults{
 		RuleResults: []*quality.RuleResult{
 			{
@@ -353,10 +353,10 @@ func TestCalculateOverallScore(t *testing.T) {
 			},
 		},
 	}
-	
+
 	// Calculate overall score
 	overallScore := calculateOverallScore(profile, results)
-	
+
 	// Verify score is between 0 and 1
 	assert.GreaterOrEqual(t, overallScore, 0.0)
 	assert.LessOrEqual(t, overallScore, 1.0)

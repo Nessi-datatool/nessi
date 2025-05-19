@@ -21,30 +21,30 @@ type QualityMetric struct {
 
 // QualityRule represents a data quality rule
 type QualityRule struct {
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Type        string   `json:"type"`
-	Column      string   `json:"column"`
-	Condition   string   `json:"condition"`
-	Threshold   float64  `json:"threshold"`
-	Severity    string   `json:"severity"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	Type        string  `json:"type"`
+	Column      string  `json:"column"`
+	Condition   string  `json:"condition"`
+	Threshold   float64 `json:"threshold"`
+	Severity    string  `json:"severity"`
 }
 
 // QualityReport represents a data quality report
 type QualityReport struct {
-	TableName    string         `json:"table_name"`
-	Timestamp    time.Time      `json:"timestamp"`
-	Version      int64          `json:"version"`
+	TableName    string          `json:"table_name"`
+	Timestamp    time.Time       `json:"timestamp"`
+	Version      int64           `json:"version"`
 	Metrics      []QualityMetric `json:"metrics"`
 	Rules        []QualityRule   `json:"rules"`
-	OverallScore float64        `json:"overall_score"`
-	Status       string         `json:"status"`
+	OverallScore float64         `json:"overall_score"`
+	Status       string          `json:"status"`
 }
 
 // QualityManager handles data quality operations
 type QualityManager struct {
-	mu     sync.RWMutex
-	rules  map[string]QualityRule
+	mu      sync.RWMutex
+	rules   map[string]QualityRule
 	reports map[string][]QualityReport
 }
 
@@ -282,4 +282,4 @@ func (m *QualityManager) GetLatestReport(tableName string) (*QualityReport, erro
 	}
 
 	return &reports[len(reports)-1], nil
-} 
+}

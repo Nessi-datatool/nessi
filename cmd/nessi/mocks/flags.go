@@ -4,14 +4,14 @@ import (
 	"flag"
 	"os"
 	"sync"
-	
+
 	"github.com/spf13/cobra"
 )
 
 var (
 	// Ensure we only initialize once
 	initOnce sync.Once
-	
+
 	// Original command line arguments
 	originalArgs []string
 )
@@ -21,10 +21,10 @@ func InitMockFlags() {
 	initOnce.Do(func() {
 		// Save original arguments
 		originalArgs = os.Args
-		
+
 		// Set minimal arguments to avoid parsing issues
 		os.Args = []string{"nessi-test"}
-		
+
 		// Reset the flag package
 		flag.CommandLine = flag.NewFlagSet("nessi-test", flag.ExitOnError)
 	})

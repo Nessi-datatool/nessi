@@ -153,8 +153,8 @@ func TestFormatHandlerConfig(t *testing.T) {
 
 	// Test custom configuration
 	customConfig := FormatHandlerConfig{
-		CSVHasHeader:          false,
-		MaxRowsForInference:   500,
+		CSVHasHeader:           false,
+		MaxRowsForInference:    500,
 		MinConfidenceThreshold: 0.9,
 	}
 	handler := NewFormatHandlerWithConfig(customConfig)

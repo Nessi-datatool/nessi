@@ -320,7 +320,7 @@ func (p *PartitionManager) GetPartitionSchema(ctx context.Context, partition str
 			if err != nil {
 				return fmt.Errorf("failed to create arrow reader from parquet: %w", err)
 			}
-			
+
 			schema, err = arrowReader.Schema()
 			if err != nil {
 				return fmt.Errorf("failed to get schema from arrow reader: %w", err)

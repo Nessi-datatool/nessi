@@ -11,7 +11,7 @@ import (
 
 func TestExchangeManager(t *testing.T) {
 	config := ExchangeConfig{
-		ArrowThreshold: 1024 * 1024, // 1MB
+		ArrowThreshold: 1024 * 1024,        // 1MB
 		MaxMemoryUsage: 1024 * 1024 * 1024, // 1GB
 		UseCompression: false,
 	}

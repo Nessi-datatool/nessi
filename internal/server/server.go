@@ -57,7 +57,7 @@ type Config struct {
 	WriteTimeout    time.Duration
 	ShutdownTimeout time.Duration
 	TLS             struct {
-		Enabled bool
+		Enabled  bool
 		CertFile string
 		KeyFile  string
 	}

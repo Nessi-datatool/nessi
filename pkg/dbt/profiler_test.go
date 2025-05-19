@@ -153,7 +153,7 @@ profile_settings:
 		if err != nil {
 			t.Fatalf("Failed to read manifest file: %v", err)
 		}
-		
+
 		var manifest DBTManifest
 		if err := json.Unmarshal(manifestData, &manifest); err != nil {
 			t.Fatalf("Failed to parse manifest file: %v", err)

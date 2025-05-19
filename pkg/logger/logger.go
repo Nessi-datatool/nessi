@@ -2,8 +2,8 @@ package logger
 
 import (
 	"context"
-	"os"
 	"github.com/rs/zerolog"
+	"os"
 )
 
 func FromContext(ctx context.Context) zerolog.Logger {

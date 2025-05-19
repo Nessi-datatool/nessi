@@ -403,7 +403,7 @@ func ValidateCustomRegex(value string, pattern string) bool {
 	if err != nil {
 		return false
 	}
-	
+
 	// Then match the value against the pattern
 	return reg.MatchString(value)
 }

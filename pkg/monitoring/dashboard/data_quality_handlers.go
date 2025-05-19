@@ -41,12 +41,12 @@ type RuleValidationResult struct {
 
 // ProfileSummary represents a summary of a data profile
 type ProfileSummary struct {
-	Name           string  `json:"name"`
-	Type           string  `json:"type"`
-	NullPercent    float64 `json:"null_percent"`
-	QualityScore   float64 `json:"quality_score,omitempty"`
-	AnomalyCount   int     `json:"anomaly_count"`
-	PatternCount   int     `json:"pattern_count"`
+	Name            string  `json:"name"`
+	Type            string  `json:"type"`
+	NullPercent     float64 `json:"null_percent"`
+	QualityScore    float64 `json:"quality_score,omitempty"`
+	AnomalyCount    int     `json:"anomaly_count"`
+	PatternCount    int     `json:"pattern_count"`
 	RecommendedType string  `json:"recommended_type,omitempty"`
 }
 
@@ -113,7 +113,7 @@ func (d *Dashboard) handleGetProfileSummaries(w http.ResponseWriter, r *http.Req
 
 	// Create advanced profiler
 	profiler := profile.NewAdvancedProfiler(tablePath)
-	
+
 	// Generate profiles
 	profiles, err := profiler.GenerateProfile()
 	if err != nil {
@@ -211,7 +211,6 @@ func (d *Dashboard) handleValidateRules(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-
 	// Example: Validate each profile (mocked)
 	var results []RuleValidationResult
 	for range profiles {
@@ -263,18 +262,18 @@ func (d *Dashboard) handleGetRuleHistory(w http.ResponseWriter, r *http.Request)
 	// In a real implementation, we would load rule history from storage
 	// Here we're just creating some example history
 	var history []rules.RuleExecutionRecord
-	
+
 	// Create example history
 	now := time.Now()
 	for i := 0; i < limit; i++ {
 		history = append(history, rules.RuleExecutionRecord{
-			ExecutionID:    fmt.Sprintf("exec-%d", i),
-			RuleID:         ruleID,
-			Timestamp:      now.Add(time.Duration(-i) * time.Hour),
-			RecordsChecked: 1000,
-			Failures:       int64(i * 2), // Increasing failures over time
+			ExecutionID:     fmt.Sprintf("exec-%d", i),
+			RuleID:          ruleID,
+			Timestamp:       now.Add(time.Duration(-i) * time.Hour),
+			RecordsChecked:  1000,
+			Failures:        int64(i * 2), // Increasing failures over time
 			ExecutionTimeMs: 150 + int64(i*10),
-			DatasetID:      "dataset-1",
+			DatasetID:       "dataset-1",
 		})
 	}
 
@@ -314,7 +313,7 @@ func (d *Dashboard) handleGetExecutionTrends(w http.ResponseWriter, r *http.Requ
 	// In a real implementation, we would calculate trends from rule history
 	// Here we're just creating some example trends
 	var trends []rules.ExecutionTrend
-	
+
 	// Create example trends
 	now := time.Now()
 	for i := 0; i < days; i++ {

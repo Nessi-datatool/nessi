@@ -85,7 +85,7 @@ func ValidateLicense() (*License, error) {
 func verifyToken(tokenString string) error {
 	// This is a simplified implementation
 	// In a real implementation, we would verify the signature using a public key
-	
+
 	// Parse the token
 	token, err := jwt.ParseWithClaims(tokenString, &LicenseClaims{}, func(token *jwt.Token) (interface{}, error) {
 		// In a real implementation, we would verify the signing method and return the public key

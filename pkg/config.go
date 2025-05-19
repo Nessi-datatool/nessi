@@ -28,14 +28,14 @@ type ExtensionsConfig struct {
 }
 
 var (
-	config *Config
+	config      *Config
 	viperConfig *viper.Viper
 )
 
 // InitConfig initializes the configuration
 func InitConfig(configFile string) error {
 	viperConfig = viper.New()
-	
+
 	if configFile != "" {
 		viperConfig.SetConfigFile(configFile)
 	} else {
@@ -188,4 +188,4 @@ func IsExtensionEnabled(name string) bool {
 		}
 	}
 	return false
-} 
+}

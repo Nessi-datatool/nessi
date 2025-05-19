@@ -20,7 +20,7 @@ func TestRuleValidation(t *testing.T) {
 	}{
 		{
 			name: "valid completeness rule",
-		rule: rules.Rule{
+			rule: rules.Rule{
 				Type:      rules.RuleTypeCompleteness,
 				Column:    "age",
 				Threshold: 90,
@@ -30,7 +30,7 @@ func TestRuleValidation(t *testing.T) {
 		},
 		{
 			name: "invalid completeness threshold",
-		rule: rules.Rule{
+			rule: rules.Rule{
 				Type:      rules.RuleTypeCompleteness,
 				Column:    "age",
 				Threshold: 105,
@@ -40,42 +40,42 @@ func TestRuleValidation(t *testing.T) {
 		},
 		{
 			name: "valid pattern rule",
-		rule: rules.Rule{
-				Type:    rules.RuleTypePattern,
-				Column:  "email",
-				Pattern: "@",
+			rule: rules.Rule{
+				Type:     rules.RuleTypePattern,
+				Column:   "email",
+				Pattern:  "@",
 				Severity: rules.SeverityMedium,
 			},
 			expected: nil,
 		},
 		{
 			name: "invalid pattern rule",
-		rule: rules.Rule{
-				Type:    rules.RuleTypePattern,
-				Column:  "email",
-				Pattern: "",
+			rule: rules.Rule{
+				Type:     rules.RuleTypePattern,
+				Column:   "email",
+				Pattern:  "",
 				Severity: rules.SeverityMedium,
 			},
 			expected: assert.AnError,
 		},
 		{
 			name: "valid range rule",
-		rule: rules.Rule{
-				Type:    rules.RuleTypeRange,
-				Column:  "age",
-				Min:     0,
-				Max:     120,
+			rule: rules.Rule{
+				Type:     rules.RuleTypeRange,
+				Column:   "age",
+				Min:      0,
+				Max:      120,
 				Severity: rules.SeverityHigh,
 			},
 			expected: nil,
 		},
 		{
 			name: "invalid range rule",
-		rule: rules.Rule{
-				Type:    rules.RuleTypeRange,
-				Column:  "age",
-				Min:     120,
-				Max:     0,
+			rule: rules.Rule{
+				Type:     rules.RuleTypeRange,
+				Column:   "age",
+				Min:      120,
+				Max:      0,
 				Severity: rules.SeverityHigh,
 			},
 			expected: assert.AnError,
@@ -161,19 +161,19 @@ func TestRuleEvaluation(t *testing.T) {
 		{
 			name: "uniqueness rule - all unique",
 			rule: rules.Rule{
-				Type:      rules.RuleTypeUniqueness,
-				Column:    "age",
-				Severity:  rules.SeverityHigh,
+				Type:     rules.RuleTypeUniqueness,
+				Column:   "age",
+				Severity: rules.SeverityHigh,
 			},
 			expected: true,
 		},
 		{
 			name: "range rule - within bounds",
 			rule: rules.Rule{
-				Type:    rules.RuleTypeRange,
-				Column:  "age",
-				Min:     0,
-				Max:     10,
+				Type:     rules.RuleTypeRange,
+				Column:   "age",
+				Min:      0,
+				Max:      10,
 				Severity: rules.SeverityHigh,
 			},
 			expected: true, // Since all values are within 0-10, this should pass

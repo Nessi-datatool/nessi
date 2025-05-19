@@ -101,13 +101,13 @@ func (r *CustomRuleRegistry) ExecuteRule(name string, data interface{}, params m
 
 // RuleLibrary represents a shared library of validation rules
 type RuleLibrary struct {
-	Name        string                  `json:"name"`
-	Description string                  `json:"description"`
-	Author      string                  `json:"author"`
-	Version     string                  `json:"version"`
-	Rules       map[string]*CustomRule  `json:"rules"`
-	Tags        []string                `json:"tags"`
-	Metadata    map[string]interface{}  `json:"metadata"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	Author      string                 `json:"author"`
+	Version     string                 `json:"version"`
+	Rules       map[string]*CustomRule `json:"rules"`
+	Tags        []string               `json:"tags"`
+	Metadata    map[string]interface{} `json:"metadata"`
 }
 
 // RuleLibraryManager manages shared rule libraries

@@ -9,10 +9,10 @@ import (
 
 // TestMonitor is a simplified version of the Monitor struct for testing
 type TestMonitor struct {
-	metricsPort              int
-	alertManager             *alerts.AlertManager
-	intelligentAlertManager  *alerts.IntelligentAlertManager
-	metricStore              alerts.MetricStore
+	metricsPort             int
+	alertManager            *alerts.AlertManager
+	intelligentAlertManager *alerts.IntelligentAlertManager
+	metricStore             alerts.MetricStore
 }
 
 // GetMetricsPort returns the metrics server port
@@ -43,7 +43,7 @@ func (m *TestMonitor) RecordMetricWithTimestamp(metricName string, value float64
 		Value:     value,
 		Labels:    labels,
 	}
-	
+
 	// Store the data point in the metric store
 	if m.metricStore != nil {
 		if mockStore, ok := m.metricStore.(*MockMetricStore); ok {
@@ -51,10 +51,10 @@ func (m *TestMonitor) RecordMetricWithTimestamp(metricName string, value float64
 			return nil
 		}
 	}
-	
+
 	// If we're not using a mock metric store, just log the metric
-	fmt.Printf("Recorded metric %s = %f at %s with labels %v\n", 
+	fmt.Printf("Recorded metric %s = %f at %s with labels %v\n",
 		metricName, value, timestamp.Format(time.RFC3339), labels)
-	
+
 	return nil
 }

@@ -177,7 +177,7 @@ func outputProfileResultsTable(results *ProfileResults, w io.Writer) error {
 			result.ProfileType,
 			result.RowCount,
 		)
-		
+
 		// Print column stats
 		for column, stats := range result.ColumnProfiles {
 			fmt.Fprintf(tw, "%s\t%s\t%s\t%d\t%d\t%.2f%%\t%d\t%.2f%%\n",
@@ -190,7 +190,7 @@ func outputProfileResultsTable(results *ProfileResults, w io.Writer) error {
 				stats.Unique,
 				stats.UniquePercent,
 			)
-			
+
 			// Print additional stats for numeric columns
 			if stats.Min != nil && stats.Max != nil {
 				fmt.Fprintf(tw, "\tMin: %v\tMax: %v", stats.Min, stats.Max)
@@ -199,7 +199,7 @@ func outputProfileResultsTable(results *ProfileResults, w io.Writer) error {
 				}
 				fmt.Fprintln(tw)
 			}
-			
+
 			// Print top values if available
 			if len(stats.TopValues) > 0 {
 				fmt.Fprintln(tw, "\tTop Values:")
@@ -208,7 +208,7 @@ func outputProfileResultsTable(results *ProfileResults, w io.Writer) error {
 				}
 			}
 		}
-		
+
 		fmt.Fprintln(tw)
 	}
 

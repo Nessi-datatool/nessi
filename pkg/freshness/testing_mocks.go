@@ -27,13 +27,13 @@ func (m *MockDeltaConnector) ListTables() ([]string, error) {
 type TableMetadata struct {
 	// LastModified is the timestamp when the table was last modified
 	LastModified *time.Time
-	
+
 	// Version is the version of the table
 	Version int64
-	
+
 	// Name is the name of the table
 	Name string
-	
+
 	// Path is the path to the table
 	Path string
 }

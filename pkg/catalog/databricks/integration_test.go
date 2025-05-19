@@ -56,6 +56,7 @@ func (c *testDatabricksClient) GetTableDetails(ctx context.Context, workspaceID,
 				{Name: "id", Type: "long", Nullable: false},
 				{Name: "name", Type: "string", Nullable: true},
 				{Name: "age", Type: "integer", Nullable: true},
+				{Name: "active", Type: "boolean", Nullable: true},
 			},
 		},
 		Metadata: &types.TableMetadata{
@@ -158,12 +159,13 @@ func TestDatabricksIntegration(t *testing.T) {
 	assert.Equal(t, "delta_table", tableDetails.Info.Name)
 	assert.Equal(t, "delta", tableDetails.Schema.Format)
 	assert.Equal(t, deltaTableDir, tableDetails.Info.Location)
-	assert.Len(t, tableDetails.Schema.Fields, 3)
+	assert.Len(t, tableDetails.Schema.Fields, 4)
 
 	// Now create some test data and write it to the Delta table
 	testData := []map[string]interface{}{
-		{"id": int64(1), "name": "John Doe", "age": int32(30)},
-		{"id": int64(2), "name": "Jane Smith", "age": int32(25)},
+		{"id": int64(1), "name": "John Doe", "age": int32(30), "active": true},
+		{"id": int64(2), "name": "Jane Smith", "age": int32(25), "active": true},
+		{"id": int64(3), "name": "Bob Johnson", "age": int32(40), "active": false},
 	}
 
 	// Create schema
@@ -171,6 +173,7 @@ func TestDatabricksIntegration(t *testing.T) {
 		{Name: "id", Type: datalake.FieldTypeInt64},
 		{Name: "name", Type: datalake.FieldTypeString},
 		{Name: "age", Type: datalake.FieldTypeInt32},
+		{Name: "active", Type: datalake.FieldTypeBool},
 	})
 
 	// Initialize Delta format handler
@@ -195,6 +198,7 @@ func TestDatabricksIntegration(t *testing.T) {
 		assert.Equal(t, testData[i]["id"], record["id"], "ID should match")
 		assert.Equal(t, testData[i]["name"], record["name"], "Name should match")
 		assert.Equal(t, testData[i]["age"], record["age"], "Age should match")
+		assert.Equal(t, testData[i]["active"], record["active"], "Active status should match")
 	}
 
 	// Test getting table metadata

@@ -12,24 +12,24 @@ import (
 
 // Transaction represents a Delta Lake transaction
 type Transaction struct {
-	Actions    []Action
+	Actions     []Action
 	ReadVersion int64
-	CommitInfo *CommitInfo
+	CommitInfo  *CommitInfo
 }
 
 // CommitInfo represents information about a commit
 type CommitInfo struct {
-	Timestamp int64             `json:"timestamp"`
-	UserID    string            `json:"userId"`
-	UserName  string            `json:"userName"`
-	Operation string            `json:"operation"`
+	Timestamp           int64             `json:"timestamp"`
+	UserID              string            `json:"userId"`
+	UserName            string            `json:"userName"`
+	Operation           string            `json:"operation"`
 	OperationParameters map[string]string `json:"operationParameters"`
-	JobInfo   map[string]string `json:"jobInfo"`
-	Notebook  map[string]string `json:"notebook"`
-	ClusterID string            `json:"clusterId"`
-	ReadVersion int64           `json:"readVersion"`
-	IsolationLevel string       `json:"isolationLevel"`
-	IsBlindAppend bool          `json:"isBlindAppend"`
+	JobInfo             map[string]string `json:"jobInfo"`
+	Notebook            map[string]string `json:"notebook"`
+	ClusterID           string            `json:"clusterId"`
+	ReadVersion         int64             `json:"readVersion"`
+	IsolationLevel      string            `json:"isolationLevel"`
+	IsBlindAppend       bool              `json:"isBlindAppend"`
 }
 
 // TransactionLog manages Delta Lake transactions
@@ -56,9 +56,9 @@ func (t *TransactionLog) BeginTransaction() *Transaction {
 		Actions:     make([]Action, 0),
 		ReadVersion: t.version,
 		CommitInfo: &CommitInfo{
-			Timestamp: time.Now().UnixMilli(),
+			Timestamp:      time.Now().UnixMilli(),
 			IsolationLevel: "Serializable",
-			IsBlindAppend: false,
+			IsBlindAppend:  false,
 		},
 	}
 }
@@ -87,7 +87,7 @@ func (t *TransactionLog) Commit(ctx context.Context, tx *Transaction) error {
 
 	// Create the commit file path with 20-digit padding
 	commitPath := filepath.Join(t.tablePath, "_delta_log", fmt.Sprintf("%020d.json", nextVersion))
-	
+
 	// Write the transaction to the log
 	data, err := json.Marshal(tx.Actions)
 	if err != nil {
@@ -215,4 +215,4 @@ func (tx *Transaction) GetActions() []Action {
 // GetCommitInfo returns the commit info of the transaction
 func (tx *Transaction) GetCommitInfo() *CommitInfo {
 	return tx.CommitInfo
-} 
+}

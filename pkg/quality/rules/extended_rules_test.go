@@ -2,7 +2,7 @@ package rules
 
 import (
 	"testing"
-	
+
 	"github.com/apache/arrow/go/v14/arrow"
 	"github.com/apache/arrow/go/v14/arrow/array"
 	"github.com/apache/arrow/go/v14/arrow/memory"
@@ -10,7 +10,7 @@ import (
 
 func createTestRecord(colName string, dataType arrow.DataType, values interface{}, validBits []bool) arrow.Record {
 	pool := memory.NewGoAllocator()
-	
+
 	// Create builder based on data type
 	var builder array.Builder
 	switch dataType.(type) {
@@ -57,11 +57,11 @@ func createTestRecord(colName string, dataType arrow.DataType, values interface{
 	default:
 		panic("Unsupported data type for test")
 	}
-	
+
 	// Build array
 	arr := builder.NewArray()
 	defer arr.Release()
-	
+
 	// Create schema
 	schema := arrow.NewSchema(
 		[]arrow.Field{
@@ -69,11 +69,11 @@ func createTestRecord(colName string, dataType arrow.DataType, values interface{
 		},
 		nil,
 	)
-	
+
 	// Create record
 	columns := []arrow.Array{arr}
 	record := array.NewRecord(schema, columns, int64(len(validBits)))
-	
+
 	return record
 }
 
@@ -87,11 +87,11 @@ func TestRegexRule(t *testing.T) {
 		"not-an-email",
 	}
 	validBits := []bool{true, true, true, true}
-	
+
 	// Create test record
 	record := createTestRecord(colName, arrow.BinaryTypes.String, values, validBits)
 	defer record.Release()
-	
+
 	// Create regex rule
 	rule, err := NewRegexRule(colName, `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, RuleMetadata{
 		ID:          "email_regex",
@@ -99,19 +99,19 @@ func TestRegexRule(t *testing.T) {
 		Description: "Validates email format",
 		Severity:    "error",
 	})
-	
+
 	if err != nil {
 		t.Fatalf("Failed to create regex rule: %v", err)
 	}
-	
+
 	// Validate
 	errors := rule.Validate(record)
-	
+
 	// Check results
 	if len(errors) != 2 {
 		t.Errorf("Expected 2 validation errors, got %d", len(errors))
 	}
-	
+
 	// Check specific errors
 	for _, err := range errors {
 		if err.Value != "invalid-email" && err.Value != "not-an-email" {
@@ -130,11 +130,11 @@ func TestEnumRule(t *testing.T) {
 		"unknown",
 	}
 	validBits := []bool{true, true, true, true}
-	
+
 	// Create test record
 	record := createTestRecord(colName, arrow.BinaryTypes.String, values, validBits)
 	defer record.Release()
-	
+
 	// Create enum rule
 	rule := NewEnumRule(colName, []string{"active", "inactive", "pending"}, true, RuleMetadata{
 		ID:          "status_enum",
@@ -142,15 +142,15 @@ func TestEnumRule(t *testing.T) {
 		Description: "Validates status values",
 		Severity:    "error",
 	})
-	
+
 	// Validate
 	errors := rule.Validate(record)
-	
+
 	// Check results
 	if len(errors) != 1 {
 		t.Errorf("Expected 1 validation error, got %d", len(errors))
 	}
-	
+
 	// Check specific error
 	if len(errors) > 0 {
 		if errors[0].Value != "unknown" {
@@ -169,11 +169,11 @@ func TestLengthRule(t *testing.T) {
 		"ok",
 	}
 	validBits := []bool{true, true, true, true}
-	
+
 	// Create test record
 	record := createTestRecord(colName, arrow.BinaryTypes.String, values, validBits)
 	defer record.Release()
-	
+
 	// Create length rule
 	rule := NewLengthRule(colName, 3, 10, RuleMetadata{
 		ID:          "username_length",
@@ -181,15 +181,15 @@ func TestLengthRule(t *testing.T) {
 		Description: "Validates username length",
 		Severity:    "error",
 	})
-	
+
 	// Validate
 	errors := rule.Validate(record)
-	
+
 	// Check results
 	if len(errors) != 3 {
 		t.Errorf("Expected 3 validation errors, got %d", len(errors))
 	}
-	
+
 	// Check specific errors
 	hasA := false
 	hasLong := false
@@ -200,7 +200,7 @@ func TestLengthRule(t *testing.T) {
 			hasLong = true
 		}
 	}
-	
+
 	if !hasA {
 		t.Errorf("Missing error for value 'a'")
 	}
@@ -219,11 +219,11 @@ func TestDateFormatRule(t *testing.T) {
 		"not-a-date",
 	}
 	validBits := []bool{true, true, true, true}
-	
+
 	// Create test record
 	record := createTestRecord(colName, arrow.BinaryTypes.String, values, validBits)
 	defer record.Release()
-	
+
 	// Create date format rule for ISO format
 	rule := NewDateFormatRule(colName, "2006-01-02", RuleMetadata{
 		ID:          "date_format",
@@ -231,21 +231,21 @@ func TestDateFormatRule(t *testing.T) {
 		Description: "Validates date format",
 		Severity:    "error",
 	})
-	
+
 	// Validate
 	errors := rule.Validate(record)
-	
+
 	// Check results
 	if len(errors) != 3 {
 		t.Errorf("Expected 3 validation errors, got %d", len(errors))
 	}
-	
+
 	// Check specific errors
 	errorValues := make(map[string]bool)
 	for _, err := range errors {
 		errorValues[err.Value] = true
 	}
-	
+
 	if !errorValues["01/01/2023"] {
 		t.Errorf("Expected error for '01/01/2023'")
 	}
@@ -260,27 +260,27 @@ func TestDateFormatRule(t *testing.T) {
 func TestYAMLLoader(t *testing.T) {
 	// Load rules from YAML
 	loader := NewRuleLoader()
-	
+
 	// Load rules from the test file
 	err := loader.LoadFromYAML("/Users/meisi/Documents/nessi/test_data/rules/test_rules.yaml")
 	if err != nil {
 		t.Fatalf("Failed to load rules from YAML: %v", err)
 	}
-	
+
 	// Get the validator with loaded rules
 	validator := loader.GetValidator()
 	rules := validator.rules
-	
+
 	// Check for errors
 	if err != nil {
 		t.Fatalf("Failed to load rules from YAML: %v", err)
 	}
-	
+
 	// Check number of rules
 	if len(rules) != 4 {
 		t.Errorf("Expected 4 rules, got %d", len(rules))
 	}
-	
+
 	// Check rule types
 	ruleTypes := make(map[string]bool)
 	for _, rule := range rules {
@@ -295,7 +295,7 @@ func TestYAMLLoader(t *testing.T) {
 			ruleTypes["date_format"] = true
 		}
 	}
-	
+
 	// Verify all rule types are present
 	if !ruleTypes["regex"] {
 		t.Errorf("Missing RegexRule")

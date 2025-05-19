@@ -54,13 +54,13 @@ type BaseExtension struct {
 // PythonExtension represents a Python-based extension
 type PythonExtension struct {
 	BaseExtension
-	process     *exec.Cmd
-	socket      net.Conn
-	scriptPath  string
-	health      *ExtensionHealth
-	stopChan    chan struct{}
-	errorChan   chan error
-	mu          sync.RWMutex
+	process    *exec.Cmd
+	socket     net.Conn
+	scriptPath string
+	health     *ExtensionHealth
+	stopChan   chan struct{}
+	errorChan  chan error
+	mu         sync.RWMutex
 }
 
 // ExtensionHealth tracks extension process health

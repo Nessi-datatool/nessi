@@ -2,8 +2,8 @@ package cli
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"github.com/nessi-dev/nessi/pkg"
+	"github.com/spf13/cobra"
 )
 
 var telemetryCmd = &cobra.Command{

@@ -33,7 +33,7 @@ func (l *BasicAuditLogger) LogAction(user, action, resource, details string) {
 	if !l.enabled {
 		return
 	}
-	
+
 	entry := BasicAuditEntry{
 		Timestamp: time.Now(),
 		User:      user,
@@ -41,7 +41,7 @@ func (l *BasicAuditLogger) LogAction(user, action, resource, details string) {
 		Resource:  resource,
 		Details:   details,
 	}
-	
+
 	// In OSS version, just log to standard logger
 	log.Printf("[AUDIT] User: %s, Action: %s, Resource: %s, Details: %s",
 		entry.User, entry.Action, entry.Resource, entry.Details)

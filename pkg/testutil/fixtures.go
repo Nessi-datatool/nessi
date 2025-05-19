@@ -52,11 +52,11 @@ func (f *TestFixtures) CreateMetricsData(metricsDir, field string, version int, 
 		"timestamp": time.Now().Add(-time.Duration(version) * 24 * time.Hour),
 		"field_metrics": map[string]map[string]float64{
 			field: {
-				"mean":              mean,
-				"standard_dev":      stdDev,
-				"min":              min,
-				"max":              max,
-				"record_count":     100.0,
+				"mean":         mean,
+				"standard_dev": stdDev,
+				"min":          min,
+				"max":          max,
+				"record_count": 100.0,
 			},
 		},
 	}

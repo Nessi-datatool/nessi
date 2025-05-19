@@ -15,28 +15,28 @@ type MetricType string
 const (
 	// NullPercentage is the percentage of null values
 	NullPercentage MetricType = "null_percentage"
-	
+
 	// UniqueRatio is the ratio of unique values
 	UniqueRatio MetricType = "unique_ratio"
-	
+
 	// MinValue is the minimum value
 	MinValue MetricType = "min_value"
-	
+
 	// MaxValue is the maximum value
 	MaxValue MetricType = "max_value"
-	
+
 	// MeanValue is the mean value
 	MeanValue MetricType = "mean_value"
-	
+
 	// MedianValue is the median value
 	MedianValue MetricType = "median_value"
-	
+
 	// StandardDeviation is the standard deviation
 	StandardDeviation MetricType = "standard_deviation"
-	
+
 	// RecordCount is the total number of records
 	RecordCount MetricType = "record_count"
-	
+
 	// InvalidCount is the number of invalid values
 	InvalidCount MetricType = "invalid_count"
 )
@@ -47,13 +47,13 @@ type AlertSeverity string
 const (
 	// InfoAlert is an informational alert
 	InfoAlert AlertSeverity = "info"
-	
+
 	// WarningAlert is a warning alert
 	WarningAlert AlertSeverity = "warning"
-	
+
 	// ErrorAlert is an error alert
 	ErrorAlert AlertSeverity = "error"
-	
+
 	// CriticalAlert is a critical alert
 	CriticalAlert AlertSeverity = "critical"
 )
@@ -62,16 +62,16 @@ const (
 type TrendDeviationOptions struct {
 	// The field to analyze
 	Field string
-	
+
 	// The metric types to compare
 	MetricTypes []MetricType
-	
+
 	// The threshold for alerting (percentage change)
 	Threshold float64
-	
+
 	// The number of previous runs to compare with
 	PreviousRuns int
-	
+
 	// The directory where previous run metrics are stored
 	MetricsDir string
 }
@@ -80,13 +80,13 @@ type TrendDeviationOptions struct {
 type TrendDeviationResult struct {
 	// The field that was analyzed
 	Field string
-	
+
 	// The metrics that were compared
 	Metrics []MetricComparison
-	
+
 	// The alerts that were generated
 	Alerts []TrendAlert
-	
+
 	// The timestamp when the analysis was performed
 	Timestamp time.Time
 }
@@ -95,22 +95,22 @@ type TrendDeviationResult struct {
 type MetricComparison struct {
 	// The metric type
 	MetricType MetricType
-	
+
 	// The current value
 	CurrentValue float64
-	
+
 	// The previous values
 	PreviousValues []float64
-	
+
 	// The percentage change from the previous run
 	PercentageChange float64
-	
+
 	// The average value across all previous runs
 	AverageValue float64
-	
+
 	// The standard deviation across all previous runs
 	StandardDeviation float64
-	
+
 	// The z-score of the current value
 	ZScore float64
 }
@@ -119,25 +119,25 @@ type MetricComparison struct {
 type TrendAlert struct {
 	// The metric type
 	MetricType MetricType
-	
+
 	// The field that triggered the alert
 	Field string
-	
+
 	// The severity of the alert
 	Severity AlertSeverity
-	
+
 	// The message describing the alert
 	Message string
-	
+
 	// The current value
 	CurrentValue float64
-	
+
 	// The previous value
 	PreviousValue float64
-	
+
 	// The percentage change
 	PercentageChange float64
-	
+
 	// The threshold that was exceeded
 	Threshold float64
 }
@@ -146,7 +146,7 @@ type TrendAlert struct {
 type RunMetrics struct {
 	// The timestamp of the run
 	Timestamp time.Time
-	
+
 	// The metrics for each field
 	FieldMetrics map[string]map[string]float64
 }
@@ -160,19 +160,19 @@ func (m *MetadataManager) AnalyzeTrendDeviation(options TrendDeviationOptions) (
 		Alerts:    []TrendAlert{},
 		Timestamp: time.Now(),
 	}
-	
+
 	// Get current metrics
 	currentMetrics, err := m.calculateFieldMetrics(options.Field, options.MetricTypes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate current metrics: %w", err)
 	}
-	
+
 	// Load previous run metrics
 	previousRuns, err := loadPreviousRunMetrics(options.MetricsDir, options.PreviousRuns)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load previous run metrics: %w", err)
 	}
-	
+
 	// Compare metrics and generate alerts
 	for _, metricType := range options.MetricTypes {
 		// Get current value
@@ -180,7 +180,7 @@ func (m *MetadataManager) AnalyzeTrendDeviation(options TrendDeviationOptions) (
 		if !ok {
 			continue // Skip if metric is not available
 		}
-		
+
 		// Get previous values
 		previousValues := []float64{}
 		for _, run := range previousRuns {
@@ -188,25 +188,25 @@ func (m *MetadataManager) AnalyzeTrendDeviation(options TrendDeviationOptions) (
 			if !ok {
 				continue
 			}
-			
+
 			value, ok := fieldMetrics[string(metricType)]
 			if !ok {
 				continue
 			}
-			
+
 			previousValues = append(previousValues, value)
 		}
-		
+
 		// Skip if no previous values
 		if len(previousValues) == 0 {
 			continue
 		}
-		
+
 		// Calculate statistics
 		avgValue := CalculateAverage(previousValues)
 		stdDev := CalculateStandardDeviation(previousValues, avgValue)
 		zScore := CalculateZScore(currentValue, avgValue, stdDev)
-		
+
 		// Calculate percentage change from most recent previous run
 		percentageChange := 0.0
 		if len(previousValues) > 0 {
@@ -215,7 +215,7 @@ func (m *MetadataManager) AnalyzeTrendDeviation(options TrendDeviationOptions) (
 				percentageChange = (currentValue - mostRecentValue) / math.Abs(mostRecentValue) * 100
 			}
 		}
-		
+
 		// Add metric comparison
 		comparison := MetricComparison{
 			MetricType:        metricType,
@@ -227,7 +227,7 @@ func (m *MetadataManager) AnalyzeTrendDeviation(options TrendDeviationOptions) (
 			ZScore:            zScore,
 		}
 		result.Metrics = append(result.Metrics, comparison)
-		
+
 		// Check for significant deviations
 		if math.Abs(percentageChange) >= options.Threshold {
 			// Determine severity based on percentage change
@@ -241,21 +241,21 @@ func (m *MetadataManager) AnalyzeTrendDeviation(options TrendDeviationOptions) (
 			if math.Abs(percentageChange) >= options.Threshold*4 {
 				severity = CriticalAlert
 			}
-			
+
 			// Create alert
 			alert := TrendAlert{
-				MetricType:        metricType,
-				Field:             options.Field,
-				Severity:          severity,
-				Message:           fmt.Sprintf("%s for field '%s' has changed by %.2f%% (threshold: %.2f%%)", metricType, options.Field, percentageChange, options.Threshold),
-				CurrentValue:      currentValue,
-				PreviousValue:     previousValues[0],
-				PercentageChange:  percentageChange,
-				Threshold:         options.Threshold,
+				MetricType:       metricType,
+				Field:            options.Field,
+				Severity:         severity,
+				Message:          fmt.Sprintf("%s for field '%s' has changed by %.2f%% (threshold: %.2f%%)", metricType, options.Field, percentageChange, options.Threshold),
+				CurrentValue:     currentValue,
+				PreviousValue:    previousValues[0],
+				PercentageChange: percentageChange,
+				Threshold:        options.Threshold,
 			}
 			result.Alerts = append(result.Alerts, alert)
 		}
-		
+
 		// Check for significant z-score deviations
 		if math.Abs(zScore) >= 2.0 && len(previousValues) >= 3 {
 			// Determine severity based on z-score
@@ -269,28 +269,28 @@ func (m *MetadataManager) AnalyzeTrendDeviation(options TrendDeviationOptions) (
 			if math.Abs(zScore) >= 4.0 {
 				severity = CriticalAlert
 			}
-			
+
 			// Create alert
 			alert := TrendAlert{
-				MetricType:        metricType,
-				Field:             options.Field,
-				Severity:          severity,
-				Message:           fmt.Sprintf("%s for field '%s' has a z-score of %.2f (current: %.2f, avg: %.2f, std: %.2f)", metricType, options.Field, zScore, currentValue, avgValue, stdDev),
-				CurrentValue:      currentValue,
-				PreviousValue:     avgValue,
-				PercentageChange:  percentageChange,
-				Threshold:         options.Threshold,
+				MetricType:       metricType,
+				Field:            options.Field,
+				Severity:         severity,
+				Message:          fmt.Sprintf("%s for field '%s' has a z-score of %.2f (current: %.2f, avg: %.2f, std: %.2f)", metricType, options.Field, zScore, currentValue, avgValue, stdDev),
+				CurrentValue:     currentValue,
+				PreviousValue:    avgValue,
+				PercentageChange: percentageChange,
+				Threshold:        options.Threshold,
 			}
 			result.Alerts = append(result.Alerts, alert)
 		}
 	}
-	
+
 	// Save current metrics
 	err = saveCurrentRunMetrics(options.MetricsDir, options.Field, currentMetrics)
 	if err != nil {
 		return nil, fmt.Errorf("failed to save current run metrics: %w", err)
 	}
-	
+
 	return result, nil
 }
 
@@ -301,7 +301,7 @@ func (m *MetadataManager) calculateFieldMetrics(field string, metricTypes []Metr
 	if err != nil {
 		return nil, fmt.Errorf("failed to read table metadata: %w", err)
 	}
-	
+
 	// Check if the field exists in the schema
 	fieldExists := false
 	for _, schemaField := range table.Schema.Fields() {
@@ -310,26 +310,26 @@ func (m *MetadataManager) calculateFieldMetrics(field string, metricTypes []Metr
 			break
 		}
 	}
-	
+
 	if !fieldExists {
 		return nil, fmt.Errorf("field '%s' does not exist in the table schema", field)
 	}
-	
+
 	// Initialize metrics
 	metrics := make(map[string]float64)
-	
+
 	// Read all parquet files and calculate metrics
 	allValues := []interface{}{}
 	nullCount := 0
 	uniqueValues := make(map[interface{}]bool)
-	
+
 	for _, file := range table.Files {
 		// Read the parquet file
 		records, err := m.ReadParquetFile(file)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read parquet file '%s': %w", file, err)
 		}
-		
+
 		// Process each record
 		for _, record := range records {
 			// Get the field value
@@ -338,23 +338,23 @@ func (m *MetadataManager) calculateFieldMetrics(field string, metricTypes []Metr
 				nullCount++
 				continue
 			}
-			
+
 			// Add to all values
 			allValues = append(allValues, value)
-			
+
 			// Add to unique values
 			uniqueValues[value] = true
 		}
 	}
-	
+
 	// Calculate metrics
 	totalCount := len(allValues) + nullCount
-	
+
 	// Record count
 	if contains(metricTypes, RecordCount) {
 		metrics[string(RecordCount)] = float64(totalCount)
 	}
-	
+
 	// Null percentage
 	if contains(metricTypes, NullPercentage) {
 		if totalCount > 0 {
@@ -363,7 +363,7 @@ func (m *MetadataManager) calculateFieldMetrics(field string, metricTypes []Metr
 			metrics[string(NullPercentage)] = 0
 		}
 	}
-	
+
 	// Unique ratio
 	if contains(metricTypes, UniqueRatio) {
 		if len(allValues) > 0 {
@@ -372,7 +372,7 @@ func (m *MetadataManager) calculateFieldMetrics(field string, metricTypes []Metr
 			metrics[string(UniqueRatio)] = 0
 		}
 	}
-	
+
 	// Numeric metrics
 	numericValues := []float64{}
 	for _, value := range allValues {
@@ -390,12 +390,12 @@ func (m *MetadataManager) calculateFieldMetrics(field string, metricTypes []Metr
 			numericValues = append(numericValues, v)
 		}
 	}
-	
+
 	// Skip numeric metrics if no numeric values
 	if len(numericValues) == 0 {
 		return metrics, nil
 	}
-	
+
 	// Min value
 	if contains(metricTypes, MinValue) {
 		min := numericValues[0]
@@ -406,7 +406,7 @@ func (m *MetadataManager) calculateFieldMetrics(field string, metricTypes []Metr
 		}
 		metrics[string(MinValue)] = min
 	}
-	
+
 	// Max value
 	if contains(metricTypes, MaxValue) {
 		max := numericValues[0]
@@ -417,23 +417,23 @@ func (m *MetadataManager) calculateFieldMetrics(field string, metricTypes []Metr
 		}
 		metrics[string(MaxValue)] = max
 	}
-	
+
 	// Mean value
 	if contains(metricTypes, MeanValue) {
 		metrics[string(MeanValue)] = CalculateAverage(numericValues)
 	}
-	
+
 	// Median value
 	if contains(metricTypes, MedianValue) {
 		metrics[string(MedianValue)] = CalculateMedian(numericValues)
 	}
-	
+
 	// Standard deviation
 	if contains(metricTypes, StandardDeviation) {
 		avg := CalculateAverage(numericValues)
 		metrics[string(StandardDeviation)] = CalculateStandardDeviation(numericValues, avg)
 	}
-	
+
 	return metrics, nil
 }
 
@@ -444,13 +444,13 @@ func loadPreviousRunMetrics(metricsDir string, maxRuns int) ([]RunMetrics, error
 	if err != nil {
 		return nil, fmt.Errorf("failed to create metrics directory: %w", err)
 	}
-	
+
 	// Get all metric files
 	files, err := filepath.Glob(filepath.Join(metricsDir, "metrics_*.json"))
 	if err != nil {
 		return nil, fmt.Errorf("failed to list metric files: %w", err)
 	}
-	
+
 	// Sort files by modification time (newest first)
 	for i := 0; i < len(files); i++ {
 		for j := i + 1; j < len(files); j++ {
@@ -458,23 +458,23 @@ func loadPreviousRunMetrics(metricsDir string, maxRuns int) ([]RunMetrics, error
 			if err != nil {
 				continue
 			}
-			
+
 			fileInfoJ, err := os.Stat(files[j])
 			if err != nil {
 				continue
 			}
-			
+
 			if fileInfoI.ModTime().Before(fileInfoJ.ModTime()) {
 				files[i], files[j] = files[j], files[i]
 			}
 		}
 	}
-	
+
 	// Limit to maxRuns
 	if len(files) > maxRuns {
 		files = files[:maxRuns]
 	}
-	
+
 	// Load metrics from each file
 	runs := []RunMetrics{}
 	for _, file := range files {
@@ -482,16 +482,16 @@ func loadPreviousRunMetrics(metricsDir string, maxRuns int) ([]RunMetrics, error
 		if err != nil {
 			continue
 		}
-		
+
 		var run RunMetrics
 		err = json.Unmarshal(data, &run)
 		if err != nil {
 			continue
 		}
-		
+
 		runs = append(runs, run)
 	}
-	
+
 	return runs, nil
 }
 
@@ -502,28 +502,28 @@ func saveCurrentRunMetrics(metricsDir string, field string, metrics map[string]f
 	if err != nil {
 		return fmt.Errorf("failed to create metrics directory: %w", err)
 	}
-	
+
 	// Create run metrics
 	run := RunMetrics{
-		Timestamp:    time.Now(),
+		Timestamp: time.Now(),
 		FieldMetrics: map[string]map[string]float64{
 			field: metrics,
 		},
 	}
-	
+
 	// Marshal to JSON
 	data, err := json.MarshalIndent(run, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal run metrics to JSON: %w", err)
 	}
-	
+
 	// Write to file
 	filename := filepath.Join(metricsDir, fmt.Sprintf("metrics_%s.json", time.Now().Format("20060102_150405")))
 	err = os.WriteFile(filename, data, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to write run metrics to file: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -532,12 +532,12 @@ func CalculateAverage(values []float64) float64 {
 	if len(values) == 0 {
 		return 0
 	}
-	
+
 	sum := 0.0
 	for _, value := range values {
 		sum += value
 	}
-	
+
 	return sum / float64(len(values))
 }
 
@@ -546,7 +546,7 @@ func CalculateMedian(values []float64) float64 {
 	if len(values) == 0 {
 		return 0
 	}
-	
+
 	// Sort values
 	sortedValues := make([]float64, len(values))
 	copy(sortedValues, values)
@@ -557,7 +557,7 @@ func CalculateMedian(values []float64) float64 {
 			}
 		}
 	}
-	
+
 	// Calculate median
 	if len(sortedValues)%2 == 0 {
 		// Even number of values
@@ -575,13 +575,13 @@ func CalculateStandardDeviation(values []float64, avg float64) float64 {
 	if len(values) <= 1 {
 		return 0
 	}
-	
+
 	sumSquaredDiff := 0.0
 	for _, value := range values {
 		diff := value - avg
 		sumSquaredDiff += diff * diff
 	}
-	
+
 	return math.Sqrt(sumSquaredDiff / float64(len(values)-1))
 }
 
@@ -590,7 +590,7 @@ func CalculateZScore(value, avg, stdDev float64) float64 {
 	if stdDev == 0 {
 		return 0
 	}
-	
+
 	return (value - avg) / stdDev
 }
 
@@ -641,13 +641,13 @@ func (s *SimpleTrendAnalyzer) AnalyzeTrendDeviation(field string, runNumber int)
 	if !ok {
 		return nil, fmt.Errorf("field '%s' does not exist", field)
 	}
-	
+
 	// Create a copy of the metrics and modify them based on the run number
 	currentMetrics := make(map[string]float64)
 	for k, v := range fieldMetrics {
 		currentMetrics[k] = v
 	}
-	
+
 	// Modify metrics based on run number
 	switch {
 	case field == "sales" && runNumber == 1:
@@ -671,12 +671,12 @@ func (s *SimpleTrendAnalyzer) AnalyzeTrendDeviation(field string, runNumber int)
 		// Decrease max value by 30%
 		currentMetrics[string(MaxValue)] *= 0.7
 	}
-	
+
 	// Create metrics directory if it doesn't exist
 	if err := os.MkdirAll(s.MetricsDir, 0755); err != nil {
 		return nil, fmt.Errorf("failed to create metrics directory: %w", err)
 	}
-	
+
 	// Create previous runs data
 	previousRuns := []RunMetrics{}
 	for i := 0; i < runNumber; i++ {
@@ -686,12 +686,12 @@ func (s *SimpleTrendAnalyzer) AnalyzeTrendDeviation(field string, runNumber int)
 				field: make(map[string]float64),
 			},
 		}
-		
+
 		// Copy original metrics
 		for k, v := range s.Metrics[field] {
 			prevRunMetrics.FieldMetrics[field][k] = v
 		}
-		
+
 		// Modify based on run number
 		if field == "sales" && i >= 1 {
 			// Increase mean value by 10% for each run
@@ -699,17 +699,17 @@ func (s *SimpleTrendAnalyzer) AnalyzeTrendDeviation(field string, runNumber int)
 			// Increase max value by 10% for each run
 			prevRunMetrics.FieldMetrics[field][string(MaxValue)] *= math.Pow(1.1, float64(i))
 		}
-		
+
 		if field == "revenue" && i >= 2 {
 			// Increase mean value by 20% for run 2
 			prevRunMetrics.FieldMetrics[field][string(MeanValue)] *= 1.2
 			// Increase max value by 20% for run 2
 			prevRunMetrics.FieldMetrics[field][string(MaxValue)] *= 1.2
 		}
-		
+
 		previousRuns = append(previousRuns, prevRunMetrics)
 	}
-	
+
 	// Create the result
 	result := &TrendDeviationResult{
 		Field:     field,
@@ -717,22 +717,22 @@ func (s *SimpleTrendAnalyzer) AnalyzeTrendDeviation(field string, runNumber int)
 		Metrics:   []MetricComparison{},
 		Alerts:    []TrendAlert{},
 	}
-	
+
 	// If no previous runs, return empty result
 	if len(previousRuns) == 0 {
 		return result, nil
 	}
-	
+
 	// Compare metrics with previous runs
 	threshold := 10.0 // Default threshold
-	
+
 	// Analyze each metric
 	for metricType, currentValue := range currentMetrics {
 		// Skip record count for now
 		if metricType == string(RecordCount) {
 			continue
 		}
-		
+
 		// Get previous values
 		previousValues := []float64{}
 		for _, prevRun := range previousRuns {
@@ -742,15 +742,15 @@ func (s *SimpleTrendAnalyzer) AnalyzeTrendDeviation(field string, runNumber int)
 				}
 			}
 		}
-		
+
 		// Skip if no previous values
 		if len(previousValues) == 0 {
 			continue
 		}
-		
+
 		// Calculate percentage change from most recent previous run
 		percentageChange := ((currentValue - previousValues[0]) / previousValues[0]) * 100
-		
+
 		// Create metric comparison
 		metricComparison := MetricComparison{
 			MetricType:       MetricType(metricType),
@@ -758,20 +758,20 @@ func (s *SimpleTrendAnalyzer) AnalyzeTrendDeviation(field string, runNumber int)
 			PreviousValues:   previousValues,
 			PercentageChange: percentageChange,
 		}
-		
+
 		// Calculate statistics if we have multiple previous values
 		if len(previousValues) > 1 {
 			avgValue := CalculateAverage(previousValues)
 			stdDev := CalculateStandardDeviation(previousValues, avgValue)
 			zScore := CalculateZScore(currentValue, avgValue, stdDev)
-			
+
 			metricComparison.AverageValue = avgValue
 			metricComparison.StandardDeviation = stdDev
 			metricComparison.ZScore = zScore
 		}
-		
+
 		result.Metrics = append(result.Metrics, metricComparison)
-		
+
 		// Check if we need to generate an alert
 		if math.Abs(percentageChange) >= threshold {
 			// Determine severity based on percentage change
@@ -782,27 +782,27 @@ func (s *SimpleTrendAnalyzer) AnalyzeTrendDeviation(field string, runNumber int)
 			if math.Abs(percentageChange) >= 30.0 {
 				severity = ErrorAlert
 			}
-			
+
 			// Create alert message
-			message := fmt.Sprintf("%s for field '%s' has changed by %.2f%% (threshold: %.2f%%)", 
+			message := fmt.Sprintf("%s for field '%s' has changed by %.2f%% (threshold: %.2f%%)",
 				metricType, field, percentageChange, threshold)
-			
+
 			// Add z-score information if available
 			if len(previousValues) > 1 && math.Abs(metricComparison.ZScore) > 2.0 {
 				message += fmt.Sprintf(" (z-score: %.2f)", metricComparison.ZScore)
 			}
-			
+
 			// Create alert
 			alert := TrendAlert{
 				MetricType: MetricType(metricType),
 				Severity:   severity,
 				Message:    message,
 			}
-			
+
 			result.Alerts = append(result.Alerts, alert)
 		}
 	}
-	
+
 	return result, nil
 }
 

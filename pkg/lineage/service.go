@@ -13,11 +13,11 @@ import (
 
 // LineageService provides high-level operations for data lineage
 type LineageService struct {
-	storage           model.LineageStorage
-	renderer          *visualization.GraphRenderer
-	diffGenerator     *comparison.DiffGenerator
-	diffAnalyzer      *comparison.DiffAnalyzer
-	catalogManager    *types.CatalogManager
+	storage        model.LineageStorage
+	renderer       *visualization.GraphRenderer
+	diffGenerator  *comparison.DiffGenerator
+	diffAnalyzer   *comparison.DiffAnalyzer
+	catalogManager *types.CatalogManager
 }
 
 // NewLineageService creates a new lineage service
@@ -39,11 +39,11 @@ func NewLineageService(
 func (s *LineageService) CreateGraph(ctx context.Context, name, description string) (*model.LineageGraph, error) {
 	graph := model.NewLineageGraph(name)
 	graph.Description = description
-	
+
 	if err := s.storage.SaveGraph(ctx, graph); err != nil {
 		return nil, fmt.Errorf("failed to save graph: %w", err)
 	}
-	
+
 	return graph, nil
 }
 
@@ -68,13 +68,13 @@ func (s *LineageService) AddNode(ctx context.Context, graphID string, node *mode
 	if err != nil {
 		return fmt.Errorf("failed to get graph: %w", err)
 	}
-	
+
 	graph.AddNode(node)
-	
+
 	if err := s.storage.SaveGraph(ctx, graph); err != nil {
 		return fmt.Errorf("failed to save graph: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -84,13 +84,13 @@ func (s *LineageService) AddEdge(ctx context.Context, graphID string, edge *mode
 	if err != nil {
 		return fmt.Errorf("failed to get graph: %w", err)
 	}
-	
+
 	graph.AddEdge(edge)
-	
+
 	if err := s.storage.SaveGraph(ctx, graph); err != nil {
 		return fmt.Errorf("failed to save graph: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -100,13 +100,13 @@ func (s *LineageService) CreateSnapshot(ctx context.Context, graphID, comment st
 	if err != nil {
 		return nil, fmt.Errorf("failed to get graph: %w", err)
 	}
-	
+
 	snapshot := model.NewLineageSnapshot(graph, comment)
-	
+
 	if err := s.storage.SaveSnapshot(ctx, snapshot); err != nil {
 		return nil, fmt.Errorf("failed to save snapshot: %w", err)
 	}
-	
+
 	return snapshot, nil
 }
 
@@ -131,18 +131,18 @@ func (s *LineageService) CompareSnapshots(ctx context.Context, snapshotID1, snap
 	if err != nil {
 		return nil, fmt.Errorf("failed to get snapshot 1: %w", err)
 	}
-	
+
 	snapshot2, err := s.storage.GetSnapshot(ctx, snapshotID2)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get snapshot 2: %w", err)
 	}
-	
+
 	diff := s.diffGenerator.GenerateDiff(snapshot1.Graph, snapshot2.Graph)
-	
+
 	if err := s.storage.SaveDiff(ctx, diff); err != nil {
 		return nil, fmt.Errorf("failed to save diff: %w", err)
 	}
-	
+
 	return diff, nil
 }
 
@@ -153,21 +153,21 @@ func (s *LineageService) AnalyzeImpact(ctx context.Context, diffID string) (*com
 	if err != nil {
 		return nil, fmt.Errorf("invalid diff ID: %w", err)
 	}
-	
+
 	diff, err := s.storage.GetDiff(ctx, oldGraphID, newGraphID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get diff: %w", err)
 	}
-	
+
 	// Get the new graph
 	graph, err := s.storage.GetGraph(ctx, newGraphID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get graph: %w", err)
 	}
-	
+
 	// Analyze impact
 	impact := s.diffAnalyzer.AnalyzeImpact(diff, graph)
-	
+
 	return impact, nil
 }
 
@@ -184,7 +184,7 @@ func (s *LineageService) RenderGraph(ctx context.Context, graphID string, option
 	if err != nil {
 		return nil, fmt.Errorf("failed to get graph: %w", err)
 	}
-	
+
 	return s.renderer.RenderGraph(graph, options)
 }
 
@@ -195,24 +195,24 @@ func (s *LineageService) ImportFromCatalog(ctx context.Context, catalogName, dat
 	if err != nil {
 		return nil, fmt.Errorf("failed to get catalog: %w", err)
 	}
-	
+
 	// Get lineage information from the catalog
 	lineageInfo, err := cat.GetTableLineage(ctx, database, table)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get lineage information: %w", err)
 	}
-	
+
 	// Create a new lineage graph
 	graph := model.NewLineageGraph(fmt.Sprintf("%s.%s.%s", catalogName, database, table))
 	graph.Description = fmt.Sprintf("Lineage for %s.%s.%s", catalogName, database, table)
-	
+
 	// Add the target table as a node
 	targetNode := model.NewNode(table, model.NodeTypeTable)
 	targetNode.Catalog = catalogName
 	targetNode.Database = database
 	targetNode.Table = table
 	graph.AddNode(targetNode)
-	
+
 	// Add upstream nodes and edges
 	for _, ref := range lineageInfo.Upstream {
 		upstreamNode := model.NewNode(ref.Table, model.NodeTypeTable)
@@ -221,11 +221,11 @@ func (s *LineageService) ImportFromCatalog(ctx context.Context, catalogName, dat
 		upstreamNode.Table = ref.Table
 		upstreamNode.Properties = ref.Properties
 		graph.AddNode(upstreamNode)
-		
+
 		edge := model.NewEdge(upstreamNode.ID, targetNode.ID, model.EdgeTypeRead)
 		graph.AddEdge(edge)
 	}
-	
+
 	// Add downstream nodes and edges
 	for _, ref := range lineageInfo.Downstream {
 		downstreamNode := model.NewNode(ref.Table, model.NodeTypeTable)
@@ -234,16 +234,16 @@ func (s *LineageService) ImportFromCatalog(ctx context.Context, catalogName, dat
 		downstreamNode.Table = ref.Table
 		downstreamNode.Properties = ref.Properties
 		graph.AddNode(downstreamNode)
-		
+
 		edge := model.NewEdge(targetNode.ID, downstreamNode.ID, model.EdgeTypeWrite)
 		graph.AddEdge(edge)
 	}
-	
+
 	// Save the graph
 	if err := s.storage.SaveGraph(ctx, graph); err != nil {
 		return nil, fmt.Errorf("failed to save graph: %w", err)
 	}
-	
+
 	return graph, nil
 }
 
@@ -253,9 +253,9 @@ func (s *LineageService) ExportLineage(ctx context.Context, graphID string, form
 	if err != nil {
 		return nil, fmt.Errorf("failed to get graph: %w", err)
 	}
-	
+
 	options := visualization.NewDefaultVisualizationOptions()
-	
+
 	switch format {
 	case "json":
 		options.Format = visualization.FormatJSON
@@ -268,6 +268,6 @@ func (s *LineageService) ExportLineage(ctx context.Context, graphID string, form
 	default:
 		return nil, fmt.Errorf("unsupported format: %s", format)
 	}
-	
+
 	return s.renderer.RenderGraph(graph, options)
 }

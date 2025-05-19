@@ -169,7 +169,7 @@ func (r *ProfileResults) HasFailures() bool {
 		if result.RowCount == 0 {
 			return true
 		}
-		
+
 		// Check for columns with 100% null values
 		for _, stats := range result.ColumnProfiles {
 			if stats.NullPercent == 100 {
@@ -268,7 +268,7 @@ func (p *Profiler) profileTable(model *DBTModel, tablePath string) (*ProfileResu
 func parseDBTManifest(dbtProjectPath string) (*DBTManifest, error) {
 	// Reuse the implementation from validator.go
 	manifestPath := filepath.Join(dbtProjectPath, "target", "manifest.json")
-	
+
 	// Check if manifest file exists
 	if _, err := os.Stat(manifestPath); os.IsNotExist(err) {
 		return nil, fmt.Errorf("dbt manifest file not found at %s, run 'dbt compile' first", manifestPath)

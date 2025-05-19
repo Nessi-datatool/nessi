@@ -116,7 +116,7 @@ func (o *DeltaOperations) findVersionByTimestamp(timestamp time.Time) (int64, er
 // createCheckpoint creates a checkpoint at the specified version
 func (o *DeltaOperations) createCheckpoint(version int64) error {
 	checkpointPath := filepath.Join(o.connector.TablePath, "_delta_log", fmt.Sprintf("%d.checkpoint.parquet", version))
-	
+
 	// Read all actions up to the target version
 	var actions []Action
 	for v := int64(0); v <= version; v++ {

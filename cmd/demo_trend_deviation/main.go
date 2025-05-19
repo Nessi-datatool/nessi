@@ -64,7 +64,7 @@ func main() {
 
 	// Run 3: Increase sales by another 10% and revenue by 20%
 	fmt.Println("Run 3: Increasing sales by another 10% and revenue by 20%...")
-	
+
 	// First check sales
 	result3Sales, err := analyzer.AnalyzeTrendDeviation("sales", 2)
 	if err != nil {
@@ -118,7 +118,7 @@ func main() {
 func printTrendDeviationResult(result *datalake.TrendDeviationResult) {
 	fmt.Printf("Field: %s\n", result.Field)
 	fmt.Printf("Timestamp: %s\n", result.Timestamp.Format(time.RFC3339))
-	
+
 	// Print metrics
 	fmt.Printf("Metrics (%d):\n", len(result.Metrics))
 	for _, metric := range result.Metrics {
@@ -135,7 +135,7 @@ func printTrendDeviationResult(result *datalake.TrendDeviationResult) {
 		}
 		fmt.Println()
 	}
-	
+
 	// Print alerts
 	if len(result.Alerts) > 0 {
 		fmt.Printf("Alerts (%d):\n", len(result.Alerts))

@@ -109,7 +109,7 @@ func TestFieldMetadata(t *testing.T) {
 		// First add metadata
 		updatedSchema, err := AddFieldMetadata(schema, "id", "Initial description", []string{"tag1"}, map[string]string{"prop1": "val1"})
 		require.NoError(t, err)
-		
+
 		// Now update the metadata
 		updatedSchema, err = AddFieldMetadata(updatedSchema, "id", "Updated description", []string{"tag1", "tag2"}, map[string]string{"prop1": "updated", "prop2": "val2"})
 		require.NoError(t, err)

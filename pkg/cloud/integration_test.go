@@ -89,11 +89,11 @@ func TestCloudIntegration(t *testing.T) {
 	// Set up mock expectations for listing objects
 	mockProvider.On("ListObjects", mock.Anything, bucket, tablePath+"/_delta_log/_last_checkpoint").
 		Return([]common.ObjectInfo{{Key: tablePath + "/_delta_log/_last_checkpoint"}}, nil)
-	
+
 	// Add mock for listing log files
 	mockProvider.On("ListObjects", mock.Anything, bucket, tablePath+"/_delta_log/00000000000000000000.json").
 		Return([]common.ObjectInfo{{Key: tablePath + "/_delta_log/00000000000000000000.json"}}, nil)
-	
+
 	mockProvider.On("ListObjects", mock.Anything, bucket, tablePath+"/_delta_log/00000000000000000001.json").
 		Return([]common.ObjectInfo{{Key: tablePath + "/_delta_log/00000000000000000001.json"}}, nil)
 

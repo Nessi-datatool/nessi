@@ -26,30 +26,30 @@ const (
 
 // MetricValue represents a metric value
 type MetricValue struct {
-	Value     float64            `json:"value"`
-	Labels    map[string]string  `json:"labels"`
-	Timestamp time.Time          `json:"timestamp"`
+	Value     float64           `json:"value"`
+	Labels    map[string]string `json:"labels"`
+	Timestamp time.Time         `json:"timestamp"`
 }
 
 // MetricSeries represents a time series of metric values
 type MetricSeries struct {
-	Name        string            `json:"name"`
-	Description string            `json:"description"`
-	Type        MetricType        `json:"type"`
-	Values      []MetricValue     `json:"values"`
+	Name        string        `json:"name"`
+	Description string        `json:"description"`
+	Type        MetricType    `json:"type"`
+	Values      []MetricValue `json:"values"`
 }
 
 // MetricSnapshot represents a snapshot of metrics at a point in time
 type MetricSnapshot struct {
-	Timestamp time.Time                `json:"timestamp"`
-	Metrics   map[string]MetricSeries  `json:"metrics"`
+	Timestamp time.Time               `json:"timestamp"`
+	Metrics   map[string]MetricSeries `json:"metrics"`
 }
 
 // RetentionConfig represents the configuration for metric retention
 type RetentionConfig struct {
-	Enabled         bool          `json:"enabled"`
-	StoragePath     string        `json:"storage_path"`
-	RetentionPeriod time.Duration `json:"retention_period"`
+	Enabled          bool          `json:"enabled"`
+	StoragePath      string        `json:"storage_path"`
+	RetentionPeriod  time.Duration `json:"retention_period"`
 	SnapshotInterval time.Duration `json:"snapshot_interval"`
 }
 

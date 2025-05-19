@@ -20,7 +20,7 @@ func TestAuthHandlers(t *testing.T) {
 	tempFile, err := os.CreateTemp("", "dashboard-auth-*.json")
 	require.NoError(t, err)
 	defer os.Remove(tempFile.Name())
-	
+
 	// Initialize the file with an empty JSON array
 	_, err = tempFile.Write([]byte("[]"))
 	require.NoError(t, err)
@@ -43,7 +43,7 @@ func TestAuthHandlers(t *testing.T) {
 	// Create dashboard
 	dashboard := &Dashboard{
 		authManager: am,
-		templates: template.Must(template.New("login.html").Parse(`<html><body><form><input type="text" name="username" placeholder="Username"><input type="password" name="password" placeholder="Password"></form></body></html>`)),
+		templates:   template.Must(template.New("login.html").Parse(`<html><body><form><input type="text" name="username" placeholder="Username"><input type="password" name="password" placeholder="Password"></form></body></html>`)),
 	}
 
 	// Create a test user
@@ -172,12 +172,12 @@ func TestAuthHandlers(t *testing.T) {
 		req := httptest.NewRequest("GET", "/api/users", nil)
 		req.Header.Set("Authorization", "Bearer "+adminToken)
 		w := httptest.NewRecorder()
-		
+
 		// Skip this test as handleUsers is not implemented
 		// dashboard.handleUsers(w, req)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("[]"))
-		
+
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		// Test user creation
@@ -194,11 +194,11 @@ func TestAuthHandlers(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", "Bearer "+adminToken)
 		w = httptest.NewRecorder()
-		
+
 		// Skip this test as handleUsers is not implemented
 		// dashboard.handleUsers(w, req)
 		w.WriteHeader(http.StatusCreated)
-		
+
 		assert.Equal(t, http.StatusCreated, w.Code)
 
 		// Create the user manually for the next tests
@@ -220,11 +220,11 @@ func TestAuthHandlers(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", "Bearer "+adminToken)
 		w = httptest.NewRecorder()
-		
+
 		// Skip this test as handleUser is not implemented
 		// dashboard.handleUser(w, req)
 		w.WriteHeader(http.StatusOK)
-		
+
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		// Update the user manually
@@ -242,11 +242,11 @@ func TestAuthHandlers(t *testing.T) {
 		req = httptest.NewRequest("DELETE", "/api/users/newuser", nil)
 		req.Header.Set("Authorization", "Bearer "+adminToken)
 		w = httptest.NewRecorder()
-		
+
 		// Skip this test as handleUser is not implemented
 		// dashboard.handleUser(w, req)
 		w.WriteHeader(http.StatusOK)
-		
+
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		// Delete the user manually

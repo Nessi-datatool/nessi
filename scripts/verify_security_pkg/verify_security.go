@@ -31,7 +31,7 @@ func main() {
 		CertFile: certFile,
 		KeyFile:  keyFile,
 	}
-	
+
 	certManager := security.NewCertManager(sslConfig)
 	tlsConfig, err := certManager.GetTLSConfig()
 	if err != nil {
@@ -39,14 +39,14 @@ func main() {
 	} else if tlsConfig != nil {
 		fmt.Println("✅ Successfully generated TLS config")
 	}
-	
+
 	// Check if certificate files were created
 	if _, err := os.Stat(certFile); err == nil {
 		fmt.Println("✅ Certificate file created successfully")
 	} else {
 		fmt.Printf("❌ Certificate file not created: %v\n", err)
 	}
-	
+
 	if _, err := os.Stat(keyFile); err == nil {
 		fmt.Println("✅ Key file created successfully")
 	} else {

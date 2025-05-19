@@ -43,7 +43,7 @@ func parseParquet(r io.ReadCloser) (*ParsedData, error) {
 
 	// Initialize result with empty data
 	result := &ParsedData{
-		Data:  make([]map[string]interface{}, 0),
+		Data: make([]map[string]interface{}, 0),
 		Schema: &DeltaSchema{
 			Fields: []DeltaField{
 				{Name: "placeholder", Type: "string", Nullable: true},
@@ -106,22 +106,22 @@ func extractArrowValue(col arrow.Array, rowIdx int64) interface{} {
 // parseJSON parses JSON format data from an io.ReadCloser
 func parseJSON(r io.ReadCloser) (*ParsedData, error) {
 	var rawData []map[string]interface{}
-	
+
 	// Decode JSON data
 	decoder := json.NewDecoder(r)
 	if err := decoder.Decode(&rawData); err != nil {
 		return nil, fmt.Errorf("failed to decode JSON: %w", err)
 	}
-	
+
 	// Initialize result
 	result := &ParsedData{
-		Data:  rawData,
+		Data: rawData,
 		Schema: &DeltaSchema{
 			Fields: []DeltaField{},
 		},
 		Count: len(rawData),
 	}
-	
+
 	// Extract schema information from the first record
 	if len(rawData) > 0 {
 		for key, value := range rawData[0] {
@@ -133,7 +133,7 @@ func parseJSON(r io.ReadCloser) (*ParsedData, error) {
 			})
 		}
 	}
-	
+
 	return result, nil
 }
 
@@ -142,7 +142,7 @@ func inferJSONType(value interface{}) string {
 	if value == nil {
 		return "null"
 	}
-	
+
 	switch v := value.(type) {
 	case bool:
 		return "boolean"
@@ -175,13 +175,13 @@ func isDateString(s string) bool {
 		time.RFC3339,
 		time.RFC3339Nano,
 	}
-	
+
 	for _, format := range dateFormats {
 		if _, err := time.Parse(format, s); err == nil {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -189,71 +189,71 @@ func isDateString(s string) bool {
 func parseCSV(r io.ReadCloser) (*ParsedData, error) {
 	// For simplicity, we'll implement a basic CSV parser
 	// In a production environment, you might want to use a more robust CSV parser
-	
+
 	// Read all data
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read CSV data: %w", err)
 	}
-	
+
 	// Split into lines
 	lines := strings.Split(string(data), "\n")
 	if len(lines) < 2 {
 		return nil, fmt.Errorf("CSV must have at least a header row and one data row")
 	}
-	
+
 	// Parse header
 	header := strings.Split(lines[0], ",")
 	for i, h := range header {
 		header[i] = strings.TrimSpace(h)
 	}
-	
+
 	// Initialize result
 	result := &ParsedData{
-		Data:   make([]map[string]interface{}, 0, len(lines)-1),
+		Data: make([]map[string]interface{}, 0, len(lines)-1),
 		Schema: &DeltaSchema{
 			Fields: []DeltaField{},
 		},
-		Count:  len(lines) - 1,
+		Count: len(lines) - 1,
 	}
-	
+
 	// Create schema fields based on header
 	schemaFields := make(map[string]string)
-	
+
 	// Process data rows
 	for i := 1; i < len(lines); i++ {
 		line := strings.TrimSpace(lines[i])
 		if line == "" {
 			continue // Skip empty lines
 		}
-		
+
 		// Split the line into fields
 		fields := strings.Split(line, ",")
-		
+
 		// Create a record
 		record := make(map[string]interface{})
-		
+
 		// Map fields to header
 		for j, field := range fields {
 			if j >= len(header) {
 				break // Skip extra fields
 			}
-			
+
 			field = strings.TrimSpace(field)
-			
+
 			// Try to convert to appropriate type
 			value := inferCSVValue(field)
 			record[header[j]] = value
-			
+
 			// For the first row, infer schema
 			if i == 1 {
 				schemaFields[header[j]] = inferJSONType(value)
 			}
 		}
-		
+
 		result.Data = append(result.Data, record)
 	}
-	
+
 	// Convert schema map to DeltaSchema
 	for field, dataType := range schemaFields {
 		result.Schema.Fields = append(result.Schema.Fields, DeltaField{
@@ -262,7 +262,7 @@ func parseCSV(r io.ReadCloser) (*ParsedData, error) {
 			Nullable: true,
 		})
 	}
-	
+
 	return result, nil
 }
 
@@ -272,22 +272,22 @@ func inferCSVValue(s string) interface{} {
 	if s == "" || strings.ToLower(s) == "null" || strings.ToLower(s) == "na" || strings.ToLower(s) == "n/a" {
 		return nil
 	}
-	
+
 	// Try to parse as integer
 	if i, err := parseInt(s); err == nil {
 		return i
 	}
-	
+
 	// Try to parse as float
 	if f, err := parseFloat(s); err == nil {
 		return f
 	}
-	
+
 	// Try to parse as boolean
 	if b, err := parseBoolean(s); err == nil {
 		return b
 	}
-	
+
 	// Default to string
 	return s
 }

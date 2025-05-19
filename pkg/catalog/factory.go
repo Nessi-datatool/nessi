@@ -31,7 +31,7 @@ func (f *CatalogFactory) CreateCatalog(catalogType CatalogType) (DataCatalog, er
 			log.Printf("Warning: Failed to load Databricks configuration: %v", err)
 			return nil, fmt.Errorf("failed to load Databricks configuration: %w", err)
 		}
-		
+
 		return NewDatabricksCatalog(config.BaseURL, config.Token, config.WorkspaceID, config.DefaultSchema)
 	default:
 		return nil, fmt.Errorf("unsupported catalog type: %s", catalogType)

@@ -9,7 +9,7 @@ func CreateOSSTestMonitor(metricsPort int) *monitoring.Monitor {
 	options := monitoring.MonitorOptions{
 		MetricsPort: metricsPort,
 	}
-	
+
 	monitor, _ := monitoring.New(options)
 	return monitor
 }

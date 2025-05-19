@@ -94,10 +94,10 @@ func (m *MetadataManager) getTableInfoAtVersion(version int64) (*DeltaTimeTravel
 
 	// Parse metadata
 	var metadata struct {
-		Version      int64                    `json:"version"`
-		Timestamp    int64                    `json:"timestamp"`
-		Schema       map[string]interface{}   `json:"schema"`
-		Files        []string                 `json:"files"`
+		Version   int64                  `json:"version"`
+		Timestamp int64                  `json:"timestamp"`
+		Schema    map[string]interface{} `json:"schema"`
+		Files     []string               `json:"files"`
 	}
 
 	if err := json.Unmarshal(data, &metadata); err != nil {

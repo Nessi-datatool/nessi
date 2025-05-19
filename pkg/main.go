@@ -17,11 +17,11 @@ func StartServer(host string, port int) error {
 		Host: host,
 		Port: port,
 	}
-	
+
 	// TODO: Initialize server with proper routes and middleware
 	addr := fmt.Sprintf("%s:%d", server.Host, server.Port)
 	fmt.Printf("Starting server on %s\n", addr)
-	
+
 	return http.ListenAndServe(addr, nil)
 }
 
@@ -30,7 +30,7 @@ func RunQualityChecks(tablePath string) error {
 	table := &DeltaTable{
 		Path: tablePath,
 	}
-	
+
 	// TODO: Implement actual data quality checks
 	fmt.Printf("Running quality checks on table: %s\n", table.Path)
 	return nil
@@ -79,4 +79,4 @@ func UninstallExtension(name string) error {
 	// TODO: Implement actual extension uninstallation logic
 	fmt.Printf("Uninstalling extension: %s\n", name)
 	return nil
-} 
+}

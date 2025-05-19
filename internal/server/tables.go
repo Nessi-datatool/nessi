@@ -218,4 +218,4 @@ func (h *TableHandler) handleReadPartition(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, data)
-} 
+}

@@ -25,20 +25,20 @@ func (m *MockMetricStore) GetMetricValues(metricName string, start, end time.Tim
 	if !ok {
 		return []alerts.MetricDataPoint{}, nil
 	}
-	
+
 	// Filter by time range and labels
 	var filteredPoints []alerts.MetricDataPoint
 	for _, point := range allPoints {
 		// Check time range
 		if (point.Timestamp.Equal(start) || point.Timestamp.After(start)) &&
-		   (point.Timestamp.Equal(end) || point.Timestamp.Before(end)) {
+			(point.Timestamp.Equal(end) || point.Timestamp.Before(end)) {
 			// Check labels
 			if labels == nil || matchLabels(point.Labels, labels) {
 				filteredPoints = append(filteredPoints, point)
 			}
 		}
 	}
-	
+
 	return filteredPoints, nil
 }
 

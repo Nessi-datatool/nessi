@@ -180,17 +180,17 @@ func displayMetricsTable(metrics []monitoring.MetricValue, metricName string) er
 	// Print metrics (most recent first)
 	for i := len(metrics) - 1; i >= 0; i-- {
 		metric := metrics[i]
-		
+
 		// Format timestamp
 		timestamp := metric.Timestamp.Format("2006-01-02 15:04:05")
-		
+
 		// Format labels
 		var labels []string
 		for k, v := range metric.Labels {
 			labels = append(labels, fmt.Sprintf("%s=%s", k, v))
 		}
 		labelsStr := strings.Join(labels, ", ")
-		
+
 		fmt.Fprintf(w, "%s\t%.2f\t%s\n", timestamp, metric.Value, labelsStr)
 	}
 
@@ -203,7 +203,7 @@ func displayMetricsJSON(metrics []monitoring.MetricValue) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal metrics: %v", err)
 	}
-	
+
 	fmt.Println(string(data))
 	return nil
 }
@@ -288,17 +288,17 @@ func displayAlertsTable(alerts []monitoring.Alert) error {
 	// Print alerts (most recent first)
 	for i := len(alerts) - 1; i >= 0; i-- {
 		alert := alerts[i]
-		
+
 		// Format timestamp
 		timestamp := alert.Timestamp.Format("2006-01-02 15:04:05")
-		
+
 		// Format metadata
 		var metadata []string
 		for k, v := range alert.Metadata {
 			metadata = append(metadata, fmt.Sprintf("%s=%s", k, v))
 		}
 		metadataStr := strings.Join(metadata, ", ")
-		
+
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", timestamp, alert.Name, alert.Severity, alert.Message, metadataStr)
 	}
 
@@ -311,7 +311,7 @@ func displayAlertsJSON(alerts []monitoring.Alert) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal alerts: %v", err)
 	}
-	
+
 	fmt.Println(string(data))
 	return nil
 }
@@ -351,7 +351,7 @@ func exportMetrics(args []string) error {
 	// Parse time range
 	start := time.Now().Add(-24 * time.Hour) // Default to last 24 hours
 	end := time.Now()
-	
+
 	if *startTime != "" {
 		parsedStart, err := time.Parse(time.RFC3339, *startTime)
 		if err != nil {
@@ -359,7 +359,7 @@ func exportMetrics(args []string) error {
 		}
 		start = parsedStart
 	}
-	
+
 	if *endTime != "" {
 		parsedEnd, err := time.Parse(time.RFC3339, *endTime)
 		if err != nil {
@@ -369,7 +369,7 @@ func exportMetrics(args []string) error {
 	}
 
 	// Build URL
-	url := fmt.Sprintf("%s/api/export?metric=%s&format=%s&start=%s&end=%s", 
+	url := fmt.Sprintf("%s/api/export?metric=%s&format=%s&start=%s&end=%s",
 		*serverURL, *metricName, *format, start.Format(time.RFC3339), end.Format(time.RFC3339))
 
 	// Make request

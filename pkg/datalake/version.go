@@ -24,13 +24,13 @@ type VersionEntry struct {
 
 // VersionComparison represents the differences between two versions
 type VersionComparison struct {
-	OlderVersion  int64          `json:"olderVersion"`
-	NewerVersion  int64          `json:"newerVersion"`
-	SchemaChanges []SchemaChange `json:"schemaChanges"`
-	FilesAdded    int            `json:"filesAdded"`
-	FilesRemoved  int            `json:"filesRemoved"`
-	RecordsAdded  int64          `json:"recordsAdded"`
-	RecordsRemoved int64         `json:"recordsRemoved"`
+	OlderVersion   int64          `json:"olderVersion"`
+	NewerVersion   int64          `json:"newerVersion"`
+	SchemaChanges  []SchemaChange `json:"schemaChanges"`
+	FilesAdded     int            `json:"filesAdded"`
+	FilesRemoved   int            `json:"filesRemoved"`
+	RecordsAdded   int64          `json:"recordsAdded"`
+	RecordsRemoved int64          `json:"recordsRemoved"`
 }
 
 // GetVersionHistory returns the version history of a Delta table
@@ -51,7 +51,7 @@ func (m *MetadataManager) GetVersionHistory() ([]VersionEntry, error) {
 		// Read commit info file
 		commitInfoPath := filepath.Join(m.tablePath, "_delta_log", fmt.Sprintf("%020d.commit.json", version))
 		data, err := os.ReadFile(commitInfoPath)
-		
+
 		// If commit info doesn't exist, try to get basic info from the log file
 		if os.IsNotExist(err) {
 			// Read transaction log
@@ -171,16 +171,16 @@ func (m *MetadataManager) CompareVersions(version1, version2 int64) (*VersionCom
 
 	// Estimate record changes (based on file count)
 	// This is a rough estimate; for accurate counts, we'd need to read all files
-	recordsAdded := int64(filesAdded) * 1000  // Assuming 1000 records per file
+	recordsAdded := int64(filesAdded) * 1000 // Assuming 1000 records per file
 	recordsRemoved := int64(filesRemoved) * 1000
 
 	comparison := &VersionComparison{
-		OlderVersion:  version1,
-		NewerVersion:  version2,
-		SchemaChanges: schemaChanges,
-		FilesAdded:    filesAdded,
-		FilesRemoved:  filesRemoved,
-		RecordsAdded:  recordsAdded,
+		OlderVersion:   version1,
+		NewerVersion:   version2,
+		SchemaChanges:  schemaChanges,
+		FilesAdded:     filesAdded,
+		FilesRemoved:   filesRemoved,
+		RecordsAdded:   recordsAdded,
 		RecordsRemoved: recordsRemoved,
 	}
 

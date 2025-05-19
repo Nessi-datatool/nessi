@@ -26,14 +26,14 @@ type ValidationResults struct {
 
 // ValidationSummary provides a summary of validation results
 type ValidationSummary struct {
-	TotalModels    int     `json:"total_models"`
-	PassedModels   int     `json:"passed_models"`
-	FailedModels   int     `json:"failed_models"`
-	TotalRules     int     `json:"total_rules"`
-	PassedRules    int     `json:"passed_rules"`
-	FailedRules    int     `json:"failed_rules"`
-	QualityScore   float64 `json:"quality_score"`
-	ExecutionTime  float64 `json:"execution_time_seconds"`
+	TotalModels   int     `json:"total_models"`
+	PassedModels  int     `json:"passed_models"`
+	FailedModels  int     `json:"failed_models"`
+	TotalRules    int     `json:"total_rules"`
+	PassedRules   int     `json:"passed_rules"`
+	FailedRules   int     `json:"failed_rules"`
+	QualityScore  float64 `json:"quality_score"`
+	ExecutionTime float64 `json:"execution_time_seconds"`
 }
 
 // Validator validates dbt models using Nessi.dev data quality rules
@@ -199,7 +199,7 @@ func (r *ValidationResults) HasFailures() bool {
 // parseDBTManifest parses the dbt manifest.json file
 func (v *Validator) parseDBTManifest() (*DBTManifest, error) {
 	manifestPath := filepath.Join(v.dbtProjectPath, "target", "manifest.json")
-	
+
 	// Check if manifest file exists
 	if _, err := os.Stat(manifestPath); os.IsNotExist(err) {
 		return nil, fmt.Errorf("dbt manifest file not found at %s, run 'dbt compile' first", manifestPath)

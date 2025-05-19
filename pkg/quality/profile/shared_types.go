@@ -14,12 +14,12 @@ type DataQualityScore struct {
 
 // EnhancedProfile combines a profile with quality scores and additional analysis
 type EnhancedProfile struct {
-	Profile          *Profile            `json:"profile"`
-	QualityScore     *DataQualityScore   `json:"quality_score,omitempty"`
-	Distribution     *DistributionAnalysis `json:"distribution,omitempty"`
-	DetailedPatterns []PatternInfo       `json:"detailed_patterns,omitempty"`
-	FormatConsistency float64            `json:"format_consistency,omitempty"`
-	TypeConsistency   float64            `json:"type_consistency,omitempty"`
+	Profile           *Profile              `json:"profile"`
+	QualityScore      *DataQualityScore     `json:"quality_score,omitempty"`
+	Distribution      *DistributionAnalysis `json:"distribution,omitempty"`
+	DetailedPatterns  []PatternInfo         `json:"detailed_patterns,omitempty"`
+	FormatConsistency float64               `json:"format_consistency,omitempty"`
+	TypeConsistency   float64               `json:"type_consistency,omitempty"`
 }
 
 // PatternInfo represents detailed information about a detected pattern

@@ -15,8 +15,8 @@ import (
 
 var (
 	// Global instance of the Python bridge
-	bridge     *PythonBridge
-	bridgeMu   sync.Mutex
+	bridge      *PythonBridge
+	bridgeMu    sync.Mutex
 	initialized bool
 )
 

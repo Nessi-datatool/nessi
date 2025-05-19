@@ -16,13 +16,13 @@ import (
 func TestHandleGetProfiles(t *testing.T) {
 
 	// Basic version doesn't use alert manager
-	
-	// Create a test monitor 
+
+	// Create a test monitor
 	mock := testutil.CreateOSSTestMonitor(9090)
 
 	// Create a new dashboard
 	dashboard, err := New(mock, DashboardOptions{
-		ListenAddr: ":8080",
+		ListenAddr:    ":8080",
 		Profiler:      &MockProfiler{},
 		RuleValidator: &MockRuleValidator{},
 	})
@@ -74,13 +74,13 @@ func TestHandleGetProfiles(t *testing.T) {
 func TestHandleGetProfilesMissingTable(t *testing.T) {
 
 	// Basic version doesn't use alert manager
-	
-	// Create a test monitor 
+
+	// Create a test monitor
 	mock := testutil.CreateOSSTestMonitor(9090)
 
 	// Create a new dashboard
 	dashboard, err := New(mock, DashboardOptions{
-		ListenAddr: ":8080",
+		ListenAddr:    ":8080",
 		Profiler:      &MockProfiler{},
 		RuleValidator: &MockRuleValidator{},
 	})
@@ -126,13 +126,13 @@ func TestHandleGetProfilesMissingTable(t *testing.T) {
 func TestHandleGetRules(t *testing.T) {
 
 	// Basic version doesn't use alert manager
-	
-	// Create a test monitor 
+
+	// Create a test monitor
 	mock := testutil.CreateOSSTestMonitor(9090)
 
 	// Create a new dashboard
 	dashboard, err := New(mock, DashboardOptions{
-		ListenAddr: ":8080",
+		ListenAddr:    ":8080",
 		Profiler:      &MockProfiler{},
 		RuleValidator: &MockRuleValidator{},
 	})
@@ -189,13 +189,13 @@ func TestHandleGetRules(t *testing.T) {
 func TestHandleValidateRules(t *testing.T) {
 
 	// Basic version doesn't use alert manager
-	
-	// Create a test monitor 
+
+	// Create a test monitor
 	mock := testutil.CreateOSSTestMonitor(9090)
 
 	// Create a new dashboard
 	dashboard, err := New(mock, DashboardOptions{
-		ListenAddr: ":8080",
+		ListenAddr:    ":8080",
 		Profiler:      &MockProfiler{},
 		RuleValidator: &MockRuleValidator{},
 	})
@@ -241,13 +241,13 @@ func TestHandleValidateRules(t *testing.T) {
 func TestHandleDataQualityDashboard(t *testing.T) {
 
 	// Basic version doesn't use alert manager
-	
-	// Create a test monitor 
+
+	// Create a test monitor
 	mock := testutil.CreateOSSTestMonitor(9090)
 
 	// Create a new dashboard
 	dashboard, err := New(mock, DashboardOptions{
-		ListenAddr: ":8080",
+		ListenAddr:    ":8080",
 		Profiler:      &MockProfiler{},
 		RuleValidator: &MockRuleValidator{},
 	})

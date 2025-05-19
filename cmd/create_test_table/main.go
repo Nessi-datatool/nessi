@@ -44,10 +44,10 @@ func CreateTestTable() error {
 
 	// Create Delta table
 	tablePath := "test_data/sample_table"
-	
+
 	// Remove existing table if it exists
 	os.RemoveAll(tablePath)
-	
+
 	// Ensure directories exist
 	if err := os.MkdirAll(tablePath, 0755); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)

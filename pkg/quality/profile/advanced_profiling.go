@@ -12,14 +12,14 @@ import (
 
 // DistributionAnalysis contains detailed distribution information
 type DistributionAnalysis struct {
-	Histogram      map[string]int    `json:"histogram"`
-	Frequencies    map[string]float64 `json:"frequencies"`
-	TopValues      []ValueCount      `json:"top_values"`
-	BottomValues   []ValueCount      `json:"bottom_values"`
-	Skewness       float64           `json:"skewness"`
-	Kurtosis       float64           `json:"kurtosis"`
-	IsNormal       bool              `json:"is_normal"`
-	Entropy        float64           `json:"entropy"`
+	Histogram    map[string]int     `json:"histogram"`
+	Frequencies  map[string]float64 `json:"frequencies"`
+	TopValues    []ValueCount       `json:"top_values"`
+	BottomValues []ValueCount       `json:"bottom_values"`
+	Skewness     float64            `json:"skewness"`
+	Kurtosis     float64            `json:"kurtosis"`
+	IsNormal     bool               `json:"is_normal"`
+	Entropy      float64            `json:"entropy"`
 }
 
 // ValueCount is defined in shared_types.go
@@ -147,13 +147,13 @@ func (p *AdvancedProfiler) analyzeNumericDistribution(values []interface{}) *Dis
 
 	binWidth := (stats.Max - stats.Min) / float64(numBins)
 	histogram := make(map[string]int)
-	
+
 	for _, val := range floatValues {
 		binIdx := int((val - stats.Min) / binWidth)
 		if binIdx >= numBins {
 			binIdx = numBins - 1
 		}
-		
+
 		binLabel := fmt.Sprintf("%.2f-%.2f", stats.Min+float64(binIdx)*binWidth, stats.Min+float64(binIdx+1)*binWidth)
 		histogram[binLabel]++
 	}
@@ -167,7 +167,7 @@ func (p *AdvancedProfiler) analyzeNumericDistribution(values []interface{}) *Dis
 	// Calculate skewness and kurtosis
 	skewness := calculateSkewness(floatValues, stats.Mean, stats.StdDev)
 	kurtosis := calculateKurtosis(floatValues, stats.Mean, stats.StdDev)
-	
+
 	// Determine if distribution is approximately normal
 	isNormal := math.Abs(skewness) < 0.5 && math.Abs(kurtosis-3) < 1.0
 
@@ -229,7 +229,7 @@ func (p *AdvancedProfiler) analyzeStringDistribution(values []interface{}) *Dist
 	// Count string lengths
 	lengthHistogram := make(map[string]int)
 	valueCountMap := make(map[string]int)
-	
+
 	for _, v := range values {
 		if v == nil {
 			continue
@@ -243,7 +243,7 @@ func (p *AdvancedProfiler) analyzeStringDistribution(values []interface{}) *Dist
 		// Group by length
 		lengthBin := fmt.Sprintf("%d", len(s))
 		lengthHistogram[lengthBin]++
-		
+
 		// Count values
 		valueCountMap[s]++
 	}
@@ -539,7 +539,7 @@ func (p *AdvancedProfiler) analyzeStringPatterns(values []interface{}) []Pattern
 		for name, re := range p.patternLibrary {
 			if re.MatchString(s) {
 				patternCounts[name]++
-				
+
 				// Store examples (up to 3 per pattern)
 				if len(patternExamples[name]) < 3 {
 					patternExamples[name] = append(patternExamples[name], s)
@@ -553,7 +553,7 @@ func (p *AdvancedProfiler) analyzeStringPatterns(values []interface{}) []Pattern
 	var patterns []PatternInfo
 	for name, count := range patternCounts {
 		confidence := float64(count) / float64(totalNonNull)
-		
+
 		// Only include patterns with at least 10% confidence
 		if confidence >= 0.1 {
 			pattern := PatternInfo{
@@ -670,7 +670,7 @@ func (p *AdvancedProfiler) calculateTypeConsistency(values []interface{}, expect
 		}
 
 		totalNonNull++
-		
+
 		switch expectedType {
 		case "integer":
 			_, ok := v.(int)

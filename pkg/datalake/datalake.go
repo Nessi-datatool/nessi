@@ -75,9 +75,9 @@ func NewReader(tablePath string) (*Reader, error) {
 	}
 
 	return &Reader{
-		table:      table,
-		closed:     false,
-		fileCache:  make(map[string]*os.File),
+		table:     table,
+		closed:    false,
+		fileCache: make(map[string]*os.File),
 	}, nil
 }
 

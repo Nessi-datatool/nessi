@@ -44,8 +44,8 @@ func NewProfiler(tablePath string) *Profiler {
 // GenerateProfile creates a complete profile for the Delta table
 func (p *Profiler) GenerateProfile() (*TableProfile, error) {
 	profile := &TableProfile{
-		TablePath:    p.tablePath,
-		ColumnStats:  make(map[string]*ProfileStats),
+		TablePath:     p.tablePath,
+		ColumnStats:   make(map[string]*ProfileStats),
 		PartitionInfo: make(map[string]string),
 	}
 
@@ -86,7 +86,7 @@ func (p *Profiler) PrintProfile(profile *TableProfile) {
 	fmt.Printf("Total Columns: %d\n", profile.TotalColumns)
 	fmt.Printf("Table Size: %d bytes\n", profile.TableSize)
 	fmt.Printf("Last Modified: %s\n", profile.LastModified.Format(time.RFC3339))
-	
+
 	fmt.Println("\nColumn Statistics:")
 	for colName, stats := range profile.ColumnStats {
 		fmt.Printf("\nColumn: %s\n", colName)
@@ -140,4 +140,4 @@ func (p *Profiler) GetPartitionInfo() (map[string]string, error) {
 	}
 
 	return profile.PartitionInfo, nil
-} 
+}

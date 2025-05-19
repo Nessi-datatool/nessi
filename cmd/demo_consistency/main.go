@@ -196,15 +196,15 @@ func createTestVersion(logDir string, version int64, operation string, timestamp
 func printConsistencyResult(result *datalake.ConsistencyCheckResult) {
 	fmt.Printf("Consistency Check Result: %s\n", result.CheckType)
 	fmt.Printf("Passed: %t\n", result.Passed)
-	
+
 	if len(result.Issues) > 0 {
 		fmt.Printf("Issues Found (%d):\n", len(result.Issues))
-		
+
 		// Group issues by severity
 		errorIssues := []datalake.ConsistencyIssue{}
 		warningIssues := []datalake.ConsistencyIssue{}
 		infoIssues := []datalake.ConsistencyIssue{}
-		
+
 		for _, issue := range result.Issues {
 			switch issue.Severity {
 			case "error":
@@ -215,7 +215,7 @@ func printConsistencyResult(result *datalake.ConsistencyCheckResult) {
 				infoIssues = append(infoIssues, issue)
 			}
 		}
-		
+
 		// Print errors first
 		if len(errorIssues) > 0 {
 			fmt.Printf("\nErrors (%d):\n", len(errorIssues))
@@ -223,7 +223,7 @@ func printConsistencyResult(result *datalake.ConsistencyCheckResult) {
 				fmt.Printf("  - %s: %s\n", issue.Field, issue.Description)
 			}
 		}
-		
+
 		// Then warnings
 		if len(warningIssues) > 0 {
 			fmt.Printf("\nWarnings (%d):\n", len(warningIssues))
@@ -231,7 +231,7 @@ func printConsistencyResult(result *datalake.ConsistencyCheckResult) {
 				fmt.Printf("  - %s: %s\n", issue.Field, issue.Description)
 			}
 		}
-		
+
 		// Then info
 		if len(infoIssues) > 0 {
 			fmt.Printf("\nInfo (%d):\n", len(infoIssues))

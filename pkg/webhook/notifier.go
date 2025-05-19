@@ -24,11 +24,11 @@ func NewWebhookNotifier(url string, method string, headers map[string]string, ti
 	if method == "" {
 		method = "POST"
 	}
-	
+
 	if timeout == 0 {
 		timeout = 5 * time.Second
 	}
-	
+
 	return &WebhookNotifier{
 		url:         url,
 		method:      method,
@@ -53,31 +53,31 @@ func (n *WebhookNotifier) SendWithContext(ctx context.Context, payload interface
 	if err != nil {
 		return fmt.Errorf("failed to marshal payload: %w", err)
 	}
-	
+
 	// Create request
 	req, err := http.NewRequestWithContext(ctx, n.method, n.url, bytes.NewBuffer(data))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	// Set headers
 	req.Header.Set("Content-Type", n.contentType)
 	req.Header.Set("User-Agent", "Nessi-Webhook-Notifier/1.0")
 	for key, value := range n.headers {
 		req.Header.Set(key, value)
 	}
-	
+
 	// Send request
 	resp, err := n.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	// Check response status
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return fmt.Errorf("received non-success status code: %d", resp.StatusCode)
 	}
-	
+
 	return nil
 }

@@ -20,11 +20,11 @@ const (
 // ExtendedRule extends the basic Rule with additional validation capabilities
 type ExtendedRule struct {
 	Rule
-	MinLength int      `json:"min_length,omitempty"` // For length rules
-	MaxLength int      `json:"max_length,omitempty"` // For length rules
-	EnumValues []string `json:"enum_values,omitempty"` // For enum rules
-	RegexPattern string `json:"regex_pattern,omitempty"` // For regex rules
-	DateFormat string  `json:"date_format,omitempty"` // For datetime rules
+	MinLength    int      `json:"min_length,omitempty"`    // For length rules
+	MaxLength    int      `json:"max_length,omitempty"`    // For length rules
+	EnumValues   []string `json:"enum_values,omitempty"`   // For enum rules
+	RegexPattern string   `json:"regex_pattern,omitempty"` // For regex rules
+	DateFormat   string   `json:"date_format,omitempty"`   // For datetime rules
 }
 
 // Validate validates the extended rule configuration

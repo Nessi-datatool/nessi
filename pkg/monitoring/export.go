@@ -64,7 +64,7 @@ func (r *MetricRetention) ExportMetricsToCSV(options ExportOptions) (string, err
 
 	// Write header
 	header := []string{"Timestamp", "Value"}
-	
+
 	// Add label columns
 	var labelKeys []string
 	if len(metrics) > 0 && len(metrics[0].Labels) > 0 {
@@ -74,7 +74,7 @@ func (r *MetricRetention) ExportMetricsToCSV(options ExportOptions) (string, err
 		sort.Strings(labelKeys)
 		header = append(header, labelKeys...)
 	}
-	
+
 	if err := writer.Write(header); err != nil {
 		return "", fmt.Errorf("failed to write CSV header: %w", err)
 	}
@@ -91,12 +91,12 @@ func (r *MetricRetention) ExportMetricsToCSV(options ExportOptions) (string, err
 			metric.Timestamp.Format(time.RFC3339),
 			strconv.FormatFloat(metric.Value, 'f', -1, 64),
 		}
-		
+
 		// Add label values
 		for _, key := range labelKeys {
 			row = append(row, metric.Labels[key])
 		}
-		
+
 		if err := writer.Write(row); err != nil {
 			return "", fmt.Errorf("failed to write CSV row: %w", err)
 		}
@@ -126,12 +126,12 @@ func (m *Monitor) ExportMetrics(options ExportOptions) (string, error) {
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
 		return "", fmt.Errorf("failed to create output directory: %w", err)
 	}
-	
+
 	// If metric retention is enabled, use it
 	if m.config != nil && m.config.Retention.Enabled && m.metricRetention != nil {
 		return m.metricRetention.ExportMetrics(options)
 	}
-	
+
 	// Otherwise, use the metric store directly
 	switch options.Format {
 	case ExportFormatCSV:

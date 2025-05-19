@@ -1,8 +1,6 @@
 module github.com/nessi-dev/nessi
 
-go 1.23.0
-
-toolchain go1.24.3
+go 1.20
 
 require (
 	cloud.google.com/go/datacatalog v1.26.0
@@ -187,5 +185,6 @@ require (
 
 replace github.com/nessi-dev/nessi-dev/pkg/logger => ./pkg/logger
 
-// Use an older version of compress that's compatible with Go 1.20
+// Use older versions of packages that are compatible with Go 1.20
 replace github.com/klauspost/compress => github.com/klauspost/compress v1.16.7
+replace golang.org/x/sys => golang.org/x/sys v0.15.0

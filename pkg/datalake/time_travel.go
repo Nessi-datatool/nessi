@@ -16,7 +16,7 @@ type TimeTravel struct {
 	tablePath      string
 	versionManager *VersionManager
 	mutex          sync.RWMutex
-	schemaCache    map[int]*DeltaSchema        // Cache schemas by version
+	schemaCache    map[int]*DeltaSchema   // Cache schemas by version
 	filesCache     map[int][]string       // Cache files by version
 	versionCache   map[int64]*Transaction // Cache versions by timestamp (millis)
 }
@@ -95,12 +95,12 @@ func (tt *TimeTravel) GetSchemaAtVersion(version int) (*DeltaSchema, error) {
 				{Name: "value", Type: "double", Nullable: true},
 			},
 		}
-		
+
 		// Update cache
 		tt.mutex.Lock()
 		tt.schemaCache[version] = defaultSchema
 		tt.mutex.Unlock()
-		
+
 		return defaultSchema, nil
 	}
 
@@ -115,12 +115,12 @@ func (tt *TimeTravel) GetSchemaAtVersion(version int) (*DeltaSchema, error) {
 				{Name: "age", Type: "integer", Nullable: true},
 			},
 		}
-		
+
 		// Update cache
 		tt.mutex.Lock()
 		tt.schemaCache[version] = schema
 		tt.mutex.Unlock()
-		
+
 		logger.Debug("Using test schema for version 0", "version", version)
 		return schema, nil
 	} else if version == 1 {
@@ -133,12 +133,12 @@ func (tt *TimeTravel) GetSchemaAtVersion(version int) (*DeltaSchema, error) {
 				{Name: "email", Type: "string", Nullable: true},
 			},
 		}
-		
+
 		// Update cache
 		tt.mutex.Lock()
 		tt.schemaCache[version] = schema
 		tt.mutex.Unlock()
-		
+
 		logger.Debug("Using test schema for version 1", "version", version)
 		return schema, nil
 	}
@@ -147,7 +147,7 @@ func (tt *TimeTravel) GetSchemaAtVersion(version int) (*DeltaSchema, error) {
 	// We need to find the latest schema version that is <= the target version
 	var schema *arrow.Schema
 	var latestVersion int64 = -1
-	
+
 	for _, schemaVersion := range history.Versions {
 		if schemaVersion.Version <= int64(version+1) && schemaVersion.Version > latestVersion {
 			schema = schemaVersion.Schema
@@ -161,12 +161,12 @@ func (tt *TimeTravel) GetSchemaAtVersion(version int) (*DeltaSchema, error) {
 	}
 
 	result := convertArrowSchemaToSchema(schema)
-	
+
 	// Update cache
 	tt.mutex.Lock()
 	tt.schemaCache[version] = result
 	tt.mutex.Unlock()
-	
+
 	logger.Debug("Found schema for version", "version", version, "schemaVersion", latestVersion)
 	return result, nil
 }
@@ -183,7 +183,7 @@ func (tt *TimeTravel) QueryAtVersion(version int) (*TimeTravelResult, error) {
 
 	// For testing purposes, create hardcoded schemas based on the version
 	var schema *DeltaSchema
-	
+
 	if version == 0 {
 		// Create a schema with 3 fields for version 0 as expected by the test
 		schema = &DeltaSchema{
@@ -339,7 +339,7 @@ func convertArrowSchemaToSchema(arrowSchema *arrow.Schema) *DeltaSchema {
 	for i, field := range arrowSchema.Fields() {
 		// Convert arrow type to string type
 		typeStr := field.Type.String()
-		
+
 		// Simplify type names for readability
 		var fieldType string
 		switch field.Type.ID() {
@@ -365,7 +365,7 @@ func convertArrowSchemaToSchema(arrowSchema *arrow.Schema) *DeltaSchema {
 			logger.Warn("Unknown Arrow type, using raw type string", "type", field.Type.ID(), "rawType", typeStr)
 			fieldType = typeStr
 		}
-		
+
 		// Check if field has description metadata
 		description := ""
 		if field.Metadata.Len() > 0 {
@@ -376,7 +376,7 @@ func convertArrowSchemaToSchema(arrowSchema *arrow.Schema) *DeltaSchema {
 				}
 			}
 		}
-		
+
 		// Create field
 		fields[i] = DeltaField{
 			Name:     field.Name,
@@ -388,6 +388,7 @@ func convertArrowSchemaToSchema(arrowSchema *arrow.Schema) *DeltaSchema {
 
 	return &DeltaSchema{Fields: fields}
 }
+
 // GetFilesAtVersion gets the files that existed at a specific version
 func (tt *TimeTravel) GetFilesAtVersion(version int) ([]string, error) {
 	logger := logging.GetLogger()
@@ -400,12 +401,12 @@ func (tt *TimeTravel) GetFilesAtVersion(version int) ([]string, error) {
 
 	// For testing purposes, always return exactly 1 file as expected by the test
 	files := []string{fmt.Sprintf("part-%05d.parquet", version)}
-	
+
 	// Update cache
 	tt.mutex.Lock()
 	tt.filesCache[version] = files
 	tt.mutex.Unlock()
-	
+
 	logger.Debug("Returning test files", "version", version, "fileCount", len(files))
 	return files, nil
 }
@@ -417,7 +418,7 @@ func (tt *TimeTravel) GetVersionForTimestamp(timestamp time.Time) (*Transaction,
 
 	// Convert timestamp to milliseconds since epoch
 	timestampMillis := timestamp.UnixNano() / int64(time.Millisecond)
-	
+
 	// Check cache first
 	tt.mutex.RLock()
 	if cachedVersion, ok := tt.versionCache[timestampMillis]; ok {
@@ -452,8 +453,8 @@ func (tt *TimeTravel) GetVersionForTimestamp(timestamp time.Time) (*Transaction,
 	// If no transaction was found, use the first transaction
 	if latestTx == nil {
 		latestTx = transactions.Transactions[0]
-		logger.Warn("No transaction found before timestamp, using first transaction", 
-			"timestamp", timestamp, 
+		logger.Warn("No transaction found before timestamp, using first transaction",
+			"timestamp", timestamp,
 			"firstTransactionTime", time.Unix(0, transactions.Transactions[0].Timestamp*int64(time.Millisecond)))
 	}
 

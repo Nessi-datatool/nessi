@@ -23,7 +23,7 @@ func NewRegexRule(field, pattern string, config RuleMetadata) (*RegexRule, error
 	if err != nil {
 		return nil, fmt.Errorf("invalid regex pattern: %w", err)
 	}
-	
+
 	return &RegexRule{
 		pattern: re,
 		field:   field,
@@ -33,12 +33,12 @@ func NewRegexRule(field, pattern string, config RuleMetadata) (*RegexRule, error
 
 func (r *RegexRule) Validate(record arrow.Record) []ValidationError {
 	var errors []ValidationError
-	
+
 	colIdx := record.Schema().FieldIndices(r.field)
 	if len(colIdx) == 0 {
 		return errors
 	}
-	
+
 	col := record.Column(colIdx[0])
 	if col.DataType().ID() != arrow.STRING {
 		return errors
@@ -49,7 +49,7 @@ func (r *RegexRule) Validate(record arrow.Record) []ValidationError {
 		if col.IsNull(i) {
 			continue
 		}
-		
+
 		value := strCol.Value(i)
 		if !r.pattern.MatchString(value) {
 			errors = append(errors, ValidationError{
@@ -61,7 +61,7 @@ func (r *RegexRule) Validate(record arrow.Record) []ValidationError {
 			})
 		}
 	}
-	
+
 	return errors
 }
 
@@ -71,16 +71,16 @@ func (r *RegexRule) GetMetadata() RuleMetadata {
 
 // EnumRule implements a rule to validate that values are within a predefined set
 type EnumRule struct {
-	allowedValues  map[string]bool
-	field          string
-	caseSensitive  bool
-	config         RuleMetadata
+	allowedValues map[string]bool
+	field         string
+	caseSensitive bool
+	config        RuleMetadata
 }
 
 // NewEnumRule creates a new enum validation rule
 func NewEnumRule(field string, values []string, caseSensitive bool, config RuleMetadata) *EnumRule {
 	allowedValues := make(map[string]bool, len(values))
-	
+
 	for _, v := range values {
 		if caseSensitive {
 			allowedValues[v] = true
@@ -88,7 +88,7 @@ func NewEnumRule(field string, values []string, caseSensitive bool, config RuleM
 			allowedValues[strings.ToLower(v)] = true
 		}
 	}
-	
+
 	return &EnumRule{
 		allowedValues: allowedValues,
 		field:         field,
@@ -99,12 +99,12 @@ func NewEnumRule(field string, values []string, caseSensitive bool, config RuleM
 
 func (r *EnumRule) Validate(record arrow.Record) []ValidationError {
 	var errors []ValidationError
-	
+
 	colIdx := record.Schema().FieldIndices(r.field)
 	if len(colIdx) == 0 {
 		return errors
 	}
-	
+
 	col := record.Column(colIdx[0])
 	if col.DataType().ID() != arrow.STRING {
 		return errors
@@ -115,13 +115,13 @@ func (r *EnumRule) Validate(record arrow.Record) []ValidationError {
 		if col.IsNull(i) {
 			continue
 		}
-		
+
 		value := strCol.Value(i)
 		checkValue := value
 		if !r.caseSensitive {
 			checkValue = strings.ToLower(value)
 		}
-		
+
 		if !r.allowedValues[checkValue] {
 			errors = append(errors, ValidationError{
 				RuleID:   r.config.ID,
@@ -132,7 +132,7 @@ func (r *EnumRule) Validate(record arrow.Record) []ValidationError {
 			})
 		}
 	}
-	
+
 	return errors
 }
 
@@ -160,12 +160,12 @@ func NewLengthRule(field string, minLength, maxLength int, config RuleMetadata) 
 
 func (r *LengthRule) Validate(record arrow.Record) []ValidationError {
 	var errors []ValidationError
-	
+
 	colIdx := record.Schema().FieldIndices(r.field)
 	if len(colIdx) == 0 {
 		return errors
 	}
-	
+
 	col := record.Column(colIdx[0])
 	if col.DataType().ID() != arrow.STRING {
 		return errors
@@ -176,22 +176,22 @@ func (r *LengthRule) Validate(record arrow.Record) []ValidationError {
 		if col.IsNull(i) {
 			continue
 		}
-		
+
 		value := strCol.Value(i)
 		length := len(value)
-		
+
 		if length < r.minLength || length > r.maxLength {
 			errors = append(errors, ValidationError{
-				RuleID:   r.config.ID,
-				Field:    r.field,
-				Value:    value,
-				Message:  fmt.Sprintf("Length of '%s' (%d) is outside range [%d, %d]", 
+				RuleID: r.config.ID,
+				Field:  r.field,
+				Value:  value,
+				Message: fmt.Sprintf("Length of '%s' (%d) is outside range [%d, %d]",
 					value, length, r.minLength, r.maxLength),
 				RowIndex: int64(i),
 			})
 		}
 	}
-	
+
 	return errors
 }
 
@@ -217,12 +217,12 @@ func NewDateFormatRule(field, format string, config RuleMetadata) *DateFormatRul
 
 func (r *DateFormatRule) Validate(record arrow.Record) []ValidationError {
 	var errors []ValidationError
-	
+
 	colIdx := record.Schema().FieldIndices(r.field)
 	if len(colIdx) == 0 {
 		return errors
 	}
-	
+
 	col := record.Column(colIdx[0])
 	if col.DataType().ID() != arrow.STRING {
 		return errors
@@ -233,7 +233,7 @@ func (r *DateFormatRule) Validate(record arrow.Record) []ValidationError {
 		if col.IsNull(i) {
 			continue
 		}
-		
+
 		value := strCol.Value(i)
 		_, err := time.Parse(r.format, value)
 		if err != nil {
@@ -246,7 +246,7 @@ func (r *DateFormatRule) Validate(record arrow.Record) []ValidationError {
 			})
 		}
 	}
-	
+
 	return errors
 }
 
@@ -256,13 +256,13 @@ func (r *DateFormatRule) GetMetadata() RuleMetadata {
 
 // RuleExecutionRecord tracks the execution history of a rule
 type RuleExecutionRecord struct {
-	ExecutionID    string
-	RuleID         string
-	Timestamp      time.Time
-	RecordsChecked int64
-	Failures       int64
+	ExecutionID     string
+	RuleID          string
+	Timestamp       time.Time
+	RecordsChecked  int64
+	Failures        int64
 	ExecutionTimeMs int64
-	DatasetID      string
+	DatasetID       string
 }
 
 // ExecutionTrend represents a trend in rule execution results over time

@@ -8,18 +8,18 @@ import (
 
 	datacatalog "cloud.google.com/go/datacatalog/apiv1"
 	datacatalogpb "cloud.google.com/go/datacatalog/apiv1/datacatalogpb"
-	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
 	nessitypes "github.com/nessi-dev/nessi/pkg/api/types"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
 // DataCatalogClient implements the DataCatalog interface for Google Cloud Data Catalog
 type DataCatalogClient struct {
-	client      *datacatalog.Client
-	connected   bool
-	projectID   string
-	location    string
+	client    *datacatalog.Client
+	connected bool
+	projectID string
+	location  string
 }
 
 // NewDataCatalogClient creates a new Google Cloud Data Catalog client
@@ -41,18 +41,18 @@ func (c *DataCatalogClient) Connect(ctx context.Context, config map[string]inter
 	if projectID == "" {
 		return fmt.Errorf("project_id is required")
 	}
-	
+
 	location, _ := config["location"].(string)
 	if location == "" {
 		location = "us-central1" // Default location
 	}
-	
+
 	credentialsFile, _ := config["credentials_file"].(string)
-	
+
 	// Create Data Catalog client
 	var client *datacatalog.Client
 	var err error
-	
+
 	if credentialsFile != "" {
 		// Use service account credentials file
 		client, err = datacatalog.NewClient(ctx, option.WithCredentialsFile(credentialsFile))
@@ -60,16 +60,16 @@ func (c *DataCatalogClient) Connect(ctx context.Context, config map[string]inter
 		// Use application default credentials
 		client, err = datacatalog.NewClient(ctx)
 	}
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to create Data Catalog client: %w", err)
 	}
-	
+
 	c.client = client
 	c.connected = true
 	c.projectID = projectID
 	c.location = location
-	
+
 	return nil
 }
 
@@ -80,7 +80,7 @@ func (c *DataCatalogClient) Disconnect(ctx context.Context) error {
 			return fmt.Errorf("failed to close Data Catalog client: %w", err)
 		}
 	}
-	
+
 	c.connected = false
 	return nil
 }
@@ -91,15 +91,15 @@ func (c *DataCatalogClient) ListDatabases(ctx context.Context) ([]nessitypes.Dat
 	if !c.connected {
 		return nil, fmt.Errorf("not connected to Google Cloud Data Catalog")
 	}
-	
+
 	// List entry groups
 	parent := fmt.Sprintf("projects/%s/locations/%s", c.projectID, c.location)
 	req := &datacatalogpb.ListEntryGroupsRequest{
 		Parent: parent,
 	}
-	
+
 	it := c.client.ListEntryGroups(ctx, req)
-	
+
 	var databases []nessitypes.DatabaseInfo
 	for {
 		entryGroup, err := it.Next()
@@ -109,11 +109,11 @@ func (c *DataCatalogClient) ListDatabases(ctx context.Context) ([]nessitypes.Dat
 		if err != nil {
 			return nil, fmt.Errorf("failed to list entry groups: %w", err)
 		}
-		
+
 		// Extract entry group ID from name
 		parts := strings.Split(entryGroup.Name, "/")
 		entryGroupID := parts[len(parts)-1]
-		
+
 		databases = append(databases, nessitypes.DatabaseInfo{
 			Name:        entryGroupID,
 			Description: entryGroup.DisplayName,
@@ -122,7 +122,7 @@ func (c *DataCatalogClient) ListDatabases(ctx context.Context) ([]nessitypes.Dat
 			},
 		})
 	}
-	
+
 	return databases, nil
 }
 
@@ -131,17 +131,17 @@ func (c *DataCatalogClient) ListTables(ctx context.Context, database string) ([]
 	if !c.connected {
 		return nil, fmt.Errorf("not connected to Google Cloud Data Catalog")
 	}
-	
+
 	// Construct parent resource name
 	parent := fmt.Sprintf("projects/%s/locations/%s/entryGroups/%s", c.projectID, c.location, database)
-	
+
 	// List entries in the entry group
 	req := &datacatalogpb.ListEntriesRequest{
 		Parent: parent,
 	}
-	
+
 	it := c.client.ListEntries(ctx, req)
-	
+
 	var tables []nessitypes.TableInfo
 	for {
 		entry, err := it.Next()
@@ -151,11 +151,11 @@ func (c *DataCatalogClient) ListTables(ctx context.Context, database string) ([]
 		if err != nil {
 			return nil, fmt.Errorf("failed to list entries: %w", err)
 		}
-		
+
 		// Extract entry ID from name
 		parts := strings.Split(entry.Name, "/")
 		entryID := parts[len(parts)-1]
-		
+
 		// Get table type
 		tableType := "unknown"
 		if entry.GetIntegratedSystem() != datacatalogpb.IntegratedSystem_INTEGRATED_SYSTEM_UNSPECIFIED {
@@ -163,7 +163,7 @@ func (c *DataCatalogClient) ListTables(ctx context.Context, database string) ([]
 		} else if entry.GetType() != datacatalogpb.EntryType_ENTRY_TYPE_UNSPECIFIED {
 			tableType = entry.GetType().String()
 		}
-		
+
 		// Get location
 		location := ""
 		if entry.GetGcsFilesetSpec() != nil {
@@ -174,20 +174,20 @@ func (c *DataCatalogClient) ListTables(ctx context.Context, database string) ([]
 					entry.GetLinkedResource())
 			}
 		}
-		
+
 		// Create properties map
 		properties := make(map[string]string)
 		properties["full_name"] = entry.Name
 		properties["linked_resource"] = entry.LinkedResource
-		
+
 		if entry.GetUserSpecifiedType() != "" {
 			properties["user_type"] = entry.GetUserSpecifiedType()
 		}
-		
+
 		if entry.GetUserSpecifiedSystem() != "" {
 			properties["user_system"] = entry.GetUserSpecifiedSystem()
 		}
-		
+
 		tables = append(tables, nessitypes.TableInfo{
 			Name:        entryID,
 			Type:        tableType,
@@ -196,7 +196,7 @@ func (c *DataCatalogClient) ListTables(ctx context.Context, database string) ([]
 			Properties:  properties,
 		})
 	}
-	
+
 	return tables, nil
 }
 
@@ -205,11 +205,11 @@ func (c *DataCatalogClient) GetTableDetails(ctx context.Context, database, table
 	if !c.connected {
 		return nil, fmt.Errorf("not connected to Google Cloud Data Catalog")
 	}
-	
+
 	// Construct entry name
-	entryName := fmt.Sprintf("projects/%s/locations/%s/entryGroups/%s/entries/%s", 
+	entryName := fmt.Sprintf("projects/%s/locations/%s/entryGroups/%s/entries/%s",
 		c.projectID, c.location, database, table)
-	
+
 	// Get entry
 	entry, err := c.client.GetEntry(ctx, &datacatalogpb.GetEntryRequest{
 		Name: entryName,
@@ -217,7 +217,7 @@ func (c *DataCatalogClient) GetTableDetails(ctx context.Context, database, table
 	if err != nil {
 		return nil, fmt.Errorf("failed to get entry: %w", err)
 	}
-	
+
 	// Get table type
 	tableType := "unknown"
 	if entry.GetType() == datacatalogpb.EntryType_TABLE {
@@ -227,7 +227,7 @@ func (c *DataCatalogClient) GetTableDetails(ctx context.Context, database, table
 	} else if entry.GetType() == datacatalogpb.EntryType_FILESET {
 		tableType = "fileset"
 	}
-	
+
 	// Get location
 	location := ""
 	if entry.GetGcsFilesetSpec() != nil {
@@ -238,20 +238,20 @@ func (c *DataCatalogClient) GetTableDetails(ctx context.Context, database, table
 				entry.GetLinkedResource())
 		}
 	}
-	
+
 	// Create properties map
 	properties := make(map[string]string)
 	properties["full_name"] = entry.Name
 	properties["linked_resource"] = entry.LinkedResource
-	
+
 	if entry.GetUserSpecifiedType() != "" {
 		properties["user_type"] = entry.GetUserSpecifiedType()
 	}
-	
+
 	if entry.GetUserSpecifiedSystem() != "" {
 		properties["user_system"] = entry.GetUserSpecifiedSystem()
 	}
-	
+
 	// Create table info
 	tableInfo := nessitypes.TableInfo{
 		Name:        table,
@@ -260,14 +260,14 @@ func (c *DataCatalogClient) GetTableDetails(ctx context.Context, database, table
 		Location:    location,
 		Properties:  properties,
 	}
-	
+
 	// Create schema
 	schema := &nessitypes.TableSchema{
 		Format:  tableType,
 		Version: 1,
 		Fields:  []nessitypes.FieldInfo{},
 	}
-	
+
 	// Get schema from entry schema
 	if entry.Schema != nil && entry.Schema.Columns != nil {
 		for _, column := range entry.Schema.Columns {
@@ -278,7 +278,7 @@ func (c *DataCatalogClient) GetTableDetails(ctx context.Context, database, table
 				Nullable:    true, // GCP Data Catalog doesn't store nullability
 				Properties:  make(map[string]string),
 			}
-			
+
 			// Add mode if available
 			if column.Mode != "" {
 				field.Properties["mode"] = column.Mode
@@ -286,11 +286,11 @@ func (c *DataCatalogClient) GetTableDetails(ctx context.Context, database, table
 					field.Nullable = false
 				}
 			}
-			
+
 			schema.Fields = append(schema.Fields, field)
 		}
 	}
-	
+
 	// Create metadata
 	metadata := &nessitypes.TableMetadata{
 		Owner:      "", // GCP Data Catalog doesn't store owner
@@ -298,12 +298,12 @@ func (c *DataCatalogClient) GetTableDetails(ctx context.Context, database, table
 		UpdatedAt:  entry.GetSourceSystemTimestamps().GetUpdateTime().AsTime(),
 		Properties: properties,
 	}
-	
+
 	// Get tags
 	tagReq := &datacatalogpb.ListTagsRequest{
 		Parent: entryName,
 	}
-	
+
 	tagIt := c.client.ListTags(ctx, tagReq)
 	for {
 		tag, err := tagIt.Next()
@@ -313,16 +313,16 @@ func (c *DataCatalogClient) GetTableDetails(ctx context.Context, database, table
 		if err != nil {
 			return nil, fmt.Errorf("failed to list tags: %w", err)
 		}
-		
+
 		// Add tag template ID as a tag
 		parts := strings.Split(tag.Template, "/")
 		templateID := parts[len(parts)-1]
 		metadata.Tags = append(metadata.Tags, templateID)
-		
+
 		// Add tag fields as properties
 		for fieldID, fieldValue := range tag.Fields {
 			key := fmt.Sprintf("tag:%s:%s", templateID, fieldID)
-			
+
 			// Convert field value to string based on type
 			var value string
 			switch {
@@ -337,18 +337,18 @@ func (c *DataCatalogClient) GetTableDetails(ctx context.Context, database, table
 			case fieldValue.GetEnumValue() != nil:
 				value = fieldValue.GetEnumValue().GetDisplayName()
 			}
-			
+
 			metadata.Properties[key] = value
 		}
 	}
-	
+
 	// Create TableDetails
 	details := &nessitypes.TableDetails{
 		Info:     tableInfo,
 		Schema:   schema,
 		Metadata: metadata,
 	}
-	
+
 	return details, nil
 }
 
@@ -366,11 +366,11 @@ func (c *DataCatalogClient) UpdateTableMetadata(ctx context.Context, database, t
 	if !c.connected {
 		return fmt.Errorf("not connected to Google Cloud Data Catalog")
 	}
-	
+
 	// Construct entry name
-	entryName := fmt.Sprintf("projects/%s/locations/%s/entryGroups/%s/entries/%s", 
+	entryName := fmt.Sprintf("projects/%s/locations/%s/entryGroups/%s/entries/%s",
 		c.projectID, c.location, database, table)
-	
+
 	// Get current entry
 	entry, err := c.client.GetEntry(ctx, &datacatalogpb.GetEntryRequest{
 		Name: entryName,
@@ -378,43 +378,43 @@ func (c *DataCatalogClient) UpdateTableMetadata(ctx context.Context, database, t
 	if err != nil {
 		return fmt.Errorf("failed to get entry: %w", err)
 	}
-	
+
 	// Update description if available
 	if description, ok := metadata.Properties["description"]; ok {
 		entry.Description = description
 	}
-	
+
 	// Update user-specified fields if available
 	// if _, ok := metadata.Properties["user_type"]; ok {
 	// 	entry.Type = datacatalogpb.EntryType(2) // Commented out problematic assignment
 	// }
-	
+
 	if _, ok := metadata.Properties["user_system"]; ok {
-		entry.LinkedResource = fmt.Sprintf("//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", 
+		entry.LinkedResource = fmt.Sprintf("//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s",
 			metadata.Properties["project_id"],
 			metadata.Properties["database_name"],
 			metadata.Properties["table_name"])
 	}
-	
+
 	// Update entry
 	updateMask := &fieldmaskpb.FieldMask{
 		Paths: []string{"description", "user_specified_type", "user_specified_system"},
 	}
-	
+
 	_, err = c.client.UpdateEntry(ctx, &datacatalogpb.UpdateEntryRequest{
-		Entry:     entry,
+		Entry:      entry,
 		UpdateMask: updateMask,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to update entry: %w", err)
 	}
-	
+
 	// Update tags
 	// First, get existing tags
 	tagReq := &datacatalogpb.ListTagsRequest{
 		Parent: entryName,
 	}
-	
+
 	existingTags := make(map[string]*datacatalogpb.Tag)
 	tagIt := c.client.ListTags(ctx, tagReq)
 	for {
@@ -425,29 +425,29 @@ func (c *DataCatalogClient) UpdateTableMetadata(ctx context.Context, database, t
 		if err != nil {
 			return fmt.Errorf("failed to list tags: %w", err)
 		}
-		
+
 		parts := strings.Split(tag.Template, "/")
 		templateID := parts[len(parts)-1]
 		existingTags[templateID] = tag
 	}
-	
+
 	// Process tags from metadata
 	for _, tagName := range metadata.Tags {
 		// Skip if tag already exists
 		if _, exists := existingTags[tagName]; exists {
 			continue
 		}
-		
+
 		// Create tag template name
-		templateName := fmt.Sprintf("projects/%s/locations/%s/tagTemplates/%s", 
+		templateName := fmt.Sprintf("projects/%s/locations/%s/tagTemplates/%s",
 			c.projectID, c.location, tagName)
-		
+
 		// Create new tag
 		newTag := &datacatalogpb.Tag{
 			Template: templateName,
 			Fields:   make(map[string]*datacatalogpb.TagField),
 		}
-		
+
 		// Add tag fields from properties
 		prefix := fmt.Sprintf("tag:%s:", tagName)
 		for key, _ := range metadata.Properties {
@@ -518,7 +518,7 @@ func (c *DataCatalogClient) PublishQualityMetrics(ctx context.Context, database,
 		fields := map[string]*datacatalogpb.TagTemplateField{
 			"overall_score": {
 				DisplayName: "Overall Score",
-				Type: &datacatalogpb.FieldType{
+				Type:        &datacatalogpb.FieldType{
 					// PrimitiveType: &datacatalogpb.FieldType_PrimitiveType{
 					// 	Type: datacatalogpb.FieldType_PrimitiveType_DOUBLE,
 					// },
@@ -526,7 +526,7 @@ func (c *DataCatalogClient) PublishQualityMetrics(ctx context.Context, database,
 			},
 			"completeness": {
 				DisplayName: "Completeness",
-				Type: &datacatalogpb.FieldType{
+				Type:        &datacatalogpb.FieldType{
 					// PrimitiveType: &datacatalogpb.FieldType_PrimitiveType{
 					// 	Type: datacatalogpb.FieldType_PrimitiveType_DOUBLE,
 					// },
@@ -534,7 +534,7 @@ func (c *DataCatalogClient) PublishQualityMetrics(ctx context.Context, database,
 			},
 			"accuracy": {
 				DisplayName: "Accuracy",
-				Type: &datacatalogpb.FieldType{
+				Type:        &datacatalogpb.FieldType{
 					// PrimitiveType: &datacatalogpb.FieldType_PrimitiveType{
 					// 	Type: datacatalogpb.FieldType_PrimitiveType_DOUBLE,
 					// },
@@ -542,7 +542,7 @@ func (c *DataCatalogClient) PublishQualityMetrics(ctx context.Context, database,
 			},
 			"consistency": {
 				DisplayName: "Consistency",
-				Type: &datacatalogpb.FieldType{
+				Type:        &datacatalogpb.FieldType{
 					// PrimitiveType: &datacatalogpb.FieldType_PrimitiveType{
 					// 	Type: datacatalogpb.FieldType_PrimitiveType_DOUBLE,
 					// },
@@ -550,7 +550,7 @@ func (c *DataCatalogClient) PublishQualityMetrics(ctx context.Context, database,
 			},
 			"timeliness": {
 				DisplayName: "Timeliness",
-				Type: &datacatalogpb.FieldType{
+				Type:        &datacatalogpb.FieldType{
 					// PrimitiveType: &datacatalogpb.FieldType_PrimitiveType{
 					// 	Type: datacatalogpb.FieldType_PrimitiveType_DOUBLE,
 					// },
@@ -558,20 +558,20 @@ func (c *DataCatalogClient) PublishQualityMetrics(ctx context.Context, database,
 			},
 			"last_updated": {
 				DisplayName: "Last Updated",
-				Type: &datacatalogpb.FieldType{
+				Type:        &datacatalogpb.FieldType{
 					// PrimitiveType: &datacatalogpb.FieldType_PrimitiveType{
 					// 	Type: datacatalogpb.FieldType_PrimitiveType_TIMESTAMP,
 					// },
 				},
 			},
 		}
-		
+
 		// Create template
 		template := &datacatalogpb.TagTemplate{
 			DisplayName: "Quality Metrics",
 			Fields:      fields,
 		}
-		
+
 		_, err = c.client.CreateTagTemplate(ctx, &datacatalogpb.CreateTagTemplateRequest{
 			Parent:        fmt.Sprintf("projects/%s/locations/%s", c.projectID, c.location),
 			TagTemplateId: "quality_metrics",
@@ -581,16 +581,16 @@ func (c *DataCatalogClient) PublishQualityMetrics(ctx context.Context, database,
 			return fmt.Errorf("failed to create quality metrics tag template: %w", err)
 		}
 	}
-	
+
 	// Construct entry name
-	entryName := fmt.Sprintf("projects/%s/locations/%s/entryGroups/%s/entries/%s", 
+	entryName := fmt.Sprintf("projects/%s/locations/%s/entryGroups/%s/entries/%s",
 		c.projectID, c.location, database, table)
-	
+
 	// Check if quality metrics tag already exists
 	tagReq := &datacatalogpb.ListTagsRequest{
 		Parent: entryName,
 	}
-	
+
 	var qualityTag *datacatalogpb.Tag
 	tagIt := c.client.ListTags(ctx, tagReq)
 	for {
@@ -601,13 +601,13 @@ func (c *DataCatalogClient) PublishQualityMetrics(ctx context.Context, database,
 		if err != nil {
 			return fmt.Errorf("failed to list tags: %w", err)
 		}
-		
+
 		if strings.HasSuffix(tag.Template, "/tagTemplates/quality_metrics") {
 			qualityTag = tag
 			break
 		}
 	}
-	
+
 	// Create tag fields
 	fields := make(map[string]*datacatalogpb.TagField)
 	// fields["overall_score"] = &datacatalogpb.TagField{
@@ -640,7 +640,7 @@ func (c *DataCatalogClient) PublishQualityMetrics(ctx context.Context, database,
 	// 		TimestampValue: metrics.LastUpdated,
 	// 	},
 	// }
-	
+
 	if qualityTag != nil {
 		// Update existing tag
 		// qualityTag.Fields = fields
@@ -656,7 +656,7 @@ func (c *DataCatalogClient) PublishQualityMetrics(ctx context.Context, database,
 			Template: templateName,
 			Fields:   fields,
 		}
-		
+
 		_, err = c.client.CreateTag(ctx, &datacatalogpb.CreateTagRequest{
 			Parent: entryName,
 			Tag:    newTag,
@@ -665,7 +665,7 @@ func (c *DataCatalogClient) PublishQualityMetrics(ctx context.Context, database,
 			return fmt.Errorf("failed to create quality metrics tag: %w", err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -674,16 +674,16 @@ func (c *DataCatalogClient) GetQualityMetrics(ctx context.Context, database, tab
 	if !c.connected {
 		return nil, fmt.Errorf("not connected to Google Cloud Data Catalog")
 	}
-	
+
 	// Construct entry name
-	entryName := fmt.Sprintf("projects/%s/locations/%s/entryGroups/%s/entries/%s", 
+	entryName := fmt.Sprintf("projects/%s/locations/%s/entryGroups/%s/entries/%s",
 		c.projectID, c.location, database, table)
-	
+
 	// Get quality metrics tag
 	tagReq := &datacatalogpb.ListTagsRequest{
 		Parent: entryName,
 	}
-	
+
 	var qualityTag *datacatalogpb.Tag
 	tagIt := c.client.ListTags(ctx, tagReq)
 	for {
@@ -694,17 +694,17 @@ func (c *DataCatalogClient) GetQualityMetrics(ctx context.Context, database, tab
 		if err != nil {
 			return nil, fmt.Errorf("failed to list tags: %w", err)
 		}
-		
+
 		if strings.HasSuffix(tag.Template, "/tagTemplates/quality_metrics") {
 			qualityTag = tag
 			break
 		}
 	}
-	
+
 	if qualityTag == nil {
 		return nil, fmt.Errorf("quality metrics not found for table %s", table)
 	}
-	
+
 	// Extract quality metrics from tag
 	metrics := &nessitypes.QualityMetrics{}
 	// if field, ok := qualityTag.Fields["overall_score"]; ok {
@@ -737,6 +737,6 @@ func (c *DataCatalogClient) GetQualityMetrics(ctx context.Context, database, tab
 	// 		metrics.LastUpdated = timestampValue.TimestampValue
 	// 	}
 	// }
-	
+
 	return metrics, nil
 }

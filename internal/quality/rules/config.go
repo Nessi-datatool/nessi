@@ -11,21 +11,21 @@ import (
 
 // RuleConfig represents the configuration for a rule
 type RuleConfig struct {
-	Name        string   `yaml:"name"`
-	Description string   `yaml:"description"`
-	Type        string   `yaml:"type"`
-	Column      string   `yaml:"column"`
-	Condition   string   `yaml:"condition,omitempty"`
-	Threshold   float64  `yaml:"threshold,omitempty"`
-	Severity    string   `yaml:"severity"`
-	Pattern     string   `yaml:"pattern,omitempty"`
-	Min         float64  `yaml:"min,omitempty"`
-	Max         float64  `yaml:"max,omitempty"`
-	MinLength   int      `yaml:"min_length,omitempty"`
-	MaxLength   int      `yaml:"max_length,omitempty"`
-	EnumValues  []string `yaml:"enum_values,omitempty"`
-	RegexPattern string  `yaml:"regex_pattern,omitempty"`
-	DateFormat  string   `yaml:"date_format,omitempty"`
+	Name         string   `yaml:"name"`
+	Description  string   `yaml:"description"`
+	Type         string   `yaml:"type"`
+	Column       string   `yaml:"column"`
+	Condition    string   `yaml:"condition,omitempty"`
+	Threshold    float64  `yaml:"threshold,omitempty"`
+	Severity     string   `yaml:"severity"`
+	Pattern      string   `yaml:"pattern,omitempty"`
+	Min          float64  `yaml:"min,omitempty"`
+	Max          float64  `yaml:"max,omitempty"`
+	MinLength    int      `yaml:"min_length,omitempty"`
+	MaxLength    int      `yaml:"max_length,omitempty"`
+	EnumValues   []string `yaml:"enum_values,omitempty"`
+	RegexPattern string   `yaml:"regex_pattern,omitempty"`
+	DateFormat   string   `yaml:"date_format,omitempty"`
 }
 
 // RulesConfigFile represents a YAML file containing rule configurations
@@ -192,8 +192,8 @@ func LoadDefaultRules() []ExtendedRule {
 				Column:      "username",
 				Severity:    SeverityMedium,
 			},
-			MinLength:   3,
-			MaxLength:   20,
+			MinLength: 3,
+			MaxLength: 20,
 		},
 		{
 			Rule: Rule{
@@ -203,7 +203,7 @@ func LoadDefaultRules() []ExtendedRule {
 				Column:      "status",
 				Severity:    SeverityMedium,
 			},
-			EnumValues:  []string{"active", "inactive", "pending"},
+			EnumValues: []string{"active", "inactive", "pending"},
 		},
 		{
 			Rule: Rule{
@@ -213,7 +213,7 @@ func LoadDefaultRules() []ExtendedRule {
 				Column:      "created_at",
 				Severity:    SeverityMedium,
 			},
-			DateFormat:  "2006-01-02",
+			DateFormat: "2006-01-02",
 		},
 	}
 }

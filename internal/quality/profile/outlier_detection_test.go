@@ -7,13 +7,13 @@ import (
 
 func TestOutlierDetectionMethods(t *testing.T) {
 	tests := []struct {
-		name           string
-		values         []float64
-		zScoreThresh   float64
-		iqrMultiplier  float64
-		expectZScore   []int
-		expectIQR      []int
-		description    string
+		name          string
+		values        []float64
+		zScoreThresh  float64
+		iqrMultiplier float64
+		expectZScore  []int
+		expectIQR     []int
+		description   string
 	}{
 		{
 			name:          "Normal Distribution",
@@ -75,19 +75,19 @@ func TestOutlierDetectionMethods(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Test Z-Score method
 			zScoreOutliers := detectOutliers(tt.values, tt.zScoreThresh)
-			
+
 			// Test IQR method
 			iqrOutliers := detectOutliersIQR(tt.values, tt.iqrMultiplier)
-			
+
 			// Check Z-Score results
 			if !compareIntSlices(zScoreOutliers, tt.expectZScore) {
-				t.Errorf("Z-Score outlier detection failed for %s: got %v, want %v", 
+				t.Errorf("Z-Score outlier detection failed for %s: got %v, want %v",
 					tt.name, zScoreOutliers, tt.expectZScore)
 			}
-			
+
 			// Check IQR results
 			if !compareIntSlices(iqrOutliers, tt.expectIQR) {
-				t.Errorf("IQR outlier detection failed for %s: got %v, want %v", 
+				t.Errorf("IQR outlier detection failed for %s: got %v, want %v",
 					tt.name, iqrOutliers, tt.expectIQR)
 			}
 		})
@@ -107,40 +107,40 @@ func compareIntSlices(a, b []int) bool {
 	if len(a) != len(b) {
 		return false
 	}
-	
+
 	if a == nil && b == nil {
 		return true
 	}
-	
+
 	if a == nil || b == nil {
 		return false
 	}
-	
+
 	// Create maps to count occurrences
 	mapA := make(map[int]int)
 	mapB := make(map[int]int)
-	
+
 	for _, v := range a {
 		mapA[v]++
 	}
-	
+
 	for _, v := range b {
 		mapB[v]++
 	}
-	
+
 	// Compare maps
 	for k, v := range mapA {
 		if mapB[k] != v {
 			return false
 		}
 	}
-	
+
 	for k, v := range mapB {
 		if mapA[k] != v {
 			return false
 		}
 	}
-	
+
 	return true
 }
 
@@ -178,7 +178,7 @@ func TestCalculateQuartiles(t *testing.T) {
 			// used in detectOutliersIQR
 			sorted := make([]float64, len(tt.values))
 			copy(sorted, tt.values)
-			
+
 			// Sort the values
 			for i := 0; i < len(sorted); i++ {
 				for j := i + 1; j < len(sorted); j++ {
@@ -187,12 +187,12 @@ func TestCalculateQuartiles(t *testing.T) {
 					}
 				}
 			}
-			
+
 			// Calculate quartiles
 			n := len(sorted)
 			q1Index := n / 4
 			q3Index := n * 3 / 4
-			
+
 			var q1, q3 float64
 			if n%4 == 0 {
 				q1 = (sorted[q1Index-1] + sorted[q1Index]) / 2
@@ -201,14 +201,14 @@ func TestCalculateQuartiles(t *testing.T) {
 				q1 = sorted[q1Index]
 				q3 = sorted[q3Index]
 			}
-			
+
 			if math.Abs(q1-tt.q1) > 0.0001 {
-				t.Errorf("Q1 calculation failed for %s: got %v, want %v", 
+				t.Errorf("Q1 calculation failed for %s: got %v, want %v",
 					tt.name, q1, tt.q1)
 			}
-			
+
 			if math.Abs(q3-tt.q3) > 0.0001 {
-				t.Errorf("Q3 calculation failed for %s: got %v, want %v", 
+				t.Errorf("Q3 calculation failed for %s: got %v, want %v",
 					tt.name, q3, tt.q3)
 			}
 		})

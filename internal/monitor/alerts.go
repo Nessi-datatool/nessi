@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	httptransport "github.com/go-openapi/runtime/client"
+	"github.com/go-openapi/strfmt"
 	alertmanagerClient "github.com/prometheus/alertmanager/api/v2/client"
 	"github.com/prometheus/alertmanager/api/v2/client/alert"
 	"github.com/prometheus/alertmanager/api/v2/models"
-	httptransport "github.com/go-openapi/runtime/client"
-	"github.com/go-openapi/strfmt"
 	"sync"
 )
 
@@ -22,19 +22,19 @@ type AlertConfig struct {
 
 // AlertManager manages alerts
 type AlertManager struct {
-	config    AlertConfig
-	apiClient *alertmanagerClient.AlertmanagerAPI
-	alerts    chan *Alert
-	shutdown  chan struct{}
+	config     AlertConfig
+	apiClient  *alertmanagerClient.AlertmanagerAPI
+	alerts     chan *Alert
+	shutdown   chan struct{}
 	shutdownWg *sync.WaitGroup
 }
 
 // Alert represents an alert to be sent
 type Alert struct {
-	Labels      map[string]string `json:"labels"`
-	Annotations map[string]string `json:"annotations"`
-	Status      string           `json:"status"`
-	GeneratorURL string          `json:"generatorURL"`
+	Labels       map[string]string `json:"labels"`
+	Annotations  map[string]string `json:"annotations"`
+	Status       string            `json:"status"`
+	GeneratorURL string            `json:"generatorURL"`
 }
 
 // NewAlertManager creates a new alert manager
@@ -43,10 +43,10 @@ func NewAlertManager(config AlertConfig) *AlertManager {
 	apiClient := alertmanagerClient.New(transport, strfmt.Default)
 
 	return &AlertManager{
-		config:    config,
-		apiClient: apiClient,
-		alerts:    make(chan *Alert, 100),
-		shutdown:  make(chan struct{}),
+		config:     config,
+		apiClient:  apiClient,
+		alerts:     make(chan *Alert, 100),
+		shutdown:   make(chan struct{}),
 		shutdownWg: &sync.WaitGroup{},
 	}
 }
@@ -98,12 +98,12 @@ func (m *AlertManager) sendAlert(alertData *Alert) error {
 	}
 
 	now := time.Now()
-	startsAtTime := strfmt.DateTime(now) // Value type
+	startsAtTime := strfmt.DateTime(now)                  // Value type
 	endsAtTime := strfmt.DateTime(now.Add(1 * time.Hour)) // Value type
 
-	if alertData.Status == "firing" { 
+	if alertData.Status == "firing" {
 		postableAlert.StartsAt = startsAtTime // DIAGNOSTIC: Assigning as value type
-		postableAlert.EndsAt = endsAtTime   // DIAGNOSTIC: Assigning as value type
+		postableAlert.EndsAt = endsAtTime     // DIAGNOSTIC: Assigning as value type
 	} else if alertData.Status == "resolved" {
 		postableAlert.StartsAt = startsAtTime // DIAGNOSTIC: Assigning as value type
 		postableAlert.EndsAt = startsAtTime   // DIAGNOSTIC: Assigning as value type (resolved now)
@@ -135,7 +135,7 @@ func CreateQualityAlert(tableName string, ruleType string, severity string, desc
 			"description": description,
 			"summary":     fmt.Sprintf("Quality violation in table %s", tableName),
 		},
-		Status:        "firing",
+		Status:       "firing",
 		GeneratorURL: "http://nessi-monitoring:9090",
 	}
 }
@@ -153,7 +153,7 @@ func CreateErrorAlert(component string, errorType string, message string) *Alert
 			"description": message,
 			"summary":     fmt.Sprintf("Error in %s component", component),
 		},
-		Status:        "firing",
+		Status:       "firing",
 		GeneratorURL: "http://nessi-monitoring:9090",
 	}
 }

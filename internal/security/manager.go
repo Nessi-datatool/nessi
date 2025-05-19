@@ -42,13 +42,13 @@ type SecurityManager struct {
 	jwtExpiration time.Duration
 
 	// Role definitions
-	roles map[string]*Role
+	roles  map[string]*Role
 	roleMu sync.RWMutex
 
 	// IP allowlist
-	allowlist         map[string]bool
-	allowlistEnabled  bool
-	allowMu           sync.RWMutex
+	allowlist        map[string]bool
+	allowlistEnabled bool
+	allowMu          sync.RWMutex
 
 	// Rate limiting
 	rateLimiters map[string]*rate.Limiter
@@ -171,7 +171,7 @@ func (m *SecurityManager) ValidateToken(tokenString string) (*User, error) {
 func (m *SecurityManager) SetRateLimit(key string, r rate.Limit, b int) {
 	m.rateMu.Lock()
 	defer m.rateMu.Unlock()
-	
+
 	// Create a new limiter with the specified rate and burst
 	m.rateLimiters[key] = rate.NewLimiter(r, b)
 }
@@ -203,7 +203,7 @@ func (m *SecurityManager) RemoveFromAllowlist(ip string) {
 	m.allowMu.Lock()
 	defer m.allowMu.Unlock()
 	delete(m.allowlist, ip)
-	
+
 	// Check if this was the last IP - if we still want to enforce the allowlist
 	// keep allowlistEnabled true even if empty
 }
@@ -212,12 +212,12 @@ func (m *SecurityManager) RemoveFromAllowlist(ip string) {
 func (m *SecurityManager) IsIPAllowed(ip string) bool {
 	m.allowMu.RLock()
 	defer m.allowMu.RUnlock()
-	
+
 	// If allowlist is not enabled, allow all IPs
 	if !m.allowlistEnabled {
 		return true
 	}
-	
+
 	// Check if the IP is explicitly allowed in the allowlist
 	allowed, exists := m.allowlist[ip]
 	// If the IP exists in the map and is set to true, it's allowed

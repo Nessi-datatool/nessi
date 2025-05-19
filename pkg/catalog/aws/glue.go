@@ -35,7 +35,7 @@ func (g *glueAPIImpl) GetTableDetails(ctx context.Context, database, table strin
 	if err != nil {
 		return nil, fmt.Errorf("failed to get table details: %w", err)
 	}
-	
+
 	// Convert AWS Glue Table to nessitypes.TableDetails
 	tableDetails := &nessitypes.TableDetails{
 		Info: nessitypes.TableInfo{
@@ -53,7 +53,7 @@ func (g *glueAPIImpl) GetTableDetails(ctx context.Context, database, table strin
 			UpdatedAt: time.Now(),
 		},
 	}
-	
+
 	return tableDetails, nil
 }
 
@@ -63,9 +63,9 @@ func init() {
 
 // GlueCatalog implements the DataCatalog interface for AWS Glue Data Catalog
 type GlueCatalog struct {
-	client      GlueAPI
-	connected   bool
-	region      string
+	client    GlueAPI
+	connected bool
+	region    string
 }
 
 // NewGlueCatalog creates a new AWS Glue Data Catalog client
@@ -87,11 +87,11 @@ func (c *GlueCatalog) Connect(ctx context.Context, config map[string]interface{}
 	accessKey, _ := config["access_key"].(string)
 	secretKey, _ := config["secret_key"].(string)
 	useIAMRole, _ := config["use_iam_role"].(bool)
-	
+
 	// Create AWS configuration
 	var awsCfg aws.Config
 	var err error
-	
+
 	if accessKey != "" && secretKey != "" {
 		// Use access key and secret key
 		awsCfg, err = awsconfig.LoadDefaultConfig(ctx,
@@ -108,16 +108,16 @@ func (c *GlueCatalog) Connect(ctx context.Context, config map[string]interface{}
 	} else {
 		return fmt.Errorf("no valid authentication method provided")
 	}
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to load AWS configuration: %w", err)
 	}
-	
+
 	// Create Glue client
 	c.client = &glueAPIImpl{glue.NewFromConfig(awsCfg)}
 	c.connected = true
 	c.region = region
-	
+
 	return nil
 }
 
@@ -132,13 +132,13 @@ func (c *GlueCatalog) ListDatabases(ctx context.Context) ([]nessitypes.DatabaseI
 	if !c.connected {
 		return nil, fmt.Errorf("not connected to AWS Glue Data Catalog")
 	}
-	
+
 	// Call Glue API to list databases
 	result, err := c.client.GetDatabases(ctx, &glue.GetDatabasesInput{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list databases: %w", err)
 	}
-	
+
 	// Convert to DatabaseInfo
 	databases := make([]nessitypes.DatabaseInfo, 0, len(result.DatabaseList))
 	for _, db := range result.DatabaseList {
@@ -148,7 +148,7 @@ func (c *GlueCatalog) ListDatabases(ctx context.Context) ([]nessitypes.DatabaseI
 			Properties:  convertMapToStringMap(db.Parameters),
 		})
 	}
-	
+
 	return databases, nil
 }
 
@@ -157,7 +157,7 @@ func (c *GlueCatalog) ListTables(ctx context.Context, database string) ([]nessit
 	if !c.connected {
 		return nil, fmt.Errorf("not connected to AWS Glue Data Catalog")
 	}
-	
+
 	// Call Glue API to list tables
 	result, err := c.client.GetTables(ctx, &glue.GetTablesInput{
 		DatabaseName: aws.String(database),
@@ -165,7 +165,7 @@ func (c *GlueCatalog) ListTables(ctx context.Context, database string) ([]nessit
 	if err != nil {
 		return nil, fmt.Errorf("failed to list tables in database %s: %w", database, err)
 	}
-	
+
 	// Convert to TableInfo
 	tables := make([]nessitypes.TableInfo, 0, len(result.TableList))
 	for _, table := range result.TableList {
@@ -173,12 +173,12 @@ func (c *GlueCatalog) ListTables(ctx context.Context, database string) ([]nessit
 		if table.StorageDescriptor != nil && table.StorageDescriptor.Location != nil {
 			location = *table.StorageDescriptor.Location
 		}
-		
+
 		tableType := ""
 		if table.Parameters != nil {
 			tableType = table.Parameters["table_type"]
 		}
-		
+
 		tables = append(tables, nessitypes.TableInfo{
 			Name:        *table.Name,
 			Type:        tableType,
@@ -187,7 +187,7 @@ func (c *GlueCatalog) ListTables(ctx context.Context, database string) ([]nessit
 			Properties:  convertMapToStringMap(table.Parameters),
 		})
 	}
-	
+
 	return tables, nil
 }
 
@@ -196,7 +196,7 @@ func (c *GlueCatalog) GetTableDetails(ctx context.Context, database, table strin
 	if !c.connected {
 		return nil, fmt.Errorf("not connected to AWS Glue Data Catalog")
 	}
-	
+
 	return c.client.GetTableDetails(ctx, database, table)
 }
 
@@ -214,7 +214,7 @@ func (c *GlueCatalog) UpdateTableMetadata(ctx context.Context, database, table s
 	if !c.connected {
 		return fmt.Errorf("not connected to AWS Glue Data Catalog")
 	}
-	
+
 	// Get current table
 	getResult, err := c.client.GetTable(ctx, &glue.GetTableInput{
 		DatabaseName: aws.String(database),
@@ -223,22 +223,22 @@ func (c *GlueCatalog) UpdateTableMetadata(ctx context.Context, database, table s
 	if err != nil {
 		return fmt.Errorf("failed to get table %s in database %s: %w", table, database, err)
 	}
-	
+
 	if getResult.Table == nil {
 		return fmt.Errorf("table %s not found in database %s", table, database)
 	}
-	
+
 	// Update table parameters with metadata
 	parameters := make(map[string]string)
 	for k, v := range metadata.Properties {
 		parameters[k] = v
 	}
-	
+
 	// Add tags as parameters with "tag:" prefix
 	for _, tag := range metadata.Tags {
 		parameters["tag:"+tag] = "true"
 	}
-	
+
 	// Create update input
 	updateInput := &glue.UpdateTableInput{
 		DatabaseName: aws.String(database),
@@ -253,13 +253,13 @@ func (c *GlueCatalog) UpdateTableMetadata(ctx context.Context, database, table s
 			TableType:         getResult.Table.TableType,
 		},
 	}
-	
+
 	// Update table
 	_, err = c.client.UpdateTable(ctx, updateInput)
 	if err != nil {
 		return fmt.Errorf("failed to update table %s in database %s: %w", table, database, err)
 	}
-	
+
 	return nil
 }
 
@@ -281,7 +281,7 @@ func (c *GlueCatalog) PublishQualityMetrics(ctx context.Context, database, table
 	if !c.connected {
 		return fmt.Errorf("not connected to AWS Glue Data Catalog")
 	}
-	
+
 	// Get current table
 	getResult, err := c.client.GetTable(ctx, &glue.GetTableInput{
 		DatabaseName: aws.String(database),
@@ -290,11 +290,11 @@ func (c *GlueCatalog) PublishQualityMetrics(ctx context.Context, database, table
 	if err != nil {
 		return fmt.Errorf("failed to get table %s in database %s: %w", table, database, err)
 	}
-	
+
 	if getResult.Table == nil {
 		return fmt.Errorf("table %s not found in database %s", table, database)
 	}
-	
+
 	// Create parameters map from existing parameters
 	parameters := make(map[string]string)
 	if getResult.Table.Parameters != nil {
@@ -302,7 +302,7 @@ func (c *GlueCatalog) PublishQualityMetrics(ctx context.Context, database, table
 			parameters[k] = v
 		}
 	}
-	
+
 	// Add quality metrics as parameters
 	parameters["quality:total_rows"] = fmt.Sprintf("%d", metrics.TotalRows)
 	parameters["quality:null_rows"] = fmt.Sprintf("%d", metrics.NullRows)
@@ -313,7 +313,7 @@ func (c *GlueCatalog) PublishQualityMetrics(ctx context.Context, database, table
 	parameters["quality:data_consistency"] = fmt.Sprintf("%.2f", metrics.DataConsistency)
 	parameters["quality:schema_version"] = metrics.SchemaVersion
 	parameters["quality:last_updated"] = metrics.LastUpdated.Format(time.RFC3339)
-	
+
 	// Create update input
 	updateInput := &glue.UpdateTableInput{
 		DatabaseName: aws.String(database),
@@ -327,13 +327,13 @@ func (c *GlueCatalog) PublishQualityMetrics(ctx context.Context, database, table
 			TableType:         getResult.Table.TableType,
 		},
 	}
-	
+
 	// Update table
 	_, err = c.client.UpdateTable(ctx, updateInput)
 	if err != nil {
 		return fmt.Errorf("failed to update table %s in database %s with quality metrics: %w", table, database, err)
 	}
-	
+
 	return nil
 }
 
@@ -342,7 +342,7 @@ func (c *GlueCatalog) GetQualityMetrics(ctx context.Context, database, table str
 	if !c.connected {
 		return nil, fmt.Errorf("not connected to AWS Glue Data Catalog")
 	}
-	
+
 	// Get table
 	getResult, err := c.client.GetTable(ctx, &glue.GetTableInput{
 		DatabaseName: aws.String(database),
@@ -351,7 +351,7 @@ func (c *GlueCatalog) GetQualityMetrics(ctx context.Context, database, table str
 	if err != nil {
 		return nil, fmt.Errorf("failed to get table %s in database %s: %w", table, database, err)
 	}
-	
+
 	if getResult.Table == nil || getResult.Table.Parameters == nil {
 		return nil, fmt.Errorf("table %s not found in database %s or has no parameters", table, database)
 	}
@@ -404,7 +404,7 @@ func convertMapToStringMap(m map[string]string) map[string]string {
 	if m == nil {
 		return make(map[string]string)
 	}
-	
+
 	result := make(map[string]string)
 	for k, v := range m {
 		result[k] = v

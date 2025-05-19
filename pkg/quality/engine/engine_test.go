@@ -74,7 +74,7 @@ func (m *mockEngine) GenerateReport(ctx context.Context, tablePath string) (*Rep
 	validation, _ := m.ValidateTable(ctx, tablePath)
 	profile, _ := m.ProfileTable(ctx, tablePath)
 	monitoring, _ := m.MonitorTable(ctx, tablePath)
-	
+
 	return &Report{
 		TableName:  tablePath,
 		Validation: *validation,
@@ -88,7 +88,7 @@ func TestGenerateReport(t *testing.T) {
 	// Add timeout to prevent test hanging - reduced to 500ms for faster tests
 	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
 	defer cancel()
-	
+
 	// Use our mock engine instead of the real one
 	mockEngine := &mockEngine{}
 
@@ -101,13 +101,13 @@ func TestGenerateReport(t *testing.T) {
 
 func TestRuleResult(t *testing.T) {
 	rule := RuleResult{
-		Name:        "test_rule",
-		Type:        "completeness",
-		Status:      "pass",
-		Message:     "all good",
-		Severity:    "low",
-		Column:      "test_col",
-		Timestamp:   time.Now(),
+		Name:      "test_rule",
+		Type:      "completeness",
+		Status:    "pass",
+		Message:   "all good",
+		Severity:  "low",
+		Column:    "test_col",
+		Timestamp: time.Now(),
 	}
 
 	assert.Equal(t, "test_rule", rule.Name)
@@ -123,14 +123,14 @@ func TestColumnProfile(t *testing.T) {
 		Name: "test_col",
 		Type: "string",
 		Stats: ColumnStats{
-			Count:      100,
-			NullCount:  10,
-			Distinct:   50,
-			Min:        "a",
-			Max:        "z",
-			Mean:       50.0,
-			StdDev:     10.0,
-			Quartiles:  []float64{25.0, 50.0, 75.0},
+			Count:     100,
+			NullCount: 10,
+			Distinct:  50,
+			Min:       "a",
+			Max:       "z",
+			Mean:      50.0,
+			StdDev:    10.0,
+			Quartiles: []float64{25.0, 50.0, 75.0},
 		},
 		Patterns: []string{"pattern1", "pattern2"},
 		Anomalies: []Anomaly{
@@ -154,11 +154,11 @@ func TestColumnProfile(t *testing.T) {
 
 func TestMetric(t *testing.T) {
 	metric := Metric{
-		Name:   "test_metric",
-		Value:  100.0,
-		Unit:   "bytes",
+		Name:      "test_metric",
+		Value:     100.0,
+		Unit:      "bytes",
 		Threshold: 90.0,
-		Status: "ok",
+		Status:    "ok",
 	}
 
 	assert.Equal(t, "test_metric", metric.Name)
@@ -170,9 +170,9 @@ func TestMetric(t *testing.T) {
 
 func TestAlert(t *testing.T) {
 	alert := Alert{
-		Name:    "test_alert",
-		Severity: "critical",
-		Message: "threshold exceeded",
+		Name:      "test_alert",
+		Severity:  "critical",
+		Message:   "threshold exceeded",
 		Timestamp: time.Now(),
 	}
 

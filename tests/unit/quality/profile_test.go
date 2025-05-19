@@ -28,7 +28,7 @@ func (r *mockReader) ReadAll() (arrow.Record, error) {
 	fields := make([]arrow.Field, 0)
 	fieldMap := make(map[string]int)
 	fieldTypes := make(map[string]arrow.DataType)
-	
+
 	// First, determine the types of each field
 	for key, value := range r.data[0] {
 		var dataType arrow.DataType
@@ -46,7 +46,7 @@ func (r *mockReader) ReadAll() (arrow.Record, error) {
 		}
 		fieldTypes[key] = dataType
 	}
-	
+
 	// Create the schema fields
 	i := 0
 	for key := range r.data[0] {
@@ -59,7 +59,7 @@ func (r *mockReader) ReadAll() (arrow.Record, error) {
 	// Create record builder
 	builder := array.NewRecordBuilder(memory.DefaultAllocator, schema)
 	defer builder.Release()
-	
+
 	// Add data
 	for _, row := range r.data {
 		for fieldName, idx := range fieldMap {
@@ -68,7 +68,7 @@ func (r *mockReader) ReadAll() (arrow.Record, error) {
 				builder.Field(idx).AppendNull()
 				continue
 			}
-			
+
 			switch fieldTypes[fieldName].ID() {
 			case arrow.STRING:
 				if str, ok := value.(string); ok {
@@ -102,7 +102,7 @@ func (r *mockReader) ReadAll() (arrow.Record, error) {
 }
 
 func TestProfileTable(t *testing.T) {
-	
+
 	// Create test data with patterns and anomalies
 	testData := []map[string]interface{}{
 		{"name": "user_test_1", "age": 25, "email": "test1@example.com", "salary": 50000.0, "created_at": time.Now().Add(-24 * time.Hour * 30)},
@@ -140,7 +140,7 @@ func TestProfileTable(t *testing.T) {
 	// Verify that we have profiles for each column
 	columns := map[string]bool{"name": false, "age": false, "email": false, "salary": false, "created_at": false}
 	profileMap := make(map[string]*profile.Profile)
-	
+
 	for _, p := range profiles {
 		columns[p.Name] = true
 		profileMap[p.Name] = p
@@ -156,10 +156,10 @@ func TestProfileTable(t *testing.T) {
 	if salaryProfile, ok := profileMap["salary"]; ok {
 		// Verify stats are calculated correctly
 		if salaryProfile.Stats.Min != 50000.0 || salaryProfile.Stats.Max != 1000000.0 {
-			t.Errorf("Incorrect min/max for salary: got min=%v, max=%v, expected min=50000, max=1000000", 
+			t.Errorf("Incorrect min/max for salary: got min=%v, max=%v, expected min=50000, max=1000000",
 				salaryProfile.Stats.Min, salaryProfile.Stats.Max)
 		}
-		
+
 		// Log if we found outliers (informational only)
 		for _, anomaly := range salaryProfile.Anomalies {
 			if strings.Contains(strings.ToLower(anomaly.Type), "outlier") {
@@ -314,14 +314,14 @@ func TestAnomalyDetection(t *testing.T) {
 		// Instead of failing, let's modify the test to check if the standard deviation is calculated correctly
 		// The outlier detection uses 3 standard deviations, so we'll verify the calculation is correct
 		expectedMean := (10.0 + 11.0 + 9.0 + 10.5 + 100.0) / 5
-		if math.Abs(valueProfile.Stats.Mean - expectedMean) > 0.01 {
+		if math.Abs(valueProfile.Stats.Mean-expectedMean) > 0.01 {
 			t.Errorf("Mean calculation incorrect: got %v, expected %v", valueProfile.Stats.Mean, expectedMean)
 		}
-		
+
 		// With these values, the standard deviation should be large enough to detect the outlier
 		t.Logf("Standard deviation: %v, Mean: %v", valueProfile.Stats.StdDev, valueProfile.Stats.Mean)
-		t.Logf("Difference between outlier and mean: %v", math.Abs(100.0 - valueProfile.Stats.Mean))
-		t.Logf("Threshold for outlier detection: %v", valueProfile.Stats.StdDev * 3)
+		t.Logf("Difference between outlier and mean: %v", math.Abs(100.0-valueProfile.Stats.Mean))
+		t.Logf("Threshold for outlier detection: %v", valueProfile.Stats.StdDev*3)
 	}
 }
 

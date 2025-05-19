@@ -9,19 +9,20 @@ import (
 )
 
 // MetricsCollector collects and exposes metrics
+//
 //go:generate stringer -type=MetricCategory
 type MetricsCollector struct {
 	// Table metrics
 	tablesTotal *prometheus.GaugeVec
 	tablesSize  *prometheus.GaugeVec
-	
+
 	// Quality metrics
 	qualityChecksTotal *prometheus.CounterVec
 	qualityViolations  *prometheus.CounterVec
-	
+
 	// Performance metrics
 	queryLatency *prometheus.HistogramVec
-	
+
 	// Error metrics
 	errorsTotal *prometheus.CounterVec
 }
@@ -30,10 +31,10 @@ type MetricsCollector struct {
 type MetricCategory string
 
 const (
-	MetricCategoryTable    MetricCategory = "table"
-	MetricCategoryQuality  MetricCategory = "quality"
-	MetricCategoryQuery    MetricCategory = "query"
-	MetricCategoryError    MetricCategory = "error"
+	MetricCategoryTable   MetricCategory = "table"
+	MetricCategoryQuality MetricCategory = "quality"
+	MetricCategoryQuery   MetricCategory = "query"
+	MetricCategoryError   MetricCategory = "error"
 )
 
 // NewMetricsCollector creates a new metrics collector
@@ -69,8 +70,8 @@ func NewMetricsCollector() *MetricsCollector {
 		),
 		queryLatency: promauto.NewHistogramVec(
 			prometheus.HistogramOpts{
-				Name: "nessi_query_latency_seconds",
-				Help: "Query latency distribution",
+				Name:    "nessi_query_latency_seconds",
+				Help:    "Query latency distribution",
 				Buckets: []float64{0.1, 0.5, 1.0, 2.0, 5.0},
 			},
 			[]string{"operation"},

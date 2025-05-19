@@ -238,12 +238,12 @@ type GCPProviderFactory struct{}
 // Create creates a new GCP provider instance
 func (f *GCPProviderFactory) Create(config common.CloudConfig) (common.CloudProvider, error) {
 	provider := NewGCPProvider()
-	
+
 	// Convert CloudConfig to map for the Connect method
 	configMap := map[string]interface{}{
 		"project_id": config.AdditionalOptions["project_id"],
 	}
-	
+
 	// Extract credentials if provided
 	if config.Credentials != nil {
 		if credentialsFile, ok := config.Credentials["credentials_file"].(string); ok {
@@ -253,17 +253,17 @@ func (f *GCPProviderFactory) Create(config common.CloudConfig) (common.CloudProv
 			configMap["credentials_json"] = credentialsJSON
 		}
 	}
-	
+
 	// Add any additional options
 	for k, v := range config.AdditionalOptions {
 		configMap[k] = v
 	}
-	
+
 	// Connect to GCP
 	err := provider.Connect(context.Background(), configMap)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return provider, nil
 }

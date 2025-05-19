@@ -50,7 +50,7 @@ func main() {
 		// Time travel to first version
 		firstVersion := history[len(history)-1].Version
 		fmt.Printf("Time traveling to version %d...\n", firstVersion)
-		
+
 		version := int64(firstVersion)
 		result, err := manager.TimeTravel(datalake.DeltaTimeTravelOptions{Version: &version})
 		if err != nil {
@@ -63,7 +63,7 @@ func main() {
 		// Time travel to latest version
 		latestVersion := history[0].Version
 		fmt.Printf("Time traveling to version %d...\n", latestVersion)
-		
+
 		version = int64(latestVersion)
 		result, err = manager.TimeTravel(datalake.DeltaTimeTravelOptions{Version: &version})
 		if err != nil {
@@ -79,12 +79,12 @@ func main() {
 		// Get timestamps of first and latest versions
 		firstTimestamp := time.Unix(0, history[len(history)-1].Timestamp*int64(time.Millisecond))
 		latestTimestamp := time.Unix(0, history[0].Timestamp*int64(time.Millisecond))
-		
+
 		// Calculate a timestamp between first and latest versions
 		midTimestamp := firstTimestamp.Add(latestTimestamp.Sub(firstTimestamp) / 2)
-		
+
 		fmt.Printf("Time traveling to timestamp %s...\n", midTimestamp.Format(time.RFC3339))
-		
+
 		result, err := manager.TimeTravel(datalake.DeltaTimeTravelOptions{Timestamp: &midTimestamp})
 		if err != nil {
 			fmt.Printf("Error time traveling to timestamp %s: %v\n", midTimestamp.Format(time.RFC3339), err)
@@ -98,7 +98,7 @@ func main() {
 	if len(history) > 0 {
 		version := history[0].Version
 		fmt.Printf("Getting schema at version %d...\n", version)
-		
+
 		schemaFields, err := manager.GetSchemaFieldsAtVersion(version)
 		if err != nil {
 			fmt.Printf("Error getting schema at version %d: %v\n", version, err)
@@ -115,7 +115,7 @@ func main() {
 	if len(history) > 0 {
 		version := history[0].Version
 		fmt.Printf("Getting files at version %d...\n", version)
-		
+
 		files, err := manager.GetFilesAtVersion(version)
 		if err != nil {
 			fmt.Printf("Error getting files at version %d: %v\n", version, err)
@@ -136,12 +136,12 @@ func printTimeTravelResult(result *datalake.DeltaTimeTravelResult) {
 	fmt.Printf("Time Travel Result:\n")
 	fmt.Printf("Version: %d\n", result.Version)
 	fmt.Printf("Timestamp: %s\n", result.Timestamp.Format(time.RFC3339))
-	
+
 	fmt.Printf("Schema (%d fields):\n", len(result.SchemaFields))
 	for _, field := range result.SchemaFields {
 		fmt.Printf("  %s: %s\n", field.Name, field.Type)
 	}
-	
+
 	fmt.Printf("Files (%d):\n", len(result.Files))
 	for _, file := range result.Files {
 		fmt.Printf("  %s\n", file)

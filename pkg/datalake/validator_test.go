@@ -89,7 +89,7 @@ func TestSchemaValidator_ValidateRecord(t *testing.T) {
 		// Validate
 		errors := validator.ValidateRecord(record)
 		assert.NotEmpty(t, errors, "Record with wrong type should have errors")
-		
+
 		// Find the type error
 		var typeError *SchemaValidationError
 		for _, err := range errors {
@@ -98,7 +98,7 @@ func TestSchemaValidator_ValidateRecord(t *testing.T) {
 				break
 			}
 		}
-		
+
 		require.NotNil(t, typeError, "Should have error for 'value' field")
 		assert.Equal(t, "float64", typeError.ExpectedType, "Expected type should be float64")
 	})
@@ -128,7 +128,7 @@ func TestSchemaValidator_ValidateRecord(t *testing.T) {
 		// Validate
 		errors := validator.ValidateRecord(record)
 		assert.NotEmpty(t, errors, "Record with extra field should have errors")
-		
+
 		// Find the extra field error
 		var extraError *SchemaValidationError
 		for _, err := range errors {
@@ -137,7 +137,7 @@ func TestSchemaValidator_ValidateRecord(t *testing.T) {
 				break
 			}
 		}
-		
+
 		require.NotNil(t, extraError, "Should have error for 'extra' field")
 		assert.Equal(t, "not in schema", extraError.ExpectedType, "Expected type should be 'not in schema'")
 	})

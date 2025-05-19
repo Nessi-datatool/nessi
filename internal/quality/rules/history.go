@@ -25,14 +25,14 @@ type ValidationResult struct {
 
 // ValidationHistory represents a collection of validation results
 type ValidationHistory struct {
-	DatasetName  string            `json:"dataset_name"`
-	RunID        string            `json:"run_id"`
-	Timestamp    time.Time         `json:"timestamp"`
-	TotalRules   int               `json:"total_rules"`
-	PassedRules  int               `json:"passed_rules"`
-	FailedRules  int               `json:"failed_rules"`
+	DatasetName  string             `json:"dataset_name"`
+	RunID        string             `json:"run_id"`
+	Timestamp    time.Time          `json:"timestamp"`
+	TotalRules   int                `json:"total_rules"`
+	PassedRules  int                `json:"passed_rules"`
+	FailedRules  int                `json:"failed_rules"`
 	Results      []ValidationResult `json:"results"`
-	TotalRecords int64             `json:"total_records"`
+	TotalRecords int64              `json:"total_records"`
 }
 
 // RuleExecutionTracker tracks rule execution history
@@ -152,7 +152,7 @@ func (t *RuleExecutionTracker) GetValidationTrends(datasetName string, days int)
 
 	// Calculate trends
 	trends := make(map[string][]float64)
-	
+
 	// Overall success rate trend
 	successRates := make([]float64, 0, len(filteredHistories))
 	for _, history := range filteredHistories {
@@ -178,7 +178,7 @@ func (t *RuleExecutionTracker) GetValidationTrends(datasetName string, days int)
 			}
 		}
 	}
-	
+
 	// Add rule-specific trends to the overall trends
 	for ruleID, rates := range ruleSuccessRates {
 		trends[fmt.Sprintf("rule_%s", ruleID)] = rates

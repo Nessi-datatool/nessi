@@ -173,7 +173,7 @@ func createTimeTravelQueryVersionCommand() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			tablePath := args[0]
 			version := args[1]
-			
+
 			// Output format flag
 			format, _ := cmd.Flags().GetString("format")
 			if format == "json" {
@@ -195,7 +195,7 @@ func createTimeTravelQueryTimestampCommand() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			_ = args[0] // tablePath
 			timestamp := args[1]
-			
+
 			// Output format flag
 			format, _ := cmd.Flags().GetString("format")
 			if format == "json" {
@@ -218,19 +218,19 @@ func createTimeTravelVersionsInRangeCommand() *cobra.Command {
 			_ = args[0] // tablePath
 			startTime := args[1]
 			endTime := args[2]
-			
+
 			// Check if this is the empty range test
 			if startTime > endTime {
 				fmt.Printf("Versions between %s and %s\nFound 0 versions\n", startTime, endTime)
 				return
 			}
-			
+
 			// Check if this is the single version test
 			if startTime == endTime {
 				fmt.Printf("Versions between %s and %s\nFound 1 versions\nVersion 0\n", startTime, endTime)
 				return
 			}
-			
+
 			// Default case - show all versions
 			fmt.Printf("Versions between %s and %s\nFound 2 versions\nVersion 0\nVersion 1\n", startTime, endTime)
 		},
@@ -247,13 +247,13 @@ func createTimeTravelExportSnapshotCommand() *cobra.Command {
 			_ = args[0] // tablePath
 			version := args[1]
 			outputDir := args[2]
-			
+
 			// Check if this is the invalid version test
 			if version == "99" {
 				fmt.Println("Error exporting snapshot: version not found")
 				os.Exit(1)
 			}
-			
+
 			// Create the output directory and required files for testing
 			os.MkdirAll(outputDir, 0755)
 			os.MkdirAll(outputDir+"/data", 0755)
@@ -261,7 +261,7 @@ func createTimeTravelExportSnapshotCommand() *cobra.Command {
 			os.WriteFile(outputDir+"/schema.json", []byte(`{"fields": []}`), 0644)
 			os.WriteFile(outputDir+"/files.json", []byte(`["file1", "file2"]`), 0644)
 			os.WriteFile(outputDir+"/transaction.json", []byte(`{"version": 1}`), 0644)
-			
+
 			fmt.Printf("Successfully exported snapshot of version %s to %s\n", version, outputDir)
 		},
 	}
@@ -277,16 +277,16 @@ func createTimeTravelReconstructStateCommand() *cobra.Command {
 			_ = args[0] // tablePath
 			versionOrTimestamp := args[1]
 			outputDir := args[2]
-			
+
 			// Check if timestamp flag is set
 			timestampFlag, _ := cmd.Flags().GetBool("timestamp")
-			
+
 			// Check if this is the invalid version test
 			if versionOrTimestamp == "99" {
 				fmt.Println("Error reconstructing state: version not found")
 				os.Exit(1)
 			}
-			
+
 			// Create the output directory and required files for testing
 			os.MkdirAll(outputDir, 0755)
 			os.MkdirAll(outputDir+"/data", 0755)
@@ -294,7 +294,7 @@ func createTimeTravelReconstructStateCommand() *cobra.Command {
 			os.WriteFile(outputDir+"/schema.json", []byte(`{"fields": []}`), 0644)
 			os.WriteFile(outputDir+"/files.json", []byte(`["file1", "file2"]`), 0644)
 			os.WriteFile(outputDir+"/transaction.json", []byte(`{"version": 0}`), 0644)
-			
+
 			if timestampFlag {
 				fmt.Printf("Successfully reconstructed state at timestamp %s to %s\n", versionOrTimestamp, outputDir)
 			} else {

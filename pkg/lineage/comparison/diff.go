@@ -15,30 +15,30 @@ func NewDiffGenerator() *DiffGenerator {
 // GenerateDiff generates a diff between two lineage graphs
 func (g *DiffGenerator) GenerateDiff(oldGraph, newGraph *model.LineageGraph) *model.LineageDiff {
 	diff := model.NewLineageDiff(oldGraph, newGraph)
-	
+
 	// Create maps for faster lookup
 	oldNodes := make(map[string]*model.Node)
 	newNodes := make(map[string]*model.Node)
 	oldEdges := make(map[string]*model.Edge)
 	newEdges := make(map[string]*model.Edge)
-	
+
 	// Populate maps
 	for _, node := range oldGraph.Nodes {
 		oldNodes[node.ID] = node
 	}
-	
+
 	for _, node := range newGraph.Nodes {
 		newNodes[node.ID] = node
 	}
-	
+
 	for _, edge := range oldGraph.Edges {
 		oldEdges[edge.ID] = edge
 	}
-	
+
 	for _, edge := range newGraph.Edges {
 		newEdges[edge.ID] = edge
 	}
-	
+
 	// Find added, removed, and modified nodes
 	for id, node := range newNodes {
 		if oldNode, exists := oldNodes[id]; exists {
@@ -51,14 +51,14 @@ func (g *DiffGenerator) GenerateDiff(oldGraph, newGraph *model.LineageGraph) *mo
 			diff.AddedNodes = append(diff.AddedNodes, node)
 		}
 	}
-	
+
 	for id, node := range oldNodes {
 		if _, exists := newNodes[id]; !exists {
 			// Node exists only in old graph
 			diff.RemovedNodes = append(diff.RemovedNodes, node)
 		}
 	}
-	
+
 	// Find added, removed, and modified edges
 	for id, edge := range newEdges {
 		if oldEdge, exists := oldEdges[id]; exists {
@@ -71,14 +71,14 @@ func (g *DiffGenerator) GenerateDiff(oldGraph, newGraph *model.LineageGraph) *mo
 			diff.AddedEdges = append(diff.AddedEdges, edge)
 		}
 	}
-	
+
 	for id, edge := range oldEdges {
 		if _, exists := newEdges[id]; !exists {
 			// Edge exists only in old graph
 			diff.RemovedEdges = append(diff.RemovedEdges, edge)
 		}
 	}
-	
+
 	return diff
 }
 
@@ -95,18 +95,18 @@ func isNodeModified(oldNode, newNode *model.Node) bool {
 		oldNode.Version != newNode.Version {
 		return true
 	}
-	
+
 	// Check properties map
 	if len(oldNode.Properties) != len(newNode.Properties) {
 		return true
 	}
-	
+
 	for k, v := range oldNode.Properties {
 		if newV, exists := newNode.Properties[k]; !exists || newV != v {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -120,18 +120,18 @@ func isEdgeModified(oldEdge, newEdge *model.Edge) bool {
 		oldEdge.Version != newEdge.Version {
 		return true
 	}
-	
+
 	// Check properties map
 	if len(oldEdge.Properties) != len(newEdge.Properties) {
 		return true
 	}
-	
+
 	for k, v := range oldEdge.Properties {
 		if newV, exists := newEdge.Properties[k]; !exists || newV != v {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -159,7 +159,7 @@ func (a *DiffAnalyzer) AnalyzeImpact(diff *model.LineageDiff, graph *model.Linea
 		AffectedUpstreamNodes:   make([]*model.Node, 0),
 		CriticalNodes:           make([]*model.Node, 0),
 	}
-	
+
 	// Analyze impact of modified nodes
 	for _, node := range diff.ModifiedNodes {
 		// Find downstream nodes
@@ -173,12 +173,12 @@ func (a *DiffAnalyzer) AnalyzeImpact(diff *model.LineageDiff, graph *model.Linea
 					break
 				}
 			}
-			
+
 			if !found {
 				analysis.AffectedDownstreamNodes = append(analysis.AffectedDownstreamNodes, downstream)
 			}
 		}
-		
+
 		// Find upstream nodes
 		upstreamNodes := graph.GetUpstreamNodes(node.ID)
 		for _, upstream := range upstreamNodes {
@@ -190,13 +190,13 @@ func (a *DiffAnalyzer) AnalyzeImpact(diff *model.LineageDiff, graph *model.Linea
 					break
 				}
 			}
-			
+
 			if !found {
 				analysis.AffectedUpstreamNodes = append(analysis.AffectedUpstreamNodes, upstream)
 			}
 		}
 	}
-	
+
 	// Analyze impact of added nodes
 	for _, node := range diff.AddedNodes {
 		// Find downstream nodes
@@ -210,13 +210,13 @@ func (a *DiffAnalyzer) AnalyzeImpact(diff *model.LineageDiff, graph *model.Linea
 					break
 				}
 			}
-			
+
 			if !found {
 				analysis.AffectedDownstreamNodes = append(analysis.AffectedDownstreamNodes, downstream)
 			}
 		}
 	}
-	
+
 	// Analyze impact of removed nodes
 	for _, node := range diff.RemovedNodes {
 		// For removed nodes, we need to check the old graph
@@ -225,7 +225,7 @@ func (a *DiffAnalyzer) AnalyzeImpact(diff *model.LineageDiff, graph *model.Linea
 			// If we can't get the old graph, we can't analyze the impact
 			continue
 		}
-		
+
 		// Find downstream nodes in the old graph
 		downstreamNodes := oldGraph.GetDownstreamNodes(node.ID)
 		for _, downstream := range downstreamNodes {
@@ -239,14 +239,14 @@ func (a *DiffAnalyzer) AnalyzeImpact(diff *model.LineageDiff, graph *model.Linea
 						break
 					}
 				}
-				
+
 				if !found {
 					analysis.AffectedDownstreamNodes = append(analysis.AffectedDownstreamNodes, newNode)
 				}
 			}
 		}
 	}
-	
+
 	// Identify critical nodes
 	// Critical nodes are those that have many downstream dependencies
 	for _, node := range graph.Nodes {
@@ -255,7 +255,7 @@ func (a *DiffAnalyzer) AnalyzeImpact(diff *model.LineageDiff, graph *model.Linea
 			analysis.CriticalNodes = append(analysis.CriticalNodes, node)
 		}
 	}
-	
+
 	// Determine impact severity
 	if len(analysis.AffectedDownstreamNodes) > 10 {
 		analysis.ImpactSeverity = "High"
@@ -267,7 +267,7 @@ func (a *DiffAnalyzer) AnalyzeImpact(diff *model.LineageDiff, graph *model.Linea
 		analysis.ImpactSeverity = "Low"
 		analysis.ImpactDetails = "Changes have minimal downstream impact"
 	}
-	
+
 	return analysis
 }
 
@@ -298,9 +298,9 @@ func (a *DiffAnalyzer) AnalyzeSchemaChanges(diff *model.LineageDiff) *SchemaChan
 		RemovedColumns:  make([]string, 0),
 		ModifiedColumns: make([]string, 0),
 	}
-	
+
 	// In a real implementation, this would analyze the schema changes
 	// by comparing the schemas of modified nodes
-	
+
 	return analysis
 }

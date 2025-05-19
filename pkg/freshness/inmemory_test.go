@@ -57,11 +57,11 @@ func TestInMemorySLAManager(t *testing.T) {
 	t.Run("All Tables Freshness", func(t *testing.T) {
 		// Set up test data
 		now := time.Now()
-		
+
 		// Table 1: 30 minutes ago (info)
 		table1LastUpdate := now.Add(-30 * time.Minute)
 		mockConnector.UpdateTableLastModified(table1Path, table1LastUpdate)
-		
+
 		// Table 2: 2 days ago (critical)
 		table2LastUpdate := now.Add(-48 * time.Hour)
 		mockConnector.AddTable(table2Path, table2LastUpdate)
@@ -83,7 +83,7 @@ func TestInMemorySLAManager(t *testing.T) {
 
 		assert.NotNil(t, table1Status)
 		assert.NotNil(t, table2Status)
-		
+
 		assert.Equal(t, SLALevelInfo, table1Status.Status)
 		assert.Equal(t, SLALevelCritical, table2Status.Status)
 	})
@@ -91,15 +91,15 @@ func TestInMemorySLAManager(t *testing.T) {
 	t.Run("History Tracking", func(t *testing.T) {
 		// Set up test data
 		now := time.Now()
-		
+
 		// Table 1: Update several times with different statuses
-		
+
 		// First check: 30 minutes ago (info)
 		mockConnector.UpdateTableLastModified(table1Path, now.Add(-30*time.Minute))
 		status1, err := manager.CheckFreshness("test_table1")
 		assert.NoError(t, err)
 		assert.Equal(t, SLALevelInfo, status1.Status)
-		
+
 		// Second check: 2 hours ago (warning or critical, depending on exact thresholds)
 		mockConnector.UpdateTableLastModified(table1Path, now.Add(-2*time.Hour))
 		status2, err := manager.CheckFreshness("test_table1")
@@ -107,21 +107,21 @@ func TestInMemorySLAManager(t *testing.T) {
 		// Status could be warning or critical depending on exact time calculations
 		// Just ensure it's not info status
 		assert.NotEqual(t, SLALevelInfo, status2.Status)
-		
+
 		// Third check: 3 hours ago (critical)
 		mockConnector.UpdateTableLastModified(table1Path, now.Add(-3*time.Hour))
 		status3, err := manager.CheckFreshness("test_table1")
 		assert.NoError(t, err)
 		assert.Equal(t, SLALevelCritical, status3.Status)
-		
+
 		// Get trends
 		trends, err := manager.GetTableTrends("test_table1")
 		assert.NoError(t, err)
 		assert.NotNil(t, trends)
-		
+
 		// Check history entries
 		assert.GreaterOrEqual(t, len(trends.History), 3)
-		
+
 		// Check compliance - actual values may vary based on timing
 		// Just verify that we have entries and the total count is correct
 		assert.Greater(t, trends.Compliance.InfoCount, 0)
@@ -148,7 +148,7 @@ func TestDurationParsing(t *testing.T) {
 		{"monthly", 30 * 24 * time.Hour, false},
 		{"invalid", 0, true},
 	}
-	
+
 	for _, tc := range testCases {
 		t.Run(tc.input, func(t *testing.T) {
 			duration, err := ParseDuration(tc.input)
@@ -243,7 +243,7 @@ func TestSLAConfigValidation(t *testing.T) {
 			hasError: true,
 		},
 	}
-	
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.config.Validate()

@@ -27,7 +27,7 @@ func NewBetterMockDeltaConnector() *BetterMockDeltaConnector {
 func (m *BetterMockDeltaConnector) GetTableMetadata(tablePath string) (*TableMetadata, error) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-	
+
 	metadata, ok := m.tableMetadata[tablePath]
 	if !ok {
 		return nil, fmt.Errorf("table not found: %s", tablePath)
@@ -39,7 +39,7 @@ func (m *BetterMockDeltaConnector) GetTableMetadata(tablePath string) (*TableMet
 func (m *BetterMockDeltaConnector) ListTables() ([]string, error) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-	
+
 	return m.tables, nil
 }
 
@@ -47,7 +47,7 @@ func (m *BetterMockDeltaConnector) ListTables() ([]string, error) {
 func (m *BetterMockDeltaConnector) SetTableLastModified(tablePath string, lastModified time.Time) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	if meta, ok := m.tableMetadata[tablePath]; ok {
 		meta.LastModified = &lastModified
 	} else {
@@ -64,11 +64,11 @@ func (m *BetterMockDeltaConnector) SetTableLastModified(tablePath string, lastMo
 func (m *BetterMockDeltaConnector) AddTable(tablePath string, lastModified time.Time) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	if !contains(m.tables, tablePath) {
 		m.tables = append(m.tables, tablePath)
 	}
-	
+
 	m.tableMetadata[tablePath] = &TableMetadata{
 		LastModified: &lastModified,
 		Version:      1,
@@ -81,12 +81,12 @@ func (m *BetterMockDeltaConnector) AddTable(tablePath string, lastModified time.
 func (m *BetterMockDeltaConnector) UpdateTableLastModified(tablePath string, lastModified time.Time) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	metadata, ok := m.tableMetadata[tablePath]
 	if !ok {
 		return fmt.Errorf("table not found: %s", tablePath)
 	}
-	
+
 	metadata.LastModified = &lastModified
 	return nil
 }
@@ -95,9 +95,9 @@ func (m *BetterMockDeltaConnector) UpdateTableLastModified(tablePath string, las
 func (m *BetterMockDeltaConnector) SetTableMetadata(tablePath string, metadata *TableMetadata) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	m.tableMetadata[tablePath] = metadata
-	
+
 	// Add to tables list if not already present
 	if !contains(m.tables, tablePath) {
 		m.tables = append(m.tables, tablePath)
@@ -108,7 +108,7 @@ func (m *BetterMockDeltaConnector) SetTableMetadata(tablePath string, metadata *
 func (m *BetterMockDeltaConnector) SetTablesList(tables []string) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	m.tables = tables
 }
 

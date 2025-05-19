@@ -9,9 +9,9 @@ import (
 // GenerateDistributionAnalysis creates a detailed distribution analysis for a profile
 func GenerateDistributionAnalysis(profile *Profile) *DistributionAnalysis {
 	analysis := &DistributionAnalysis{
-		Histogram:   make(map[string]int),
-		Frequencies: make(map[string]float64),
-		TopValues:   []ValueCount{},
+		Histogram:    make(map[string]int),
+		Frequencies:  make(map[string]float64),
+		TopValues:    []ValueCount{},
 		BottomValues: []ValueCount{},
 	}
 

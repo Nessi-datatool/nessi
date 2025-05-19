@@ -107,7 +107,7 @@ func TestNewReader(t *testing.T) {
 func TestInitialize(t *testing.T) {
 	// Skip this test for now as we're focusing on fixing other tests
 	t.Skip("Skipping TestInitialize while fixing other tests")
-	
+
 	// Setup test table
 	tempDir, schema := setupTestTable(t)
 	defer os.RemoveAll(tempDir)
@@ -124,7 +124,7 @@ func TestInitialize(t *testing.T) {
 	// Verify schema
 	actualSchema := reader.GetSchema()
 	require.NotNil(t, actualSchema, "Schema should not be nil")
-	
+
 	// Compare schemas
 	expected := serializeSchema(schema)
 	actual := serializeSchema(actualSchema)
@@ -198,9 +198,9 @@ func TestGetStats(t *testing.T) {
 
 	// Update metadata
 	metadata := map[string]interface{}{
-		"version":    int64(1),
-		"timestamp":  time.Now().Unix(),
-		"schema":     map[string]interface{}{
+		"version":   int64(1),
+		"timestamp": time.Now().Unix(),
+		"schema": map[string]interface{}{
 			"fields": []map[string]interface{}{
 				{"name": "id", "type": "int32"},
 				{"name": "name", "type": "utf8"},
@@ -251,7 +251,7 @@ func generateSampleParquet(t *testing.T, output string, rows int, schema string)
 func TestReadAllStructuredWithRealParquet(t *testing.T) {
 	// Skip this test as it requires Python dependencies (pandas) that might not be available
 	t.Skip("Skipping test that requires Python dependencies (pandas)")
-	
+
 	tests := []struct {
 		name      string
 		schema    string
@@ -322,7 +322,7 @@ func TestReadAllStructuredWithRealParquet(t *testing.T) {
 func TestReadAllStructuredWithRealParquetFile(t *testing.T) {
 	// Skip this test as it requires Python dependencies (pandas) that might not be available
 	t.Skip("Skipping test that requires Python dependencies (pandas)")
-	
+
 	// Generate a real sample Parquet file
 	parquetPath := filepath.Join("..", "..", "test_data.parquet")
 	_, err := os.Stat(parquetPath)
@@ -386,7 +386,7 @@ func TestReadAllStructuredWithRealParquetFile(t *testing.T) {
 func TestReadAllStructured(t *testing.T) {
 	// Skip this test as it requires Parquet file handling which is incomplete
 	t.Skip("Skipping test that requires Parquet file handling")
-	
+
 	// Setup test table
 	tempDir, schema := setupTestTable(t)
 	defer os.RemoveAll(tempDir)
@@ -407,9 +407,9 @@ func TestReadAllStructured(t *testing.T) {
 	}
 
 	metadata := map[string]interface{}{
-		"version":    int64(1),
-		"timestamp":  time.Now().Unix(),
-		"schema":     map[string]interface{}{
+		"version":   int64(1),
+		"timestamp": time.Now().Unix(),
+		"schema": map[string]interface{}{
 			"fields": schemaFields,
 		},
 		"files":      []string{filePath},
@@ -445,7 +445,7 @@ func TestReadAllStructured(t *testing.T) {
 func TestGetSchema(t *testing.T) {
 	// Skip this test for now as we're focusing on fixing other tests
 	t.Skip("Skipping TestGetSchema while fixing other tests")
-	
+
 	// Setup test table
 	tempDir, schema := setupTestTable(t)
 	defer os.RemoveAll(tempDir)
@@ -462,7 +462,7 @@ func TestGetSchema(t *testing.T) {
 	// Test schema
 	actualSchema := reader.GetSchema()
 	require.NotNil(t, actualSchema, "Schema should not be nil")
-	
+
 	// Compare schemas
 	expected := serializeSchema(schema)
 	actual := serializeSchema(actualSchema)
@@ -477,7 +477,7 @@ func TestGetSchema(t *testing.T) {
 func TestConvertToStructuredData(t *testing.T) {
 	// Skip this test as it requires Parquet file handling which is incomplete
 	t.Skip("Skipping test that requires Parquet file handling")
-	
+
 	// Setup test table
 	tempDir, schema := setupTestTable(t)
 	defer os.RemoveAll(tempDir)

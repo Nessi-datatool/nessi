@@ -170,4 +170,4 @@ security_headers:
 			t.Error("X-Content-Type-Options header mismatch")
 		}
 	})
-} 
+}

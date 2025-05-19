@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	"github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
 	nessitypes "github.com/nessi-dev/nessi/pkg/api/types"
+	"github.com/stretchr/testify/assert"
 )
 
 //go:generate mockgen -destination mock_glue_client.go -package aws -source glue.go GlueAPI
@@ -47,21 +47,21 @@ func TestGlueCatalog_ListDatabases(t *testing.T) {
 			},
 		},
 	}
-	
+
 	// Set up mock expectations
 	m.EXPECT().GetDatabases(gomock.Any(), gomock.Any()).Return(&glue.GetDatabasesOutput{
 		DatabaseList: testDatabases,
 	}, nil)
-	
+
 	// Create catalog with mock client
 	catalog := &GlueCatalog{}
 	catalog.client = m
 	catalog.connected = true
-	
+
 	// Call ListDatabases
 	ctx := context.Background()
 	databases, err := catalog.ListDatabases(ctx)
-	
+
 	// Verify results
 	assert.NoError(t, err)
 	assert.Len(t, databases, 2)
@@ -79,7 +79,7 @@ func TestGlueCatalog_ListTables(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	m := NewMockGlueAPI(ctrl)
-	
+
 	// Create test data
 	testTables := []types.Table{
 		{
@@ -103,21 +103,21 @@ func TestGlueCatalog_ListTables(t *testing.T) {
 			},
 		},
 	}
-	
+
 	// Set up mock expectations
 	m.EXPECT().GetTables(gomock.Any(), gomock.Any()).Return(&glue.GetTablesOutput{
 		TableList: testTables,
 	}, nil)
-	
+
 	// Create catalog with mock client
 	catalog := &GlueCatalog{}
 	catalog.client = m
 	catalog.connected = true
-	
+
 	// Call ListTables
 	ctx := context.Background()
 	tables, err := catalog.ListTables(ctx, "testdb")
-	
+
 	// Verify results
 	assert.NoError(t, err)
 	assert.Len(t, tables, 2)
@@ -129,7 +129,7 @@ func TestGlueCatalog_ListTables(t *testing.T) {
 	assert.Equal(t, "parquet", tables[1].Type)
 	assert.Equal(t, "Test Table 2", tables[1].Description)
 	assert.Equal(t, "s3://bucket/path/to/table2", tables[1].Location)
-	
+
 	// No need to verify mock expectations with gomock
 }
 
@@ -139,15 +139,15 @@ func TestGlueCatalog_GetTableDetails(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := NewMockGlueAPI(ctrl)
-	
+
 	// Create test data
 	createTime := time.Now().Add(-24 * time.Hour)
 	updateTime := time.Now()
-	
+
 	expectedDetails := &nessitypes.TableDetails{
 		Info: nessitypes.TableInfo{
-			Name: "table1",
-			Type: "delta",
+			Name:     "table1",
+			Type:     "delta",
 			Location: "s3://test-bucket/table1",
 		},
 		Metadata: &nessitypes.TableMetadata{
@@ -155,29 +155,29 @@ func TestGlueCatalog_GetTableDetails(t *testing.T) {
 			UpdatedAt: updateTime,
 		},
 	}
-	
+
 	// Set up mock expectations
 	mockClient.EXPECT().GetTableDetails(gomock.Any(), "testdb", "table1").Return(expectedDetails, nil)
-	
+
 	// Create catalog with mock client
 	c := GlueCatalog{client: mockClient, connected: true, region: "us-west-2"}
-	
+
 	// Call GetTableDetails
 	ctx := context.Background()
 	details, err := c.GetTableDetails(ctx, "testdb", "table1")
-	
+
 	// Verify results
 	assert.NoError(t, err)
 	assert.NotNil(t, details)
 	assert.Equal(t, "table1", details.Info.Name)
 	assert.Equal(t, "delta", details.Info.Type)
 	assert.Equal(t, "s3://test-bucket/table1", details.Info.Location)
-	
+
 	// Verify metadata
 	assert.NotNil(t, details.Metadata)
 	assert.WithinDuration(t, createTime, details.Metadata.CreatedAt, time.Second)
 	assert.WithinDuration(t, updateTime, details.Metadata.UpdatedAt, time.Second)
-	
+
 	// No need to verify mock expectations with gomock
 }
 
@@ -187,9 +187,9 @@ func TestGlueCatalog_PublishQualityMetrics(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	m := NewMockGlueAPI(ctrl)
-	
+
 	// Create test data
-	
+
 	// Set up mock expectations
 	m.EXPECT().GetTable(gomock.Any(), gomock.Any()).Return(&glue.GetTableOutput{
 		Table: &types.Table{
@@ -208,27 +208,27 @@ func TestGlueCatalog_PublishQualityMetrics(t *testing.T) {
 		params := input.TableInput.Parameters
 		_, hasCompleteness := params["quality:data_completeness"]
 		_, hasAccuracy := params["quality:data_accuracy"]
-		
+
 		if !hasCompleteness || !hasAccuracy {
 			t.Error("Missing required quality metrics parameters")
 		}
 		return &glue.UpdateTableOutput{}, nil
 	})
-	
+
 	// Create catalog with mock client
 	catalog := &GlueCatalog{}
 	catalog.client = m
 	catalog.connected = true
-	
+
 	// Call PublishQualityMetrics
 	err := catalog.PublishQualityMetrics(context.Background(), "testdb", "table1", &nessitypes.QualityMetrics{
 		DataCompleteness: 0.95,
 		DataAccuracy:     0.98,
 	})
-	
+
 	// Verify results
 	assert.NoError(t, err)
-	
+
 	// No need to verify mock expectations with gomock
 }
 
@@ -238,9 +238,9 @@ func TestGlueCatalog_GetQualityMetrics(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	m := NewMockGlueAPI(ctrl)
-	
+
 	// Create test data
-	
+
 	testTable := &types.Table{
 		Name:        aws.String("table1"),
 		Description: aws.String("Test Table 1"),
@@ -249,28 +249,28 @@ func TestGlueCatalog_GetQualityMetrics(t *testing.T) {
 			"quality:data_accuracy":     "0.85",
 		},
 	}
-	
+
 	// Set up mock expectations
 	m.EXPECT().GetTable(gomock.Any(), gomock.Any()).Return(&glue.GetTableOutput{
 		Table: testTable,
 	}, nil)
-	
+
 	// Create catalog with mock client
 	catalog := &GlueCatalog{}
 	catalog.client = m
 	catalog.connected = true
-	
+
 	// Call GetQualityMetrics
 	ctx := context.Background()
 	metrics, err := catalog.GetQualityMetrics(ctx, "testdb", "table1")
-	
+
 	// Verify results
 	assert.NoError(t, err)
 	assert.NotNil(t, metrics)
-	
+
 	// Verify metrics
 	assert.InDelta(t, 0.90, metrics.DataCompleteness, 0.001)
 	assert.InDelta(t, 0.85, metrics.DataAccuracy, 0.001)
-	
+
 	// No need to verify mock expectations with gomock
 }

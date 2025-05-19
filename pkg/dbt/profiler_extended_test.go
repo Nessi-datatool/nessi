@@ -27,13 +27,13 @@ func TestProfilerSetProfileType(t *testing.T) {
 			}
 		}
 	}`
-	
+
 	manifestDir := filepath.Join(tempDir, "target")
 	err = os.MkdirAll(manifestDir, 0755)
 	if err != nil {
 		t.Fatalf("Failed to create manifest directory: %v", err)
 	}
-	
+
 	manifestPath := filepath.Join(manifestDir, "manifest.json")
 	err = os.WriteFile(manifestPath, []byte(manifestData), 0644)
 	if err != nil {
@@ -50,7 +50,7 @@ model_mappings:
   - model: "model1"
     table_path: "/delta/test/model1"
 `
-	
+
 	configPath := filepath.Join(tempDir, "config.yaml")
 	err = os.WriteFile(configPath, []byte(configData), 0644)
 	if err != nil {
@@ -107,7 +107,7 @@ func TestProfilerHasFailures(t *testing.T) {
 
 	// Test with failures (in this case, we'll consider a table with 0 rows as a failure)
 	results.Results[0].RowCount = 0
-	
+
 	if !results.HasFailures() {
 		t.Errorf("HasFailures() should return true for profile results with failures")
 	}
@@ -127,7 +127,7 @@ enable_dbt_plugin: true
 dbt_project_path: "` + tempDir + `"
 delta_base_path: "/delta"
 `
-	
+
 	configPath := filepath.Join(tempDir, "config.yaml")
 	err = os.WriteFile(configPath, []byte(configData), 0644)
 	if err != nil {
@@ -138,13 +138,13 @@ delta_base_path: "/delta"
 	manifestData := `{
 		"nodes": {}
 	}`
-	
+
 	manifestDir := filepath.Join(tempDir, "target")
 	err = os.MkdirAll(manifestDir, 0755)
 	if err != nil {
 		t.Fatalf("Failed to create manifest directory: %v", err)
 	}
-	
+
 	manifestPath := filepath.Join(manifestDir, "manifest.json")
 	err = os.WriteFile(manifestPath, []byte(manifestData), 0644)
 	if err != nil {
