@@ -22,7 +22,7 @@ Nessi is an open-source data quality and Delta Lake management tool that helps o
   - Multi-format support (Delta, Parquet, CSV)
   - Schema inference and validation
   - Cloud integration with AWS, Azure, and GCP
-  - **Data Catalog Integration**: Integration with data catalogs like AWS Glue, Azure Purview, and Google Cloud Data Catalog
+  - **Data Catalog Integration**: Integration with data catalogs like AWS Glue, Azure Purview, Google Cloud Data Catalog, and Databricks Unity Catalog
 
 - **Data Quality Intelligence**
   - Data quality checks
@@ -351,11 +351,46 @@ See `config/config.yaml` for detailed configuration options.
 The application provides the following CLI commands:
 
 - `nessi tables list` - List Delta tables
-- `nessi tables info <name>` - Get table details
-- `nessi quality check <name>` - Run quality checks
-- `nessi quality metrics <name>` - Get quality metrics
-- `nessi reports list <name>` - List available reports
-- `nessi reports generate <name>` - Generate new report
+- `nessi tables info <n>` - Get table details
+- `nessi quality check <n>` - Run quality checks
+- `nessi quality metrics <n>` - Get quality metrics
+- `nessi reports list <n>` - List available reports
+- `nessi reports generate <n>` - Generate new report
+- `nessi catalog list --type <catalog_type>` - List available catalogs
+- `nessi catalog tables --type <catalog_type> --database <db>` - List tables in a catalog
+- `nessi catalog describe --type <catalog_type> --database <db> --table <table>` - Get table details from a catalog
+
+### Databricks Integration
+
+Nessi supports integration with Databricks, allowing you to work with Databricks Unity Catalog and Delta Lake tables.
+
+#### Configuration
+
+To use the Databricks integration, set the following environment variables:
+
+```bash
+export DATABRICKS_HOST="https://your-workspace.cloud.databricks.com"
+export DATABRICKS_TOKEN="your-personal-access-token"
+export DATABRICKS_WORKSPACE_ID="your-workspace-id"  # Optional, defaults to "0"
+export DATABRICKS_DEFAULT_SCHEMA="default"          # Optional, defaults to "default"
+export DATABRICKS_DEFAULT_CATALOG="hive_metastore"  # Optional, defaults to "hive_metastore"
+```
+
+#### Example Commands
+
+```bash
+# List catalogs in Databricks
+nessi catalog list --type databricks
+
+# List tables in a specific catalog and schema
+nessi catalog tables --type databricks --database main.default
+
+# Get details of a specific table
+nessi catalog describe --type databricks --database main.default --table customers
+
+# Work with Delta Lake tables
+nessi tables info /path/to/delta/table
+```
 
 ### Development
 
