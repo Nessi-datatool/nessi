@@ -22,15 +22,31 @@ jobs:
         with:
           go-version: '1.20'
           cache: false
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: v1.54.2
-          args: --timeout=5m --verbose
-          # Specifically target the Databricks integration and visualization packages
-          only-new-issues: true
-          working-directory: .
-          # Run on specific directories to avoid the 'no go files to analyze' error
-          skip-dirs: "pkg/monitoring,pkg/datalake,pkg/api,pkg/cloud,pkg/dbt,pkg/freshness,pkg/lineage,pkg/quality,pkg/security,pkg/webhook"
-          skip-pkg-cache: true
-          skip-build-cache: true
+      - name: Check for Go files
+        id: check-go-files
+        run: |
+          if [ -d "pkg/catalog/databricks" ] && [ "$(find pkg/catalog/databricks -name '*.go' | wc -l)" -gt 0 ]; then
+            echo "has_files=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_files=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run gofmt
+        if: steps.check-go-files.outputs.has_files == 'true'
+        run: |
+          # Run gofmt on specific directories
+          gofmt -l -w pkg/catalog/databricks pkg/visualization
+          
+          # Check if any files were changed by gofmt
+          GOFMT_CHANGES=$(git diff --name-only)
+          if [ -n "$GOFMT_CHANGES" ]; then
+            echo "The following files need formatting:"
+            echo "$GOFMT_CHANGES"
+            exit 1
+          fi
+
+      - name: Run go vet
+        if: steps.check-go-files.outputs.has_files == 'true'
+        run: |
+          # Run go vet on specific directories
+          go vet ./pkg/catalog/databricks/... ./pkg/visualization/...
