@@ -34,6 +34,7 @@ const (
 type AuthConfig struct {
 	Enabled      bool   `json:"enabled"`
 	UsersFile    string `json:"users_file"`
+	APIKeyPath   string `json:"api_key_path"`
 	InMemoryOnly bool   `json:"in_memory_only"` // If true, disables all file I/O for tests
 }
 
@@ -207,6 +208,23 @@ func (am *AuthManager) AuthenticateWithAPIKey(apiKey string) (User, error) {
 	}
 
 	return user, nil
+}
+
+// GetAPIKey returns the API key for a user
+func (am *AuthManager) GetAPIKey(username string) (string, bool) {
+	if !am.config.Enabled {
+		return "", false
+	}
+
+	am.mu.RLock()
+	user, ok := am.users[username]
+	am.mu.RUnlock()
+
+	if !ok || user.APIKey == "" {
+		return "", false
+	}
+
+	return user.APIKey, true
 }
 
 // CreateUser creates a new user

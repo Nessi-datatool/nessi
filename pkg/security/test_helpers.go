@@ -64,10 +64,8 @@ func CreateTestAuthManager() (*AuthManager, error) {
 	// Create a configuration that doesn't use file I/O for maximum performance
 	config := AuthConfig{
 		Enabled:      true,
-		JWTSecret:    "test-secret-" + random,
-		UsersFile:    "/tmp/nonexistent-users-file.json", // Won't be used
-		TokenExpiry:  1,                                  // 1 hour - minimum value for faster tests
-		RequireHTTPS: false,
+		APIKeyPath:   "/tmp/nonexistent-apikeys-file.json", // Won't be used
+		UsersFile:    "/tmp/nonexistent-users-file.json",   // Won't be used
 		InMemoryOnly: true, // Skip all file I/O for better performance
 	}
 

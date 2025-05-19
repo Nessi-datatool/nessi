@@ -1,13 +1,12 @@
 package telemetry
 
 import (
+	"bytes"
 	"encoding/json"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -152,7 +151,7 @@ func TestRecordCommandAndFeature(t *testing.T) {
 	assert.Equal(t, 1, stats["quality"])
 }
 
-func TestTelemetryMiddleware(t *testing.T) {
+func TestTelemetryCollector(t *testing.T) {
 	// Create temporary directory for test
 	tempDir, err := os.MkdirTemp("", "telemetry_test")
 	require.NoError(t, err)
@@ -162,54 +161,59 @@ func TestTelemetryMiddleware(t *testing.T) {
 	err = Enable(tempDir)
 	require.NoError(t, err)
 
-	// Create middleware
-	middleware := NewTelemetryMiddleware(tempDir)
+	// Create telemetry collector
+	collector := NewTelemetryCollector(tempDir)
 
-	// Create test handler
-	handler := middleware.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/api/v1/error" {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("Internal Server Error"))
-			return
+	// Record some test events
+	collector.RecordEvent("command_executed", map[string]interface{}{
+		"command": "analyze",
+		"status": "success",
+	})
+
+	collector.RecordEvent("command_executed", map[string]interface{}{
+		"command": "validate",
+		"status": "success",
+	})
+
+	collector.RecordEvent("command_executed", map[string]interface{}{
+		"command": "error_test",
+		"status": "error",
+		"error": "test error",
+	})
+
+	// Wait for telemetry to be processed
+	time.Sleep(100 * time.Millisecond)
+
+	// Check telemetry stats
+	stats, err := collector.GetStats()
+	require.NoError(t, err)
+
+	// Verify the recorded events
+	assert.Equal(t, 3, stats["command_executed"])
+	
+	// Check event details
+	events, err := collector.GetEvents("command_executed", 10)
+	require.NoError(t, err)
+	assert.Equal(t, 3, len(events))
+	
+	// Verify we have the expected commands
+	commands := make(map[string]int)
+	statuses := make(map[string]int)
+	
+	for _, event := range events {
+		if cmd, ok := event["command"].(string); ok {
+			commands[cmd]++
 		}
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
-	}))
-
-	// Create test server
-	server := httptest.NewServer(handler)
-	defer server.Close()
-
-	// Make test requests
-	resp, err := http.Get(server.URL + "/api/v1/tables")
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	resp.Body.Close()
-
-	resp, err = http.Get(server.URL + "/api/v1/tables")
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	resp.Body.Close()
-
-	resp, err = http.Post(server.URL+"/api/v1/validate", "application/json", nil)
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	resp.Body.Close()
-
-	resp, err = http.Get(server.URL + "/api/v1/error")
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
-	resp.Body.Close()
-
-	// Verify stats
-	assert.Equal(t, 2, middleware.stats.Endpoints["/api/v1/tables"])
-	assert.Equal(t, 1, middleware.stats.Endpoints["/api/v1/validate"])
-	assert.Equal(t, 1, middleware.stats.Endpoints["/api/v1/error"])
-	assert.Equal(t, 3, middleware.stats.Methods["GET"])
-	assert.Equal(t, 1, middleware.stats.Methods["POST"])
-	assert.Equal(t, 3, middleware.stats.StatusCodes[http.StatusOK])
-	assert.Equal(t, 1, middleware.stats.StatusCodes[http.StatusInternalServerError])
-	assert.Equal(t, 1, middleware.stats.Errors["error_500"])
+		if status, ok := event["status"].(string); ok {
+			statuses[status]++
+		}
+	}
+	
+	assert.Equal(t, 1, commands["analyze"])
+	assert.Equal(t, 1, commands["validate"])
+	assert.Equal(t, 1, commands["error_test"])
+	assert.Equal(t, 2, statuses["success"])
+	assert.Equal(t, 1, statuses["error"])
 }
 
 func TestReporter(t *testing.T) {
