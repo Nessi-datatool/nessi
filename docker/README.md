@@ -34,6 +34,25 @@ Nessi.dev is built with a Go-first architecture, which means you don't need to i
 
 All necessary components are included in the Docker images, making deployment simple and lightweight.
 
+## Databricks Integration
+
+Nessi.dev includes integration with Databricks, allowing you to:
+- Connect to Databricks workspaces via the REST API
+- Browse Unity Catalog resources (catalogs, schemas, and tables)
+- Read and write Delta Lake tables
+- Perform time travel queries on Delta Lake tables
+
+To use the Databricks integration, set the following environment variables:
+
+```yaml
+environment:
+  - DATABRICKS_HOST=your-databricks-workspace.cloud.databricks.com
+  - DATABRICKS_TOKEN=your-personal-access-token
+  - DATABRICKS_WORKSPACE_ID=your-workspace-id
+  - DATABRICKS_DEFAULT_CATALOG=main
+  - DATABRICKS_DEFAULT_SCHEMA=default
+```
+
 ## Configuration
 
 ### Environment Variables

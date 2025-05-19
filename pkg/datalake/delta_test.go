@@ -66,9 +66,9 @@ func TestGetDeltaTableMetadata(t *testing.T) {
 	// Test getting metadata from a Delta table
 	metadata, err := GetDeltaTableMetadata(context.Background(), deltaTableDir)
 	require.NoError(t, err)
-	assert.Equal(t, "delta-table", metadata.Name)
-	assert.Equal(t, "delta", metadata.Format)
-	assert.Equal(t, deltaTableDir, metadata.Location)
+	assert.Equal(t, "delta-table", metadata.Info.Name)
+	assert.Equal(t, "delta", metadata.Schema.Format)
+	assert.Equal(t, deltaTableDir, metadata.Info.Location)
 }
 
 func TestIsDeltaLakeFormat(t *testing.T) {
