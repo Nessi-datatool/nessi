@@ -138,7 +138,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/nessi-dev/nessi-dev/pkg/catalog"
+	"github.com/nessi-dev/nessi/pkg/catalog"
 )
 
 func main() {

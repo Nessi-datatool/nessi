@@ -11,8 +11,8 @@ pip install nessi-client
 Or install from source:
 
 ```bash
-git clone https://github.com/nessi-dev/nessi-dev.git
-cd nessi-dev/python
+git clone git@github.com:nessi-dev/nessi.git
+cd nessi/python
 pip install -e .
 ```
 
