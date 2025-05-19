@@ -1,4 +1,4 @@
-// [REMOVED FOR OSS]: AlertManager and alerting features are only available in LakeDiff Enterprise.
+// Implementation of monitoring and alerting features.
 
 package alerts
 
@@ -67,7 +67,7 @@ type AlertNotification struct {
 	// AlertID is the ID of the alert
 	AlertID string `json:"alert_id"`
 	
-	// Channel is the notification channel (email, slack, webhook)
+	// Channel is the notification channel (email, webhook)
 	Channel string `json:"channel"`
 	
 	// Recipient is the recipient of the notification

@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"nessi/pkg"
+	"github.com/nessi-dev/nessi/pkg"
 )
 
 var telemetryCmd = &cobra.Command{

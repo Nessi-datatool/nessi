@@ -26,11 +26,7 @@ type Config struct {
 	// RuleSets defines sets of data quality rules
 	RuleSets []RuleSet `json:"rule_sets" yaml:"rule_sets"`
 	
-	// AlertConfig defines alerting configuration
-	AlertConfig AlertConfig `json:"alert_config" yaml:"alert_config"`
-	
-	// AlertSettings defines alert settings (new format)
-	AlertSettings AlertSettings `json:"alert_settings" yaml:"alert_settings"`
+
 	
 	// OutputConfig defines output configuration
 	OutputConfig OutputConfig `json:"output_config" yaml:"output_config"`
@@ -87,57 +83,6 @@ type Rule struct {
 	
 	// Severity is the severity of the rule (e.g., "error", "warning")
 	Severity string `json:"severity" yaml:"severity"`
-}
-
-// AlertConfig defines alerting configuration
-type AlertConfig struct {
-	// Enabled indicates whether alerting is enabled
-	Enabled bool `json:"enabled" yaml:"enabled"`
-	
-	// Channels defines alerting channels
-	Channels []AlertChannel `json:"channels" yaml:"channels"`
-}
-
-// AlertChannel defines an alerting channel
-type AlertChannel struct {
-	// Type is the type of channel (e.g., "slack", "email")
-	Type string `json:"type" yaml:"type"`
-	
-	// Webhook is the webhook URL (for Slack)
-	Webhook string `json:"webhook" yaml:"webhook"`
-	
-	// Recipients is the list of recipients (for email)
-	Recipients []string `json:"recipients" yaml:"recipients"`
-}
-
-// AlertSettings defines the settings for the alerting system
-type AlertSettings struct {
-	// Enabled indicates whether alerting is enabled
-	Enabled bool `json:"enabled" yaml:"enabled"`
-	
-	// ThresholdScore is the quality score threshold for sending alerts
-	ThresholdScore int `json:"threshold_score" yaml:"threshold_score"`
-	
-	// Slack defines Slack-specific alert settings
-	Slack SlackAlertSettings `json:"slack" yaml:"slack"`
-	
-	// Email defines email-specific alert settings
-	Email EmailAlertSettings `json:"email" yaml:"email"`
-}
-
-// SlackAlertSettings defines Slack-specific alert settings
-type SlackAlertSettings struct {
-	// Enabled indicates whether Slack alerting is enabled
-	Enabled bool `json:"enabled" yaml:"enabled"`
-	
-	// WebhookURL is the Slack webhook URL
-	WebhookURL string `json:"webhook_url" yaml:"webhook_url"`
-	
-	// Channel is the Slack channel to send alerts to
-	Channel string `json:"channel" yaml:"channel"`
-	
-	// Username is the username to use for Slack alerts
-	Username string `json:"username" yaml:"username"`
 }
 
 // EmailAlertSettings defines email-specific alert settings
@@ -205,19 +150,6 @@ func LoadConfig(configPath string) (*Config, error) {
 						Name:    "default",
 						Default: true,
 						Rules:   []*Rule{},
-					},
-				},
-				AlertConfig: AlertConfig{
-					Enabled: false,
-				},
-				AlertSettings: AlertSettings{
-					Enabled:       false,
-					ThresholdScore: 80,
-					Slack: SlackAlertSettings{
-						Enabled: false,
-					},
-					Email: EmailAlertSettings{
-						Enabled: false,
 					},
 				},
 				OutputConfig: OutputConfig{

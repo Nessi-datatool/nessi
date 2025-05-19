@@ -510,7 +510,7 @@ func init() {
 	alertsRulesCreateCmd.Flags().String("user", "system", "User creating the rule")
 	alertsRulesCreateCmd.Flags().StringToString("label", nil, "Rule labels (key=value)")
 	alertsRulesCreateCmd.Flags().StringToString("annotation", nil, "Rule annotations (key=value)")
-	alertsRulesCreateCmd.Flags().StringSlice("channel", nil, "Notification channels (email, slack, webhook)")
+	alertsRulesCreateCmd.Flags().StringSlice("channel", nil, "Notification channels (email, webhook)")
 	alertsRulesCreateCmd.Flags().StringSlice("recipient", nil, "Notification recipients")
 
 	// Flags for update command
@@ -528,7 +528,7 @@ func init() {
 	alertsRulesUpdateCmd.Flags().String("user", "system", "User updating the rule")
 	alertsRulesUpdateCmd.Flags().StringToString("label", nil, "Rule labels (key=value)")
 	alertsRulesUpdateCmd.Flags().StringToString("annotation", nil, "Rule annotations (key=value)")
-	alertsRulesUpdateCmd.Flags().StringSlice("channel", nil, "Notification channels (email, slack, webhook)")
+	alertsRulesUpdateCmd.Flags().StringSlice("channel", nil, "Notification channels (email, webhook)")
 	alertsRulesUpdateCmd.Flags().StringSlice("recipient", nil, "Notification recipients")
 
 	// Flags for enable/disable commands

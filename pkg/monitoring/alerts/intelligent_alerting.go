@@ -1,4 +1,4 @@
-// [REMOVED FOR OSS]: IntelligentAlertManager and intelligent alerting features are only available in LakeDiff Enterprise.
+// Implementation of monitoring and alerting features.
 
 package alerts
 

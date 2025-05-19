@@ -1,6 +1,6 @@
 # Nessi CLI Quickstart Guide
 
-Welcome to Nessi! This guide will help you get started with Delta Lake data quality management, Python extensions, telemetry, and more.
+Welcome to Nessi! This guide will help you get started with Nessi for Delta Lake data quality management, Python extensions, telemetry, and more.
 
 ---
 

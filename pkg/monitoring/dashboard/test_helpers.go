@@ -1,4 +1,4 @@
-// [REMOVED FOR OSS]: alerting and advanced dashboards are only available in LakeDiff Enterprise.
+// Implementation of monitoring and alerting features.
 
 package dashboard
 

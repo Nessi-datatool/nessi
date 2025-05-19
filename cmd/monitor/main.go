@@ -24,7 +24,7 @@ func main() {
 	// Initialize monitor
 	monitor, err := monitoring.New(monitoring.MonitorOptions{
 		MetricsPort: *metricsPort,
-		EnableIntelligentAlerting: true,
+
 	})
 	if err != nil {
 		logging.Error("Failed to create monitoring service", err)
@@ -118,9 +118,7 @@ func generateSampleMetrics(monitor *monitoring.Monitor) {
 
 			// Generate some alerts
 			if time.Now().Unix()%60 == 0 {
-				table := tables[time.Now().Unix()%int64(len(tables))]
-				value := 1000.0 + float64(time.Now().Unix()%500)
-				monitor.SendAlert("high_latency", table, value)
+				// [OSS] Alerting disabled: monitor.SendAlert (OSS)
 			}
 		}
 	}

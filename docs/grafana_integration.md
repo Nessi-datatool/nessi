@@ -1,11 +1,6 @@
-# Grafana and Prometheus Dashboarding in Nessi OSS
+# Grafana and Prometheus Dashboarding in Nessi
 
-Advanced dashboarding and monitoring features (Grafana and Prometheus integration) are only available in the LakeDiff Enterprise version of Nessi. The open-source version provides a basic built-in dashboard for core monitoring functionality.
-
-For advanced visualization, alerting, and analytics, please contact the LakeDiff team for enterprise licensing and support.
-
-
-This document explains how to use the Grafana dashboards included with Nessi for monitoring alerts and metrics.
+Nessi provides built-in dashboard functionality for core monitoring capabilities, with additional support for Grafana and Prometheus integration for more advanced visualization needs.
 
 ## Overview
 
@@ -49,157 +44,84 @@ The Grafana dashboards are automatically provisioned when you run Nessi with the
 ### Nessi Dashboard
 
 The main dashboard provides an overview of key metrics:
-- Table sizes and record counts
-- Error rates
-- Operation latencies
-- System resource usage
+
+- System health status
+- Active alerts
+- Data quality scores
+- Resource utilization
+- Recent validation results
 
 ### Nessi Alerts Dashboard
 
-This dashboard focuses on the alerting system:
-- Alerts by severity (critical, warning, info)
-- Alerts by status (active, acknowledged, resolved, silenced)
-- Active alerts by type
-- Alert rule evaluation rates
-- Top alert sources
+The alerts dashboard shows:
 
-Key panels:
-- **Alerts by Severity** - Time series showing alert counts by severity level
-- **Active Critical Alerts** - Gauge showing the number of active critical alerts
-- **Alert Rule Evaluation Rate** - Shows how frequently alert rules are being evaluated
+- Active alerts by severity
+- Alert history and trends
+- Alert resolution times
+- Top alert sources
+- Alert categories
 
 ### Nessi Data Quality Dashboard
 
-This dashboard focuses on data quality metrics:
-- Overall data quality score
-- Data quality by table
-- Completeness and accuracy metrics
-- Rule validation failures
-- Anomalies detected
+The data quality dashboard displays:
 
-Key panels:
-- **Overall Data Quality Score** - Gauge showing the average quality score
-- **Data Quality Score by Table** - Time series showing quality scores by table
-- **Rule Validation Failures by Table** - Shows which tables have the most rule failures
+- Quality scores by table/dataset
+- Trend analysis of quality metrics
+- Validation failure rates
+- Data completeness metrics
+- Accuracy and consistency scores
 
 ### Nessi Performance Dashboard
 
-This dashboard focuses on system performance:
-- Operation latencies
-- API request rates
-- Error rates
-- Resource usage (CPU, memory)
-- Table sizes and record counts
+The performance dashboard monitors:
 
-Key panels:
-- **Operation Latency** - 95th percentile latency for different operations
-- **API Request Rate** - Requests per second by endpoint
-- **Memory Usage** - Memory consumption over time
+- CPU, memory, and disk usage
+- Query performance metrics
+- Response times
+- Throughput statistics
+- Resource bottlenecks
 
 ### Nessi Anomaly Detection Dashboard
 
-This dashboard focuses on anomaly detection:
-- Anomalies by table and type
-- Top columns with anomalies
-- Anomaly detection performance
-- Specific anomaly type counts
+The anomaly detection dashboard highlights:
 
-Key panels:
-- **Total Anomalies by Table** - Time series showing anomaly counts by table
-- **Anomaly Distribution by Type** - Pie chart showing distribution of anomaly types
-- **Anomaly Detection Duration** - Performance metrics for anomaly detection algorithms
+- Detected anomalies by type
+- Anomaly severity distribution
+- Historical anomaly patterns
+- False positive rates
+- Detection sensitivity metrics
 
-## Using Dashboards with Alerts
+## Custom Dashboards
 
-The Grafana dashboards integrate with Nessi's alerting system to provide visual monitoring of alerts and metrics. Here's how to use them effectively:
+You can create custom dashboards by:
 
-### Monitoring Alerts
-
-1. **View Active Alerts**: The Alerts Dashboard shows all active alerts, their severity, and status.
-
-2. **Filter Alerts**: Use the dashboard filters to focus on specific alert types, severities, or sources.
-
-3. **Track Alert Trends**: The time series panels show how alert counts change over time, helping identify patterns.
-
-### Alert Actions from Grafana
-
-While you can view alerts in Grafana, actions like acknowledging or resolving alerts should be performed through:
-
-1. **Nessi Web Dashboard**: Use the Nessi alerts dashboard at `/alerts` for managing alerts.
-
-2. **Nessi API**: Use the alerts API endpoints for programmatic control.
-
-### Setting Up Grafana Alerting
-
-You can also configure Grafana to send notifications based on the metrics displayed in the dashboards:
-
-1. Hover over a panel and click the edit icon
-2. Go to the "Alert" tab
-3. Configure alert conditions based on the panel's metrics
-4. Set up notification channels (email, Slack, etc.)
-
-## Customizing Dashboards
-
-You can customize the provided dashboards or create new ones:
-
-1. Click the settings icon on any dashboard
-2. Select "Save As" to create a copy
-3. Modify panels, add new ones, or adjust existing queries
-4. Save your customized dashboard
+1. Duplicating an existing dashboard
+2. Adding new panels with custom metrics
+3. Configuring alerts for specific thresholds
+4. Saving your custom dashboard
 
 ## Prometheus Integration
 
-The dashboards use the following Prometheus metrics from Nessi:
+Nessi exposes metrics in Prometheus format at:
 
-- `nessi_alerts_total` - Alert counts by various labels
-- `nessi_data_quality_score` - Data quality scores
-- `nessi_operation_latency_seconds` - Operation latencies
-- `nessi_api_requests_total` - API request counts
-- `nessi_errors_total` - Error counts
-- `nessi_table_size_bytes` - Table sizes
-- `nessi_record_count` - Record counts
-- `nessi_rule_validation_failures_total` - Rule validation failures
-- `nessi_anomalies_detected_total` - Anomaly counts
-- `nessi_alert_rule_evaluations_total` - Alert rule evaluation counts
-- `nessi_alert_rule_evaluation_errors_total` - Alert rule evaluation errors
-- `nessi_anomaly_detection_duration_seconds` - Anomaly detection duration
-- `nessi_anomaly_detection_runs_total` - Anomaly detection run counts
-- `nessi_anomaly_detection_failures_total` - Anomaly detection failures
+```
+http://localhost:8080/metrics
+```
+
+You can configure Prometheus to scrape these metrics by adding the following to your `prometheus.yml`:
+
+```yaml
+scrape_configs:
+  - job_name: 'nessi'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['localhost:8080']
+```
 
 ## Troubleshooting
 
-### Dashboard Shows No Data
+Common issues:
 
-1. Check if Prometheus is running:
-   ```
-   docker-compose ps
-   ```
-
-2. Verify Nessi is exposing metrics:
-   ```
-   curl http://localhost:9090/metrics
-   ```
-
-3. Check Prometheus target status in Grafana:
-   - Go to Configuration > Data Sources > Prometheus
-   - Click "Explore" and run a simple query like `up`
-
-### Missing Dashboards
-
-If dashboards are not automatically provisioned:
-
-1. Import them manually:
-   - Go to Dashboards > Import
-   - Upload the JSON files from `config/grafana/dashboards/`
-
-## Further Customization
-
-For advanced customization:
-
-1. **Add New Metrics**: Extend Nessi to expose additional Prometheus metrics
-
-2. **Create New Dashboards**: Design custom dashboards for specific monitoring needs
-
-3. **Set Up Additional Alert Channels**: Configure Grafana to send alerts to additional notification channels
-
-4. **Use Variables**: Add dashboard variables to make dashboards more dynamic and reusable
+- **No data in dashboards**: Check that Prometheus is correctly scraping metrics
+- **Missing metrics**: Verify that the metric collection is enabled in Nessi configuration
+- **Dashboard errors**: Ensure Grafana can connect to Prometheus data source

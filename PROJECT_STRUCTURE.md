@@ -1,4 +1,6 @@
-# Nessi.dev Project Structure
+# Nessi Project Structure
+
+This document describes the structure of the Nessi open-source project.
 
 ```
 nessi-dev/
@@ -35,7 +37,7 @@ nessi-dev/
 │   │   └── export.go             # JSON/CSV exports
 │   ├── security/                 # Security components
 │   │   ├── auth.go               # Authentication
-│   │   ├── rbac.go               # Role-based access control
+│   │   ├── rbac.go               # Access control
 │   │   └── tls.go                # TLS configuration
 │   └── server/                   # HTTP server implementation
 │       ├── server.go             # Server setup

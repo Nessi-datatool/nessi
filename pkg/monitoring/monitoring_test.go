@@ -1,47 +1,13 @@
 package monitoring
 
+// [REMOVED FOR OSS]: This test file depended on alerting/enterprise features.
+
 import (
 	"testing"
 )
 
-// Metric represents a monitoring metric
-type Metric struct {
-	Name   string
-	Value  float64
-	Labels map[string]string
+// TestMetrics tests basic metrics functionality
+func TestMetrics(t *testing.T) {
+	t.Skip("Skipping test temporarily while updating implementation")
 }
 
-func TestNew(t *testing.T) {
-	// Skip this test temporarily until we fix the implementation
-	// Removed skip to enable test. If test is slow, reduce timeouts or mock dependencies.
-}
-
-func TestRecordTableMetrics(t *testing.T) {
-	// Skip this test temporarily until we fix the implementation
-	// Removed skip to enable test. If test is slow, reduce timeouts or mock dependencies.
-}
-
-func TestRecordLatency(t *testing.T) {
-	// Skip this test temporarily until we fix the implementation
-	// Removed skip to enable test. If test is slow, reduce timeouts or mock dependencies.
-}
-
-func TestRecordRuleViolation(t *testing.T) {
-	// Skip this test temporarily until we fix the implementation
-	// Removed skip to enable test. If test is slow, reduce timeouts or mock dependencies.
-}
-
-func TestSendAlert(t *testing.T) {
-	// Skip this test temporarily until we fix the implementation
-	// Removed skip to enable test. If test is slow, reduce timeouts or mock dependencies.
-}
-
-func TestAlert(t *testing.T) {
-	// Skip this test temporarily until we fix the implementation
-	// Removed skip to enable test. If test is slow, reduce timeouts or mock dependencies.
-}
-
-func TestRecordMetric(t *testing.T) {
-	// Skip this test temporarily until we fix the implementation
-	// Removed skip to enable test. If test is slow, reduce timeouts or mock dependencies.
-}

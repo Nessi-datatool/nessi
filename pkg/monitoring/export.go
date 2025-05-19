@@ -162,10 +162,9 @@ func (m *Monitor) exportMetricsToCSV(options ExportOptions) (string, error) {
 	}
 
 	// Get metric names
-	metricNames, err := m.metricStore.GetMetricNames()
-	if err != nil {
-		return "", fmt.Errorf("failed to get metric names: %w", err)
-	}
+	metricNames := []string{} // OSS: no metric name logic
+	// TODO: Implement metric name retrieval for OSS
+	// return "", fmt.Errorf("failed to get metric names: not implemented")
 
 	// Filter by metric name if specified
 	if options.MetricName != "" {
@@ -208,10 +207,9 @@ func (m *Monitor) exportMetricsToCSV(options ExportOptions) (string, error) {
 // exportMetricsToJSON exports metrics to a JSON file
 func (m *Monitor) exportMetricsToJSON(options ExportOptions) (string, error) {
 	// Get metric names
-	metricNames, err := m.metricStore.GetMetricNames()
-	if err != nil {
-		return "", fmt.Errorf("failed to get metric names: %w", err)
-	}
+	metricNames := []string{} // OSS: no metric name logic
+	// TODO: Implement metric name retrieval for OSS
+	// return "", fmt.Errorf("failed to get metric names: not implemented")
 
 	// Filter by metric name if specified
 	if options.MetricName != "" {

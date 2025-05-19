@@ -86,21 +86,15 @@ func NewMonitoringSystem() (*Monitor, error) {
 		config = defaultConfig()
 	}
 
-	// Create alert manager
-	alertManager, err := CreateAlertManager()
-	if err != nil {
-		logging.Error("Failed to create alert manager", err)
-	}
 
 	// Create monitor
 	m := &Monitor{
 		metricsPort: config.Metrics.Port,
-		alertManager: alertManager,
 		config: config,
 	}
 
 	// Initialize metric store
-	m.metricStore = NewMetricStore(m)
+	m.metricStore = NewMetricStore()
 
 	// Initialize metric retention if enabled
 	if config.Retention.Enabled {
@@ -113,20 +107,6 @@ func NewMonitoringSystem() (*Monitor, error) {
 		m.metricRetention = NewMetricRetention(retentionConfig)
 	}
 
-	// Initialize alert thresholds
-	m.alertThresholds = make(map[string]AlertThreshold)
-	for name, threshold := range config.Alerts.Thresholds {
-		m.alertThresholds[name] = threshold
-	}
-
-	// Set silence and cooldown periods
-	m.silencePeriod = config.Alerts.SilencePeriod
-	m.cooldownPeriod = config.Alerts.CooldownPeriod
-
-	// Set notification configs
-	m.slackConfig = config.Notifications.Slack
-	m.emailConfig = config.Notifications.Email
-	m.webhookConfig = config.Notifications.Webhook
 
 	// Initialize security components if enabled
 	if config.Security.Auth.Enabled {
@@ -156,15 +136,6 @@ func (m *Monitor) updateConfig(config *Config) error {
 	// Update metrics config
 	m.config.Metrics = config.Metrics
 
-	// Update alert thresholds
-	m.alertThresholds = config.Alerts.Thresholds
-	m.silencePeriod = config.Alerts.SilencePeriod
-	m.cooldownPeriod = config.Alerts.CooldownPeriod
-
-	// Update notification configs
-	m.slackConfig = config.Notifications.Slack
-	m.emailConfig = config.Notifications.Email
-	m.webhookConfig = config.Notifications.Webhook
 
 	// Update retention config
 	if m.metricRetention != nil && config.Retention.Enabled {
@@ -262,109 +233,6 @@ func (m *Monitor) watchConfig() error {
 	}
 }
 
-// checkAlerts checks for alert conditions
-func (m *Monitor) checkAlerts() error {
-	// Get current metrics
-	var tableSize, recordCount float64
-	
-	// Get table size
-	metrics, err := prometheus.DefaultGatherer.Gather()
-	if err != nil {
-		return fmt.Errorf("failed to gather metrics: %w", err)
-	}
-
-	// Find table size
-	for _, metric := range metrics {
-		if metric.GetName() == "nessi_table_size_bytes" {
-			for _, mf := range metric.GetMetric() {
-				for _, label := range mf.GetLabel() {
-					if label.GetName() == "table_name" && label.GetValue() == "users" {
-						tableSize = mf.GetGauge().GetValue()
-					}
-				}
-			}
-			break
-		}
-		if metric.GetName() == "nessi_record_count" {
-			for _, mf := range metric.GetMetric() {
-				for _, label := range mf.GetLabel() {
-					if label.GetName() == "table_name" && label.GetValue() == "users" {
-						recordCount = mf.GetGauge().GetValue()
-					}
-				}
-			}
-			break
-		}
-	}
-
-	errorRate := m.GetErrorRate()
-
-	// Check each alert condition
-	for alertName, threshold := range m.alertThresholds {
-		var value float64
-		switch alertName {
-		case "table_size":
-			value = tableSize
-		case "record_count":
-			value = recordCount
-		case "error_rate":
-			value = errorRate
-		}
-
-		// Check against thresholds
-		if value > threshold.Critical {
-			m.SendAlert(alertName, "users", value)
-		} else if value > threshold.Warning {
-			m.SendAlert(alertName, "users", value)
-		}
-	}
-	return nil
-}
-
-// SendAlert sends an alert notification
-func (m *Monitor) SendAlert(name string, tableName string, value float64) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	if !m.config.Alerts.Enabled {
-		return
-	}
-
-	threshold, ok := m.alertThresholds[name]
-	if !ok {
-		return
-	}
-
-	// Check cooldown period
-	lastAlertTime, ok := m.lastAlertTimes[name]
-	if ok && time.Since(lastAlertTime) < m.cooldownPeriod {
-		return
-	}
-
-	// Determine severity
-	severity := AlertStateOK
-	if value >= threshold.Critical {
-		severity = AlertStateCritical
-	} else if value >= threshold.Warning {
-		severity = AlertStateWarning
-	} else {
-		return // No alert needed
-	}
-
-	alert := Alert{
-		Name:      name,
-		Severity:  severity,
-		Message:   fmt.Sprintf("Metric %s exceeded threshold for table %s (value: %.2f)", name, tableName, value),
-		Timestamp: time.Now(),
-		Metadata: map[string]string{
-			"table_name": tableName,
-		},
-	}
-
-	// Send alert through configured channels
-	m.alerts <- alert
-	m.lastAlertTimes[name] = time.Now()
-}
 
 // Metrics represents various monitoring metrics
 type Metrics struct {
@@ -505,7 +373,6 @@ func (m *Monitor) Start() {
 	// Apply authentication middleware if enabled
 	if m.authManager != nil {
 		// Protected routes
-		router.Handle("/alerts", m.authManager.AuthMiddleware(http.HandlerFunc(m.listAlerts)))
 		router.Handle("/metrics/history", m.authManager.AuthMiddleware(http.HandlerFunc(m.metricsHistory)))
 		
 		// Add authentication endpoints
@@ -516,7 +383,6 @@ func (m *Monitor) Start() {
 		router.Handle("/admin/users", m.authManager.RoleMiddleware(security.RoleAdmin)(http.HandlerFunc(m.handleUsers)))
 	} else {
 		// No authentication, routes are public
-		router.HandleFunc("/alerts", m.listAlerts)
 		router.HandleFunc("/metrics/history", m.metricsHistory)
 	}
 
@@ -570,7 +436,6 @@ func (m *Monitor) monitor() {
 		default:
 			if time.Since(lastCheck) >= checkInterval {
 				m.checkTables()
-				m.checkAlerts()
 				lastCheck = time.Now()
 			}
 		}
@@ -583,11 +448,6 @@ func (m *Monitor) healthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }
 
-// listAlerts handles alert listing requests
-func (m *Monitor) listAlerts(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(m.alerts)
-}
 
 // metricsHistory handles metrics history requests
 func (m *Monitor) metricsHistory(w http.ResponseWriter, r *http.Request) {

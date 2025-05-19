@@ -233,10 +233,20 @@ func init() {
 	// Initialize CLI
 	cli.Init()
 
-	// Global flags
-	cli.CLI.RootCmd.PersistentFlags().StringVar(&configPath, "config", "", "path to config file")
-	cli.CLI.RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
-	cli.CLI.RootCmd.PersistentFlags().BoolVarP(&version, "version", "V", false, "show version")
+	// Global flags - only add if they don't exist
+	// Skip adding flags in test mode to avoid redefinition errors
+	if os.Getenv("TESTING") != "true" {
+		// Check if flags already exist before adding them
+		if cli.CLI.RootCmd.PersistentFlags().Lookup("config") == nil {
+			cli.CLI.RootCmd.PersistentFlags().StringVar(&configPath, "config", "", "path to config file")
+		}
+		if cli.CLI.RootCmd.PersistentFlags().Lookup("verbose") == nil {
+			cli.CLI.RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+		}
+		if cli.CLI.RootCmd.PersistentFlags().Lookup("version") == nil {
+			cli.CLI.RootCmd.PersistentFlags().BoolVarP(&version, "version", "V", false, "show version")
+		}
+	}
 
 	// Serve command flags
 	serveCmd.Flags().StringVar(&host, "host", "", "Host to bind the server to (default from config)")

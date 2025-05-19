@@ -14,23 +14,14 @@ import (
 type Monitor struct {
 	mu                     sync.RWMutex
 	metricsPort            int
-	alertManager           *alerts.AlertManager
-	intelligentAlertManager *alerts.IntelligentAlertManager
+
 	metricStore            *MetricStore
 	authManager            *security.AuthManager
 	certManager            *security.CertManager
 	config                 *Config
 	metricRetention        *MetricRetention
-	alertThresholds        map[string]AlertThreshold
-	silencePeriod          time.Duration
-	cooldownPeriod         time.Duration
-	slackConfig            *SlackNotificationConfig
-	emailConfig            *EmailNotificationConfig
-	webhookConfig          *WebhookNotificationConfig
-	lastAlertTimes         map[string]time.Time
 	stopCh                 chan struct{}
 	running                bool
-	alerts                 chan Alert
 	configPath             string
 	metrics                map[string]interface{}
 }
@@ -38,38 +29,16 @@ type Monitor struct {
 // MonitorOptions represents monitor configuration options
 type MonitorOptions struct {
 	MetricsPort  int
-	AlertManager *alerts.AlertManager
-	EnableIntelligentAlerting bool
-	IntelligentAlertingConfig *alerts.IntelligentAlertingConfig
 }
 
 // New creates a new Monitor instance
 func New(options MonitorOptions) (*Monitor, error) {
 	monitor := &Monitor{
 		metricsPort:  options.MetricsPort,
-		alertManager: options.AlertManager,
 	}
 	
 	// Create metric store
-	monitor.metricStore = NewMetricStore(monitor)
-	
-	// Initialize intelligent alerting if enabled
-	if options.EnableIntelligentAlerting {
-		config := options.IntelligentAlertingConfig
-		if config == nil {
-			config = alerts.DefaultIntelligentAlertingConfig()
-		}
-		
-		monitor.intelligentAlertManager = alerts.NewIntelligentAlertManager(
-			monitor.alertManager,
-			monitor.metricStore,
-			config,
-		)
-		
-		// Start background analysis
-		go monitor.intelligentAlertManager.StartAnalysis()
-	}
-	
+	monitor.metricStore = NewMetricStore()
 	return monitor, nil
 }
 
@@ -78,25 +47,15 @@ func (m *Monitor) GetMetricsPort() int {
 	return m.metricsPort
 }
 
-// GetAlertManager returns the alert manager
-func (m *Monitor) GetAlertManager() *alerts.AlertManager {
-	return m.alertManager
-}
-
-// GetIntelligentAlertManager returns the intelligent alert manager
-func (m *Monitor) GetIntelligentAlertManager() *alerts.IntelligentAlertManager {
-	return m.intelligentAlertManager
-}
 
 // Export functionality is defined in export.go
 
 // AlertManagerOptions represents options for creating an AlertManager
 type AlertManagerOptions struct {
 	EnableEmail   bool
-	EnableSlack   bool
-	EnableWebhook bool
 	EmailConfig   *alerts.EmailConfig
-	SlackConfig   *alerts.SlackConfig
+	// Webhook support is limited in OSS version
+	EnableWebhook bool
 	WebhookConfig *alerts.WebhookConfig
 }
 
@@ -104,8 +63,7 @@ type AlertManagerOptions struct {
 func DefaultAlertManagerOptions() AlertManagerOptions {
 	return AlertManagerOptions{
 		EnableEmail:   true,
-		EnableSlack:   true,
-		EnableWebhook: true,
+		EnableWebhook: false, // Disabled by default in OSS version
 		EmailConfig: &alerts.EmailConfig{
 			Host:     "smtp.example.com",
 			Port:     587,
@@ -115,11 +73,7 @@ func DefaultAlertManagerOptions() AlertManagerOptions {
 			FromName: "Nessi Alerts",
 			UseHTML:  true,
 		},
-		SlackConfig: &alerts.SlackConfig{
-			WebhookURL: "https://hooks.slack.com/services/your-webhook-url",
-			Username:   "Nessi Alert Bot",
-			IconEmoji:  ":warning:",
-		},
+
 		WebhookConfig: &alerts.WebhookConfig{
 			URL:        "https://example.com/webhook",
 			Method:     "POST",
@@ -159,13 +113,8 @@ func CreateAlertManager(options ...AlertManagerOptions) (*alerts.AlertManager, e
 		alertManager.RegisterNotifier(emailNotifier)
 	}
 
-	// Create Slack notifier if enabled
-	if opts.EnableSlack && opts.SlackConfig != nil {
-		slackNotifier := alerts.NewSlackNotifier(*opts.SlackConfig)
-		alertManager.RegisterNotifier(slackNotifier)
-	}
-
-	// Create webhook notifier if enabled
+	// Webhook support is limited in OSS version
+	// Only enabled if explicitly configured
 	if opts.EnableWebhook && opts.WebhookConfig != nil {
 		webhookNotifier := alerts.NewWebhookNotifier(*opts.WebhookConfig)
 		alertManager.RegisterNotifier(webhookNotifier)

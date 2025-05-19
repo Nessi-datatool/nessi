@@ -2,23 +2,16 @@ package cli
 
 import (
 	"github.com/nessi-dev/nessi/pkg"
-	"os"
-	"github.com/spf13/cobra"
-)
-
-
-import (
 	"context"
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/apache/arrow/go/v15/arrow"
 	"github.com/apache/arrow/go/v15/arrow/ipc"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
 	"github.com/nessi-dev/nessi/pkg/datalake"
 	"github.com/nessi-dev/nessi/pkg/quality/engine"
 	"github.com/nessi-dev/nessi/pkg/security"
@@ -51,23 +44,11 @@ func Init() {
 			fmt.Println("Telemetry: disabled")
 			fmt.Println("Team features: not available (OSS Edition)")
 			fmt.Println("\n→ Want RCA dashboards, team alerts, or governance features?")
-			fmt.Println("   Learn about LakeDiff: https://lakediff.com\n")
+			fmt.Print("   Learn about LakeDiff: https://lakediff.com\n")
 			os.Exit(0)
 		},
 	}
 	CLI.RootCmd.AddCommand(infoCmd)
-
-	// Add team-features command
-	teamFeaturesCmd := &cobra.Command{
-		Use:   "team-features",
-		Short: "Show team and enterprise features available in LakeDiff",
-		Long:  "Display a list of features available in LakeDiff Team & Enterprise edition.",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(`\n🚀 Team & Enterprise Features (via LakeDiff)\n\n✔ Slack/Teams alerts\n✔ RCA dashboards with lineage\n✔ Role-based access control (RBAC)\n✔ dbt Cloud model mapping\n✔ Trend dashboards (Grafana/Prometheus)\n→ Learn more: https://lakediff.com/features\n`)
-			os.Exit(0)
-		},
-	}
-	CLI.RootCmd.AddCommand(teamFeaturesCmd)
 
 	CLI.Config = viper.New()
 	CLI.RootCmd = &cobra.Command{
@@ -77,7 +58,6 @@ func Init() {
 It provides features for validation, profiling, monitoring, and reporting.`,
 		Version: "v0.10.3", // Update as needed
 	} // Add Version field to the root command
-	}
 
 	// Add global flags
 	CLI.RootCmd.PersistentFlags().StringVar(&CLI.ConfigPath, "config", "", "Path to configuration file")
@@ -92,7 +72,7 @@ It provides features for validation, profiling, monitoring, and reporting.`,
 	initUserCmd()
 	initSchemaTreeCmd() // Register the new schema-tree command
 	// RCA command is disabled due to missing implementation
-	rootCmd.AddCommand(telemetryCmd)
+	CLI.RootCmd.AddCommand(telemetryCmd)
 }
 
 // Execute runs the CLI
@@ -102,7 +82,7 @@ func Execute() error {
 	CLI.RootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		// Send telemetry event for every command
 		telemetryManager.SendEvent(pkg.TelemetryEvent{
-			Timestamp: pkg.Now(),
+			Timestamp: time.Now(),
 			Command:   cmd.Name(),
 			Args:      args,
 			Success:   true, // Set to false on error in future
@@ -110,24 +90,21 @@ func Execute() error {
 			Version:   "v0.1.0", // TODO: set dynamically
 		})
 	}
-	// Check for --team or --enterprise flag in os.Args
-	for _, arg := range os.Args[1:] {
-		if arg == "--team" || arg == "--enterprise" {
-			fmt.Println(`\n\U0001F512 Team & Enterprise Features (LakeDiff)
------------------------------------------
-✔ Slack/Teams alerts
-✔ RCA dashboards (with lineage views)
-✔ SSO and role-based access
-✔ dbt Cloud and orchestration
-→ Learn more: https://lakediff.com/features\n`)
-			os.Exit(0)
-		}
-	}
 	return CLI.RootCmd.Execute()
 }
 
 func init() {
-	rootCmd.AddCommand(telemetryCmd)
+	// Initialize RootCmd if it's nil
+	if CLI.RootCmd == nil {
+		CLI.RootCmd = &cobra.Command{
+			Use:   "nessi",
+			Short: "Nessi - Delta Lake Data Quality Tool",
+			Long:  "Nessi is a data quality tool for Delta Lake tables",
+		}
+	}
+	
+	// Now it's safe to add commands
+	CLI.RootCmd.AddCommand(telemetryCmd)
 
 	CLI.RootCmd.Version = "v0.10.3"
 	CLI.RootCmd.SetVersionTemplate(`Nessi CLI {{.Version}} — OSS edition\nLooking for team features like Slack alerts and dashboards? See LakeDiff → https://lakediff.com\n`)

@@ -1,4 +1,4 @@
-// [REMOVED FOR OSS]: alerting and advanced dashboards are only available in LakeDiff Enterprise.
+// Implementation of monitoring and alerting features.
 
 package testutil
 
@@ -6,35 +6,18 @@ import (
 	"os"
 
 	"github.com/nessi-dev/nessi/pkg/monitoring"
-	"github.com/nessi-dev/nessi/pkg/monitoring/alerts"
+
 )
 
 // CreateTestMonitor creates a monitoring.Monitor instance for testing
 func CreateTestMonitor(metricsPort int) *monitoring.Monitor {
 	// Create a temporary directory for the test
-	tempDir, _ := os.MkdirTemp("", "test-monitor-")
-	
-	// Create alert manager
-	alertManager, _ := alerts.NewAlertManager(tempDir)
+	_, _ = os.MkdirTemp("", "test-monitor-")
 	
 	// Create options
 	options := monitoring.MonitorOptions{
 		MetricsPort:  metricsPort,
-		AlertManager: alertManager,
-	}
-	
-	// Create monitor
-	monitor, _ := monitoring.New(options)
-	
-	return monitor
-}
-
-// CreateTestMonitorWithAlertManager creates a monitoring.Monitor instance with a specific AlertManager
-func CreateTestMonitorWithAlertManager(metricsPort int, alertManager *alerts.AlertManager) *monitoring.Monitor {
-	// Create options
-	options := monitoring.MonitorOptions{
-		MetricsPort:  metricsPort,
-		AlertManager: alertManager,
+		
 	}
 	
 	// Create monitor

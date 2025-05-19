@@ -120,99 +120,40 @@ func (d *Dashboard) Start() error {
 	d.mux.HandleFunc("/", d.handleIndex)
 	d.mux.HandleFunc("/health", d.handleHealth)
 	d.mux.HandleFunc("/data-quality", d.handleDataQualityDashboard)
-	d.mux.HandleFunc("/// [REMOVED FOR OSS]: alerting features are only available in LakeDiff Enterprise.", d.handleAlertsDashboard)
 	d.mux.HandleFunc("/freshness", d.handleFreshnessDashboard)
 	
 	// Authentication routes
 	if d.authManager != nil {
 		d.mux.HandleFunc("/login", d.handleLogin)
-		d.mux.HandleFunc("/auth/login", d.handleAPILogin)
+		d.mux.HandleFunc("/auth/login", nil)
 	}
 	
 	// Protected routes
 	if d.authManager != nil {
 		// Apply authentication middleware to API routes
 		d.mux.Handle("/api/metrics", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleMetrics)))
-		d.mux.Handle("/api/// [REMOVED FOR OSS]: alerting features are only available in LakeDiff Enterprise.", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleAlerts)))
-		d.mux.Handle("/api/// [REMOVED FOR OSS]: alerting features are only available in LakeDiff Enterprise./rules", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleAlertRulesAPI)))
-		
-		// RCA API routes
-		d.mux.Handle("/api/rca/", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleRcaAPI)))
-		d.mux.Handle("/api/rca/recent", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleRcaAPI)))
-		d.mux.Handle("/api/rca/analyze", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleRcaAPI)))
-		d.mux.Handle("/api/rca/insights", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleRcaAPI)))
-		d.mux.Handle("/api/rca/export", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleRcaAPI)))
-		
-		// Freshness API routes
 		d.mux.Handle("/api/freshness/status", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleFreshnessStatusAPI)))
 		d.mux.Handle("/api/freshness/sla", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleFreshnessSLAAPI)))
 		d.mux.Handle("/api/freshness/trends", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleFreshnessTrendsAPI)))
 		d.mux.Handle("/api/freshness/export", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleFreshnessExportAPI)))
-		d.mux.Handle("/api/// [REMOVED FOR OSS]: alerting features are only available in LakeDiff Enterprise./{id}/acknowledge", d.authManager.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			d.handleAlertAction(w, r, "acknowledge")
-		})))
-		d.mux.Handle("/api/// [REMOVED FOR OSS]: alerting features are only available in LakeDiff Enterprise./{id}/resolve", d.authManager.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			d.handleAlertAction(w, r, "resolve")
-		})))
-		d.mux.Handle("/api/// [REMOVED FOR OSS]: alerting features are only available in LakeDiff Enterprise./{id}/silence", d.authManager.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			d.handleAlertAction(w, r, "silence")
-		})))
-		d.mux.Handle("/api/// [REMOVED FOR OSS]: alerting features are only available in LakeDiff Enterprise./rules/{id}/enable", d.authManager.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			d.handleAlertRuleAction(w, r, "enable")
-		})))
-		d.mux.Handle("/api/// [REMOVED FOR OSS]: alerting features are only available in LakeDiff Enterprise./rules/{id}/disable", d.authManager.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			d.handleAlertRuleAction(w, r, "disable")
-		})))
-		d.mux.Handle("/api/// [REMOVED FOR OSS]: alerting features are only available in LakeDiff Enterprise./rules/{id}", d.authManager.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.Method == http.MethodDelete {
-				d.handleAlertRuleAction(w, r, "delete")
-			} else {
-				w.WriteHeader(http.StatusMethodNotAllowed)
-			}
-		})))
 		d.mux.Handle("/api/export", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleExport)))
-		
-		// Data quality routes with authentication
 		d.mux.Handle("/api/profiles", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleGetProfiles)))
 		d.mux.Handle("/api/profiles/summary", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleGetProfileSummaries)))
 		d.mux.Handle("/api/rules", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleGetRules)))
 		d.mux.Handle("/api/rules/validate", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleValidateRules)))
 		d.mux.Handle("/api/rules/history", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleGetRuleHistory)))
 		d.mux.Handle("/api/rules/trends", d.authManager.AuthMiddleware(http.HandlerFunc(d.handleGetExecutionTrends)))
-		
 		// Admin routes
 		adminHandler := d.authManager.RoleMiddleware(security.RoleAdmin)
 		d.mux.Handle("/admin/users", adminHandler(http.HandlerFunc(d.handleUsers)))
 	} else {
 		// No authentication, routes are public
 		d.mux.HandleFunc("/api/metrics", d.handleMetrics)
-		d.mux.HandleFunc("/api/// [REMOVED FOR OSS]: alerting features are only available in LakeDiff Enterprise.", d.handleAlertsAPI)
-		d.mux.HandleFunc("/api/// [REMOVED FOR OSS]: alerting features are only available in LakeDiff Enterprise./rules", d.handleAlertRulesAPI)
-		d.mux.HandleFunc("/api/// [REMOVED FOR OSS]: alerting features are only available in LakeDiff Enterprise./{id}/acknowledge", func(w http.ResponseWriter, r *http.Request) {
-			d.handleAlertAction(w, r, "acknowledge")
-		})
-		d.mux.HandleFunc("/api/// [REMOVED FOR OSS]: alerting features are only available in LakeDiff Enterprise./{id}/resolve", func(w http.ResponseWriter, r *http.Request) {
-			d.handleAlertAction(w, r, "resolve")
-		})
-		d.mux.HandleFunc("/api/// [REMOVED FOR OSS]: alerting features are only available in LakeDiff Enterprise./{id}/silence", func(w http.ResponseWriter, r *http.Request) {
-			d.handleAlertAction(w, r, "silence")
-		})
-		d.mux.HandleFunc("/api/// [REMOVED FOR OSS]: alerting features are only available in LakeDiff Enterprise./rules/{id}/enable", func(w http.ResponseWriter, r *http.Request) {
-			d.handleAlertRuleAction(w, r, "enable")
-		})
-		d.mux.HandleFunc("/api/// [REMOVED FOR OSS]: alerting features are only available in LakeDiff Enterprise./rules/{id}/disable", func(w http.ResponseWriter, r *http.Request) {
-			d.handleAlertRuleAction(w, r, "disable")
-		})
-		d.mux.HandleFunc("/api/// [REMOVED FOR OSS]: alerting features are only available in LakeDiff Enterprise./rules/{id}", func(w http.ResponseWriter, r *http.Request) {
-			if r.Method == http.MethodDelete {
-				d.handleAlertRuleAction(w, r, "delete")
-			} else {
-				w.WriteHeader(http.StatusMethodNotAllowed)
-			}
-		})
+		d.mux.HandleFunc("/api/freshness/status", d.handleFreshnessStatusAPI)
+		d.mux.HandleFunc("/api/freshness/sla", d.handleFreshnessSLAAPI)
+		d.mux.HandleFunc("/api/freshness/trends", d.handleFreshnessTrendsAPI)
+		d.mux.HandleFunc("/api/freshness/export", d.handleFreshnessExportAPI)
 		d.mux.HandleFunc("/api/export", d.handleExport)
-		
-		// Data quality routes without authentication
 		d.mux.HandleFunc("/api/profiles", d.handleGetProfiles)
 		d.mux.HandleFunc("/api/profiles/summary", d.handleGetProfileSummaries)
 		d.mux.HandleFunc("/api/rules", d.handleGetRules)
@@ -278,36 +219,6 @@ func (d *Dashboard) handleMetrics(w http.ResponseWriter, r *http.Request) {
 	
 	if _, err := w.Write(respBody); err != nil {
 		logging.Error("Failed to write metrics response", err)
-	}
-}
-
-// handleAlertsAPI handles // [REMOVED FOR OSS]: alerting features are only available in LakeDiff Enterprise. API requests
-func (d *Dashboard) handleAlertsAPI(w http.ResponseWriter, r *http.Request) {
-	// Set content type
-	w.Header().Set("Content-Type", "application/json")
-
-	// Forward to // [REMOVED FOR OSS]: alerting features are only available in LakeDiff Enterprise. endpoint
-	resp, err := http.Get(fmt.Sprintf("http://localhost:%d/// [REMOVED FOR OSS]: alerting features are only available in LakeDiff Enterprise.", 
-		d.monitor.GetMetricsPort()))
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{
-			"error": fmt.Sprintf("Failed to get // [REMOVED FOR OSS]: alerting features are only available in LakeDiff Enterprise.: %v", err),
-		})
-		return
-	}
-	defer resp.Body.Close()
-
-	// Copy response
-	w.WriteHeader(resp.StatusCode)
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		logging.Error("Failed to read // [REMOVED FOR OSS]: alerting features are only available in LakeDiff Enterprise. response", err)
-		return
-	}
-	
-	if _, err := w.Write(respBody); err != nil {
-		logging.Error("Failed to write // [REMOVED FOR OSS]: alerting features are only available in LakeDiff Enterprise. response", err)
 	}
 }
 

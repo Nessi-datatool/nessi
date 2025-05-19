@@ -1,7 +1,9 @@
-# Nessi.dev Project Requirements
+# Nessi Project Requirements
+
+This document outlines the features and requirements of the Nessi open-source project.
 
 ## Project Overview
-Nessi.dev is a data quality and Delta Lake management tool with a Go-first architecture. Python components are optional and can be enabled by users as needed. The goal is to become the go-to tool for Delta Lake data quality and management.
+Nessi is an open-source data quality and Delta Lake management tool with a Go-first architecture. Python components are optional and can be enabled by users as needed. The goal is to become the go-to tool for Delta Lake data quality and management.
 
 ## Core Features
 
@@ -54,24 +56,16 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
 - ✅ Recent validation failures
 - ✅ Live metrics for table health and ingestion
 
-### Grafana Integration
-- ✅ 5 pre-built dashboard templates
-- ✅ Custom visualization options
-- ✅ Shareable insights with team members
-- ✅ Prometheus integration for alerts and historical trends
+### Monitoring Dashboard
+- ✅ Built-in dashboard for core monitoring functionality
+- ✅ Real-time metrics visualization
+- ✅ System health monitoring
 
-### Advanced Alerting
+### Alerting
 - ✅ Email notifications for critical issues
 - ✅ Threshold-based triggers
 - ✅ Daily/Weekly summary reports
-- ✅ Integration with collaboration tools (Slack, Teams)
-- ✅ Configurable alert routing and escalation policies
-- ✅ Intelligent alerting based on historical trends and anomalies
-  - ✅ Outlier detection using statistical analysis
-  - ✅ Trend deviation detection for gradual changes
-  - ✅ Seasonal pattern recognition (hourly, daily, weekly)
-  - ✅ Automatic rule creation and updating based on historical data
-  - ✅ Self-tuning sensitivity configuration
+- ✅ Customizable alert templates
 
 ### Monitoring History
 - ✅ 30-day metrics retention
@@ -93,9 +87,7 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
 - ✅ SSL/TLS encrypted interfaces
 - ✅ User authentication with JWT
 - ✅ API key management
-- ✅ Role-based access control (RBAC) for APIs and dashboards
-- ✅ API rate limiting and optional IP allowlisting
-- ✅ Audit logging for key operations
+- ✅ Basic access controls
 
 ### Containerization
 - ✅ 100% Docker-native for easy installation
@@ -146,6 +138,11 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
 - ✅ Interactive examples
 - ✅ API reference
 - ✅ Best practices guides
+- ✅ ASCII schema trees and CLI heatmaps for improved visualization
+- ✅ Terraform-style CLI flags for automation-friendly interface
+- ✅ Local-only data handling for privacy and security
+- ✅ GitHub usage badge and telemetry opt-in (with privacy controls)
+- ✅ Quickstart demo with embedded examples
 
 ### dbt Integration
 - ✅ Opt-in dbt plugin for data quality and profiling
@@ -155,7 +152,7 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
 - ✅ Automatic mapping between dbt models and Delta tables
 - ✅ Export results in various formats (JSON, CSV, table)
 - ✅ Generate artifacts for dbt Docs integration
-- ✅ Alerting capabilities via Slack and email
+- ✅ Alerting capabilities via email
 
 ### Workflow Orchestration Integration
 - ✅ Apache Airflow operators and sensors for Nessi.dev tasks
@@ -164,16 +161,12 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
 - ✅ Kubernetes operators for Nessi.dev jobs
 - ✅ Workflow status monitoring and callbacks
 - ✅ Pipeline-aware data quality checks
-
 ### Collaboration & Governance
-- ✅ Role-Based Access Control (RBAC) for the CLI/API
-- ✅ Audit Logging for key operations (configuration changes, rule executions)
-- ✅ Team-based permissions and access controls
 - ✅ Shared rule libraries and configurations
 
 ## Architecture Requirements
 
-### Primary Go Components (Required)
+### Primary Go Components
 1. ✅ API Gateway
 2. ✅ Data Quality Engine
 3. ✅ Monitoring Service
@@ -181,16 +174,7 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
 5. ✅ Delta Lake Connector
 6. ✅ Security Manager
 7. ✅ CLI Interface
-8. ✅ Alerting System
-   - ✅ Standard alerting with multiple notification channels
-   - ✅ Intelligent alerting with pattern recognition
-
-### Optional Python Extensions
-1. ✅ Advanced Delta Lake Features
-2. ✅ ML-based Anomaly Detection
-3. ✅ Advanced Statistical Analysis
-4. ✅ Custom Rule Execution Engine
-5. ✅ Advanced Visualization Components
+8. ✅ Email Alerting System
 
 ### Extension System
 - ✅ Plugin architecture for enabling/disabling features
@@ -198,6 +182,12 @@ Nessi.dev is a data quality and Delta Lake management tool with a Go-first archi
 - ✅ Dynamic configuration loading
 - ✅ Custom rule extensions
 - ✅ Integration points for external systems
+
+### Community
+- ✅ Documentation and tutorials
+- ✅ Example projects and use cases
+- ✅ GitHub repository with issue tracking
+- ✅ Slack/Discord community support channels
 
 ### Testing & Quality Assurance
 - ✅ Comprehensive unit test coverage
