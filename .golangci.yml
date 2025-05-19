@@ -1,0 +1,74 @@
+run:
+  # Timeout for analysis, e.g. 30s, 5m, default is 1m
+  timeout: 5m
+
+  # Include test files or not, default is true
+  tests: true
+
+  # Skip directories
+  skip-dirs:
+    - vendor
+    - node_modules
+
+# Output configuration options
+output:
+  # Format: colored-line-number|line-number|json|tab|checkstyle|code-climate, default is "colored-line-number"
+  format: colored-line-number
+
+# Linters settings
+linters-settings:
+  errcheck:
+    # Report about not checking of errors in type assertions: `a := b.(MyStruct)`.
+    check-type-assertions: true
+
+  govet:
+    # Report about shadowed variables
+    check-shadowing: true
+
+  gocyclo:
+    # Minimal code complexity to report, 30 by default
+    min-complexity: 15
+
+  dupl:
+    # Tokens count to trigger issue, 150 by default
+    threshold: 100
+
+  goconst:
+    # Minimal length of string constant, 3 by default
+    min-len: 3
+    # Minimal occurrences count to trigger, 3 by default
+    min-occurrences: 3
+
+  lll:
+    # Max line length, lines longer will be reported. Default is 120.
+    line-length: 120
+
+# Enabled linters
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    - gofmt
+
+# Issues configuration
+issues:
+  # Maximum issues count per one linter. Set to 0 to disable. Default is 50.
+  max-issues-per-linter: 0
+
+  # Maximum count of issues with the same text. Set to 0 to disable. Default is 3.
+  max-same-issues: 0
+
+  # Excluding configuration
+  exclude-rules:
+    # Exclude some linters from running on tests files.
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - dupl
+        - gosec
