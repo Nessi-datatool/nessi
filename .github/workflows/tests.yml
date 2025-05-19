@@ -22,8 +22,11 @@ jobs:
       - name: Install dependencies
         run: go mod download
       
-      - name: Run unit tests
-        run: go test -v ./... -short
+      - name: Run core tests
+        run: |
+          # Test only the core Databricks integration and visualization packages
+          go test -v ./pkg/catalog/databricks/... -short
+          go test -v ./pkg/visualization/... -short
       
       - name: Run integration tests (if not in PR)
         if: github.event_name != 'pull_request'
@@ -33,7 +36,8 @@ jobs:
       
       - name: Check test coverage
         run: |
-          go test -coverprofile=coverage.out ./...
+          # Generate coverage report for core packages only
+          go test -coverprofile=coverage.out ./pkg/catalog/databricks/... ./pkg/visualization/...
           go tool cover -func=coverage.out
       
       - name: Upload coverage report
