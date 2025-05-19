@@ -1,48 +1,247 @@
 # Nessi
 
+<p align="center">
+  <img src="docs/images/nessi-logo.png" alt="Nessi Logo" width="200"/>
+</p>
+
 Nessi is an open-source data quality and Delta Lake management tool that helps organizations maintain high-quality data and efficiently manage their Delta Lake tables.
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/nessi-dev/nessi)](https://goreportcard.com/report/github.com/nessi-dev/nessi)
+[![Build Status](https://github.com/nessi-dev/nessi/workflows/CI/badge.svg)](https://github.com/nessi-dev/nessi/actions)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Go Reference](https://pkg.go.dev/badge/github.com/nessi-dev/nessi.svg)](https://pkg.go.dev/github.com/nessi-dev/nessi)
 
 ## Features
 
 - **Delta Lake Support**
-  - Native Delta Lake table management
+  - Delta Lake table management
   - Transaction log parsing and analysis
   - Schema evolution tracking
   - Partition management
   - Version control and time travel
   - Multi-format support (Delta, Parquet, CSV)
-  - Automatic schema inference and validation
-  - Cloud integration with AWS, Azure (SDK v1.6.1+), and GCP
-  - **Data Catalog Integration**: Connect with popular data catalogs like AWS Glue, Azure Purview, and Google Cloud Data Catalog to discover data assets and publish quality metrics
+  - Schema inference and validation
+  - Cloud integration with AWS, Azure, and GCP
+  - **Data Catalog Integration**: Integration with data catalogs like AWS Glue, Azure Purview, and Google Cloud Data Catalog
 
 - **Data Quality Intelligence**
-  - Automated data quality checks
+  - Data quality checks
   - Custom quality rules
   - Data profiling and statistics
   - Anomaly detection
+  - Schema validation
+  - Freshness monitoring
+  - Consistency checks
+  - Quality reporting
+  
+- **Monitoring & Alerting**
+  - File-based metrics collection
+  - Email alerting for failed checks
+  - Configurable alert thresholds
+  - Alert history in log files
+  
+- **Reporting**
+  - CLI-generated reports
+  - Schema tree visualization
+  - Data quality metrics
+  - Trend analysis via report comparison
   - Quality scoring and metrics
   - **dbt Integration**: Seamless integration with dbt for validating and profiling models directly in your dbt workflow
 
-- **Monitoring and Alerting**
-  - Built-in monitoring dashboard
-  - Email notifications for critical issues
+## Installation
+
+### Prerequisites
+
+- Go 1.18 or higher
+- Python 3.8 or higher (for Python integrations)
+- Access to Delta Lake tables
+
+### Binary Installation
+
+#### Using Go
+
+```bash
+go install github.com/nessi-dev/nessi/cmd/nessi@latest
+```
+
+#### Using Prebuilt Binaries
+
+Download the latest release from the [GitHub Releases page](https://github.com/nessi-dev/nessi/releases).
+
+```bash
+# Linux/macOS
+chmod +x nessi
+./nessi --version
+
+# Add to your PATH for easier access
+mv nessi /usr/local/bin/
+```
+
+### Docker Installation
+
+```bash
+# Pull the latest image
+docker pull nessi/nessi:latest
+
+# Run Nessi
+docker run -v $(pwd):/data nessi/nessi:latest scan /data/table
+```
+
+## Quick Start
+
+### Basic Usage
+
+```bash
+# Scan a Delta Lake table
+nessi scan s3://my-bucket/my-table
+
+# Generate a data quality report
+nessi report s3://my-bucket/my-table --format html --output report.html
+
+# Validate a table against quality rules
+nessi validate s3://my-bucket/my-table --rules rules.yaml
+
+# Time travel to a specific version
+nessi timetravel s3://my-bucket/my-table --version 5
+
+# View schema evolution
+nessi schema s3://my-bucket/my-table --history
+```
+
+### Configuration
+
+Create a `nessi.yaml` configuration file:
+
+```yaml
+storage:
+  type: s3
+  region: us-west-2
+  bucket: my-delta-tables
+
+monitoring:
+  enabled: true
+  metrics_retention: 30d
+
+quality:
+  default_rules: path/to/rules.yaml
+  threshold: 0.95
+```
+
+### Using the API
+
+Nessi provides a Go API for programmatic access:
+
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/nessi-dev/nessi/pkg/datalake"
+)
+
+func main() {
+	// Open a Delta Lake table
+	table, err := datalake.OpenTable("s3://my-bucket/my-table")
+	if err != nil {
+		panic(err)
+	}
+	
+	// Get table metadata
+	meta, err := table.Metadata()
+	if err != nil {
+		panic(err)
+	}
+	
+	fmt.Printf("Table: %s, Version: %d\n", meta.Name, meta.Version)
+	
+	// Run quality checks
+	results, err := table.ValidateQuality(nil)
+	if err != nil {
+		panic(err)
+	}
+	
+	fmt.Printf("Quality Score: %.2f%%\n", results.OverallScore*100)
+}
+```
+
+## Documentation
+
+For detailed documentation, visit our [User Guide](docs/USER_GUIDE.md).
+
+Additional documentation:
+- [CLI Reference](docs/cli/README.md)
+- [Configuration Options](docs/CONFIGURATION.md)
+- [Quality Rules](docs/QUALITY_RULES.md)
+- [Report Generation](docs/report_generation.md)
+
+- **Monitoring and Alerting (OSS + Optional)**
+  - CLI-based metrics reporting
+  - Email notifications for failed checks (OSS)
   - Performance tracking
   - Resource utilization monitoring
   - Health checks
-  - **Freshness SLA Monitoring**: Track data freshness with configurable SLAs, compliance tracking, and historical trend analysis
+  - **Freshness SLA Monitoring**: Track data freshness with configurable SLAs and compliance tracking
 
 - **Report Generation**
   - Customizable report templates
-  - Multiple output formats (PDF, CSV, HTML, JSON)
-  - Scheduled report generation
+  - Multiple output formats (CSV, JSON)
+  - Report generation via CLI
   - Report archiving and retention
-  - Data quality dashboards
 
 - **Security**
-  - JWT-based authentication
-  - TLS encryption
-  - Security headers
   - API key management
+  - TLS encryption for secure connections
+  - File-based credential storage
+
+## Contributing
+
+We welcome contributions from the community! Please see our [Contributing Guide](CONTRIBUTING.md) for details on how to get started.
+
+### Development Setup
+
+```bash
+# Clone the repository
+git clone git@github.com:nessi-dev/nessi.git
+cd nessi
+
+# Install dependencies
+make deps
+
+# Build the project
+make build
+
+# Run tests
+make test
+```
+
+### Testing
+
+We aim for high test coverage. Run the test suite with:
+
+```bash
+./generate-test-coverage.sh
+```
+
+This will generate a coverage report in the `./coverage` directory.
+
+## Community
+
+- [GitHub Discussions](https://github.com/nessi-dev/nessi/discussions) - Ask questions and share ideas
+- [Issue Tracker](https://github.com/nessi-dev/nessi/issues) - Report bugs or request features
+- [Slack Community](https://nessi-community.slack.com) - Join our Slack for real-time discussions
+
+## Roadmap
+
+See our [project roadmap](https://github.com/nessi-dev/nessi/projects/1) for upcoming features and enhancements.
+
+## License
+
+Nessi is licensed under the [Apache License 2.0](LICENSE).
+
+## Acknowledgments
+
+- The Delta Lake community for their excellent work on the Delta Lake format
+- All our contributors and users who provide valuable feedback
 
 - **Testing Framework**
   - Comprehensive unit and integration tests
@@ -72,18 +271,15 @@ Nessi is an open-source data quality and Delta Lake management tool that helps o
   - Environment variable-based configuration for secure deployment
 
 - **Integration Capabilities**
-  - Prometheus metrics integration
-  - Grafana dashboards
-  - Secure API access
-  - Comprehensive webhook integration
-  - Event-based notifications
+  - File-based metrics collection
+  - CLI-based reporting
+  - Secure API key access
+  - Email notifications
   - Cloud provider integration (AWS, Azure, GCP)
-  - Modern Azure SDK (v1.6.1+) support
   - **dbt Integration**: Opt-in plugin for executing data quality rules against dbt models and generating data profiles
-  - **Workflow Orchestration Integration**: Seamless integration with Apache Airflow, Prefect, Dagster, and Kubernetes for incorporating data quality checks into data pipelines
-  - **Kubernetes Integration**: Native operators for running Nessi operations as Kubernetes jobs with configurable resources and monitoring
-  - **Error Handling and Retries**: Configurable retry mechanisms with exponential backoff for API failures and detailed error categorization
-  - **Observability**: Comprehensive metrics collection, structured logging, and tracing support for monitoring and debugging
+  - **Workflow Orchestration Integration**: Integration with Apache Airflow, Prefect, and Dagster for incorporating data quality checks into data pipelines
+  - **Error Handling and Retries**: Configurable retry mechanisms for operations and detailed error reporting
+  - **Observability**: Structured logging and file-based metrics for monitoring
 
 - **Documentation**
   - Comprehensive user guides
@@ -103,7 +299,7 @@ Nessi is an open-source data quality and Delta Lake management tool that helps o
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/nessi-dev/nessi-dev.git
+   git clone git@github.com:nessi-dev/nessi.git
    cd nessi-dev
    ```
 
@@ -126,11 +322,11 @@ Nessi is an open-source data quality and Delta Lake management tool that helps o
 
 The application is configured using a YAML file located at `config/config.yaml`. The configuration includes settings for:
 
-- Server configuration (host, port, timeouts)
-- Security settings (JWT, TLS, rate limiting)
+- Security settings (API keys, TLS for CLI tools)
 - Delta Lake paths and properties
 - Data quality rules and thresholds
-- Monitoring and alerting
+- Monitoring and metrics export
+- Email notifications
 - Report generation
 - Logging
 
@@ -138,29 +334,28 @@ See `config/config.yaml` for detailed configuration options.
 
 ## Usage
 
-### Running the Application
+### Running the CLI
 
-1. Start the server:
+1. Run the CLI tool:
    ```bash
-   make run
+   nessi --help
    ```
 
 2. Or run with Docker:
    ```bash
-   make docker-build
-   make docker-run
+   docker run -v $(pwd):/data nessi/nessi:latest --help
    ```
 
-### API Endpoints
+### CLI Commands
 
-The application exposes the following REST API endpoints:
+The application provides the following CLI commands:
 
-- `GET /api/v1/tables` - List Delta tables
-- `GET /api/v1/tables/{name}` - Get table details
-- `POST /api/v1/tables/{name}/quality` - Run quality checks
-- `GET /api/v1/tables/{name}/quality` - Get quality metrics
-- `GET /api/v1/tables/{name}/reports` - Get quality reports
-- `POST /api/v1/tables/{name}/reports` - Generate new report
+- `nessi tables list` - List Delta tables
+- `nessi tables info <name>` - Get table details
+- `nessi quality check <name>` - Run quality checks
+- `nessi quality metrics <name>` - Get quality metrics
+- `nessi reports list <name>` - List available reports
+- `nessi reports generate <name>` - Generate new report
 
 ### Development
 
@@ -199,31 +394,33 @@ The application exposes the following REST API endpoints:
 
 ### Authentication
 
-The application uses JWT for authentication. Configure the JWT settings in `config/config.yaml`:
+The application uses API keys for CLI authentication. Configure the API key settings in `config/config.yaml`:
 
 ```yaml
 security:
-  jwt:
-    secret: "your-secret-key"
-    expiration: 24h
+  api_key:
+    enabled: true
+    key_file: "config/api_keys.yaml"
 ```
 
-## Monitoring and Observability
+Set the API key as an environment variable for CLI commands:
 
-The application integrates with Prometheus for monitoring and provides comprehensive observability features. Configure the monitoring settings in `config/config.yaml`:
+```bash
+export NESSI_API_KEY="your-api-key"
+nessi tables list
+```
+
+## Monitoring and Metrics Export
+
+The application provides file-based metrics export for monitoring and observability. Configure the metrics export settings in `config/config.yaml`:
 
 ```yaml
 monitoring:
-  prometheus:
+  metrics:
     enabled: true
-    push_gateway: "http://localhost:9091"
-    job_name: "nessi"
-    interval: 15s
-  tracing:
-    enabled: true
-    provider: "opentelemetry"
-    endpoint: "http://localhost:4317"
-    service_name: "nessi"
+    collection_interval: 15s
+    export_path: "./data/metrics"
+    export_format: "json"
   logging:
     structured: true
     format: "json"

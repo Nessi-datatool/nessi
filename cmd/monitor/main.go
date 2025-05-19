@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -10,116 +9,56 @@ import (
 
 	"github.com/nessi-dev/nessi/pkg/logging"
 	"github.com/nessi-dev/nessi/pkg/monitoring"
-	"github.com/nessi-dev/nessi/pkg/monitoring/dashboard"
 )
 
 func main() {
-	// Parse command-line flags
-	metricsPort := flag.Int("metrics-port", 9090, "Port for metrics server")
-	dashboardPort := flag.Int("dashboard-port", 8080, "Port for dashboard server")
-	configPath := flag.String("config", "pkg/monitoring/config/monitoring.json", "Path to monitoring configuration")
-	enableDashboard := flag.Bool("dashboard", true, "Enable web dashboard")
+	// Parse command line arguments
+	exportPath := flag.String("export-path", "./data/metrics", "Path to export metrics to")
+	interval := flag.Duration("interval", 1*time.Minute, "Metrics collection interval")
+	enableSystemMetrics := flag.Bool("system-metrics", true, "Enable system metrics collection")
 	flag.Parse()
 
-	// Initialize monitor
-	monitor, err := monitoring.New(monitoring.MonitorOptions{
-		MetricsPort: *metricsPort,
+	// Initialize metrics collector
+	collector := monitoring.NewReportMetricsCollector()
 
-	})
-	if err != nil {
-		logging.Error("Failed to create monitoring service", err)
-		os.Exit(1)
-	}
-	monitor.SetConfigPath(*configPath)
+	// Set export path
+	collector.SetMetricsExportPath(*exportPath)
 
-	// Load configuration
-	if err := monitor.LoadConfig(); err != nil {
-		logging.Error("Failed to load monitoring configuration", err)
-		os.Exit(1)
-	}
+	// Set collection interval
+	collector.SetExportInterval(*interval)
 
-	// Override metrics port if specified
-	if *metricsPort != 9090 {
-		monitor.SetMetricsPort(*metricsPort)
+	// Start metrics collection
+	collector.Start()
+	logging.Info("Metrics collection started")
+
+	if *enableSystemMetrics {
+		logging.Info("Enabling system metrics collection")
+		collector.EnableSystemMetrics()
 	}
 
-	// Start monitoring service
-	monitor.Start()
-	logging.Info("Monitoring service started")
-
-	// Start dashboard if enabled
-	if *enableDashboard {
-		dashboardOpts := dashboard.DashboardOptions{
-			ListenAddr: fmt.Sprintf(":%d", *dashboardPort),
-		}
-
-		dash, err := dashboard.New(monitor, dashboardOpts)
-		if err != nil {
-			logging.Error("Failed to create dashboard", err)
-		} else {
-			go func() {
-				if err := dash.Start(); err != nil {
-					logging.Error("Dashboard server error", err)
-				}
-			}()
-			logging.Info(fmt.Sprintf("Dashboard available at http://localhost:%d", *dashboardPort))
-		}
-	}
-
-	// Generate some sample metrics for demonstration
-	go generateSampleMetrics(monitor)
+	// Generate sample metrics for demonstration
+	go generateSampleMetrics(collector)
 
 	// Wait for termination signal
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	<-sigCh
+	logging.Info("Shutting down metrics collector")
 
-	logging.Info("Shutting down monitoring service")
+	// Stop monitoring service
+	collector.Stop()
+	logging.Info("Metrics collection stopped")
 }
 
-// generateSampleMetrics generates sample metrics for demonstration
-func generateSampleMetrics(monitor *monitoring.Monitor) {
-	tables := []string{"users", "orders", "products", "transactions"}
-	operations := []string{"read", "write", "update", "delete"}
-	rules := []string{"completeness", "uniqueness", "range", "format"}
-
-	ticker := time.NewTicker(5 * time.Second)
-	defer ticker.Stop()
-
+func generateSampleMetrics(collector *monitoring.ReportMetricsCollector) {
 	for {
-		select {
-		case <-ticker.C:
-			// Record table metrics
-			for _, table := range tables {
-				size := 100.0 + float64(time.Now().Unix()%1000)
-				count := 1000 + int(time.Now().Unix()%100)
-				monitor.RecordTableMetrics(table, []map[string]interface{}{
-					{"size": size, "count": count},
-				})
-			}
+		// Record some sample metrics
+		collector.RecordMetrics("sample_metrics", map[string]interface{}{
+			"counter": 1,
+			"gauge":   42.5,
+		})
 
-			// Record latency metrics
-			for _, op := range operations {
-				latency := time.Duration(50+time.Now().Unix()%200) * time.Millisecond
-				monitor.RecordLatency(op, latency)
-			}
-
-			// Record some errors and rule violations
-			if time.Now().Unix()%30 == 0 {
-				table := tables[time.Now().Unix()%int64(len(tables))]
-				monitor.RecordError(table, "validation_error")
-			}
-
-			if time.Now().Unix()%20 == 0 {
-				table := tables[time.Now().Unix()%int64(len(tables))]
-				rule := rules[time.Now().Unix()%int64(len(rules))]
-				monitor.RecordRuleViolation(table, rule)
-			}
-
-			// Generate some alerts
-			if time.Now().Unix()%60 == 0 {
-				// [OSS] Alerting disabled: monitor.SendAlert (OSS)
-			}
-		}
+		// Sleep for a while
+		time.Sleep(10 * time.Second)
 	}
 }

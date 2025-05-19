@@ -13,6 +13,7 @@ import (
 
 // TestTrendDeviationIntegration tests the trend deviation functionality with a more realistic setup
 func TestTrendDeviationIntegration(t *testing.T) {
+	// Skip in short mode
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}
@@ -20,11 +21,6 @@ func TestTrendDeviationIntegration(t *testing.T) {
 	// Use test fixtures
 	fixtures := testutil.NewTestFixtures(t)
 	defer fixtures.Cleanup()
-TestTrendDeviationIntegration(t *testing.T) {
-	// Skip in short mode
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
-	}
 
 	// Create test metrics directory
 	metricsDir := fixtures.CreateTempDir("trend-deviation-metrics-")

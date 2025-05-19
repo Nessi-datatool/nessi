@@ -14,11 +14,10 @@ import (
 	"github.com/nessi-dev/nessi/pkg/testutil"
 )
 
-func (t *testing.T) {
+func TestFormatDetection(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}
-TestFormatDetection(t *testing.T) {
 	// Create test directory
 	tempDir := fixtures.CreateTempDir("format-detection-")
 
