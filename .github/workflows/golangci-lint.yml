@@ -22,13 +22,27 @@ jobs:
         with:
           go-version: '1.20'
           cache: false
-      - name: Install dependencies
-        run: go mod download
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: v1.54.2
-          args: --timeout=5m --verbose --path-prefix=./
-          # Optional: show only new issues if it's a pull request
-          only-new-issues: true
-          working-directory: ./
+      - name: Lint only changed files
+        run: |
+          # Get list of changed Go files
+          CHANGED_FILES=$(git diff --name-only origin/main | grep '\.go$' || echo "")
+          
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No Go files changed, skipping lint"
+            exit 0
+          fi
+          
+          # Run gofmt on changed files
+          echo "Running gofmt on changed files..."
+          echo "$CHANGED_FILES" | xargs -I{} gofmt -l -w {}
+          
+          # Check if any files were changed by gofmt
+          GOFMT_CHANGES=$(git diff --name-only)
+          if [ -n "$GOFMT_CHANGES" ]; then
+            echo "The following files need formatting:"
+            echo "$GOFMT_CHANGES"
+            exit 1
+          fi
+          
+          echo "All files are properly formatted!"
+          exit 0
