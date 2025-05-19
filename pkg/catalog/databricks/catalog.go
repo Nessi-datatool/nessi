@@ -2,7 +2,6 @@ package databricks
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -98,38 +97,4 @@ func (c *DatabricksClient) GetWorkspaces(ctx context.Context) ([]Workspace, erro
 	}, nil
 }
 
-// GetCatalogs returns a list of catalogs in the specified workspace
-func (c *DatabricksClient) GetCatalogs(ctx context.Context, workspaceID string) ([]Catalog, error) {
-	// Implementation would make API call to Databricks Unity Catalog API
-	// GET /api/2.1/unity-catalog/catalogs
-	// For now, return a placeholder
-	return []Catalog{}, fmt.Errorf("not implemented: GetCatalogs")
-}
-
-// GetSchemas returns a list of schemas in the specified catalog
-func (c *DatabricksClient) GetSchemas(ctx context.Context, workspaceID, catalogName string) ([]Schema, error) {
-	// Implementation would make API call to Databricks Unity Catalog API
-	// GET /api/2.1/unity-catalog/schemas?catalog_name={catalogName}
-	return []Schema{}, fmt.Errorf("not implemented: GetSchemas")
-}
-
-// GetTables returns a list of tables in the specified schema
-func (c *DatabricksClient) GetTables(ctx context.Context, workspaceID, catalogName, schemaName string) ([]Table, error) {
-	// Implementation would make API call to Databricks Unity Catalog API
-	// GET /api/2.1/unity-catalog/tables?catalog_name={catalogName}&schema_name={schemaName}
-	return []Table{}, fmt.Errorf("not implemented: GetTables")
-}
-
-// GetTableDetails returns details of a specific table
-func (c *DatabricksClient) GetTableDetails(ctx context.Context, workspaceID, catalogName, schemaName, tableName string) (*types.TableDetails, error) {
-	// Implementation would make API call to Databricks Unity Catalog API
-	// GET /api/2.1/unity-catalog/tables/{catalogName}.{schemaName}.{tableName}
-	return nil, fmt.Errorf("not implemented: GetTableDetails")
-}
-
-// UpdateTableDetails updates the details of a specific table
-func (c *DatabricksClient) UpdateTableDetails(ctx context.Context, workspaceID, catalogName, schemaName, tableName string, details *types.TableDetails) error {
-	// Implementation would make API call to Databricks Unity Catalog API
-	// PATCH /api/2.1/unity-catalog/tables/{catalogName}.{schemaName}.{tableName}
-	return fmt.Errorf("not implemented: UpdateTableDetails")
-}
+// Implementation of DatabricksAPI interface is in client.go

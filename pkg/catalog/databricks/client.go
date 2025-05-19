@@ -165,17 +165,26 @@ func (c *DatabricksClient) GetTableDetails(ctx context.Context, workspaceID, cat
 
 	// Convert Databricks table details to Nessi TableDetails
 	tableDetails := &types.TableDetails{
-		Name:        response.Name,
-		Description: response.Description,
-		Owner:       response.Owner,
-		Format:      response.Format,
-		Location:    response.Location,
-		Properties:  response.Properties,
-		Columns:     make([]types.ColumnDetails, 0, len(response.Columns)),
+		Info: types.TableInfo{
+			Name:        response.Name,
+			Type:        response.Format, // Using format as type
+			Description: response.Description,
+			Location:    response.Location,
+			Properties:  response.Properties,
+		},
+		Schema: &types.TableSchema{
+			Format:  response.Format,
+			Version: 1, // Default version
+			Fields:  make([]types.FieldInfo, 0, len(response.Columns)),
+		},
+		Metadata: &types.TableMetadata{
+			Owner:      response.Owner,
+			Properties: response.Properties,
+		},
 	}
 
 	for _, col := range response.Columns {
-		tableDetails.Columns = append(tableDetails.Columns, types.ColumnDetails{
+		tableDetails.Schema.Fields = append(tableDetails.Schema.Fields, types.FieldInfo{
 			Name:        col.Name,
 			Type:        col.TypeName,
 			Description: col.Description,
@@ -192,17 +201,17 @@ func (c *DatabricksClient) UpdateTableDetails(ctx context.Context, workspaceID, 
 
 	// Prepare the request body
 	requestBody := map[string]interface{}{
-		"description": details.Description,
-		"properties":  details.Properties,
+		"description": details.Info.Description,
+		"properties":  details.Info.Properties,
 	}
 
-	// If columns have descriptions, update them
-	if len(details.Columns) > 0 {
-		columns := make([]map[string]interface{}, 0, len(details.Columns))
-		for _, col := range details.Columns {
+	// If fields have descriptions, update them
+	if details.Schema != nil && len(details.Schema.Fields) > 0 {
+		columns := make([]map[string]interface{}, 0, len(details.Schema.Fields))
+		for _, field := range details.Schema.Fields {
 			columns = append(columns, map[string]interface{}{
-				"name":        col.Name,
-				"description": col.Description,
+				"name":        field.Name,
+				"description": field.Description,
 			})
 		}
 		requestBody["columns"] = columns
