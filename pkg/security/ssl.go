@@ -34,14 +34,14 @@ type sslConfigInternal struct {
 
 // CertManager handles SSL certificates for CLI tools
 type CertManager struct {
-	config SSLConfig
+	config       SSLConfig
 	autoGenerate bool // Whether to auto-generate certificates
 }
 
 // NewCertManager creates a new CertManager
 func NewCertManager(config SSLConfig) *CertManager {
 	return &CertManager{
-		config: config,
+		config:       config,
 		autoGenerate: true, // Default to auto-generate for CLI tools
 	}
 }

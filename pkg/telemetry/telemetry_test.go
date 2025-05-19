@@ -89,7 +89,7 @@ func TestCollectTelemetryData(t *testing.T) {
 	}
 	customMetrics := map[string]interface{}{
 		"scan_duration_ms": 1500.5,
-		"memory_usage_mb": 256.0,
+		"memory_usage_mb":  256.0,
 	}
 
 	// Collect telemetry data
@@ -167,18 +167,18 @@ func TestTelemetryCollector(t *testing.T) {
 	// Record some test events
 	collector.RecordEvent("command_executed", map[string]interface{}{
 		"command": "analyze",
-		"status": "success",
+		"status":  "success",
 	})
 
 	collector.RecordEvent("command_executed", map[string]interface{}{
 		"command": "validate",
-		"status": "success",
+		"status":  "success",
 	})
 
 	collector.RecordEvent("command_executed", map[string]interface{}{
 		"command": "error_test",
-		"status": "error",
-		"error": "test error",
+		"status":  "error",
+		"error":   "test error",
 	})
 
 	// Wait for telemetry to be processed
@@ -190,16 +190,16 @@ func TestTelemetryCollector(t *testing.T) {
 
 	// Verify the recorded events
 	assert.Equal(t, 3, stats["command_executed"])
-	
+
 	// Check event details
 	events, err := collector.GetEvents("command_executed", 10)
 	require.NoError(t, err)
 	assert.Equal(t, 3, len(events))
-	
+
 	// Verify we have the expected commands
 	commands := make(map[string]int)
 	statuses := make(map[string]int)
-	
+
 	for _, event := range events {
 		if cmd, ok := event["command"].(string); ok {
 			commands[cmd]++
@@ -208,7 +208,7 @@ func TestTelemetryCollector(t *testing.T) {
 			statuses[status]++
 		}
 	}
-	
+
 	assert.Equal(t, 1, commands["analyze"])
 	assert.Equal(t, 1, commands["validate"])
 	assert.Equal(t, 1, commands["error_test"])

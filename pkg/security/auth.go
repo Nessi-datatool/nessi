@@ -40,9 +40,9 @@ type AuthConfig struct {
 
 // AuthManager handles authentication and authorization
 type AuthManager struct {
-	mu     sync.RWMutex
-	config AuthConfig
-	users  map[string]User // username -> User
+	mu      sync.RWMutex
+	config  AuthConfig
+	users   map[string]User   // username -> User
 	apiKeys map[string]string // api_key -> username
 }
 
@@ -116,7 +116,7 @@ func (am *AuthManager) saveUsers() error {
 	if am.config.InMemoryOnly {
 		return nil // skip file I/O for tests
 	}
-	
+
 	// Create a copy of the users map to avoid holding the lock during I/O operations
 	am.mu.RLock() // Use read lock first to make a copy
 	usersCopy := make(map[string]User, len(am.users))
@@ -202,7 +202,7 @@ func (am *AuthManager) AuthenticateWithAPIKey(apiKey string) (User, error) {
 	// Get user
 	user, ok := am.users[username]
 	am.mu.RUnlock()
-	
+
 	if !ok {
 		return User{}, fmt.Errorf("user not found")
 	}
@@ -377,7 +377,7 @@ func (am *AuthManager) RegenerateAPIKey(username string) (string, error) {
 	am.mu.RLock()
 	user, ok := am.users[username]
 	am.mu.RUnlock()
-	
+
 	if !ok {
 		return "", fmt.Errorf("user not found")
 	}
