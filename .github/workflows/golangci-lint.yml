@@ -45,8 +45,11 @@ jobs:
             exit 1
           fi
 
-      - name: Run go vet
+      - name: Run go vet and check imports
         if: steps.check-go-files.outputs.has_files == 'true'
         run: |
           # Run go vet on specific directories
           go vet ./pkg/catalog/databricks/... ./pkg/visualization/...
+          
+          # Check for unused imports
+          ! grep -r "imported and not used" <(go build ./pkg/catalog/databricks/... ./pkg/visualization/... 2>&1)
