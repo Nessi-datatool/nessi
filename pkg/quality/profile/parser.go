@@ -55,30 +55,30 @@ func ParseParquet(r io.Reader) ([]map[string]interface{}, error) {
 
 	// Convert table to record batches for easier processing
 	schema := table.Schema()
-	
+
 	// Create a record batch reader from the table
 	rr := array.NewTableReader(table, 1024)
 	defer rr.Release()
-	
+
 	// Process each batch
 	for rr.Next() {
 		record := rr.Record()
-		
+
 		// Process each row in the batch
 		for i := 0; i < int(record.NumRows()); i++ {
 			row := make(map[string]interface{})
-			
+
 			// Process each column
 			for j := 0; j < int(record.NumCols()); j++ {
 				col := record.Column(j)
 				field := schema.Field(j)
-				
+
 				// Skip null values
 				if col.IsNull(i) {
 					row[field.Name] = nil
 					continue
 				}
-				
+
 				// Extract value based on type
 				switch col.DataType().ID() {
 				case arrow.INT8:
@@ -110,15 +110,15 @@ func ParseParquet(r io.Reader) ([]map[string]interface{}, error) {
 					row[field.Name] = col.ValueStr(i)
 				}
 			}
-			
+
 			result = append(result, row)
 		}
 	}
-	
+
 	if rr.Err() != nil {
 		return nil, fmt.Errorf("error reading records: %w", rr.Err())
 	}
-	
+
 	return result, nil
 }
 

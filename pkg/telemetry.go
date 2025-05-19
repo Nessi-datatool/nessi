@@ -11,9 +11,10 @@ import (
 
 // TelemetryConfig represents telemetry settings in config
 // Add this to your main config struct
-//   Telemetry TelemetryConfig `mapstructure:"telemetry"`
+//
+//	Telemetry TelemetryConfig `mapstructure:"telemetry"`
 type TelemetryConfig struct {
-	Enabled bool   `mapstructure:"enabled"`
+	Enabled  bool   `mapstructure:"enabled"`
 	Endpoint string `mapstructure:"endpoint"`
 }
 

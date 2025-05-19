@@ -53,7 +53,7 @@ func (l *RuleLoader) LoadFromYAML(filePath string) error {
 		if err != nil {
 			return fmt.Errorf("failed to create rule '%s': %w", ruleConfig.ID, err)
 		}
-		
+
 		l.validator.AddRule(rule)
 	}
 
@@ -82,7 +82,7 @@ func (l *RuleLoader) createRuleFromConfig(config YAMLRuleConfig) (Rule, error) {
 		if !ok {
 			return nil, fmt.Errorf("invalid fields configuration for null check rule")
 		}
-		
+
 		fieldNames := make([]string, len(fields))
 		for i, field := range fields {
 			fieldStr, ok := field.(string)
@@ -91,54 +91,54 @@ func (l *RuleLoader) createRuleFromConfig(config YAMLRuleConfig) (Rule, error) {
 			}
 			fieldNames[i] = fieldStr
 		}
-		
+
 		return NewNullCheckRule(fieldNames, metadata), nil
-		
+
 	case "range":
 		fieldsConfig, ok := config.Config["fields"].(map[string]interface{})
 		if !ok {
 			return nil, fmt.Errorf("invalid fields configuration for range check rule")
 		}
-		
+
 		rangeFields := make(map[string]RangeConfig)
 		for field, rangeVal := range fieldsConfig {
 			rangeMap, ok := rangeVal.(map[string]interface{})
 			if !ok {
 				return nil, fmt.Errorf("invalid range configuration for field '%s'", field)
 			}
-			
+
 			min, ok := rangeMap["min"].(float64)
 			if !ok {
 				return nil, fmt.Errorf("min value must be a number for field '%s'", field)
 			}
-			
+
 			max, ok := rangeMap["max"].(float64)
 			if !ok {
 				return nil, fmt.Errorf("max value must be a number for field '%s'", field)
 			}
-			
+
 			rangeFields[field] = RangeConfig{
 				Min: min,
 				Max: max,
 			}
 		}
-		
+
 		return NewRangeCheckRule(rangeFields, metadata), nil
-		
+
 	case "regex":
 		pattern, ok := config.Config["pattern"].(string)
 		if !ok {
 			return nil, fmt.Errorf("pattern must be a string for regex rule")
 		}
-		
+
 		return NewRegexRule(config.Field, pattern, metadata)
-		
+
 	case "enum":
 		values, ok := config.Config["values"].([]interface{})
 		if !ok {
 			return nil, fmt.Errorf("values must be an array for enum rule")
 		}
-		
+
 		strValues := make([]string, len(values))
 		for i, v := range values {
 			strVal, ok := v.(string)
@@ -147,14 +147,14 @@ func (l *RuleLoader) createRuleFromConfig(config YAMLRuleConfig) (Rule, error) {
 			}
 			strValues[i] = strVal
 		}
-		
+
 		caseSensitive := true
 		if cs, ok := config.Config["case_sensitive"].(bool); ok {
 			caseSensitive = cs
 		}
-		
+
 		return NewEnumRule(config.Field, strValues, caseSensitive, metadata), nil
-		
+
 	case "length":
 		// Handle both int and float64 values for min_length
 		var minLength int
@@ -165,7 +165,7 @@ func (l *RuleLoader) createRuleFromConfig(config YAMLRuleConfig) (Rule, error) {
 		} else {
 			return nil, fmt.Errorf("min_length must be a number for length rule")
 		}
-		
+
 		// Handle both int and float64 values for max_length
 		var maxLength int
 		if maxLengthFloat, ok := config.Config["max_length"].(float64); ok {
@@ -175,17 +175,17 @@ func (l *RuleLoader) createRuleFromConfig(config YAMLRuleConfig) (Rule, error) {
 		} else {
 			return nil, fmt.Errorf("max_length must be a number for length rule")
 		}
-		
+
 		return NewLengthRule(config.Field, minLength, maxLength, metadata), nil
-		
+
 	case "date_format":
 		format, ok := config.Config["format"].(string)
 		if !ok {
 			return nil, fmt.Errorf("format must be a string for date format rule")
 		}
-		
+
 		return NewDateFormatRule(config.Field, format, metadata), nil
-		
+
 	default:
 		return nil, fmt.Errorf("unsupported rule type: %s", config.RuleType)
 	}
@@ -196,10 +196,10 @@ func SaveRulesToYAML(rules []Rule, filePath string) error {
 	config := YAMLRulesConfig{
 		Rules: make([]YAMLRuleConfig, len(rules)),
 	}
-	
+
 	for i, rule := range rules {
 		metadata := rule.GetMetadata()
-		
+
 		yamlConfig := YAMLRuleConfig{
 			ID:          metadata.ID,
 			Name:        metadata.Name,
@@ -208,7 +208,7 @@ func SaveRulesToYAML(rules []Rule, filePath string) error {
 			Tags:        metadata.Tags,
 			Config:      metadata.Config,
 		}
-		
+
 		// Determine rule type and field
 		switch rule.(type) {
 		case *NullCheckRule:
@@ -236,18 +236,18 @@ func SaveRulesToYAML(rules []Rule, filePath string) error {
 				yamlConfig.Field = r.field
 			}
 		}
-		
+
 		config.Rules[i] = yamlConfig
 	}
-	
+
 	data, err := yaml.Marshal(config)
 	if err != nil {
 		return fmt.Errorf("failed to marshal rules to YAML: %w", err)
 	}
-	
+
 	if err := ioutil.WriteFile(filePath, data, 0644); err != nil {
 		return fmt.Errorf("failed to write YAML file: %w", err)
 	}
-	
+
 	return nil
 }

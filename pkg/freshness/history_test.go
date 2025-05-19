@@ -153,14 +153,14 @@ func TestHistoryManager_MaxEntries(t *testing.T) {
 
 	// Get history
 	history := manager.getTableHistory("table1")
-	
+
 	// Should only have the 3 most recent entries
 	assert.Len(t, history, 3)
-	
+
 	// Check that we have the 3 most recent entries (newest first)
-	assert.Equal(t, now.Add(-1 * time.Hour).Unix(), history[0].Timestamp.Unix())
-	assert.Equal(t, now.Add(-2 * time.Hour).Unix(), history[1].Timestamp.Unix())
-	assert.Equal(t, now.Add(-3 * time.Hour).Unix(), history[2].Timestamp.Unix())
+	assert.Equal(t, now.Add(-1*time.Hour).Unix(), history[0].Timestamp.Unix())
+	assert.Equal(t, now.Add(-2*time.Hour).Unix(), history[1].Timestamp.Unix())
+	assert.Equal(t, now.Add(-3*time.Hour).Unix(), history[2].Timestamp.Unix())
 }
 
 func TestSLAManager_UpdateHistory(t *testing.T) {
@@ -174,12 +174,12 @@ func TestSLAManager_UpdateHistory(t *testing.T) {
 	// Create test status
 	now := time.Now()
 	status := &FreshnessStatus{
-		TableName:         "test_table",
-		TablePath:         "/path/to/test_table",
-		LastUpdateTime:    now.Add(-1 * time.Hour),
-		TimeSinceUpdate:   time.Hour,
-		ExpectedFrequency: time.Hour,
-		Status:            SLALevelInfo,
+		TableName:          "test_table",
+		TablePath:          "/path/to/test_table",
+		LastUpdateTime:     now.Add(-1 * time.Hour),
+		TimeSinceUpdate:    time.Hour,
+		ExpectedFrequency:  time.Hour,
+		Status:             SLALevelInfo,
 		NextExpectedUpdate: now,
 		SLAConfig: &SLAConfig{
 			TableName:         "test_table",
@@ -199,7 +199,7 @@ func TestSLAManager_UpdateHistory(t *testing.T) {
 	assert.Len(t, history, 1)
 	assert.Equal(t, "test_table", history[0].TableName)
 	assert.Equal(t, "/path/to/test_table", history[0].TablePath)
-	assert.Equal(t, now.Add(-1 * time.Hour).Unix(), history[0].LastUpdateTime.Unix())
+	assert.Equal(t, now.Add(-1*time.Hour).Unix(), history[0].LastUpdateTime.Unix())
 	assert.Equal(t, "info", history[0].Status)
 
 	// Check if last check time was updated
@@ -228,7 +228,7 @@ func TestSLAManager_UpdateHistory(t *testing.T) {
 func TestSLAManager_GetTableTrends(t *testing.T) {
 	// Create a better mock connector
 	mockConnector := NewBetterMockDeltaConnector()
-	
+
 	// Create a test SLA manager with the mock connector
 	manager := NewTestSLAManager(mockConnector)
 
@@ -245,7 +245,7 @@ func TestSLAManager_GetTableTrends(t *testing.T) {
 	// Set up mock behavior
 	now := time.Now()
 	lastModified := now.Add(-1 * time.Hour)
-	
+
 	// Set up mock table metadata
 	mockConnector.SetTableMetadata("/path/to/test_table", &TableMetadata{
 		LastModified: &lastModified,
@@ -289,14 +289,14 @@ func TestSLAManager_GetTableTrends(t *testing.T) {
 	assert.Equal(t, 1, trends.Compliance.InfoCount)
 	assert.Equal(t, 1, trends.Compliance.WarningCount) // Updated to match actual results
 	assert.Equal(t, 0, trends.Compliance.CriticalCount)
-	assert.Equal(t, 2, trends.Compliance.TotalCount) // Updated to match actual results
+	assert.Equal(t, 2, trends.Compliance.TotalCount)               // Updated to match actual results
 	assert.Equal(t, float64(50), trends.Compliance.ComplianceRate) // Updated to match actual results
 }
 
 func TestSLAManager_GetAllTablesTrends(t *testing.T) {
 	// Create a better mock connector
 	mockConnector := NewBetterMockDeltaConnector()
-	
+
 	// Create a test SLA manager with the mock connector
 	manager := NewTestSLAManager(mockConnector)
 
@@ -323,20 +323,20 @@ func TestSLAManager_GetAllTablesTrends(t *testing.T) {
 	now := time.Now()
 	lastModified1 := now.Add(-1 * time.Hour)
 	lastModified2 := now.Add(-30 * time.Hour)
-	
+
 	// Set up mock table metadata
 	mockConnector.SetTableMetadata("/path/to/test_table1", &TableMetadata{
 		LastModified: &lastModified1,
 		Name:         "test_table1",
 		Path:         "/path/to/test_table1",
 	})
-	
+
 	mockConnector.SetTableMetadata("/path/to/test_table2", &TableMetadata{
 		LastModified: &lastModified2,
 		Name:         "test_table2",
 		Path:         "/path/to/test_table2",
 	})
-	
+
 	// Set up mock tables list
 	mockConnector.SetTablesList([]string{
 		"/path/to/test_table1",

@@ -22,7 +22,7 @@ func (m *mainMockMonitor) GetMetricsPort() int {
 func TestDashboard(t *testing.T) {
 	// No longer skipping tests
 	// Basic version doesn't use alert manager
-	
+
 	// Create a test monitor with our alert manager
 	mock := testutil.CreateOSSTestMonitor(9090)
 
@@ -48,7 +48,7 @@ func TestDashboard(t *testing.T) {
 func TestDashboardNotFound(t *testing.T) {
 	// No longer skipping tests
 	// Basic version doesn't use alert manager
-	
+
 	// Create a test monitor with our alert manager
 	mock := testutil.CreateOSSTestMonitor(9090)
 
@@ -73,7 +73,7 @@ func TestDashboardNotFound(t *testing.T) {
 func TestMetricsHandler(t *testing.T) {
 	// No longer skipping tests
 	// Basic version doesn't use alert manager
-	
+
 	// Create a test HTTP server to mock the metrics server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Return mock metrics data
@@ -97,7 +97,7 @@ func TestMetricsHandler(t *testing.T) {
 	// Test metrics handler
 	req := httptest.NewRequest(http.MethodGet, "/api/metrics?metric=table_size", nil)
 	w := httptest.NewRecorder()
-	
+
 	// Create a custom handler that uses our test server
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Forward the request to our test server
@@ -107,7 +107,7 @@ func TestMetricsHandler(t *testing.T) {
 			return
 		}
 		defer resp.Body.Close()
-		
+
 		// Copy the response
 		w.WriteHeader(resp.StatusCode)
 		for k, v := range resp.Header {
@@ -116,10 +116,10 @@ func TestMetricsHandler(t *testing.T) {
 		http.MaxBytesReader(w, resp.Body, 1<<20) // 1MB limit
 		w.Write([]byte(`{"status":"success","data":{"resultType":"vector","result":[{"metric":{"__name__":"table_size","table":"test"},"value":[1622568000,"1024"]}]}}`))
 	})
-	
+
 	// Call the handler
 	handler.ServeHTTP(w, req)
-	
+
 	// Check the response
 	resp := w.Result()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -129,7 +129,7 @@ func TestMetricsHandler(t *testing.T) {
 func TestAlertsHandler(t *testing.T) {
 	// No longer skipping tests
 	// Basic version doesn't use alert manager
-	
+
 	// Create a test HTTP server to mock the alerts API
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Return mock alerts data
@@ -153,7 +153,7 @@ func TestAlertsHandler(t *testing.T) {
 	// Test alerts handler
 	req := httptest.NewRequest(http.MethodGet, "/api/alerts", nil)
 	w := httptest.NewRecorder()
-	
+
 	// Create a custom handler that uses our test server
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Forward the request to our test server
@@ -163,7 +163,7 @@ func TestAlertsHandler(t *testing.T) {
 			return
 		}
 		defer resp.Body.Close()
-		
+
 		// Copy the response
 		w.WriteHeader(resp.StatusCode)
 		for k, v := range resp.Header {
@@ -172,10 +172,10 @@ func TestAlertsHandler(t *testing.T) {
 		http.MaxBytesReader(w, resp.Body, 1<<20) // 1MB limit
 		w.Write([]byte(`{"status":"success","data":{"alerts":[{"id":"test-alert","name":"Test Alert","severity":"critical","status":"firing","timestamp":"2025-05-14T12:00:00Z"}]}}`))
 	})
-	
+
 	// Call the handler
 	handler.ServeHTTP(w, req)
-	
+
 	// Check the response
 	resp := w.Result()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)

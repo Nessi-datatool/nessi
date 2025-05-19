@@ -44,7 +44,7 @@ func TestSecurityIntegration(t *testing.T) {
 			Email:    "secint@example.com",
 			Role:     security.RoleAdmin,
 		}
-		
+
 		err = securityManager.AuthManager.CreateUser(testUser, "secint123")
 		require.NoError(t, err)
 

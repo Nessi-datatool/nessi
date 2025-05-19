@@ -60,7 +60,7 @@ func ShouldSkipIntegrationTests(t *testing.T) bool {
 
 // DebugTimer is a helper for tracking time spent in test sections
 type DebugTimer struct {
-	t        *testing.T
+	t         *testing.T
 	startTime time.Time
 	section   string
 	enabled   bool
@@ -70,16 +70,16 @@ type DebugTimer struct {
 func NewDebugTimer(t *testing.T, section string) *DebugTimer {
 	enabled := os.Getenv("NESSI_TEST_DEBUG") != ""
 	dt := &DebugTimer{
-		t:        t,
+		t:         t,
 		startTime: time.Now(),
 		section:   section,
 		enabled:   enabled,
 	}
-	
+
 	if enabled {
 		t.Logf("[DEBUG] Starting section: %s", section)
 	}
-	
+
 	return dt
 }
 
@@ -88,7 +88,7 @@ func (dt *DebugTimer) End() {
 	if !dt.enabled {
 		return
 	}
-	
+
 	elapsed := time.Since(dt.startTime)
 	dt.t.Logf("[DEBUG] Section '%s' took %v", dt.section, elapsed)
 }

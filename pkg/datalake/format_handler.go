@@ -20,13 +20,13 @@ type FormatType string
 const (
 	// DeltaFormat represents the Delta Lake format
 	DeltaFormat FormatType = "delta"
-	
+
 	// ParquetFormat represents the Parquet format
 	ParquetFormat FormatType = "parquet"
-	
+
 	// CSVFormat represents the CSV format
 	CSVFormat FormatType = "csv"
-	
+
 	// UnknownFormat represents an unknown format
 	UnknownFormat FormatType = "unknown"
 )
@@ -35,13 +35,13 @@ const (
 type FormatHandlerConfig struct {
 	// CSVHasHeader indicates whether CSV files have a header row
 	CSVHasHeader bool
-	
+
 	// DateFormats is a list of date formats to try when parsing dates
 	DateFormats []string
-	
+
 	// MaxRowsForInference is the maximum number of rows to use for schema inference
 	MaxRowsForInference int
-	
+
 	// MinConfidenceThreshold is the minimum confidence threshold for type inference
 	MinConfidenceThreshold float64
 }
@@ -49,9 +49,9 @@ type FormatHandlerConfig struct {
 // DefaultFormatHandlerConfig returns the default configuration for the format handler
 func DefaultFormatHandlerConfig() FormatHandlerConfig {
 	return FormatHandlerConfig{
-		CSVHasHeader:          true,
-		DateFormats:           []string{time.RFC3339, "2006-01-02", "2006/01/02"},
-		MaxRowsForInference:   100,
+		CSVHasHeader:           true,
+		DateFormats:            []string{time.RFC3339, "2006-01-02", "2006/01/02"},
+		MaxRowsForInference:    100,
 		MinConfidenceThreshold: 0.7,
 	}
 }
@@ -81,7 +81,7 @@ func (h *FormatHandler) DetectFormat(path string) (FormatType, error) {
 	if hasDeltaLogDirectory(path) {
 		return DeltaFormat, nil
 	}
-	
+
 	// Check file extension
 	ext := strings.ToLower(filepath.Ext(path))
 	switch ext {
@@ -100,7 +100,7 @@ func (h *FormatHandler) ReadWithInference(path string) (arrow.Record, *arrow.Sch
 	if err != nil {
 		return nil, arrow.NewSchema([]arrow.Field{}, nil), fmt.Errorf("error detecting format: %w", err)
 	}
-	
+
 	switch format {
 	case DeltaFormat:
 		return h.readDelta(path)
@@ -129,7 +129,7 @@ func (h *FormatHandler) readParquet(path string) (arrow.Record, *arrow.Schema, e
 		return nil, arrow.NewSchema([]arrow.Field{}, nil), fmt.Errorf("error opening parquet file: %w", err)
 	}
 	defer file.Close()
-	
+
 	// For now, return a placeholder implementation
 	// In a real implementation, we would use the parquet library to read the file
 	emptySchema := arrow.NewSchema([]arrow.Field{}, nil)
@@ -144,27 +144,27 @@ func (h *FormatHandler) readCSV(path string) (arrow.Record, *arrow.Schema, error
 		return nil, arrow.NewSchema([]arrow.Field{}, nil), fmt.Errorf("error opening CSV file: %w", err)
 	}
 	defer file.Close()
-	
+
 	// Create CSV reader
 	reader := csv.NewReader(file)
-	
+
 	// Read all rows first
 	allRows, err := reader.ReadAll()
 	if err != nil {
 		return nil, arrow.NewSchema([]arrow.Field{}, nil), fmt.Errorf("error reading CSV data: %w", err)
 	}
-	
+
 	// Check if we have any data
 	if len(allRows) == 0 {
 		// Return an empty schema if there are no rows
 		emptySchema := arrow.NewSchema([]arrow.Field{}, nil)
 		return nil, emptySchema, nil
 	}
-	
+
 	// Handle header and data rows
 	var header []string
 	var dataRows [][]string
-	
+
 	if h.config.CSVHasHeader {
 		// First row is header, rest is data
 		header = allRows[0]
@@ -177,25 +177,25 @@ func (h *FormatHandler) readCSV(path string) (arrow.Record, *arrow.Schema, error
 			header[i] = fmt.Sprintf("col%d", i+1)
 		}
 	}
-	
+
 	// Limit rows for inference if needed
 	inferenceRows := dataRows
 	if len(dataRows) > h.config.MaxRowsForInference {
 		inferenceRows = dataRows[:h.config.MaxRowsForInference]
 	}
-	
+
 	// Infer schema
 	schema, err := h.inferCSVSchema(header, inferenceRows)
 	if err != nil {
 		return nil, arrow.NewSchema([]arrow.Field{}, nil), fmt.Errorf("error inferring CSV schema: %w", err)
 	}
-	
+
 	// Convert data to Arrow record
 	record, err := h.csvToArrowRecord(schema, header, dataRows)
 	if err != nil {
 		return nil, arrow.NewSchema([]arrow.Field{}, nil), fmt.Errorf("error converting CSV to Arrow: %w", err)
 	}
-	
+
 	return record, schema, nil
 }
 
@@ -206,20 +206,20 @@ func (h *FormatHandler) csvToArrowRecord(schema *arrow.Schema, header []string, 
 	for i, field := range schema.Fields() {
 		builders[i] = array.NewBuilder(memory.DefaultAllocator, field.Type)
 	}
-	
+
 	// Add data to builders
 	for _, row := range rows {
 		for i, value := range row {
 			if i >= len(builders) {
 				continue
 			}
-			
+
 			// Skip empty values
 			if value == "" {
 				builders[i].AppendNull()
 				continue
 			}
-			
+
 			// Add value based on the field type
 			switch builders[i].Type().ID() {
 			case arrow.INT64:
@@ -239,14 +239,14 @@ func (h *FormatHandler) csvToArrowRecord(schema *arrow.Schema, header []string, 
 			}
 		}
 	}
-	
+
 	// Create arrays from builders
 	arrays := make([]arrow.Array, len(builders))
 	for i, builder := range builders {
 		arrays[i] = builder.NewArray()
 		defer arrays[i].Release()
 	}
-	
+
 	// Create record batch
 	return array.NewRecord(schema, arrays, int64(len(rows))), nil
 }
@@ -255,7 +255,7 @@ func (h *FormatHandler) csvToArrowRecord(schema *arrow.Schema, header []string, 
 func (h *FormatHandler) inferCSVSchema(header []string, rows [][]string) (*arrow.Schema, error) {
 	// Create fields for the schema
 	fields := make([]arrow.Field, len(header))
-	
+
 	// Infer type for each column
 	for i, name := range header {
 		// Extract values for this column
@@ -265,22 +265,22 @@ func (h *FormatHandler) inferCSVSchema(header []string, rows [][]string) (*arrow
 				values = append(values, row[i])
 			}
 		}
-		
+
 		// Infer the type
 		dataType := h.detectDataType(values)
-		
+
 		// Use string as fallback if confidence is too low
 		if dataType == arrow.BinaryTypes.String {
 			dataType = h.detectDataTypeWithConfidence(values)
 		}
-		
+
 		fields[i] = arrow.Field{
 			Name:     name,
 			Type:     dataType,
 			Nullable: true,
 		}
 	}
-	
+
 	// Create schema from fields
 	return arrow.NewSchema(fields, nil), nil
 }
@@ -290,29 +290,29 @@ func (h *FormatHandler) detectDataType(values []string) arrow.DataType {
 	if len(values) == 0 {
 		return arrow.BinaryTypes.String
 	}
-	
+
 	// Try to parse as integer
 	if _, err := strconv.ParseInt(values[0], 10, 64); err == nil {
 		return arrow.PrimitiveTypes.Int64
 	}
-	
+
 	// Try to parse as float
 	if _, err := strconv.ParseFloat(values[0], 64); err == nil {
 		return arrow.PrimitiveTypes.Float64
 	}
-	
+
 	// Try to parse as boolean
 	value := strings.ToLower(values[0])
 	if value == "true" || value == "false" || value == "yes" || value == "no" || value == "1" || value == "0" {
 		return arrow.FixedWidthTypes.Boolean
 	}
-	
+
 	// Try to parse as date
 	// This is a simplified check, in a real implementation we would check against multiple date formats
 	if strings.Contains(values[0], "-") && strings.Count(values[0], "-") == 2 {
 		return arrow.FixedWidthTypes.Timestamp_s
 	}
-	
+
 	// Default to string
 	return arrow.BinaryTypes.String
 }
@@ -328,57 +328,57 @@ func (h *FormatHandler) detectDataTypeWithConfidence(values []string) arrow.Data
 		stringCount  int
 		nonNullCount int
 	)
-	
+
 	// Check each value
 	for _, v := range values {
 		if v == "" {
 			continue
 		}
-		
+
 		nonNullCount++
-		
+
 		// Try integer
 		if _, err := strconv.ParseInt(v, 10, 64); err == nil {
 			intCount++
 			continue
 		}
-		
+
 		// Try float
 		if _, err := strconv.ParseFloat(v, 64); err == nil {
 			floatCount++
 			continue
 		}
-		
+
 		// Try boolean
 		value := strings.ToLower(v)
 		if value == "true" || value == "false" || value == "yes" || value == "no" || value == "1" || value == "0" {
 			boolCount++
 			continue
 		}
-		
+
 		// Try date
 		// This is a simplified check, in a real implementation we would check against multiple date formats
 		if strings.Contains(v, "-") && strings.Count(v, "-") == 2 {
 			dateCount++
 			continue
 		}
-		
+
 		// Default to string
 		stringCount++
 	}
-	
+
 	// Determine the most likely type
 	if nonNullCount == 0 {
 		return arrow.BinaryTypes.String
 	}
-	
+
 	// Calculate confidence for each type
 	boolConfidence := float64(boolCount) / float64(nonNullCount)
 	dateConfidence := float64(dateCount) / float64(nonNullCount)
-	
+
 	// Calculate combined numeric confidence (integers can be represented as floats)
 	numericConfidence := float64(intCount+floatCount) / float64(nonNullCount)
-	
+
 	// Choose the type with the highest confidence
 	if numericConfidence > 0.9 {
 		// If we have any floats, use float type to represent all numbers
@@ -393,7 +393,7 @@ func (h *FormatHandler) detectDataTypeWithConfidence(values []string) arrow.Data
 	if dateConfidence > 0.9 {
 		return arrow.FixedWidthTypes.Timestamp_s
 	}
-	
+
 	// Default to string
 	return arrow.BinaryTypes.String
 }
@@ -407,7 +407,7 @@ func hasDeltaLogDirectory(path string) bool {
 	if err != nil || !info.IsDir() {
 		return false
 	}
-	
+
 	// Check if the _delta_log directory exists
 	deltaLogPath := filepath.Join(path, "_delta_log")
 	info, err = os.Stat(deltaLogPath)

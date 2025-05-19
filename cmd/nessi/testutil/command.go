@@ -2,9 +2,9 @@ package testutil
 
 import (
 	"bytes"
-	
-	"github.com/spf13/cobra"
+
 	"github.com/nessi-dev/nessi/cmd/nessi/mocks"
+	"github.com/spf13/cobra"
 )
 
 // ExecuteCommand executes a command for testing and returns its output
@@ -13,7 +13,7 @@ func ExecuteCommand(cmd *cobra.Command, args ...string) (string, error) {
 	mocks.ResetFlags()
 	// Set up command flags for testing
 	mocks.SetupTestCommandFlags(cmd)
-	
+
 	// Execute command using our mock implementation
 	return mocks.ExecuteCommand(cmd, args...)
 }
@@ -24,7 +24,7 @@ func SetupTestCommand(cmd *cobra.Command) (*bytes.Buffer, *bytes.Buffer) {
 	mocks.ResetFlags()
 	// Set up command flags for testing
 	mocks.SetupTestCommandFlags(cmd)
-	
+
 	// Set up command for testing
 	return mocks.SetupTestCommand(cmd)
 }

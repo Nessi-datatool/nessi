@@ -18,7 +18,7 @@ import (
 func TestWebhookManager(t *testing.T) {
 	// No longer using testutil.RunInParallel(t) to avoid duplicate t.Parallel() calls
 	// Tests will still run efficiently with the Go test runner
-	
+
 	// Run test with timeout
 	testutil.RunWithTimeout(t, func() {
 		manager := NewWebhookManager()
@@ -86,15 +86,15 @@ func TestWebhookManager(t *testing.T) {
 func TestTriggerEvent(t *testing.T) {
 	// No longer using testutil.RunInParallel(t) to avoid duplicate t.Parallel() calls
 	// Tests will still run efficiently with the Go test runner
-	
+
 	// Run test with timeout
 	testutil.RunWithTimeout(t, func() {
 		// Create a test server to receive webhook events with minimal processing
 		var receivedPayload []byte
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Quick header checks
-			if r.Method != "POST" || r.Header.Get("Content-Type") != "application/json" || 
-			   r.Header.Get("User-Agent") != "Nessi-Webhook-Client/1.0" {
+			if r.Method != "POST" || r.Header.Get("Content-Type") != "application/json" ||
+				r.Header.Get("User-Agent") != "Nessi-Webhook-Client/1.0" {
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
@@ -105,7 +105,7 @@ func TestTriggerEvent(t *testing.T) {
 
 			// Return success immediately
 			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte(`{"status":"success"}`))  
+			_, _ = w.Write([]byte(`{"status":"success"}`))
 		}))
 		defer server.Close()
 
@@ -233,13 +233,13 @@ func TestTriggerEvent(t *testing.T) {
 func TestWebhookManagerMinimal(t *testing.T) {
 	// No longer using testutil.RunInParallel(t) to avoid duplicate t.Parallel() calls
 	// Tests will still run efficiently with the Go test runner
-	
+
 	// Run test with timeout
 	testutil.RunWithTimeout(t, func() {
 		// Create a test server with minimal response time
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"status":"success"}`))  
+			w.Write([]byte(`{"status":"success"}`))
 		}))
 		defer server.Close()
 
@@ -247,20 +247,20 @@ func TestWebhookManagerMinimal(t *testing.T) {
 		manager := &WebhookManager{
 			webhooks: map[string]*WebhookConfig{
 				"test-webhook": {
-					ID:          "test-webhook",
-					Name:        "Test Webhook",
-					URL:         server.URL,
-					Events:      []string{"test-event"},
-					Enabled:     true,
-					Headers:     map[string]string{},
-					RetryCount:  1,
-					RetryDelay:  1,
+					ID:         "test-webhook",
+					Name:       "Test Webhook",
+					URL:        server.URL,
+					Events:     []string{"test-event"},
+					Enabled:    true,
+					Headers:    map[string]string{},
+					RetryCount: 1,
+					RetryDelay: 1,
 				},
 			},
 			client: &http.Client{
 				Timeout: 100 * time.Millisecond, // Very short timeout
 			},
-			mu:     sync.RWMutex{},
+			mu: sync.RWMutex{},
 		}
 
 		// Create test event
@@ -288,13 +288,13 @@ func TestWebhookManagerMinimal(t *testing.T) {
 func TestWebhookNotifierMinimal(t *testing.T) {
 	// No longer using testutil.RunInParallel(t) to avoid duplicate t.Parallel() calls
 	// Tests will still run efficiently with the Go test runner
-	
+
 	// Run test with timeout
 	testutil.RunWithTimeout(t, func() {
 		// Create a test server with minimal response time
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"status":"success"}`))  
+			w.Write([]byte(`{"status":"success"}`))
 		}))
 		defer server.Close()
 
@@ -303,7 +303,7 @@ func TestWebhookNotifierMinimal(t *testing.T) {
 			server.URL,
 			"POST",
 			map[string]string{},
-			100 * time.Millisecond, // Very short timeout
+			100*time.Millisecond, // Very short timeout
 		)
 
 		// Test sending a notification with a context that has a short timeout

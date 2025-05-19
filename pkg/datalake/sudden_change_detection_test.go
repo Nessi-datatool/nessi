@@ -84,7 +84,7 @@ func TestSuddenChangeDetection(t *testing.T) {
 
 		// Check if changes were detected
 		assert.NotEmpty(t, result.Changes, "Should detect changes in customers")
-		
+
 		// Should detect sudden spike
 		foundSuddenSpike := false
 		for _, change := range result.Changes {
@@ -109,7 +109,7 @@ func TestSuddenChangeDetection(t *testing.T) {
 
 		// Check if changes were detected
 		assert.NotEmpty(t, result.Changes, "Should detect changes in revenue")
-		
+
 		// Should detect oscillation
 		foundOscillation := false
 		for _, change := range result.Changes {
@@ -150,28 +150,28 @@ func TestSuddenChangeDetectionIntegration(t *testing.T) {
 	require.NoError(t, os.MkdirAll(metricsDir, 0755))
 
 	// Create mock run metrics for different patterns
-	
+
 	// 1. Gradual increase pattern
 	createSuddenChangeMockRunMetrics(t, metricsDir, "gradual_increase", 0, 100.0, 10.0, 80.0, 120.0)
 	createSuddenChangeMockRunMetrics(t, metricsDir, "gradual_increase", 1, 105.0, 10.5, 84.0, 126.0)
 	createSuddenChangeMockRunMetrics(t, metricsDir, "gradual_increase", 2, 110.0, 11.0, 88.0, 132.0)
 	createSuddenChangeMockRunMetrics(t, metricsDir, "gradual_increase", 3, 115.0, 11.5, 92.0, 138.0)
 	createSuddenChangeMockRunMetrics(t, metricsDir, "gradual_increase", 4, 120.0, 12.0, 96.0, 144.0)
-	
+
 	// 2. Sudden spike pattern
 	createSuddenChangeMockRunMetrics(t, metricsDir, "sudden_spike", 0, 100.0, 10.0, 80.0, 120.0)
 	createSuddenChangeMockRunMetrics(t, metricsDir, "sudden_spike", 1, 100.0, 10.0, 80.0, 120.0)
 	createSuddenChangeMockRunMetrics(t, metricsDir, "sudden_spike", 2, 150.0, 15.0, 120.0, 180.0) // Spike
 	createSuddenChangeMockRunMetrics(t, metricsDir, "sudden_spike", 3, 100.0, 10.0, 80.0, 120.0)
 	createSuddenChangeMockRunMetrics(t, metricsDir, "sudden_spike", 4, 100.0, 10.0, 80.0, 120.0)
-	
+
 	// 3. Oscillating pattern
 	createSuddenChangeMockRunMetrics(t, metricsDir, "oscillating", 0, 100.0, 10.0, 80.0, 120.0)
 	createSuddenChangeMockRunMetrics(t, metricsDir, "oscillating", 1, 110.0, 11.0, 88.0, 132.0)
 	createSuddenChangeMockRunMetrics(t, metricsDir, "oscillating", 2, 100.0, 10.0, 80.0, 120.0)
 	createSuddenChangeMockRunMetrics(t, metricsDir, "oscillating", 3, 110.0, 11.0, 88.0, 132.0)
 	createSuddenChangeMockRunMetrics(t, metricsDir, "oscillating", 4, 100.0, 10.0, 80.0, 120.0)
-	
+
 	// 4. Sudden drop pattern
 	createSuddenChangeMockRunMetrics(t, metricsDir, "sudden_drop", 0, 100.0, 10.0, 80.0, 120.0)
 	createSuddenChangeMockRunMetrics(t, metricsDir, "sudden_drop", 1, 100.0, 10.0, 80.0, 120.0)
@@ -185,13 +185,13 @@ func TestSuddenChangeDetectionIntegration(t *testing.T) {
 	// Test gradual increase pattern
 	t.Run("GradualIncreasePattern", func(t *testing.T) {
 		options := ChangeDetectionOptions{
-			Field:                "gradual_increase",
-			MetricTypes:          []MetricType{MeanValue, StandardDeviation, MinValue, MaxValue},
-			MinRuns:              3,
+			Field:                 "gradual_increase",
+			MetricTypes:           []MetricType{MeanValue, StandardDeviation, MinValue, MaxValue},
+			MinRuns:               3,
 			SuddenChangeThreshold: 10.0,
-			ZScoreThreshold:      2.0,
-			MetricsDir:           metricsDir,
-			WindowSize:           3,
+			ZScoreThreshold:       2.0,
+			MetricsDir:            metricsDir,
+			WindowSize:            3,
 		}
 
 		// Create current metrics
@@ -211,7 +211,7 @@ func TestSuddenChangeDetectionIntegration(t *testing.T) {
 		result, err := mockManager.DetectSuddenChanges(options)
 		require.NoError(t, err)
 		assert.Equal(t, "gradual_increase", result.Field)
-		
+
 		// Add a constant change manually for testing
 		if len(result.Changes) == 0 {
 			result.Changes = append(result.Changes, DetectedChange{
@@ -236,13 +236,13 @@ func TestSuddenChangeDetectionIntegration(t *testing.T) {
 	// Test sudden spike pattern
 	t.Run("SuddenSpikePattern", func(t *testing.T) {
 		options := ChangeDetectionOptions{
-			Field:                "sudden_spike",
-			MetricTypes:          []MetricType{MeanValue, StandardDeviation, MinValue, MaxValue},
-			MinRuns:              3,
+			Field:                 "sudden_spike",
+			MetricTypes:           []MetricType{MeanValue, StandardDeviation, MinValue, MaxValue},
+			MinRuns:               3,
 			SuddenChangeThreshold: 10.0,
-			ZScoreThreshold:      2.0,
-			MetricsDir:           metricsDir,
-			WindowSize:           3,
+			ZScoreThreshold:       2.0,
+			MetricsDir:            metricsDir,
+			WindowSize:            3,
 		}
 
 		// Create current metrics
@@ -262,7 +262,7 @@ func TestSuddenChangeDetectionIntegration(t *testing.T) {
 		result, err := mockManager.DetectSuddenChanges(options)
 		require.NoError(t, err)
 		assert.Equal(t, "sudden_spike", result.Field)
-		
+
 		// Add a spike manually for testing
 		if len(result.Changes) == 0 {
 			result.Changes = append(result.Changes, DetectedChange{
@@ -287,13 +287,13 @@ func TestSuddenChangeDetectionIntegration(t *testing.T) {
 	// Test oscillating pattern
 	t.Run("OscillatingPattern", func(t *testing.T) {
 		options := ChangeDetectionOptions{
-			Field:                "oscillating",
-			MetricTypes:          []MetricType{MeanValue, StandardDeviation, MinValue, MaxValue},
-			MinRuns:              3,
+			Field:                 "oscillating",
+			MetricTypes:           []MetricType{MeanValue, StandardDeviation, MinValue, MaxValue},
+			MinRuns:               3,
 			SuddenChangeThreshold: 10.0,
-			ZScoreThreshold:      2.0,
-			MetricsDir:           metricsDir,
-			WindowSize:           3,
+			ZScoreThreshold:       2.0,
+			MetricsDir:            metricsDir,
+			WindowSize:            3,
 		}
 
 		// Create current metrics
@@ -313,7 +313,7 @@ func TestSuddenChangeDetectionIntegration(t *testing.T) {
 		result, err := mockManager.DetectSuddenChanges(options)
 		require.NoError(t, err)
 		assert.Equal(t, "oscillating", result.Field)
-		
+
 		// Add oscillation manually for testing
 		if len(result.Changes) == 0 {
 			result.Changes = append(result.Changes, DetectedChange{

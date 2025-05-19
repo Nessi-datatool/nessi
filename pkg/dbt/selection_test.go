@@ -7,13 +7,13 @@ import (
 
 func TestParseSelectionSyntax(t *testing.T) {
 	tests := []struct {
-		name     string
+		name      string
 		selectors []string
-		want     []SelectionCriteria
-		wantErr  bool
+		want      []SelectionCriteria
+		wantErr   bool
 	}{
 		{
-			name:     "simple model name",
+			name:      "simple model name",
 			selectors: []string{"my_model"},
 			want: []SelectionCriteria{
 				{
@@ -28,7 +28,7 @@ func TestParseSelectionSyntax(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:     "tag selection",
+			name:      "tag selection",
 			selectors: []string{"tag:daily"},
 			want: []SelectionCriteria{
 				{
@@ -43,7 +43,7 @@ func TestParseSelectionSyntax(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:     "downstream modifier",
+			name:      "downstream modifier",
 			selectors: []string{"my_model+downstream"},
 			want: []SelectionCriteria{
 				{
@@ -58,7 +58,7 @@ func TestParseSelectionSyntax(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:     "upstream modifier",
+			name:      "upstream modifier",
 			selectors: []string{"my_model+upstream"},
 			want: []SelectionCriteria{
 				{
@@ -73,7 +73,7 @@ func TestParseSelectionSyntax(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:     "depth modifier",
+			name:      "depth modifier",
 			selectors: []string{"my_model+3"},
 			want: []SelectionCriteria{
 				{
@@ -88,7 +88,7 @@ func TestParseSelectionSyntax(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:     "exclusion",
+			name:      "exclusion",
 			selectors: []string{"!my_model"},
 			want: []SelectionCriteria{
 				{
@@ -103,7 +103,7 @@ func TestParseSelectionSyntax(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:     "multiple selectors",
+			name:      "multiple selectors",
 			selectors: []string{"tag:daily", "my_model+downstream", "!exclude_model"},
 			want: []SelectionCriteria{
 				{
@@ -134,10 +134,10 @@ func TestParseSelectionSyntax(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:     "unknown selection type",
+			name:      "unknown selection type",
 			selectors: []string{"unknown:value"},
-			want:     nil,
-			wantErr:  true,
+			want:      nil,
+			wantErr:   true,
 		},
 	}
 

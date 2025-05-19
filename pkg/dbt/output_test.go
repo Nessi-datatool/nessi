@@ -47,7 +47,7 @@ func TestOutputJSON(t *testing.T) {
 	}
 
 	output := buf.String()
-	
+
 	// Check that the output contains expected JSON elements
 	expectedElements := []string{
 		`"model_name": "model1"`,
@@ -108,7 +108,7 @@ func TestOutputCSV(t *testing.T) {
 	}
 
 	output := buf.String()
-	
+
 	// Check that the output contains expected CSV elements
 	expectedElements := []string{
 		"Model,Rule,Status,Message,Table Path,Failure Count",
@@ -168,7 +168,7 @@ func TestOutputTable(t *testing.T) {
 	}
 
 	output := buf.String()
-	
+
 	// Check that the output contains expected table elements
 	expectedElements := []string{
 		"MODEL",
@@ -241,7 +241,7 @@ func TestOutputProfileResults(t *testing.T) {
 	}
 
 	jsonOutput := jsonBuf.String()
-	
+
 	// Check that the output contains expected JSON elements
 	jsonExpectedElements := []string{
 		`"model_name": "model1"`,

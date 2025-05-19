@@ -31,7 +31,7 @@ func TestSSLIntegration(t *testing.T) {
 		// Generate self-signed certificate
 		err := cm.GenerateSelfSignedCertForTest()
 		require.NoError(t, err)
-		
+
 		// Get TLS config
 		tlsConfig, err := cm.GetTLSConfig()
 		require.NoError(t, err)

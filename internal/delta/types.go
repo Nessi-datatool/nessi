@@ -7,8 +7,8 @@ import (
 
 // Config represents Delta table configuration
 type Config struct {
-	ReadOnly bool
-	MaxRetries int
+	ReadOnly      bool
+	MaxRetries    int
 	RetryInterval time.Duration
 }
 
@@ -32,13 +32,13 @@ func (a Action) Validate() error {
 
 // AddAction represents a file addition action
 type AddAction struct {
-	Path            string            `json:"path"`
-	Size            int64             `json:"size"`
-	ModificationTime int64            `json:"modificationTime"`
-	DataChange      bool              `json:"dataChange"`
-	Stats           interface{}       `json:"stats,omitempty"`
-	Tags            map[string]string `json:"tags,omitempty"`
-	PartitionValues map[string]string `json:"partitionValues,omitempty"`
+	Path             string            `json:"path"`
+	Size             int64             `json:"size"`
+	ModificationTime int64             `json:"modificationTime"`
+	DataChange       bool              `json:"dataChange"`
+	Stats            interface{}       `json:"stats,omitempty"`
+	Tags             map[string]string `json:"tags,omitempty"`
+	PartitionValues  map[string]string `json:"partitionValues,omitempty"`
 }
 
 // RemoveAction represents a file removal action
@@ -62,9 +62,9 @@ type MetaAction struct {
 
 // Format represents the table format
 type Format struct {
-	Provider string `json:"provider"`
+	Provider string            `json:"provider"`
 	Options  map[string]string `json:"options,omitempty"`
-} 
+}
 
 // Table is an alias for MetaAction, representing a Delta table's metadata and schema.
 // This is used by handlers to return table information.

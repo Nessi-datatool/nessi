@@ -21,8 +21,8 @@ func TestSLAManagerFreshness(t *testing.T) {
 		TableName:         "test_table",
 		TablePath:         "/path/to/test_table",
 		ExpectedFrequency: time.Hour,
-		WarningThreshold:  150,  // 150% of expected frequency (90 minutes)
-		CriticalThreshold: 200,  // 200% of expected frequency (120 minutes)
+		WarningThreshold:  150, // 150% of expected frequency (90 minutes)
+		CriticalThreshold: 200, // 200% of expected frequency (120 minutes)
 		Enabled:           true,
 	})
 
@@ -30,47 +30,47 @@ func TestSLAManagerFreshness(t *testing.T) {
 	t.Run("Info Status", func(t *testing.T) {
 		now := time.Now()
 		lastModified := now.Add(-30 * time.Minute)
-		
+
 		// Set up mock behavior
 		mockConnector.AddTable("/path/to/test_table", lastModified)
-		
+
 		status, err := manager.CheckFreshness("test_table")
 		require.NoError(t, err)
-		
+
 		assert.Equal(t, "test_table", status.TableName)
 		assert.Equal(t, "/path/to/test_table", status.TablePath)
 		assert.Equal(t, lastModified.Unix(), status.LastUpdateTime.Unix())
 		assert.Equal(t, SLALevelInfo, status.Status)
 	})
-	
+
 	// Test case 2: Table is approaching SLA violation (last modified 100 minutes ago)
 	t.Run("Warning Status", func(t *testing.T) {
 		now := time.Now()
 		lastModified := now.Add(-100 * time.Minute)
-		
+
 		// Set up mock behavior
 		mockConnector.UpdateTableLastModified("/path/to/test_table", lastModified)
-		
+
 		status, err := manager.CheckFreshness("test_table")
 		require.NoError(t, err)
-		
+
 		assert.Equal(t, "test_table", status.TableName)
 		assert.Equal(t, "/path/to/test_table", status.TablePath)
 		assert.Equal(t, lastModified.Unix(), status.LastUpdateTime.Unix())
 		assert.Equal(t, SLALevelWarning, status.Status)
 	})
-	
+
 	// Test case 3: Table has SLA violation (last modified 150 minutes ago)
 	t.Run("Critical Status", func(t *testing.T) {
 		now := time.Now()
 		lastModified := now.Add(-150 * time.Minute)
-		
+
 		// Set up mock behavior
 		mockConnector.UpdateTableLastModified("/path/to/test_table", lastModified)
-		
+
 		status, err := manager.CheckFreshness("test_table")
 		require.NoError(t, err)
-		
+
 		assert.Equal(t, "test_table", status.TableName)
 		assert.Equal(t, "/path/to/test_table", status.TablePath)
 		assert.Equal(t, lastModified.Unix(), status.LastUpdateTime.Unix())
@@ -99,7 +99,7 @@ func TestSLAManagerAllFreshness(t *testing.T) {
 	manager.AddSLA(&SLAConfig{
 		TableName:         "test_table2",
 		TablePath:         "/path/to/test_table2",
-		ExpectedFrequency: time.Hour * 24,  // Daily table
+		ExpectedFrequency: time.Hour * 24, // Daily table
 		WarningThreshold:  125,
 		CriticalThreshold: 150,
 		Enabled:           true,
@@ -107,9 +107,9 @@ func TestSLAManagerAllFreshness(t *testing.T) {
 
 	// Set up mock behavior
 	now := time.Now()
-	lastModified1 := now.Add(-30 * time.Minute)  // 30 minutes ago, should be "info" status
-	lastModified2 := now.Add(-36 * time.Hour)    // 36 hours ago, should be "critical" status for daily table
-	
+	lastModified1 := now.Add(-30 * time.Minute) // 30 minutes ago, should be "info" status
+	lastModified2 := now.Add(-36 * time.Hour)   // 36 hours ago, should be "critical" status for daily table
+
 	// Add tables to mock connector
 	mockConnector.AddTable("/path/to/test_table1", lastModified1)
 	mockConnector.AddTable("/path/to/test_table2", lastModified2)
@@ -117,10 +117,10 @@ func TestSLAManagerAllFreshness(t *testing.T) {
 	// Check all freshness
 	statuses, err := manager.CheckAllFreshness()
 	require.NoError(t, err)
-	
+
 	// Should have 2 statuses
 	assert.Len(t, statuses, 2)
-	
+
 	// Find status for each table
 	var status1, status2 *FreshnessStatus
 	for _, status := range statuses {
@@ -130,10 +130,10 @@ func TestSLAManagerAllFreshness(t *testing.T) {
 			status2 = status
 		}
 	}
-	
+
 	require.NotNil(t, status1)
 	require.NotNil(t, status2)
-	
+
 	// Check status values
 	assert.Equal(t, SLALevelInfo, status1.Status)
 	assert.Equal(t, SLALevelCritical, status2.Status)

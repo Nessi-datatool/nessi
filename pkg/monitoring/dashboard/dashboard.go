@@ -18,9 +18,9 @@ import (
 	"github.com/nessi-dev/nessi/pkg/monitoring/freshness"
 	"github.com/nessi-dev/nessi/pkg/monitoring/service"
 
-	"github.com/nessi-dev/nessi/pkg/security"
 	"github.com/nessi-dev/nessi/pkg/quality/profile"
 	"github.com/nessi-dev/nessi/pkg/quality/rules"
+	"github.com/nessi-dev/nessi/pkg/security"
 )
 
 //go:embed templates
@@ -55,18 +55,18 @@ type FreshnessManager interface {
 // Now supports dependency injection for Profiler and RuleValidator
 // so tests can inject fast mocks.
 type Dashboard struct {
-	serviceProvider *service.Provider
+	serviceProvider  *service.Provider
 	authRequiredFlag bool
-	monitor      *monitoring.Monitor
-	templates    *template.Template
-	listenAddr   string
-	authManager  *security.AuthManager
-	certManager  *security.CertManager
-	secureMode   bool
-	mux          *http.ServeMux
+	monitor          *monitoring.Monitor
+	templates        *template.Template
+	listenAddr       string
+	authManager      *security.AuthManager
+	certManager      *security.CertManager
+	secureMode       bool
+	mux              *http.ServeMux
 
-	profiler        Profiler
-	ruleValidator   RuleValidator
+	profiler         Profiler
+	ruleValidator    RuleValidator
 	freshnessManager FreshnessManager
 }
 
@@ -78,8 +78,8 @@ type DashboardOptions struct {
 	SecureMode  bool
 
 	// Dependency injection for tests
-	Profiler        Profiler
-	RuleValidator   RuleValidator
+	Profiler         Profiler
+	RuleValidator    RuleValidator
 	FreshnessManager FreshnessManager
 }
 
@@ -93,16 +93,16 @@ func New(monitor *monitoring.Monitor, options DashboardOptions) (*Dashboard, err
 
 	// Use injected profiler/ruleValidator if provided, else default to nil (handlers must check!)
 	dash := &Dashboard{
-		monitor:      monitor,
-		templates:    templates,
-		listenAddr:   options.ListenAddr,
-		authManager:  options.AuthManager,
-		certManager:  options.CertManager,
-		secureMode:   options.SecureMode,
-		mux:          http.NewServeMux(),
-		profiler:     options.Profiler,
+		monitor:       monitor,
+		templates:     templates,
+		listenAddr:    options.ListenAddr,
+		authManager:   options.AuthManager,
+		certManager:   options.CertManager,
+		secureMode:    options.SecureMode,
+		mux:           http.NewServeMux(),
+		profiler:      options.Profiler,
 		ruleValidator: options.RuleValidator,
-	
+
 		freshnessManager: options.FreshnessManager,
 	}
 	return dash, nil
@@ -112,22 +112,22 @@ func New(monitor *monitoring.Monitor, options DashboardOptions) (*Dashboard, err
 func (d *Dashboard) Start() error {
 	// Set up routes
 	d.mux = http.NewServeMux()
-	
+
 	// Static files
 	d.mux.Handle("/static/", http.FileServer(http.FS(staticFS)))
-	
+
 	// Public routes
 	d.mux.HandleFunc("/", d.handleIndex)
 	d.mux.HandleFunc("/health", d.handleHealth)
 	d.mux.HandleFunc("/data-quality", d.handleDataQualityDashboard)
 	d.mux.HandleFunc("/freshness", d.handleFreshnessDashboard)
-	
+
 	// Authentication routes
 	if d.authManager != nil {
 		d.mux.HandleFunc("/login", d.handleLogin)
 		d.mux.HandleFunc("/auth/login", nil)
 	}
-	
+
 	// Protected routes
 	if d.authManager != nil {
 		// Apply authentication middleware to API routes
@@ -161,19 +161,19 @@ func (d *Dashboard) Start() error {
 		d.mux.HandleFunc("/api/rules/history", d.handleGetRuleHistory)
 		d.mux.HandleFunc("/api/rules/trends", d.handleGetExecutionTrends)
 	}
-	
+
 	// Register data quality handlers
 	d.registerDataQualityHandlers()
-	
+
 	// Start server
 	logging.Info(fmt.Sprintf("Starting dashboard server on %s", d.listenAddr))
-	
+
 	// Use HTTPS if secure mode is enabled and cert manager is available
 	if d.secureMode && d.certManager != nil {
 		logging.Info("Starting dashboard in secure mode (HTTPS)")
 		return d.certManager.StartHTTPSServer(d.listenAddr, d.mux)
 	}
-	
+
 	// Fallback to HTTP
 	return http.ListenAndServe(d.listenAddr, d.mux)
 }
@@ -198,7 +198,7 @@ func (d *Dashboard) handleMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	// Forward to metrics history endpoint
-	resp, err := http.Get(fmt.Sprintf("http://localhost:%d/metrics/history?%s", 
+	resp, err := http.Get(fmt.Sprintf("http://localhost:%d/metrics/history?%s",
 		d.monitor.GetMetricsPort(), r.URL.RawQuery))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -216,7 +216,7 @@ func (d *Dashboard) handleMetrics(w http.ResponseWriter, r *http.Request) {
 		logging.Error("Failed to read metrics response", err)
 		return
 	}
-	
+
 	if _, err := w.Write(respBody); err != nil {
 		logging.Error("Failed to write metrics response", err)
 	}
@@ -229,7 +229,7 @@ func (d *Dashboard) handleExport(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	
+
 	// Parse query parameters
 	query := r.URL.Query()
 	metricName := query.Get("metric")
@@ -240,29 +240,29 @@ func (d *Dashboard) handleExport(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	
+
 	// Parse format
 	format := query.Get("format")
 	if format == "" {
 		format = "csv" // Default to CSV
 	}
-	
+
 	// Parse time range
 	start := time.Now().Add(-24 * time.Hour) // Default to last 24 hours
 	end := time.Now()
-	
+
 	if startStr := query.Get("start"); startStr != "" {
 		if startTime, err := time.Parse(time.RFC3339, startStr); err == nil {
 			start = startTime
 		}
 	}
-	
+
 	if endStr := query.Get("end"); endStr != "" {
 		if endTime, err := time.Parse(time.RFC3339, endStr); err == nil {
 			end = endTime
 		}
 	}
-	
+
 	// Parse labels
 	labels := make(map[string]string)
 	for key, values := range query {
@@ -270,7 +270,7 @@ func (d *Dashboard) handleExport(w http.ResponseWriter, r *http.Request) {
 			labels[key] = values[0]
 		}
 	}
-	
+
 	// Create temporary file for export
 	tempDir, err := os.MkdirTemp("", "nessi-export-")
 	if err != nil {
@@ -280,16 +280,16 @@ func (d *Dashboard) handleExport(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	
+
 	// Create export options
 	exportFormat := monitoring.ExportFormatCSV
 	if format == "json" {
 		exportFormat = monitoring.ExportFormatJSON
 	}
-	
+
 	filename := fmt.Sprintf("%s_%s.%s", metricName, time.Now().Format("20060102_150405"), format)
 	exportPath := filepath.Join(tempDir, filename)
-	
+
 	options := monitoring.ExportOptions{
 		Format:     exportFormat,
 		OutputPath: exportPath,
@@ -298,7 +298,7 @@ func (d *Dashboard) handleExport(w http.ResponseWriter, r *http.Request) {
 		MetricName: metricName,
 		Labels:     labels,
 	}
-	
+
 	// Export metrics
 	outputPath, err := d.monitor.ExportMetrics(options)
 	if err != nil {
@@ -308,7 +308,7 @@ func (d *Dashboard) handleExport(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	
+
 	// Set headers for file download
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
 	if format == "csv" {
@@ -316,10 +316,10 @@ func (d *Dashboard) handleExport(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.Header().Set("Content-Type", "application/json")
 	}
-	
+
 	// Serve the file
 	http.ServeFile(w, r, outputPath)
-	
+
 	// Clean up temporary file
 	if isTestMode() {
 		// In test mode, clean up immediately to avoid hanging tests
@@ -341,15 +341,15 @@ func isTestMode() bool {
 			return true
 		}
 	}
-	
+
 	// Also check for common testing environment variables
 	_, testEnvSet := os.LookupEnv("GO_TEST")
-	
+
 	// Check if the program is being run by the testing package
 	if strings.HasSuffix(os.Args[0], ".test") {
 		return true
 	}
-	
+
 	return testEnvSet
 }
 

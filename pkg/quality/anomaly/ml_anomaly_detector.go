@@ -23,11 +23,11 @@ type AnomalyDetectionResult struct {
 
 // SeasonalDecompositionResult represents the result of seasonal decomposition
 type SeasonalDecompositionResult struct {
-	Trend         []float64                       `json:"trend"`
-	Seasonal      []float64                       `json:"seasonal"`
-	Residual      []float64                       `json:"residual"`
-	Visualizations map[string]string              `json:"visualizations"` // Base64 encoded PNGs
-	Error         string                          `json:"error,omitempty"`
+	Trend          []float64         `json:"trend"`
+	Seasonal       []float64         `json:"seasonal"`
+	Residual       []float64         `json:"residual"`
+	Visualizations map[string]string `json:"visualizations"` // Base64 encoded PNGs
+	Error          string            `json:"error,omitempty"`
 }
 
 // NewMLAnomalyDetector creates a new MLAnomalyDetector

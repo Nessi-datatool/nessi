@@ -53,7 +53,7 @@ func Validate(args ...interface{}) ([]interface{}, error) {
 // GetOptions returns the available options for this plugin
 func GetOptions() map[string]interface{} {
 	return map[string]interface{}{
-		"strict_mode": false,
+		"strict_mode":         false,
 		"allow_local_domains": true,
 	}
 }

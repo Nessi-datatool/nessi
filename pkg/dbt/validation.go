@@ -6,10 +6,10 @@ import (
 
 // ModelValidationResult represents the validation results for a model
 type ModelValidationResult struct {
-	ModelName string             `json:"model_name"`
-	TablePath string             `json:"table_path"`
+	ModelName string              `json:"model_name"`
+	TablePath string              `json:"table_path"`
 	Rules     []*ValidationResult `json:"rules"`
-	Timestamp time.Time          `json:"timestamp"`
+	Timestamp time.Time           `json:"timestamp"`
 }
 
 // These types are already defined in validator.go:

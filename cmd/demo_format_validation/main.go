@@ -240,7 +240,7 @@ func printFormatValidationResult(result *datalake.FormatValidationResult) {
 	fmt.Printf("Total Values: %d\n", result.TotalValues)
 	fmt.Printf("Valid Values: %d\n", result.ValidValues)
 	fmt.Printf("Invalid Values: %d\n", result.InvalidValues)
-	
+
 	if len(result.InvalidExamples) > 0 {
 		fmt.Printf("Invalid Examples (%d):\n", len(result.InvalidExamples))
 		for i, example := range result.InvalidExamples {

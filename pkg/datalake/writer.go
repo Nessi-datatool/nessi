@@ -32,10 +32,10 @@ func NewWriter(tablePath string, schema *arrow.Schema) (*Writer, error) {
 			LastModified:    time.Now(),
 			Schema:          schema,
 			PartitionSchema: []string{},
-			Stats:          &TableStats{},
-			Files:          []string{},
-			Partitions:     make(map[string][]string),
-			Metadata:       make(map[string]interface{}),
+			Stats:           &TableStats{},
+			Files:           []string{},
+			Partitions:      make(map[string][]string),
+			Metadata:        make(map[string]interface{}),
 		},
 		closed:    false,
 		fileCache: make(map[string]*os.File),
@@ -119,14 +119,14 @@ func (w *Writer) Commit() error {
 
 	// Create transaction log entry
 	logEntry := map[string]interface{}{
-		"version":      w.table.Version,
-		"timestamp":    w.table.LastModified.Unix(),
-		"operation":    "WRITE",
-		"files":        w.table.Files,
-		"partitions":   w.table.Partitions,
-		"stats":        w.table.Stats,
-		"schema":       w.table.Schema,
-		"metadata":     w.table.Metadata,
+		"version":    w.table.Version,
+		"timestamp":  w.table.LastModified.Unix(),
+		"operation":  "WRITE",
+		"files":      w.table.Files,
+		"partitions": w.table.Partitions,
+		"stats":      w.table.Stats,
+		"schema":     w.table.Schema,
+		"metadata":   w.table.Metadata,
 	}
 
 	// Convert to JSON

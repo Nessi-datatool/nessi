@@ -1,20 +1,20 @@
 package cli
 
 import (
-	"github.com/nessi-dev/nessi/pkg"
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/nessi-dev/nessi/pkg"
 	"os"
 	"time"
 
 	"github.com/apache/arrow/go/v15/arrow"
 	"github.com/apache/arrow/go/v15/arrow/ipc"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/nessi-dev/nessi/pkg/datalake"
 	"github.com/nessi-dev/nessi/pkg/quality/engine"
 	"github.com/nessi-dev/nessi/pkg/security"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // CLI represents the command-line interface
@@ -102,7 +102,7 @@ func init() {
 			Long:  "Nessi is a data quality tool for Delta Lake tables",
 		}
 	}
-	
+
 	// Now it's safe to add commands
 	CLI.RootCmd.AddCommand(telemetryCmd)
 

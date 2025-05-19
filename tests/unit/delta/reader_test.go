@@ -50,12 +50,12 @@ func setupTestTable(t *testing.T, basePath string, version int, hasData bool) st
 	// Create transaction log entries
 	for i := 0; i <= version; i++ {
 		logEntry := map[string]interface{}{
-			"version": i,
-			"timestamp": time.Now().Unix(),
-			"operation": "WRITE",
+			"version":         i,
+			"timestamp":       time.Now().Unix(),
+			"operation":       "WRITE",
 			"partitionValues": map[string]string{},
-			"numFiles": 1,
-			"sizeBytes": 1024,
+			"numFiles":        1,
+			"sizeBytes":       1024,
 		}
 		if i == 0 {
 			logEntry["operation"] = "CREATE TABLE"
@@ -63,13 +63,13 @@ func setupTestTable(t *testing.T, basePath string, version int, hasData bool) st
 				"type": "struct",
 				"fields": []map[string]interface{}{
 					{
-						"name": "id",
-						"type": "long",
+						"name":     "id",
+						"type":     "long",
 						"nullable": false,
 					},
 					{
-						"name": "name",
-						"type": "string",
+						"name":     "name",
+						"type":     "string",
 						"nullable": true,
 					},
 				},
@@ -86,11 +86,11 @@ func setupTestTable(t *testing.T, basePath string, version int, hasData bool) st
 	// Create checkpoint if version > 0
 	if version > 0 {
 		checkpoint := pkg.Checkpoint{
-			Version:   int64(version),
-			Timestamp: time.Now(),
-			FileCount: 1,
-			FilePaths: []string{"data/part-00000.parquet"},
-			Schema:    map[string]string{"id": "long", "name": "string"},
+			Version:    int64(version),
+			Timestamp:  time.Now(),
+			FileCount:  1,
+			FilePaths:  []string{"data/part-00000.parquet"},
+			Schema:     map[string]string{"id": "long", "name": "string"},
 			Partitions: []string{},
 		}
 		checkpointFile := filepath.Join(deltaLogPath, fmt.Sprintf("%020d.checkpoint.parquet", version))
@@ -219,11 +219,11 @@ func TestParseTransactionLog(t *testing.T) {
 				logPath := filepath.Join(tablePath, "_delta_log")
 				for i := 6; i <= 10; i++ {
 					logEntry := map[string]interface{}{
-						"version": i,
+						"version":   i,
 						"timestamp": time.Now().Unix(),
 						"operation": "MERGE",
 						"predicate": "id > 100",
-						"numFiles": 2,
+						"numFiles":  2,
 						"sizeBytes": 2048,
 					}
 					logFile := filepath.Join(logPath, fmt.Sprintf("%020d.json", i))
@@ -296,7 +296,7 @@ func TestReadParquetFile(t *testing.T) {
 	// // Create table with Parquet files
 	// tablePath := setupTestTable(t, tempDir, 1, true)
 	// dataPath := filepath.Join(tablePath, "data")
-	
+
 	// // Create a simple Parquet file
 	// parquetFile := filepath.Join(dataPath, "part-00000.parquet")
 	// // TODO: Create actual Parquet file with test data
@@ -433,7 +433,7 @@ func TestReaderErrorHandling(t *testing.T) {
 					// For now, just join with /. This might need adjustment based on how getPartitionFromPath is implemented.
 					// Sorting keys first would make it deterministic if order matters.
 					sort.Strings(parts)
-					partitionStr = strings.Join(parts, "/") 
+					partitionStr = strings.Join(parts, "/")
 				}
 
 				_, err := r.ReadPartition(partitionStr)

@@ -13,12 +13,12 @@ func CommonPrefix(s1, s2 string) string {
 	if len(s1) == 0 || len(s2) == 0 {
 		return ""
 	}
-	
+
 	minLen := len(s1)
 	if len(s2) < minLen {
 		minLen = len(s2)
 	}
-	
+
 	for i := 0; i < minLen; i++ {
 		if s1[i] != s2[i] {
 			return s1[:i]

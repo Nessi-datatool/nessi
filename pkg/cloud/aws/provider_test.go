@@ -90,10 +90,10 @@ func TestAWSProvider_Name(t *testing.T) {
 func TestAWSProvider_ListBuckets(t *testing.T) {
 	// Create mock provider
 	provider := new(MockAWSProvider)
-	
+
 	// Create test data
 	creationDate := time.Now().Format(time.RFC3339)
-	
+
 	// Set up mock expectations
 	provider.On("ListBuckets", mock.Anything).Return([]common.BucketInfo{
 		{
@@ -107,10 +107,10 @@ func TestAWSProvider_ListBuckets(t *testing.T) {
 			Region:       "us-east-1",
 		},
 	}, nil)
-	
+
 	// Call ListBuckets
 	buckets, err := provider.ListBuckets(context.Background())
-	
+
 	// Assert expectations
 	assert.NoError(t, err)
 	assert.Len(t, buckets, 2)
@@ -125,11 +125,11 @@ func TestAWSProvider_ListBuckets(t *testing.T) {
 func TestAWSProvider_ListObjects(t *testing.T) {
 	// Create mock provider
 	provider := new(MockAWSProvider)
-	
+
 	// Create test data
 	size := int64(1024)
 	lastModified := time.Now().Format(time.RFC3339)
-	
+
 	// Set up mock expectations
 	provider.On("ListObjects", mock.Anything, "test-bucket", "test-prefix/").Return([]common.ObjectInfo{
 		{
@@ -147,10 +147,10 @@ func TestAWSProvider_ListObjects(t *testing.T) {
 			ContentType:  "text/plain",
 		},
 	}, nil)
-	
+
 	// Call ListObjects
 	objects, err := provider.ListObjects(context.Background(), "test-bucket", "test-prefix/")
-	
+
 	// Assert expectations
 	assert.NoError(t, err)
 	assert.Len(t, objects, 2)
@@ -169,19 +169,19 @@ func TestAWSProvider_ListObjects(t *testing.T) {
 func TestAWSProvider_GetObject(t *testing.T) {
 	// Create mock provider
 	provider := new(MockAWSProvider)
-	
+
 	// Create test data
 	content := "test content"
 	reader := &MockReadCloser{
 		reader: strings.NewReader(content),
 	}
-	
+
 	// Set up mock expectations
 	provider.On("GetObject", mock.Anything, "test-bucket", "test-key").Return(reader, nil)
-	
+
 	// Call GetObject
 	result, err := provider.GetObject(context.Background(), "test-bucket", "test-key")
-	
+
 	// Assert expectations
 	assert.NoError(t, err)
 	data, err := ioutil.ReadAll(result)
@@ -194,7 +194,7 @@ func TestAWSProvider_GetObject(t *testing.T) {
 func TestAWSProviderFactory_Create(t *testing.T) {
 	// Create a factory
 	factory := &AWSProviderFactory{}
-	
+
 	// Create test config
 	config := common.CloudConfig{
 		Provider: "aws",
@@ -209,11 +209,11 @@ func TestAWSProviderFactory_Create(t *testing.T) {
 		},
 		DefaultBucket: "test-bucket",
 	}
-	
+
 	// This test will not actually connect to AWS
 	// It just verifies that the factory creates a provider with the correct configuration
 	_, err := factory.Create(config)
-	
+
 	// We expect an error since we're not actually connecting to AWS
 	assert.Error(t, err)
 }

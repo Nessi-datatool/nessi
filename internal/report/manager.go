@@ -181,7 +181,7 @@ func (m *ReportManager) generateJSON(template ReportTemplate, parameters map[str
 // SaveReport saves a report to a file
 func (m *ReportManager) SaveReport(report *Report) error {
 	filename := filepath.Join(m.outputDir, fmt.Sprintf("%s.%s", report.ID, report.Format))
-	
+
 	switch report.Format {
 	case PDF:
 		if pdf, ok := report.Content.(*gofpdf.Fpdf); ok {
@@ -242,7 +242,7 @@ func (m *ReportManager) GenerateTableReport(ctx context.Context, templateID stri
 
 	// Convert record to table data
 	table := make([][]string, int(record.NumRows())+1)
-	
+
 	// Add headers
 	headers := make([]string, int(record.NumCols()))
 	for i := 0; i < int(record.NumCols()); i++ {
@@ -338,4 +338,4 @@ func (m *ReportManager) generateTableHTML(template ReportTemplate, table [][]str
 func (m *ReportManager) generateTableJSON(template ReportTemplate, table [][]string) (interface{}, error) {
 	// TODO: Implement JSON generation
 	return nil, fmt.Errorf("JSON generation not implemented")
-} 
+}

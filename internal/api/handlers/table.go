@@ -27,9 +27,10 @@ type Table struct {
 // swagger:route GET /api/v1/tables listTables
 // List all Delta tables
 // responses:
-//   200: []Table
-//   400: error
-//   500: error
+//
+//	200: []Table
+//	400: error
+//	500: error
 func ListTablesHandler(c *gin.Context) {
 	path := c.Query("path")
 	if path == "" {
@@ -49,10 +50,11 @@ func ListTablesHandler(c *gin.Context) {
 // swagger:route GET /api/v1/tables/{tableName} getTable
 // Get table details
 // responses:
-//   200: Table
-//   400: error
-//   404: error
-//   500: error
+//
+//	200: Table
+//	400: error
+//	404: error
+//	500: error
 func GetTableHandler(c *gin.Context) {
 	tableName := c.Param("tableName")
 	versionStr := c.Query("version")
@@ -84,10 +86,11 @@ func GetTableHandler(c *gin.Context) {
 // swagger:route GET /api/v1/tables/{tableName}/profile getTableProfile
 // Get table profile
 // responses:
-//   200: profile.Profile
-//   400: error
-//   404: error
-//   500: error
+//
+//	200: profile.Profile
+//	400: error
+//	404: error
+//	500: error
 func GetTableProfileHandler(c *gin.Context) {
 	tableName := c.Param("tableName")
 	sampleStr := c.Query("sample")
@@ -118,10 +121,11 @@ func GetTableProfileHandler(c *gin.Context) {
 // swagger:route POST /api/v1/tables/{tableName}/check checkTableQuality
 // Run quality checks on table
 // responses:
-//   200: quality.QualityReport
-//   400: error
-//   404: error
-//   500: error
+//
+//	200: quality.QualityReport
+//	400: error
+//	404: error
+//	500: error
 func CheckTableQualityHandler(c *gin.Context) {
 	tableName := c.Param("tableName")
 	var requestRules []rules.Rule
@@ -156,9 +160,10 @@ func CheckTableQualityHandler(c *gin.Context) {
 // swagger:route GET /api/v1/tables/{tableName}/versions getTableVersions
 // List table versions
 // responses:
-//   200: []int64
-//   404: error
-//   500: error
+//
+//	200: []int64
+//	404: error
+//	500: error
 func GetTableVersionsHandler(c *gin.Context) {
 	tableName := c.Param("tableName")
 

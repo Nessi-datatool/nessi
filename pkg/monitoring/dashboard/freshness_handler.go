@@ -14,25 +14,25 @@ import (
 type FreshnessHandlerManager interface {
 	// GetTableStatus gets the table status for a table
 	GetTableStatus(tableName string) (freshness.TableFreshnessStatus, error)
-	
+
 	// GetAllTableStatuses lists all table statuses
 	GetAllTableStatuses() ([]freshness.TableFreshnessStatus, error)
-	
+
 	// GetSLAConfig gets the SLA configuration for a table
 	GetSLAConfig(tableName string) (freshness.SLAConfig, error)
-	
+
 	// GetAllSLAConfigs lists all SLA configurations
 	GetAllSLAConfigs() ([]freshness.SLAConfig, error)
-	
+
 	// SetSLAConfig sets the SLA configuration for a table
 	SetSLAConfig(config freshness.SLAConfig) error
-	
+
 	// DeleteSLAConfig deletes the SLA configuration for a table
 	DeleteSLAConfig(tableName string) error
-	
+
 	// GetTableTrends gets the freshness trends for a specific table
 	GetTableTrends(tableName string) (*freshness.FreshnessTrends, error)
-	
+
 	// GetAllTablesTrends gets the freshness trends for all tables
 	GetAllTablesTrends() (*freshness.FreshnessTrends, error)
 }

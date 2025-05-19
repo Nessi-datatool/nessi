@@ -82,7 +82,7 @@ func (p *AWSProvider) Connect(ctx context.Context, configMap map[string]interfac
 	// Create S3 client
 	p.client = s3.NewFromConfig(p.config)
 	p.presignClient = s3.NewPresignClient(p.client)
-	
+
 	// Test the connection by listing buckets
 	if endpoint, ok := configMap["endpoint"].(string); ok && endpoint != "" {
 		// For testing purposes, if a custom endpoint is provided, verify it works
@@ -92,7 +92,7 @@ func (p *AWSProvider) Connect(ctx context.Context, configMap map[string]interfac
 			return fmt.Errorf("failed to connect to endpoint %s: %w", endpoint, err)
 		}
 	}
-	
+
 	p.connected = true
 
 	return nil
@@ -264,14 +264,14 @@ type AWSProviderFactory struct{}
 // Create creates a new AWS provider instance
 func (f *AWSProviderFactory) Create(config common.CloudConfig) (common.CloudProvider, error) {
 	provider := NewAWSProvider()
-	
+
 	// Convert CloudConfig to map for the Connect method
 	configMap := map[string]interface{}{
-		"region":        config.Region,
-		"endpoint":      config.EndpointOverride,
-		"use_iam_role":  false,
+		"region":       config.Region,
+		"endpoint":     config.EndpointOverride,
+		"use_iam_role": false,
 	}
-	
+
 	// Extract credentials if provided
 	if config.Credentials != nil {
 		if accessKey, ok := config.Credentials["access_key"].(string); ok {
@@ -287,17 +287,17 @@ func (f *AWSProviderFactory) Create(config common.CloudConfig) (common.CloudProv
 			configMap["use_iam_role"] = useIAMRole
 		}
 	}
-	
+
 	// Add any additional options
 	for k, v := range config.AdditionalOptions {
 		configMap[k] = v
 	}
-	
+
 	// Connect to AWS
 	err := provider.Connect(context.Background(), configMap)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return provider, nil
 }

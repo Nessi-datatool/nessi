@@ -35,10 +35,10 @@ func NewPurviewClient(endpoint string, credential azcore.TokenCredential) *Purvi
 // sendRequest sends a request to the Purview API
 func (c *PurviewClient) sendRequest(ctx context.Context, method, path string, body interface{}) (*http.Response, error) {
 	url := fmt.Sprintf("%s%s", c.endpoint, path)
-	
+
 	var req *http.Request
 	var err error
-	
+
 	if body != nil {
 		bodyJSON, err := json.Marshal(body)
 		if err != nil {
@@ -55,7 +55,7 @@ func (c *PurviewClient) sendRequest(ctx context.Context, method, path string, bo
 			return nil, fmt.Errorf("failed to create request: %w", err)
 		}
 	}
-	
+
 	// Get token from credential
 	token, err := c.credential.GetToken(ctx, policy.TokenRequestOptions{
 		Scopes: []string{"https://purview.azure.net/.default"},
@@ -63,16 +63,16 @@ func (c *PurviewClient) sendRequest(ctx context.Context, method, path string, bo
 	if err != nil {
 		return nil, fmt.Errorf("failed to get token: %w", err)
 	}
-	
+
 	// Add token to request
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token.Token))
-	
+
 	// Send request
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
-	
+
 	return resp, nil
 }
 
@@ -102,23 +102,23 @@ func (c *PurviewCatalog) Connect(ctx context.Context, config map[string]interfac
 	if accountName == "" {
 		return fmt.Errorf("account_name is required")
 	}
-	
+
 	// Create credential
 	var credential azcore.TokenCredential
 	var err error
-	
+
 	// Use Azure AD authentication
 	credential, err = azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		return fmt.Errorf("failed to create Azure AD credential: %w", err)
 	}
-	
+
 	// Create Purview client
 	endpoint := fmt.Sprintf("https://%s.purview.azure.com", accountName)
 	c.client = NewPurviewClient(endpoint, credential)
 	c.connected = true
 	c.accountName = accountName
-	
+
 	return nil
 }
 
@@ -133,7 +133,7 @@ func (c *PurviewCatalog) ListDatabases(ctx context.Context) ([]nessitypes.Databa
 	if !c.connected {
 		return nil, fmt.Errorf("not connected to Azure Purview")
 	}
-	
+
 	// Purview uses collections instead of databases
 	// Call Purview API to list collections
 	resp, err := c.client.sendRequest(ctx, "GET", "/catalog/api/atlas/v2/glossary", nil)
@@ -141,11 +141,11 @@ func (c *PurviewCatalog) ListDatabases(ctx context.Context) ([]nessitypes.Databa
 		return nil, fmt.Errorf("failed to list collections: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to list collections: %s", resp.Status)
 	}
-	
+
 	// Parse response
 	var result struct {
 		GlossaryInfo []struct {
@@ -154,11 +154,11 @@ func (c *PurviewCatalog) ListDatabases(ctx context.Context) ([]nessitypes.Databa
 			Description string `json:"description"`
 		} `json:"glossaryInfo"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
-	
+
 	// Convert to DatabaseInfo
 	databases := make([]nessitypes.DatabaseInfo, 0, len(result.GlossaryInfo))
 	for _, glossary := range result.GlossaryInfo {
@@ -170,7 +170,7 @@ func (c *PurviewCatalog) ListDatabases(ctx context.Context) ([]nessitypes.Databa
 			},
 		})
 	}
-	
+
 	return databases, nil
 }
 
@@ -179,7 +179,7 @@ func (c *PurviewCatalog) ListTables(ctx context.Context, database string) ([]nes
 	if !c.connected {
 		return nil, fmt.Errorf("not connected to Azure Purview")
 	}
-	
+
 	// In Purview, we need to search for entities of type "Table"
 	requestBody := map[string]interface{}{
 		"keywords": "",
@@ -189,38 +189,38 @@ func (c *PurviewCatalog) ListTables(ctx context.Context, database string) ([]nes
 			"typeName": "Table",
 		},
 	}
-	
+
 	// Call Purview API to search for tables
 	resp, err := c.client.sendRequest(ctx, "POST", "/catalog/api/search/query", requestBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list tables: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to list tables: %s", resp.Status)
 	}
-	
+
 	// Parse response
 	var result struct {
 		Value []struct {
-			ID          string `json:"id"`
-			Name        string `json:"name"`
-			Description string `json:"description"`
+			ID          string                 `json:"id"`
+			Name        string                 `json:"name"`
+			Description string                 `json:"description"`
 			Properties  map[string]interface{} `json:"properties"`
 		} `json:"value"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
-	
+
 	// Convert to TableInfo
 	tables := make([]nessitypes.TableInfo, 0, len(result.Value))
 	for _, entity := range result.Value {
 		tableType := "unknown"
 		location := ""
-		
+
 		if entity.Properties != nil {
 			if format, ok := entity.Properties["format"]; ok {
 				tableType = fmt.Sprintf("%v", format)
@@ -229,12 +229,12 @@ func (c *PurviewCatalog) ListTables(ctx context.Context, database string) ([]nes
 				location = fmt.Sprintf("%v", loc)
 			}
 		}
-		
+
 		properties := make(map[string]string)
 		for k, v := range entity.Properties {
 			properties[k] = fmt.Sprintf("%v", v)
 		}
-		
+
 		tables = append(tables, nessitypes.TableInfo{
 			Name:        entity.Name,
 			Type:        tableType,
@@ -243,7 +243,7 @@ func (c *PurviewCatalog) ListTables(ctx context.Context, database string) ([]nes
 			Properties:  properties,
 		})
 	}
-	
+
 	return tables, nil
 }
 
@@ -252,7 +252,7 @@ func (c *PurviewCatalog) GetTableDetails(ctx context.Context, database, table st
 	if !c.connected {
 		return nil, fmt.Errorf("not connected to Azure Purview")
 	}
-	
+
 	// In Purview, we need to search for the specific table by name
 	requestBody := map[string]interface{}{
 		"keywords": table,
@@ -261,42 +261,42 @@ func (c *PurviewCatalog) GetTableDetails(ctx context.Context, database, table st
 			"typeName": "Table",
 		},
 	}
-	
+
 	// Call Purview API to search for the table
 	resp, err := c.client.sendRequest(ctx, "POST", "/catalog/api/search/query", requestBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get table details: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to get table details: %s", resp.Status)
 	}
-	
+
 	// Parse response
 	var searchResult struct {
 		Value []struct {
-			ID          string `json:"id"`
-			Name        string `json:"name"`
-			Description string `json:"description"`
+			ID          string                 `json:"id"`
+			Name        string                 `json:"name"`
+			Description string                 `json:"description"`
 			Properties  map[string]interface{} `json:"properties"`
 		} `json:"value"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&searchResult); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
-	
+
 	if len(searchResult.Value) == 0 {
 		return nil, fmt.Errorf("table %s not found", table)
 	}
-	
+
 	entity := searchResult.Value[0]
-	
+
 	// Get table info
 	tableType := "unknown"
 	location := ""
-	
+
 	if entity.Properties != nil {
 		if format, ok := entity.Properties["format"]; ok {
 			tableType = fmt.Sprintf("%v", format)
@@ -305,12 +305,12 @@ func (c *PurviewCatalog) GetTableDetails(ctx context.Context, database, table st
 			location = fmt.Sprintf("%v", loc)
 		}
 	}
-	
+
 	properties := make(map[string]string)
 	for k, v := range entity.Properties {
 		properties[k] = fmt.Sprintf("%v", v)
 	}
-	
+
 	tableInfo := nessitypes.TableInfo{
 		Name:        entity.Name,
 		Type:        tableType,
@@ -318,18 +318,18 @@ func (c *PurviewCatalog) GetTableDetails(ctx context.Context, database, table st
 		Location:    location,
 		Properties:  properties,
 	}
-	
+
 	// Get entity details
 	resp, err = c.client.sendRequest(ctx, "GET", fmt.Sprintf("/catalog/api/atlas/v2/entity/guid/%s", entity.ID), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get entity details: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to get entity details: %s", resp.Status)
 	}
-	
+
 	// Parse entity details
 	var entityResult struct {
 		Entity struct {
@@ -339,18 +339,18 @@ func (c *PurviewCatalog) GetTableDetails(ctx context.Context, database, table st
 			Owner      string                 `json:"owner"`
 		} `json:"entity"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&entityResult); err != nil {
 		return nil, fmt.Errorf("failed to decode entity details: %w", err)
 	}
-	
+
 	// Get schema
 	schema := &nessitypes.TableSchema{
 		Format:  tableType,
 		Version: 1,
 		Fields:  []nessitypes.FieldInfo{},
 	}
-	
+
 	// Get columns
 	if columns, ok := entityResult.Entity.Attributes["columns"]; ok {
 		if columnsList, ok := columns.([]interface{}); ok {
@@ -363,19 +363,19 @@ func (c *PurviewCatalog) GetTableDetails(ctx context.Context, database, table st
 						Nullable:    true,
 						Properties:  make(map[string]string),
 					}
-					
+
 					for k, v := range colMap {
 						if k != "name" && k != "dataType" && k != "description" {
 							field.Properties[k] = fmt.Sprintf("%v", v)
 						}
 					}
-					
+
 					schema.Fields = append(schema.Fields, field)
 				}
 			}
 		}
 	}
-	
+
 	// Get metadata
 	metadata := &nessitypes.TableMetadata{
 		Owner:      entityResult.Entity.Owner,
@@ -383,14 +383,14 @@ func (c *PurviewCatalog) GetTableDetails(ctx context.Context, database, table st
 		UpdatedAt:  time.Unix(entityResult.Entity.UpdateTime/1000, 0),
 		Properties: properties,
 	}
-	
+
 	// Create TableDetails
 	details := &nessitypes.TableDetails{
 		Info:     tableInfo,
 		Schema:   schema,
 		Metadata: metadata,
 	}
-	
+
 	return details, nil
 }
 
@@ -408,7 +408,7 @@ func (c *PurviewCatalog) UpdateTableMetadata(ctx context.Context, database, tabl
 	if !c.connected {
 		return fmt.Errorf("not connected to Azure Purview")
 	}
-	
+
 	// First, get the table to get its GUID
 	requestBody := map[string]interface{}{
 		"keywords": table,
@@ -417,29 +417,29 @@ func (c *PurviewCatalog) UpdateTableMetadata(ctx context.Context, database, tabl
 			"typeName": "Table",
 		},
 	}
-	
+
 	resp, err := c.client.sendRequest(ctx, "POST", "/catalog/api/search/query", requestBody)
 	if err != nil {
 		return fmt.Errorf("failed to find table: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	var searchResult struct {
 		Value []struct {
 			ID string `json:"id"`
 		} `json:"value"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&searchResult); err != nil {
 		return fmt.Errorf("failed to decode response: %w", err)
 	}
-	
+
 	if len(searchResult.Value) == 0 {
 		return fmt.Errorf("table %s not found", table)
 	}
-	
+
 	guid := searchResult.Value[0].ID
-	
+
 	// Update entity
 	updateBody := map[string]interface{}{
 		"entity": map[string]interface{}{
@@ -450,25 +450,25 @@ func (c *PurviewCatalog) UpdateTableMetadata(ctx context.Context, database, tabl
 			},
 		},
 	}
-	
+
 	// Add custom attributes
 	for k, v := range metadata.Properties {
 		if k != "description" {
 			updateBody["entity"].(map[string]interface{})["attributes"].(map[string]interface{})[k] = v
 		}
 	}
-	
+
 	// Update entity
 	resp, err = c.client.sendRequest(ctx, "PUT", "/catalog/api/atlas/v2/entity", updateBody)
 	if err != nil {
 		return fmt.Errorf("failed to update entity: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("failed to update entity: %s", resp.Status)
 	}
-	
+
 	// Add tags
 	if len(metadata.Tags) > 0 {
 		tagsBody := map[string]interface{}{
@@ -477,20 +477,20 @@ func (c *PurviewCatalog) UpdateTableMetadata(ctx context.Context, database, tabl
 				"typeName":   "tags",
 			},
 		}
-		
+
 		for _, tag := range metadata.Tags {
 			resp, err = c.client.sendRequest(ctx, "POST", "/catalog/api/atlas/v2/entity/guid/"+guid+"/classifications", tagsBody)
 			if err != nil {
 				return fmt.Errorf("failed to add tag %s: %w", tag, err)
 			}
 			defer resp.Body.Close()
-			
+
 			if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
 				return fmt.Errorf("failed to add tag %s: %s", tag, resp.Status)
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -499,7 +499,7 @@ func (c *PurviewCatalog) GetTableLineage(ctx context.Context, database, table st
 	if !c.connected {
 		return nil, fmt.Errorf("not connected to Azure Purview")
 	}
-	
+
 	// First, get the table to get its GUID
 	requestBody := map[string]interface{}{
 		"keywords": table,
@@ -508,69 +508,69 @@ func (c *PurviewCatalog) GetTableLineage(ctx context.Context, database, table st
 			"typeName": "Table",
 		},
 	}
-	
+
 	resp, err := c.client.sendRequest(ctx, "POST", "/catalog/api/search/query", requestBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find table: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	var searchResult struct {
 		Value []struct {
 			ID string `json:"id"`
 		} `json:"value"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&searchResult); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
-	
+
 	if len(searchResult.Value) == 0 {
 		return nil, fmt.Errorf("table %s not found", table)
 	}
-	
+
 	guid := searchResult.Value[0].ID
-	
+
 	// Get lineage
 	resp, err = c.client.sendRequest(ctx, "GET", fmt.Sprintf("/catalog/api/atlas/v2/lineage/%s", guid), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get lineage: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to get lineage: %s", resp.Status)
 	}
-	
+
 	// Parse lineage
 	var lineageResult struct {
-		BaseEntityGuid string `json:"baseEntityGuid"`
+		BaseEntityGuid   string `json:"baseEntityGuid"`
 		LineageDirection string `json:"lineageDirection"`
-		LineageDepth int `json:"lineageDepth"`
-		GuidEntityMap map[string]struct {
-			TypeName string `json:"typeName"`
+		LineageDepth     int    `json:"lineageDepth"`
+		GuidEntityMap    map[string]struct {
+			TypeName   string                 `json:"typeName"`
 			Attributes map[string]interface{} `json:"attributes"`
 		} `json:"guidEntityMap"`
 		Relations []struct {
 			FromEntityId string `json:"fromEntityId"`
-			ToEntityId string `json:"toEntityId"`
+			ToEntityId   string `json:"toEntityId"`
 		} `json:"relations"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&lineageResult); err != nil {
 		return nil, fmt.Errorf("failed to decode lineage: %w", err)
 	}
-	
+
 	// Create LineageInfo
 	lineageInfo := &nessitypes.LineageInfo{
 		Upstream:   []nessitypes.TableReference{},
 		Downstream: []nessitypes.TableReference{},
 		Properties: map[string]string{
 			"provider": "Azure Purview",
-			"guid":    guid,
+			"guid":     guid,
 		},
 	}
-	
+
 	// Process relations
 	for _, relation := range lineageResult.Relations {
 		// Upstream: relation.ToEntityId == guid
@@ -585,7 +585,7 @@ func (c *PurviewCatalog) GetTableLineage(ctx context.Context, database, table st
 				lineageInfo.Upstream = append(lineageInfo.Upstream, ref)
 			}
 		}
-		
+
 		// Downstream: relation.FromEntityId == guid
 		if relation.FromEntityId == guid {
 			toEntity, ok := lineageResult.GuidEntityMap[relation.ToEntityId]
@@ -599,7 +599,7 @@ func (c *PurviewCatalog) GetTableLineage(ctx context.Context, database, table st
 			}
 		}
 	}
-	
+
 	return lineageInfo, nil
 }
 
@@ -615,7 +615,7 @@ func (c *PurviewCatalog) PublishQualityMetrics(ctx context.Context, database, ta
 	if !c.connected {
 		return fmt.Errorf("not connected to Azure Purview")
 	}
-	
+
 	// First, get the table to get its GUID
 	requestBody := map[string]interface{}{
 		"keywords": table,
@@ -624,27 +624,27 @@ func (c *PurviewCatalog) PublishQualityMetrics(ctx context.Context, database, ta
 			"typeName": "Table",
 		},
 	}
-	
+
 	resp, err := c.client.sendRequest(ctx, "POST", "/catalog/api/search/query", requestBody)
 	if err != nil {
 		return fmt.Errorf("failed to find table: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	var searchResult struct {
 		Value []struct {
 			ID string `json:"id"`
 		} `json:"value"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&searchResult); err != nil {
 		return fmt.Errorf("failed to decode response: %w", err)
 	}
-	
+
 	if len(searchResult.Value) == 0 {
 		return fmt.Errorf("table %s not found", table)
 	}
-	
+
 	guid := searchResult.Value[0].ID
 
 	// Update entity with quality metrics
@@ -671,11 +671,11 @@ func (c *PurviewCatalog) PublishQualityMetrics(ctx context.Context, database, ta
 		return fmt.Errorf("failed to update entity: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("failed to update entity: %s", resp.Status)
 	}
-	
+
 	return nil
 }
 
@@ -684,13 +684,13 @@ func (c *PurviewCatalog) GetQualityMetrics(ctx context.Context, database, table 
 	if !c.connected {
 		return nil, fmt.Errorf("not connected to Azure Purview")
 	}
-	
+
 	// Get table details
 	details, err := c.GetTableDetails(ctx, database, table)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Extract quality metrics from properties
 	metrics := &nessitypes.QualityMetrics{}
 
@@ -729,6 +729,6 @@ func (c *PurviewCatalog) GetQualityMetrics(ctx context.Context, database, table 
 	if lastUpdated, ok := details.Metadata.Properties["quality:last_updated"]; ok {
 		metrics.LastUpdated, _ = time.Parse(time.RFC3339, lastUpdated)
 	}
-	
+
 	return metrics, nil
 }

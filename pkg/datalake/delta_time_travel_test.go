@@ -20,7 +20,7 @@ func TestDeltaTimeTravel_GetVersionHistory(t *testing.T) {
 	// Create a mock Delta Lake table
 	deltaTableDir := filepath.Join(tempDir, "delta-table")
 	require.NoError(t, os.MkdirAll(deltaTableDir, 0755))
-	
+
 	// Create _delta_log directory
 	deltaLogDir := filepath.Join(deltaTableDir, "_delta_log")
 	require.NoError(t, os.MkdirAll(deltaLogDir, 0755))
@@ -29,16 +29,16 @@ func TestDeltaTimeTravel_GetVersionHistory(t *testing.T) {
 	// Version 0
 	txnLogFile0 := filepath.Join(deltaLogDir, "00000000000000000000.json")
 	require.NoError(t, os.WriteFile(txnLogFile0, []byte(`{"commitInfo": {"timestamp": 1620000000000, "operation": "CREATE TABLE"}}`), 0644))
-	
+
 	// Sleep briefly to ensure file timestamps are different
 	time.Sleep(10 * time.Millisecond)
-	
+
 	// Version 1
 	txnLogFile1 := filepath.Join(deltaLogDir, "00000000000000000001.json")
 	require.NoError(t, os.WriteFile(txnLogFile1, []byte(`{"commitInfo": {"timestamp": 1620001000000, "operation": "WRITE"}}`), 0644))
-	
+
 	time.Sleep(10 * time.Millisecond)
-	
+
 	// Version 2
 	txnLogFile2 := filepath.Join(deltaLogDir, "00000000000000000002.json")
 	require.NoError(t, os.WriteFile(txnLogFile2, []byte(`{"commitInfo": {"timestamp": 1620002000000, "operation": "WRITE"}}`), 0644))
@@ -51,13 +51,13 @@ func TestDeltaTimeTravel_GetVersionHistory(t *testing.T) {
 	ctx := context.Background()
 	versions, err := timeTravel.GetVersionHistory(ctx, deltaTableDir)
 	require.NoError(t, err)
-	
+
 	// Verify version history
 	require.Len(t, versions, 3)
 	assert.Equal(t, int64(0), versions[0].Version)
 	assert.Equal(t, int64(1), versions[1].Version)
 	assert.Equal(t, int64(2), versions[2].Version)
-	
+
 	// Verify timestamps are in ascending order
 	assert.True(t, versions[0].Timestamp.Before(versions[1].Timestamp))
 	assert.True(t, versions[1].Timestamp.Before(versions[2].Timestamp))
@@ -72,7 +72,7 @@ func TestDeltaTimeTravel_ReadAsOfVersion(t *testing.T) {
 	// Create a mock Delta Lake table
 	deltaTableDir := filepath.Join(tempDir, "delta-table")
 	require.NoError(t, os.MkdirAll(deltaTableDir, 0755))
-	
+
 	// Create _delta_log directory
 	deltaLogDir := filepath.Join(deltaTableDir, "_delta_log")
 	require.NoError(t, os.MkdirAll(deltaLogDir, 0755))
@@ -80,7 +80,7 @@ func TestDeltaTimeTravel_ReadAsOfVersion(t *testing.T) {
 	// Create mock transaction log files
 	txnLogFile0 := filepath.Join(deltaLogDir, "00000000000000000000.json")
 	require.NoError(t, os.WriteFile(txnLogFile0, []byte(`{}`), 0644))
-	
+
 	txnLogFile1 := filepath.Join(deltaLogDir, "00000000000000000001.json")
 	require.NoError(t, os.WriteFile(txnLogFile1, []byte(`{}`), 0644))
 
@@ -119,7 +119,7 @@ func TestDeltaTimeTravel_ReadAsOfTimestamp(t *testing.T) {
 	// Create a mock Delta Lake table
 	deltaTableDir := filepath.Join(tempDir, "delta-table")
 	require.NoError(t, os.MkdirAll(deltaTableDir, 0755))
-	
+
 	// Create _delta_log directory
 	deltaLogDir := filepath.Join(deltaTableDir, "_delta_log")
 	require.NoError(t, os.MkdirAll(deltaLogDir, 0755))

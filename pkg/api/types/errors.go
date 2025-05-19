@@ -4,6 +4,6 @@ import "errors"
 
 // Common errors
 var (
-	ErrNotImplemented          = errors.New("not implemented")
+	ErrNotImplemented         = errors.New("not implemented")
 	ErrUnsupportedCatalogType = errors.New("unsupported catalog type")
 )

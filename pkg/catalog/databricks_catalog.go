@@ -162,10 +162,10 @@ func (c *DatabricksCatalog) IsTableExternal(ctx context.Context, database, table
 	if err != nil {
 		return false, err
 	}
-	
+
 	// Tables with locations outside of DBFS managed locations are external
-	return strings.HasPrefix(location, "s3://") || 
-		   strings.HasPrefix(location, "abfss://") || 
-		   strings.HasPrefix(location, "gs://") || 
-		   strings.HasPrefix(location, "dbfs:/mnt/"), nil
+	return strings.HasPrefix(location, "s3://") ||
+		strings.HasPrefix(location, "abfss://") ||
+		strings.HasPrefix(location, "gs://") ||
+		strings.HasPrefix(location, "dbfs:/mnt/"), nil
 }

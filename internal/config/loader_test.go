@@ -462,4 +462,4 @@ func TestGetDefaultConfig(t *testing.T) {
 	assert.True(t, config.Development.Docker.Enabled)
 	assert.Equal(t, "localhost:5000", config.Development.Docker.Registry)
 	assert.Equal(t, "latest", config.Development.Docker.Tag)
-} 
+}

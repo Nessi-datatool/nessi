@@ -18,7 +18,7 @@ type MetadataManager struct {
 	tablePath string
 	mutex     sync.RWMutex
 	cache     *DeltaTable // In-memory cache of the latest table metadata
-	versions  []int64    // Cached list of available versions
+	versions  []int64     // Cached list of available versions
 }
 
 // NewMetadataManager creates a new metadata manager
@@ -87,13 +87,13 @@ func (m *MetadataManager) ReadTableMetadata() (*DeltaTable, error) {
 
 	// Parse metadata
 	var metadata struct {
-		Version      int64                    `json:"version"`
-		Timestamp    int64                    `json:"timestamp"`
-		Schema       map[string]interface{}   `json:"schema"`
-		Files        []string                 `json:"files"`
-		Partitions   map[string][]string      `json:"partitions"`
-		Stats        *TableStats              `json:"stats"`
-		Metadata     map[string]interface{}   `json:"metadata"`
+		Version    int64                  `json:"version"`
+		Timestamp  int64                  `json:"timestamp"`
+		Schema     map[string]interface{} `json:"schema"`
+		Files      []string               `json:"files"`
+		Partitions map[string][]string    `json:"partitions"`
+		Stats      *TableStats            `json:"stats"`
+		Metadata   map[string]interface{} `json:"metadata"`
 	}
 
 	if err := json.Unmarshal(data, &metadata); err != nil {
@@ -219,13 +219,13 @@ func (m *MetadataManager) WriteTableMetadata(table *DeltaTable) error {
 	}
 
 	metadata := map[string]interface{}{
-		"version":      table.Version,
-		"timestamp":    table.LastModified.Unix(),
-		"schema":       map[string]interface{}{"fields": fields},
-		"files":        table.Files,
-		"partitions":   table.Partitions,
-		"stats":        table.Stats,
-		"metadata":     table.Metadata,
+		"version":    table.Version,
+		"timestamp":  table.LastModified.Unix(),
+		"schema":     map[string]interface{}{"fields": fields},
+		"files":      table.Files,
+		"partitions": table.Partitions,
+		"stats":      table.Stats,
+		"metadata":   table.Metadata,
 	}
 
 	// Convert to JSON
@@ -413,9 +413,9 @@ func (m *MetadataManager) RollbackToVersion(targetVersion int64, force bool) err
 
 	// Record rollback transaction
 	commitInfo := map[string]string{
-		"operation": "ROLLBACK",
+		"operation":     "ROLLBACK",
 		"targetVersion": fmt.Sprintf("%d", targetVersion),
-		"force": fmt.Sprintf("%t", force),
+		"force":         fmt.Sprintf("%t", force),
 	}
 
 	// Use the files from the target version
@@ -438,50 +438,50 @@ func (m *MetadataManager) RollbackToVersion(targetVersion int64, force bool) err
 	latestVersion := int64(len(versions))
 	logDir := filepath.Join(m.tablePath, "_delta_log")
 	logFile := filepath.Join(logDir, fmt.Sprintf("%020d.json", latestVersion))
-	
+
 	// Create rollback metadata
 	rollbackMetadata := map[string]interface{}{
-		"version":      latestVersion,
-		"timestamp":    time.Now().Unix(),
-		"schema":       schemaToMap(table.Schema),
-		"files":        table.Files,
-		"partitions":   table.Partitions,
-		"stats":        table.Stats,
-		"metadata":     table.Metadata,
+		"version":    latestVersion,
+		"timestamp":  time.Now().Unix(),
+		"schema":     schemaToMap(table.Schema),
+		"files":      table.Files,
+		"partitions": table.Partitions,
+		"stats":      table.Stats,
+		"metadata":   table.Metadata,
 	}
-	
+
 	// Convert to JSON
 	data, err := json.Marshal(rollbackMetadata)
 	if err != nil {
 		logger.Error("Failed to marshal rollback metadata", "error", err)
 		return fmt.Errorf("failed to marshal rollback metadata: %w", err)
 	}
-	
+
 	// Write to transaction log
 	err = os.WriteFile(logFile, data, 0644)
 	if err != nil {
 		logger.Error("Failed to write rollback log", "error", err)
 		return fmt.Errorf("failed to write rollback log: %w", err)
 	}
-	
+
 	// Create commit info
 	commitInfoFile := map[string]interface{}{
-		"timestamp":    time.Now().UnixMilli(),
-		"operation":    "ROLLBACK",
+		"timestamp": time.Now().UnixMilli(),
+		"operation": "ROLLBACK",
 		"operationParameters": map[string]string{
 			"targetVersion": fmt.Sprintf("%d", targetVersion),
 		},
-		"isBlindAppend": false,
+		"isBlindAppend":  false,
 		"isolationLevel": "Serializable",
 	}
-	
+
 	// Convert to JSON
 	commitData, err := json.Marshal(commitInfoFile)
 	if err != nil {
 		logger.Error("Failed to marshal commit info", "error", err)
 		return fmt.Errorf("failed to marshal commit info: %w", err)
 	}
-	
+
 	// Write commit info
 	commitFile := filepath.Join(logDir, fmt.Sprintf("%020d.commit.json", latestVersion))
 	err = os.WriteFile(commitFile, commitData, 0644)
@@ -526,13 +526,13 @@ func (m *MetadataManager) GetTableAtVersion(version int64) (*DeltaTable, error) 
 
 	// Parse metadata
 	var metadata struct {
-		Version      int64                    `json:"version"`
-		Timestamp    int64                    `json:"timestamp"`
-		Schema       map[string]interface{}   `json:"schema"`
-		Files        []string                 `json:"files"`
-		Partitions   map[string][]string      `json:"partitions"`
-		Stats        *TableStats              `json:"stats"`
-		Metadata     map[string]interface{}   `json:"metadata"`
+		Version    int64                  `json:"version"`
+		Timestamp  int64                  `json:"timestamp"`
+		Schema     map[string]interface{} `json:"schema"`
+		Files      []string               `json:"files"`
+		Partitions map[string][]string    `json:"partitions"`
+		Stats      *TableStats            `json:"stats"`
+		Metadata   map[string]interface{} `json:"metadata"`
 	}
 
 	if err := json.Unmarshal(data, &metadata); err != nil {

@@ -5,10 +5,6 @@ import (
 	"time"
 )
 
-
-
-
-
 // GenerateQualityScore generates a quality score from validation results
 func GenerateQualityScore(results *ValidationResults) float64 {
 	if results.Summary.TotalRules == 0 {
@@ -18,9 +14,6 @@ func GenerateQualityScore(results *ValidationResults) float64 {
 	// Basic quality score: percentage of passed rules
 	return float64(results.Summary.PassedRules) / float64(results.Summary.TotalRules) * 100.0
 }
-
-
-
 
 // ScoreData represents a quality score at a point in time
 type ScoreData struct {
@@ -40,4 +33,3 @@ func StoreQualityScore(modelName string, score float64) error {
 
 	return nil
 }
-

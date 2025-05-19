@@ -18,11 +18,11 @@ import (
 // Config represents the monitoring configuration
 type Config struct {
 	Alerts struct {
-		Enabled           bool
-		Thresholds        map[string]AlertThreshold
-		SilencePeriod     time.Duration
-		CooldownPeriod    time.Duration
-		CheckInterval     time.Duration
+		Enabled              bool
+		Thresholds           map[string]AlertThreshold
+		SilencePeriod        time.Duration
+		CooldownPeriod       time.Duration
+		CheckInterval        time.Duration
 		NotificationChannels []string `json:"notification_channels"`
 	} `json:"alerts"`
 	Metrics struct {
@@ -30,8 +30,8 @@ type Config struct {
 		Port    int
 	} `json:"metrics"`
 	Notifications struct {
-		Slack *SlackNotificationConfig
-		Email *EmailNotificationConfig
+		Slack   *SlackNotificationConfig
+		Email   *EmailNotificationConfig
 		Webhook *WebhookNotificationConfig
 	} `json:"notifications"`
 	Retention struct {
@@ -54,25 +54,25 @@ type AlertThreshold struct {
 
 // AlertState represents alert states
 const (
-	AlertStateOK        = "OK"
-	AlertStateWarning   = "WARNING"
-	AlertStateCritical  = "CRITICAL"
+	AlertStateOK       = "OK"
+	AlertStateWarning  = "WARNING"
+	AlertStateCritical = "CRITICAL"
 )
 
 // AlertConfig represents alert configuration
 type AlertConfig struct {
-	Thresholds        map[string]AlertThreshold
-	SilencePeriod     time.Duration
+	Thresholds           map[string]AlertThreshold
+	SilencePeriod        time.Duration
 	NotificationChannels []string
 }
 
 // Alert represents a monitoring alert
 type Alert struct {
-	Name        string
-	Severity    string
-	Message     string
-	Timestamp   time.Time
-	Metadata    map[string]string
+	Name      string
+	Severity  string
+	Message   string
+	Timestamp time.Time
+	Metadata  map[string]string
 }
 
 // Monitor struct is defined in monitor.go
@@ -86,11 +86,10 @@ func NewMonitoringSystem() (*Monitor, error) {
 		config = defaultConfig()
 	}
 
-
 	// Create monitor
 	m := &Monitor{
 		metricsPort: config.Metrics.Port,
-		config: config,
+		config:      config,
 	}
 
 	// Initialize metric store
@@ -99,14 +98,13 @@ func NewMonitoringSystem() (*Monitor, error) {
 	// Initialize metric retention if enabled
 	if config.Retention.Enabled {
 		retentionConfig := RetentionConfig{
-			Enabled: true,
-			StoragePath: config.Retention.StoragePath,
-			RetentionPeriod: config.Retention.RetentionPeriod,
+			Enabled:          true,
+			StoragePath:      config.Retention.StoragePath,
+			RetentionPeriod:  config.Retention.RetentionPeriod,
 			SnapshotInterval: config.Retention.SnapshotInterval,
 		}
 		m.metricRetention = NewMetricRetention(retentionConfig)
 	}
-
 
 	// Initialize security components if enabled
 	if config.Security.Auth.Enabled {
@@ -136,12 +134,11 @@ func (m *Monitor) updateConfig(config *Config) error {
 	// Update metrics config
 	m.config.Metrics = config.Metrics
 
-
 	// Update retention config
 	if m.metricRetention != nil && config.Retention.Enabled {
 		// Stop existing retention service if running
 		m.metricRetention.Stop()
-		
+
 		// Create new retention service with updated config
 		retentionConfig := RetentionConfig{
 			Enabled:          config.Retention.Enabled,
@@ -150,7 +147,7 @@ func (m *Monitor) updateConfig(config *Config) error {
 			SnapshotInterval: config.Retention.SnapshotInterval,
 		}
 		m.metricRetention = NewMetricRetention(retentionConfig)
-		
+
 		// Start retention service if monitor is running
 		if m.running {
 			if err := m.metricRetention.Start(); err != nil {
@@ -233,13 +230,12 @@ func (m *Monitor) watchConfig() error {
 	}
 }
 
-
 // Metrics represents various monitoring metrics
 type Metrics struct {
-	TableSize     *prometheus.GaugeVec
-	RecordCount   *prometheus.GaugeVec
-	ErrorCount    *prometheus.CounterVec
-	Latency       *prometheus.HistogramVec
+	TableSize      *prometheus.GaugeVec
+	RecordCount    *prometheus.GaugeVec
+	ErrorCount     *prometheus.CounterVec
+	Latency        *prometheus.HistogramVec
 	RuleViolations *prometheus.CounterVec
 }
 
@@ -299,7 +295,7 @@ func (m *Monitor) RecordTableMetrics(tableName string, records []map[string]inte
 	// Record metrics using the metricStore
 	m.metricStore.RecordMetric("table_size_"+tableName, size)
 	m.metricStore.RecordMetric("record_count_"+tableName, float64(count))
-	
+
 	// Record metrics in retention system if enabled
 	if m.config.Retention.Enabled && m.metricRetention != nil {
 		labels := map[string]string{"table_name": tableName}
@@ -311,7 +307,7 @@ func (m *Monitor) RecordTableMetrics(tableName string, records []map[string]inte
 // RecordError records an error metric
 func (m *Monitor) RecordError(tableName, errorType string) {
 	m.metricStore.RecordMetric("error_count_"+tableName, 1.0)
-	
+
 	// Record error in retention system if enabled
 	if m.config.Retention.Enabled && m.metricRetention != nil {
 		labels := map[string]string{
@@ -325,7 +321,7 @@ func (m *Monitor) RecordError(tableName, errorType string) {
 // RecordLatency records operation latency
 func (m *Monitor) RecordLatency(operation string, duration time.Duration) {
 	m.metricStore.RecordMetric("latency_"+operation, duration.Seconds())
-	
+
 	// Record latency in retention system if enabled
 	if m.config.Retention.Enabled && m.metricRetention != nil {
 		labels := map[string]string{"operation": operation}
@@ -340,12 +336,12 @@ func (m *Monitor) RecordRuleViolation(tableName, ruleName string) {
 	}
 
 	m.metricStore.RecordMetric("rule_violations_"+ruleName+"_"+tableName, 1.0)
-	
+
 	// Record rule violation in retention system if enabled
 	if m.config.Retention.Enabled && m.metricRetention != nil {
 		labels := map[string]string{
 			"table_name": tableName,
-			"rule_name": ruleName,
+			"rule_name":  ruleName,
 		}
 		m.metricRetention.RecordMetric("rule_violations", "Number of rule violations", MetricTypeCounter, 1.0, labels)
 	}
@@ -374,11 +370,11 @@ func (m *Monitor) Start() {
 	if m.authManager != nil {
 		// Protected routes
 		router.Handle("/metrics/history", m.authManager.AuthMiddleware(http.HandlerFunc(m.metricsHistory)))
-		
+
 		// Add authentication endpoints
 		router.HandleFunc("/auth/login", m.handleLogin)
 		router.HandleFunc("/auth/refresh", m.handleRefreshToken)
-		
+
 		// Admin routes
 		router.Handle("/admin/users", m.authManager.RoleMiddleware(security.RoleAdmin)(http.HandlerFunc(m.handleUsers)))
 	} else {
@@ -391,7 +387,7 @@ func (m *Monitor) Start() {
 		go func() {
 			addr := fmt.Sprintf(":%d", m.config.Metrics.Port)
 			logging.Info(fmt.Sprintf("Starting metrics server on port %d", m.config.Metrics.Port))
-			
+
 			// Use SSL if enabled
 			if m.certManager != nil && m.config.Security.SSL.Enabled {
 				logging.Info("Starting HTTPS server")
@@ -448,7 +444,6 @@ func (m *Monitor) healthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }
 
-
 // metricsHistory handles metrics history requests
 func (m *Monitor) metricsHistory(w http.ResponseWriter, r *http.Request) {
 	if !m.config.Retention.Enabled || m.metricRetention == nil {
@@ -456,7 +451,7 @@ func (m *Monitor) metricsHistory(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Metric retention is not enabled"))
 		return
 	}
-	
+
 	// Parse query parameters
 	query := r.URL.Query()
 	metricName := query.Get("metric")
@@ -465,23 +460,23 @@ func (m *Monitor) metricsHistory(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Missing metric parameter"))
 		return
 	}
-	
+
 	// Parse time range
 	start := time.Now().Add(-24 * time.Hour) // Default to last 24 hours
 	end := time.Now()
-	
+
 	if startStr := query.Get("start"); startStr != "" {
 		if startTime, err := time.Parse(time.RFC3339, startStr); err == nil {
 			start = startTime
 		}
 	}
-	
+
 	if endStr := query.Get("end"); endStr != "" {
 		if endTime, err := time.Parse(time.RFC3339, endStr); err == nil {
 			end = endTime
 		}
 	}
-	
+
 	// Parse labels
 	labels := make(map[string]string)
 	for key, values := range query {
@@ -489,7 +484,7 @@ func (m *Monitor) metricsHistory(w http.ResponseWriter, r *http.Request) {
 			labels[key] = values[0]
 		}
 	}
-	
+
 	// Get metric history
 	history, err := m.metricRetention.GetMetricHistory(metricName, labels, start, end)
 	if err != nil {
@@ -497,7 +492,7 @@ func (m *Monitor) metricsHistory(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fmt.Sprintf("Failed to get metric history: %v", err)))
 		return
 	}
-	
+
 	// Return history as JSON
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(history)

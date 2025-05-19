@@ -232,13 +232,13 @@ func (r *DeltaTableReader) ValidateRule(tablePath string, rule *Rule) (*Validati
 
 // DeltaTableInfo contains information about a Delta table
 type DeltaTableInfo struct {
-	Path        string           `json:"path"`
-	Version     int64            `json:"version"`
-	Format      string           `json:"format"`
-	NumFiles    int              `json:"num_files"`
-	SizeBytes   int64            `json:"size_bytes"`
-	NumRows     int64            `json:"num_rows"`
-	LastUpdated time.Time        `json:"last_updated"`
+	Path        string            `json:"path"`
+	Version     int64             `json:"version"`
+	Format      string            `json:"format"`
+	NumFiles    int               `json:"num_files"`
+	SizeBytes   int64             `json:"size_bytes"`
+	NumRows     int64             `json:"num_rows"`
+	LastUpdated time.Time         `json:"last_updated"`
 	Schema      []DeltaColumnInfo `json:"schema"`
 }
 

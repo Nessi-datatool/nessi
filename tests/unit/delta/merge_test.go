@@ -28,7 +28,7 @@ func TestMergeOperation(t *testing.T) {
 	targetPath := filepath.Join(tempDir, "target_table")
 	require.NoError(t, os.MkdirAll(targetPath, 0755))
 	require.NoError(t, os.MkdirAll(filepath.Join(targetPath, "_delta_log"), 0755)) // Create _delta_log dir
-	
+
 	// Create a target log file with proper schema information
 	targetLogEntry := map[string]interface{}{
 		"metaData": map[string]interface{}{
@@ -47,7 +47,7 @@ func TestMergeOperation(t *testing.T) {
 				]
 			}`,
 			"partitionColumns": []string{},
-			"createdTime": time.Now().UnixMilli(),
+			"createdTime":      time.Now().UnixMilli(),
 		},
 		"protocol": map[string]interface{}{
 			"minReaderVersion": 1,
@@ -60,12 +60,12 @@ func TestMergeOperation(t *testing.T) {
 	require.NoError(t, os.WriteFile(targetFile, targetLogData, 0644))
 	connector, err := delta.NewConnector(targetPath)
 	require.NoError(t, err, "NewConnector should not fail")
-	
+
 	// Initialize Delta connector for source table
 	sourcePath := filepath.Join(tempDir, "source_table")
 	require.NoError(t, os.MkdirAll(sourcePath, 0755))
 	require.NoError(t, os.MkdirAll(filepath.Join(sourcePath, "_delta_log"), 0755)) // Create _delta_log dir
-	
+
 	// Create a source file in the source table directory with proper schema information
 	sourceLogEntry := map[string]interface{}{
 		"metaData": map[string]interface{}{
@@ -84,7 +84,7 @@ func TestMergeOperation(t *testing.T) {
 				]
 			}`,
 			"partitionColumns": []string{},
-			"createdTime": time.Now().UnixMilli(),
+			"createdTime":      time.Now().UnixMilli(),
 		},
 		"protocol": map[string]interface{}{
 			"minReaderVersion": 1,
@@ -143,18 +143,18 @@ func TestMergeOperation(t *testing.T) {
 
 	sourceRecord := sourceBuilder.NewRecord()
 	defer sourceRecord.Release()
-	
+
 	// Now create a source connector to write our source data
 	sourceConnector, err := delta.NewConnector(sourcePath)
 	require.NoError(t, err, "Source connector creation should not fail")
-	
+
 	// Set the schema for the source connector
 	sourceConnector.Schema = sourceSchema
-	
+
 	// Initialize the source connector
 	err = sourceConnector.Initialize()
 	require.NoError(t, err, "Source Initialize should not fail")
-	
+
 	// Write source data to the source table
 	require.NoError(t, sourceConnector.WritePartition(context.Background(), "", sourceRecord), "Writing source data should not fail")
 
@@ -206,10 +206,10 @@ func TestMergeOperation(t *testing.T) {
 			{
 				Type: "insert",
 				Values: map[string]string{
-					"id":        "source.id",
-					"name":      "source.name",
-					"value":     "source.value",
-					"active":    "source.active",
+					"id":         "source.id",
+					"name":       "source.name",
+					"value":      "source.value",
+					"active":     "source.active",
 					"updated_at": "source.updated_at",
 				},
 			},
@@ -238,7 +238,7 @@ func TestMergeOperation(t *testing.T) {
 	// We'll check that we have the expected number of rows
 	expectedIDs := map[int64]bool{1: true, 2: true, 3: true, 4: true}
 	expectedIDsCount := 0
-	
+
 	// Count how many of our expected IDs are present in the result
 	for id := range expectedIDs {
 		idx := findRowIndex(mergedRecord, "id", id)
@@ -246,10 +246,10 @@ func TestMergeOperation(t *testing.T) {
 			expectedIDsCount++
 		}
 	}
-	
+
 	// Ensure we have all expected rows (might be in different order)
 	assert.Equal(t, 3, expectedIDsCount, "Should find 3 rows with expected IDs")
-	
+
 	// Also verify we have the expected total number of rows
 	assert.Equal(t, 3, int(mergedRecord.NumRows()), "Should have 3 total rows after merge")
 

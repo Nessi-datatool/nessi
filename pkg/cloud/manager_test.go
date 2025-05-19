@@ -79,13 +79,13 @@ func (m *MockCloudProviderFactory) Create(config common.CloudConfig) (common.Clo
 func TestCloudManager_RegisterFactory(t *testing.T) {
 	// Create a new CloudManager
 	manager := NewCloudManager()
-	
+
 	// Create a mock factory
 	factory := new(MockCloudProviderFactory)
-	
+
 	// Register the provider
 	manager.RegisterProvider("test", factory)
-	
+
 	// Verify that the factory was registered
 	assert.Contains(t, manager.factories, "test")
 	assert.Equal(t, factory, manager.factories["test"])
@@ -98,11 +98,11 @@ func TestCloudManager_CreateProvider(t *testing.T) {
 	t.Skip("Skipping test that requires updating")
 	// Create a new CloudManager
 	manager := NewCloudManager()
-	
+
 	// Create a mock factory and provider
 	factory := new(MockCloudProviderFactory)
 	provider := new(MockCloudProvider)
-	
+
 	// Set up expectations
 	config := common.CloudConfig{
 		Provider: "test",
@@ -114,16 +114,16 @@ func TestCloudManager_CreateProvider(t *testing.T) {
 		},
 		DefaultBucket: "test-bucket",
 	}
-	
+
 	factory.On("Create", config).Return(provider, nil)
 	provider.On("Name").Return("test")
-	
+
 	// Register the provider
 	manager.RegisterProvider("test", factory)
-	
+
 	// Create a provider
 	createdProvider, err := manager.CreateProvider("test-provider", config)
-	
+
 	// Verify expectations
 	assert.NoError(t, err)
 	assert.Equal(t, provider, createdProvider)
@@ -137,16 +137,16 @@ func TestCloudManager_CreateProvider(t *testing.T) {
 func TestCloudManager_GetProvider(t *testing.T) {
 	// Create a new CloudManager
 	manager := NewCloudManager()
-	
+
 	// Create a mock provider
 	provider := new(MockCloudProvider)
-	
+
 	// Add the provider to the manager
 	manager.providers["test-provider"] = provider
-	
+
 	// Get the provider
 	retrievedProvider, exists := manager.GetProvider("test-provider")
-	
+
 	// Verify expectations
 	assert.True(t, exists)
 	assert.Equal(t, provider, retrievedProvider)
@@ -156,10 +156,10 @@ func TestCloudManager_GetProvider(t *testing.T) {
 func TestCloudManager_GetProvider_NotFound(t *testing.T) {
 	// Create a new CloudManager
 	manager := NewCloudManager()
-	
+
 	// Get a non-existent provider
 	retrievedProvider, exists := manager.GetProvider("non-existent")
-	
+
 	// Verify expectations
 	assert.False(t, exists)
 	assert.Nil(t, retrievedProvider)
@@ -172,22 +172,22 @@ func TestCloudManager_ListProviders(t *testing.T) {
 	t.Skip("Skipping test that requires updating")
 	// Create a new CloudManager
 	manager := NewCloudManager()
-	
+
 	// Create mock providers
 	provider1 := new(MockCloudProvider)
 	provider2 := new(MockCloudProvider)
-	
+
 	// Set up expectations
 	provider1.On("Name").Return("test1")
 	provider2.On("Name").Return("test2")
-	
+
 	// Add the providers to the manager
 	manager.providers["provider1"] = provider1
 	manager.providers["provider2"] = provider2
-	
+
 	// List the providers
 	providers := manager.ListProviders()
-	
+
 	// Verify expectations
 	assert.Len(t, providers, 2)
 	assert.Contains(t, providers, "provider1")
@@ -200,19 +200,19 @@ func TestCloudManager_ListProviders(t *testing.T) {
 func TestCloudManager_RemoveProvider(t *testing.T) {
 	// Create a new CloudManager
 	manager := NewCloudManager()
-	
+
 	// Create a mock provider
 	provider := new(MockCloudProvider)
-	
+
 	// Set up expectations
 	provider.On("Disconnect", mock.Anything).Return(nil)
-	
+
 	// Add the provider to the manager
 	manager.providers["test-provider"] = provider
-	
+
 	// Remove the provider
 	err := manager.RemoveProvider("test-provider")
-	
+
 	// Verify expectations
 	assert.NoError(t, err)
 	assert.NotContains(t, manager.providers, "test-provider")
@@ -223,10 +223,10 @@ func TestCloudManager_RemoveProvider(t *testing.T) {
 func TestCloudManager_RemoveProvider_NotFound(t *testing.T) {
 	// Create a new CloudManager
 	manager := NewCloudManager()
-	
+
 	// Remove a non-existent provider
 	err := manager.RemoveProvider("non-existent")
-	
+
 	// Verify expectations
 	assert.Error(t, err)
 }
@@ -236,22 +236,22 @@ func TestCloudManager_Close(t *testing.T) {
 	t.Skip("Skipping test that requires updating")
 	// Create a new CloudManager
 	manager := NewCloudManager()
-	
+
 	// Create mock providers
 	provider1 := new(MockCloudProvider)
 	provider2 := new(MockCloudProvider)
-	
+
 	// Set up expectations
 	provider1.On("Disconnect", mock.Anything).Return(nil)
 	provider2.On("Disconnect", mock.Anything).Return(nil)
-	
+
 	// Add the providers to the manager
 	manager.providers["provider1"] = provider1
 	manager.providers["provider2"] = provider2
-	
+
 	// Shutdown the manager
 	err := manager.Shutdown()
-	
+
 	// Verify expectations
 	assert.NoError(t, err)
 	assert.Empty(t, manager.providers)

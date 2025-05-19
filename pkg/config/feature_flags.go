@@ -56,13 +56,13 @@ func (m *FeatureFlagManager) GetFlag(flag FeatureFlag) bool {
 func (m *FeatureFlagManager) ListFlags() map[FeatureFlag]bool {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	// Create a copy to avoid race conditions
 	flags := make(map[FeatureFlag]bool)
 	for k, v := range m.flags {
 		flags[k] = v
 	}
-	
+
 	return flags
 }
 
@@ -75,12 +75,12 @@ func (m *FeatureFlagManager) IsEnabled(flag FeatureFlag) bool {
 func (m *FeatureFlagManager) LoadFromConfig(config map[string]interface{}) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	featureFlags, ok := config["feature_flags"].(map[string]interface{})
 	if !ok {
 		return fmt.Errorf("feature_flags configuration not found or invalid")
 	}
-	
+
 	for flagName, enabled := range featureFlags {
 		enabledBool, ok := enabled.(bool)
 		if !ok {
@@ -88,7 +88,7 @@ func (m *FeatureFlagManager) LoadFromConfig(config map[string]interface{}) error
 		}
 		m.flags[FeatureFlag(flagName)] = enabledBool
 	}
-	
+
 	return nil
 }
 
@@ -96,12 +96,12 @@ func (m *FeatureFlagManager) LoadFromConfig(config map[string]interface{}) error
 func (m *FeatureFlagManager) SaveToConfig() map[string]interface{} {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	featureFlags := make(map[string]interface{})
 	for flag, enabled := range m.flags {
 		featureFlags[string(flag)] = enabled
 	}
-	
+
 	return map[string]interface{}{
 		"feature_flags": featureFlags,
 	}

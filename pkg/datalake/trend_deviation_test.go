@@ -142,7 +142,7 @@ func TestTrendDeviation(t *testing.T) {
 	})
 
 	// Create metrics for run 0 (baseline) and run 1 for multiple previous runs test
-	createMockRunMetrics(t, metricsDir, "numeric_multi", 0, 200.0, 100.0, 100.0, 300.0) // Oldest run
+	createMockRunMetrics(t, metricsDir, "numeric_multi", 0, 200.0, 100.0, 100.0, 300.0)  // Oldest run
 	createMockRunMetrics(t, metricsDir, "numeric_multi", 1, 250.0, 141.42, 100.0, 400.0) // Previous run
 
 	// Test analyzing trend deviation with multiple previous runs
@@ -173,7 +173,7 @@ func TestTrendDeviation(t *testing.T) {
 			if assert.NotNil(t, meanMetric) {
 				assert.InDelta(t, 300.0, meanMetric.CurrentValue, 0.1)
 				assert.InDelta(t, 20.0, meanMetric.PercentageChange, 1.0) // 20% increase from previous run
-				
+
 				// Check if Z-score is calculated
 				if len(meanMetric.PreviousValues) > 1 {
 					assert.True(t, meanMetric.ZScore != 0, "Z-score should be calculated")
@@ -186,7 +186,7 @@ func TestTrendDeviation(t *testing.T) {
 			if assert.NotNil(t, maxMetric) {
 				assert.InDelta(t, 500.0, maxMetric.CurrentValue, 0.1)
 				assert.InDelta(t, 25.0, maxMetric.PercentageChange, 1.0) // 25% increase from previous run
-				
+
 				// Check if Z-score is calculated
 				if len(maxMetric.PreviousValues) > 1 {
 					assert.True(t, maxMetric.ZScore != 0, "Z-score should be calculated")
@@ -217,7 +217,7 @@ func TestTrendDeviation(t *testing.T) {
 			Metrics: map[string]map[string]float64{
 				"null_field": {
 					string(NullPercentage): 80.0, // 4 out of 5 are null
-					string(RecordCount):   5.0,
+					string(RecordCount):    5.0,
 				},
 			},
 		}

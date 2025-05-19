@@ -262,26 +262,26 @@ func TestPatternDetector(t *testing.T) {
 		// Create data with some noise and a trend
 		now := time.Now()
 		data := make([]TimeSeriesDataPoint, 30)
-		
+
 		// Base trend with some noise
 		for i := 0; i < 30; i++ {
 			// Base value with linear trend - increased slope for more obvious trend
 			value := 1000.0 + float64(i)*30.0
-			
+
 			// Add some noise (±3%) - reduced noise
 			noise := value * (0.03 * (float64(i%3) - 1.0))
 			value += noise
-			
+
 			// Add a spike around index 15
 			if i >= 14 && i <= 16 {
 				value *= 1.3 // 30% spike
 			}
-			
+
 			// Add a dip around index 25
 			if i >= 24 && i <= 26 {
 				value *= 0.7 // 30% dip
 			}
-			
+
 			data[i] = TimeSeriesDataPoint{
 				Timestamp: now.Add(time.Duration(i) * time.Hour),
 				Value:     value,

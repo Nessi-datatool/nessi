@@ -2,24 +2,18 @@ package dashboard
 
 import (
 	"github.com/nessi-dev/nessi/pkg/monitoring"
-
 )
 
 // mockMonitor implements a minimal mock for the monitoring.Monitor interface
 // that can be used in tests
 type mockMonitor struct {
-	metricsPort  int
-
+	metricsPort int
 }
 
 // GetMetricsPort returns the metrics port
 func (m *mockMonitor) GetMetricsPort() int {
 	return m.metricsPort
 }
-
-
-
-
 
 // RecordMetric implements the Monitor interface
 func (m *mockMonitor) RecordMetric(name string, value float64, labels map[string]string) {

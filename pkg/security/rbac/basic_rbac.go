@@ -12,17 +12,17 @@ type BasicRole string
 const (
 	// AdminRole has full access to all resources
 	AdminRole BasicRole = "admin"
-	
+
 	// UserRole has limited access to resources
 	UserRole BasicRole = "user"
-	
+
 	// ReadOnlyRole has read-only access to resources
 	ReadOnlyRole BasicRole = "readonly"
 )
 
 // BasicRBACManager implements a simplified version of the RBACManager interface
 type BasicRBACManager struct {
-	mu       sync.RWMutex
+	mu        sync.RWMutex
 	userRoles map[string]BasicRole
 }
 
@@ -52,26 +52,26 @@ func (m *BasicRBACManager) GetUserRole(username string) (BasicRole, bool) {
 func (m *BasicRBACManager) CheckAccess(username, resource, action string) bool {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	role, exists := m.userRoles[username]
 	if !exists {
 		return false
 	}
-	
+
 	// Admin has access to everything
 	if role == AdminRole {
 		return true
 	}
-	
+
 	// User has access to most things except admin actions
 	if role == UserRole {
 		return action != "admin" && action != "delete"
 	}
-	
+
 	// ReadOnly has access only to read actions
 	if role == ReadOnlyRole {
 		return action == "read" || action == "view"
 	}
-	
+
 	return false
 }

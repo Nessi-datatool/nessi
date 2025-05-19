@@ -20,6 +20,6 @@ type EmailNotificationConfig struct {
 // WebhookNotificationConfig represents webhook notification configuration
 type WebhookNotificationConfig struct {
 	URL     string            `json:"url"`
-	Method  string           `json:"method"`
+	Method  string            `json:"method"`
 	Headers map[string]string `json:"headers"`
 }

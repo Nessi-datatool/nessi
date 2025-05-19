@@ -48,7 +48,7 @@ func TestDeltaTimeTravel(t *testing.T) {
 }
 
 // stubMetadataManager is a stub implementation of MetadataManager for testing
-type stubMetadataManager struct {}
+type stubMetadataManager struct{}
 
 // TimeTravel returns a stub result for testing
 func (s *stubMetadataManager) TimeTravel(options DeltaTimeTravelOptions) (*TimeTravelResult, error) {
@@ -91,7 +91,7 @@ func initializeTestTable(tablePath string) error {
 	tx0Content := `{"metaData":{"id":"test-table-id","format":{"provider":"parquet"},"schemaString":"{\"type\":\"struct\",\"fields\":[{\"name\":\"id\",\"type\":\"integer\",\"nullable\":false},{\"name\":\"name\",\"type\":\"string\",\"nullable\":true},{\"name\":\"created_at\",\"type\":\"timestamp\",\"nullable\":false}]}","partitionColumns":[]}}
 {"add":[{"path":"part-00000.parquet","size":1024,"modificationTime":1609459200000,"dataChange":true}]}
 {"commitInfo":{"timestamp":1609459200000,"operation":"WRITE","operationParameters":{"mode":"Overwrite"},"isBlindAppend":true}}`
-	
+
 	// Split into separate lines to ensure each line is a valid JSON object
 	lines := strings.Split(tx0Content, "\n")
 	var formattedContent strings.Builder

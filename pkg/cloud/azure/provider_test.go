@@ -22,10 +22,10 @@ func TestAzureProvider_ListBuckets(t *testing.T) {
 	provider := NewAzureProvider()
 	provider.connected = true
 	provider.accountName = "testaccount"
-	
+
 	// Call ListBuckets
 	buckets, err := provider.ListBuckets(context.Background())
-	
+
 	// Assert expectations
 	assert.NoError(t, err)
 	assert.Len(t, buckets, 2)
@@ -39,10 +39,10 @@ func TestAzureProvider_ListObjects(t *testing.T) {
 	provider := NewAzureProvider()
 	provider.connected = true
 	provider.accountName = "testaccount"
-	
+
 	// Call ListObjects
 	objects, err := provider.ListObjects(context.Background(), "container1", "")
-	
+
 	// Assert expectations
 	assert.NoError(t, err)
 	assert.Len(t, objects, 2)
@@ -57,7 +57,7 @@ func TestAzureProvider_ListObjects(t *testing.T) {
 func TestAzureProviderFactory_Create(t *testing.T) {
 	// Create a factory
 	factory := &AzureProviderFactory{}
-	
+
 	// Create test config
 	config := common.CloudConfig{
 		Provider: "azure",
@@ -66,10 +66,10 @@ func TestAzureProviderFactory_Create(t *testing.T) {
 		},
 		DefaultBucket: "test-container",
 	}
-	
+
 	// Test creating a provider
 	provider, err := factory.Create(config)
-	
+
 	// We should not get an error with our simplified implementation
 	assert.NoError(t, err)
 	assert.NotNil(t, provider)

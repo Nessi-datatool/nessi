@@ -52,8 +52,8 @@ func NewLineageGraph(manifest *DBTManifest) (*LineageGraph, error) {
 			if id != otherId {
 				// Simple heuristic: if this node's name starts with the other node's name,
 				// it might be a child of that node
-				if len(node.Name) > len(otherNode.Name) && 
-				   node.Name[:len(otherNode.Name)] == otherNode.Name {
+				if len(node.Name) > len(otherNode.Name) &&
+					node.Name[:len(otherNode.Name)] == otherNode.Name {
 					node.Parents = append(node.Parents, otherNode)
 					otherNode.Children = append(otherNode.Children, node)
 				}

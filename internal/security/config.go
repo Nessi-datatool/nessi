@@ -54,7 +54,7 @@ type SecurityConfig struct {
 	RateLimit struct {
 		Enabled           bool `yaml:"enabled"`
 		RequestsPerMinute int  `yaml:"requests_per_minute"`
-		Burst            int  `yaml:"burst"`
+		Burst             int  `yaml:"burst"`
 	} `yaml:"rate_limit"`
 
 	IPAllowlist struct {
@@ -70,24 +70,24 @@ type SecurityConfig struct {
 
 	SecurityHeaders struct {
 		Enabled bool `yaml:"enabled"`
-		HSTS   struct {
+		HSTS    struct {
 			Enabled           bool `yaml:"enabled"`
-			MaxAge           int  `yaml:"max_age"`
+			MaxAge            int  `yaml:"max_age"`
 			IncludeSubdomains bool `yaml:"include_subdomains"`
-			Preload          bool `yaml:"preload"`
+			Preload           bool `yaml:"preload"`
 		} `yaml:"hsts"`
 		ContentSecurityPolicy struct {
-			Enabled     bool   `yaml:"enabled"`
-			DefaultSrc  string `yaml:"default_src"`
-			ScriptSrc   string `yaml:"script_src"`
-			StyleSrc    string `yaml:"style_src"`
-			ImgSrc      string `yaml:"img_src"`
-			ConnectSrc  string `yaml:"connect_src"`
+			Enabled    bool   `yaml:"enabled"`
+			DefaultSrc string `yaml:"default_src"`
+			ScriptSrc  string `yaml:"script_src"`
+			StyleSrc   string `yaml:"style_src"`
+			ImgSrc     string `yaml:"img_src"`
+			ConnectSrc string `yaml:"connect_src"`
 		} `yaml:"content_security_policy"`
 		XContentTypeOptions string `yaml:"x_content_type_options"`
-		XFrameOptions      string `yaml:"x_frame_options"`
-		XXSSProtection     string `yaml:"x_xss_protection"`
-		ReferrerPolicy     string `yaml:"referrer_policy"`
+		XFrameOptions       string `yaml:"x_frame_options"`
+		XXSSProtection      string `yaml:"x_xss_protection"`
+		ReferrerPolicy      string `yaml:"referrer_policy"`
 	} `yaml:"security_headers"`
 }
 
@@ -238,4 +238,4 @@ func (m *SecurityManager) GetSecurityHeaders() map[string]string {
 	}
 
 	return headers
-} 
+}

@@ -23,13 +23,13 @@ func ShouldSkipIntegrationTests(t *testing.T) bool {
 		t.Skip("Skipping integration test in short mode")
 		return true
 	}
-	
+
 	// Check for environment variable to skip integration tests
 	if os.Getenv("SKIP_INTEGRATION_TESTS") == "1" {
 		t.Skip("Skipping integration test due to SKIP_INTEGRATION_TESTS=1")
 		return true
 	}
-	
+
 	return false
 }
 
@@ -98,13 +98,13 @@ func RunTestWithContext(t *testing.T, testFunc func(ctx context.Context)) {
 // Instead, either use this function OR call t.Parallel() directly, but not both.
 func RunInParallel(t *testing.T) {
 	t.Helper() // Mark as test helper for better error reporting
-	
+
 	// Check if this function is being called from a test that might also call t.Parallel()
 	t.Log("WARNING: Using testutil.RunInParallel() - do not also call t.Parallel() directly in the same test")
-	
+
 	// Mark the test as parallel
 	t.Parallel()
-	
+
 	// Note: This doesn't actually run the test, just marks it as parallel
 	// You should use RunWithTimeout or RunTestWithContext after this
 }

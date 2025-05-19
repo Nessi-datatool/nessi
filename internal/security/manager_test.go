@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 	"time"
-	
+
 	"golang.org/x/time/rate"
 )
 
@@ -122,10 +122,10 @@ func TestSecurityManager(t *testing.T) {
 		// Create test request
 		req := httptest.NewRequest("GET", "/", nil)
 		req.RemoteAddr = "192.168.1.1:12345"
-		
+
 		// Ensure the IP is allowed for this test
 		manager.AddToAllowlist("192.168.1.1")
-		
+
 		// Test without token - should fail with Unauthorized
 		w := httptest.NewRecorder()
 		manager.Middleware(handler).ServeHTTP(w, req)
@@ -162,4 +162,4 @@ func TestTLSConfig(t *testing.T) {
 
 	// Note: To test with real certificates, you would need to generate them first
 	// This is just a basic test to ensure the function handles errors properly
-} 
+}

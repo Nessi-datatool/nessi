@@ -2,7 +2,7 @@ package mocks
 
 import (
 	"bytes"
-	
+
 	"github.com/spf13/cobra"
 )
 

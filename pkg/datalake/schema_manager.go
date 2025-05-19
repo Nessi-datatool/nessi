@@ -15,21 +15,21 @@ import (
 
 // DeltaSchemaManager handles Delta Lake schema operations with caching and thread safety
 type DeltaSchemaManager struct {
-	tablePath      string
-	metaDir        string
-	mutex          sync.RWMutex
-	historyCache   *SchemaHistory // Cache for schema history
-	currentCache   *SchemaVersion // Cache for current schema
-	versionCache   map[int64]*SchemaVersion // Cache for schema versions by version number
+	tablePath    string
+	metaDir      string
+	mutex        sync.RWMutex
+	historyCache *SchemaHistory           // Cache for schema history
+	currentCache *SchemaVersion           // Cache for current schema
+	versionCache map[int64]*SchemaVersion // Cache for schema versions by version number
 	// Used to ensure arrow package is referenced
-	arrowSchema    *arrow.Schema
+	arrowSchema *arrow.Schema
 }
 
 // NewDeltaSchemaManager creates a new schema manager with initialized caches
 func NewDeltaSchemaManager(tablePath string) *DeltaSchemaManager {
 	logger := logging.GetLogger()
 	logger.Debug("Creating new SchemaManager", "tablePath", tablePath)
-	
+
 	return &DeltaSchemaManager{
 		tablePath:    tablePath,
 		metaDir:      filepath.Join(tablePath, "_delta_log", "schema_history"),
@@ -41,11 +41,11 @@ func NewDeltaSchemaManager(tablePath string) *DeltaSchemaManager {
 func (sm *DeltaSchemaManager) InitializeSchema(schema *DeltaSchema, partitionBy []string, zOrderBy []string) (*SchemaVersion, error) {
 	logger := logging.GetLogger()
 	logger.Debug("Initializing schema", "tablePath", sm.tablePath, "fields", len(schema.Fields))
-	
+
 	// Lock for thread safety
 	sm.mutex.Lock()
 	defer sm.mutex.Unlock()
-	
+
 	// Check if schema already exists by reading directly from disk
 	// We don't use GetCurrentSchema to avoid potential cache issues during initialization
 	existingHistory, err := sm.readHistory()
@@ -63,10 +63,10 @@ func (sm *DeltaSchemaManager) InitializeSchema(schema *DeltaSchema, partitionBy 
 
 	// Create initial schema version
 	schemaVersion := &SchemaVersion{
-		Version:       1,
-		Timestamp:     time.Now(),
-		Schema:        arrowSchema,
-		SchemaFields:  arrowFields,
+		Version:      1,
+		Timestamp:    time.Now(),
+		Schema:       arrowSchema,
+		SchemaFields: arrowFields,
 	}
 
 	// Create schema history
@@ -93,7 +93,7 @@ func (sm *DeltaSchemaManager) InitializeSchema(schema *DeltaSchema, partitionBy 
 func (sm *DeltaSchemaManager) GetCurrentSchema() (*SchemaVersion, error) {
 	logger := logging.GetLogger()
 	logger.Debug("Getting current schema", "tablePath", sm.tablePath)
-	
+
 	// Check cache first
 	sm.mutex.RLock()
 	if sm.currentCache != nil {
@@ -102,7 +102,7 @@ func (sm *DeltaSchemaManager) GetCurrentSchema() (*SchemaVersion, error) {
 		return sm.currentCache, nil
 	}
 	sm.mutex.RUnlock()
-	
+
 	// Cache miss, get from history
 	history, err := sm.GetSchemaHistory()
 	if err != nil {
@@ -118,11 +118,11 @@ func (sm *DeltaSchemaManager) GetCurrentSchema() (*SchemaVersion, error) {
 	// Get the latest schema version (last in the list)
 	sm.mutex.Lock()
 	defer sm.mutex.Unlock()
-	
+
 	// Update cache
 	sm.currentCache = &history.Versions[len(history.Versions)-1]
 	logger.Debug("Updated current schema cache", "tablePath", sm.tablePath, "version", sm.currentCache.Version)
-	
+
 	return sm.currentCache, nil
 }
 
@@ -130,7 +130,7 @@ func (sm *DeltaSchemaManager) GetCurrentSchema() (*SchemaVersion, error) {
 func (sm *DeltaSchemaManager) GetSchemaVersion(version int64) (*SchemaVersion, error) {
 	logger := logging.GetLogger()
 	logger.Debug("Getting schema version", "tablePath", sm.tablePath, "version", version)
-	
+
 	// Check cache first
 	sm.mutex.RLock()
 	if cachedVersion, exists := sm.versionCache[version]; exists {
@@ -139,7 +139,7 @@ func (sm *DeltaSchemaManager) GetSchemaVersion(version int64) (*SchemaVersion, e
 		return cachedVersion, nil
 	}
 	sm.mutex.RUnlock()
-	
+
 	// Cache miss, get from history
 	history, err := sm.GetSchemaHistory()
 	if err != nil {
@@ -153,12 +153,12 @@ func (sm *DeltaSchemaManager) GetSchemaVersion(version int64) (*SchemaVersion, e
 			// Update cache
 			sm.mutex.Lock()
 			defer sm.mutex.Unlock()
-			
+
 			// Create a copy to avoid modifying the original
 			schemaCopy := schema
 			sm.versionCache[version] = &schemaCopy
 			logger.Debug("Updated schema version cache", "tablePath", sm.tablePath, "version", version)
-			
+
 			return &schemaCopy, nil
 		}
 	}
@@ -171,7 +171,7 @@ func (sm *DeltaSchemaManager) GetSchemaVersion(version int64) (*SchemaVersion, e
 func (sm *DeltaSchemaManager) GetSchemaHistory() (*SchemaHistory, error) {
 	logger := logging.GetLogger()
 	logger.Debug("Getting schema history", "tablePath", sm.tablePath)
-	
+
 	// Check cache first
 	sm.mutex.RLock()
 	if sm.historyCache != nil {
@@ -180,28 +180,28 @@ func (sm *DeltaSchemaManager) GetSchemaHistory() (*SchemaHistory, error) {
 		return sm.historyCache, nil
 	}
 	sm.mutex.RUnlock()
-	
+
 	// Cache miss, read from disk
 	sm.mutex.Lock()
 	defer sm.mutex.Unlock()
-	
+
 	// Double-check after acquiring write lock
 	if sm.historyCache != nil {
 		logger.Debug("Returning cached schema history (after lock)", "tablePath", sm.tablePath)
 		return sm.historyCache, nil
 	}
-	
+
 	// Read from disk
 	history, err := sm.readHistory()
 	if err != nil {
 		logger.Error("Failed to read schema history", "tablePath", sm.tablePath, "error", err)
 		return nil, fmt.Errorf("failed to get schema history: %w", err)
 	}
-	
+
 	// Update cache
 	sm.historyCache = history
 	logger.Debug("Updated schema history cache", "tablePath", sm.tablePath, "versions", len(history.Versions))
-	
+
 	return history, nil
 }
 
@@ -209,11 +209,11 @@ func (sm *DeltaSchemaManager) GetSchemaHistory() (*SchemaHistory, error) {
 func (sm *DeltaSchemaManager) UpdateSchema(newSchema *DeltaSchema, commitInfo map[string]string) (*SchemaVersion, error) {
 	logger := logging.GetLogger()
 	logger.Debug("Updating schema", "tablePath", sm.tablePath, "fields", len(newSchema.Fields))
-	
+
 	// Get history with thread safety
 	sm.mutex.Lock()
 	defer sm.mutex.Unlock()
-	
+
 	// Read fresh history from disk to ensure we have the latest
 	history, err := sm.readHistory()
 	if err != nil {
@@ -229,7 +229,7 @@ func (sm *DeltaSchemaManager) UpdateSchema(newSchema *DeltaSchema, commitInfo ma
 	// Get the latest schema version
 	currentSchema := history.Versions[len(history.Versions)-1]
 	logger.Debug("Current schema version", "tablePath", sm.tablePath, "version", currentSchema.Version)
-	
+
 	// Convert Schema to arrow.Schema using helper function
 	arrowSchema, arrowFields, err := ConvertToArrowSchema(newSchema)
 	if err != nil {
@@ -243,19 +243,19 @@ func (sm *DeltaSchemaManager) UpdateSchema(newSchema *DeltaSchema, commitInfo ma
 		logger.Error("Failed to convert current arrow schema to schema", "tablePath", sm.tablePath, "error", err)
 		return nil, fmt.Errorf("failed to convert current schema for comparison: %w", err)
 	}
-	
+
 	// Compare schemas to detect changes
 	schemaChanges, err := sm.CompareSchemas(currentSchemaObj, newSchema)
 	if err != nil {
 		logger.Error("Failed to compare schemas", "tablePath", sm.tablePath, "error", err)
 		return nil, fmt.Errorf("failed to detect schema changes: %w", err)
 	}
-	
+
 	// Log the detected changes
 	if len(schemaChanges) > 0 {
 		logger.Info("Schema changes detected", "tablePath", sm.tablePath, "changeCount", len(schemaChanges))
 		for i, change := range schemaChanges {
-			logger.Info("Schema change", "tablePath", sm.tablePath, "index", i, 
+			logger.Info("Schema change", "tablePath", sm.tablePath, "index", i,
 				"type", change.Type, "field", change.FieldName)
 		}
 	} else {
@@ -264,10 +264,10 @@ func (sm *DeltaSchemaManager) UpdateSchema(newSchema *DeltaSchema, commitInfo ma
 
 	// Create new schema version with change information
 	newVersion := &SchemaVersion{
-		Version:       currentSchema.Version + 1,
-		Timestamp:     time.Now(),
-		Schema:        arrowSchema,
-		SchemaFields:  arrowFields,
+		Version:      currentSchema.Version + 1,
+		Timestamp:    time.Now(),
+		Schema:       arrowSchema,
+		SchemaFields: arrowFields,
 	}
 
 	// Add new schema to history
@@ -292,82 +292,82 @@ func (sm *DeltaSchemaManager) UpdateSchema(newSchema *DeltaSchema, commitInfo ma
 func (sm *DeltaSchemaManager) ValidateSchemaCompatibility(newSchema *DeltaSchema) (bool, []string, error) {
 	logger := logging.GetLogger()
 	logger.Debug("Validating schema compatibility", "tablePath", sm.tablePath)
-	
+
 	// Get current schema
 	currentVersion, err := sm.GetCurrentSchema()
 	if err != nil {
 		logger.Error("Failed to get current schema", "tablePath", sm.tablePath, "error", err)
 		return false, nil, fmt.Errorf("failed to validate schema compatibility: %w", err)
 	}
-	
+
 	// Convert current schema to Schema object
 	currentSchema, err := ConvertFromArrowSchema(currentVersion.Schema)
 	if err != nil {
 		logger.Error("Failed to convert current schema", "tablePath", sm.tablePath, "error", err)
 		return false, nil, fmt.Errorf("failed to convert current schema: %w", err)
 	}
-	
+
 	// Compare schemas
 	changes, err := sm.CompareSchemas(currentSchema, newSchema)
 	if err != nil {
 		logger.Error("Failed to compare schemas", "tablePath", sm.tablePath, "error", err)
 		return false, nil, fmt.Errorf("failed to compare schemas: %w", err)
 	}
-	
+
 	// Check for incompatible changes
 	compatible := true
 	var incompatibleChanges []string
-	
+
 	for _, change := range changes {
 		switch change.Type {
 		case "remove":
 			// Removing fields is incompatible
 			compatible = false
-			incompatibleChanges = append(incompatibleChanges, 
+			incompatibleChanges = append(incompatibleChanges,
 				fmt.Sprintf("Cannot remove field '%s'", change.FieldName))
-			
+
 		case "type_change":
 			// Type changes are incompatible
 			compatible = false
-			incompatibleChanges = append(incompatibleChanges, 
+			incompatibleChanges = append(incompatibleChanges,
 				fmt.Sprintf("Cannot change type of field '%s'", change.FieldName))
-			
+
 		case "nullability_change":
 			// Nullability changes are incompatible
 			compatible = false
-			incompatibleChanges = append(incompatibleChanges, 
+			incompatibleChanges = append(incompatibleChanges,
 				fmt.Sprintf("Cannot change nullability of field '%s'", change.FieldName))
 		}
 	}
-	
+
 	if compatible {
 		logger.Info("Schema is compatible", "tablePath", sm.tablePath)
 	} else {
-		logger.Warn("Schema is incompatible", "tablePath", sm.tablePath, 
+		logger.Warn("Schema is incompatible", "tablePath", sm.tablePath,
 			"incompatibleChanges", incompatibleChanges)
 	}
-	
+
 	return compatible, incompatibleChanges, nil
 }
 
 // GetSchemaChangesBetweenVersions returns the schema changes between two versions
 func (sm *DeltaSchemaManager) GetSchemaChangesBetweenVersions(fromVersion, toVersion int64) ([]SchemaChange, error) {
 	logger := logging.GetLogger()
-	logger.Debug("Getting schema changes between versions", "tablePath", sm.tablePath, 
+	logger.Debug("Getting schema changes between versions", "tablePath", sm.tablePath,
 		"fromVersion", fromVersion, "toVersion", toVersion)
-	
+
 	// Validate version numbers
 	if fromVersion >= toVersion {
 		return nil, fmt.Errorf("fromVersion must be less than toVersion")
 	}
-	
+
 	// Get schema history
 	history, err := sm.GetSchemaHistory()
 	if err != nil {
 		logger.Error("Failed to get schema history", "tablePath", sm.tablePath, "error", err)
 		return nil, fmt.Errorf("failed to get schema changes: %w", err)
 	}
-	
+
 	// Find the versions
 	var fromSchema, toSchema *SchemaVersion
 	for i := range history.Versions {
@@ -379,7 +379,7 @@ func (sm *DeltaSchemaManager) GetSchemaChangesBetweenVersions(fromVersion, toVer
 			toSchema = &history.Versions[i]
 		}
 	}
-	
+
 	// Check if versions exist
 	if fromSchema == nil {
 		return nil, fmt.Errorf("schema version %d not found", fromVersion)
@@ -387,27 +387,27 @@ func (sm *DeltaSchemaManager) GetSchemaChangesBetweenVersions(fromVersion, toVer
 	if toSchema == nil {
 		return nil, fmt.Errorf("schema version %d not found", toVersion)
 	}
-	
+
 	// Convert schemas to Schema objects
 	fromSchemaObj, err := ConvertFromArrowSchema(fromSchema.Schema)
 	if err != nil {
 		logger.Error("Failed to convert from schema", "tablePath", sm.tablePath, "error", err)
 		return nil, fmt.Errorf("failed to convert from schema: %w", err)
 	}
-	
+
 	toSchemaObj, err := ConvertFromArrowSchema(toSchema.Schema)
 	if err != nil {
 		logger.Error("Failed to convert to schema", "tablePath", sm.tablePath, "error", err)
 		return nil, fmt.Errorf("failed to convert to schema: %w", err)
 	}
-	
+
 	// Compare schemas
 	changes, err := sm.CompareSchemas(fromSchemaObj, toSchemaObj)
 	if err != nil {
 		logger.Error("Failed to compare schemas", "tablePath", sm.tablePath, "error", err)
 		return nil, fmt.Errorf("failed to compare schemas: %w", err)
 	}
-	
+
 	logger.Debug("Found schema changes", "tablePath", sm.tablePath, "changes", len(changes))
 	return changes, nil
 }
@@ -416,27 +416,27 @@ func (sm *DeltaSchemaManager) GetSchemaChangesBetweenVersions(fromVersion, toVer
 func (sm *DeltaSchemaManager) CompareSchemas(oldSchema, newSchema *DeltaSchema) ([]SchemaChange, error) {
 	logger := logging.GetLogger()
 	logger.Debug("Comparing schemas", "tablePath", sm.tablePath)
-	
+
 	if oldSchema == nil || newSchema == nil {
 		return nil, fmt.Errorf("cannot compare nil schemas")
 	}
-	
+
 	// Create maps for quick lookup
 	oldFields := make(map[string]DeltaField, len(oldSchema.Fields))
 	for _, field := range oldSchema.Fields {
 		oldFields[field.Name] = field
 	}
-	
+
 	newFields := make(map[string]DeltaField, len(newSchema.Fields))
 	for _, field := range newSchema.Fields {
 		newFields[field.Name] = field
 	}
-	
+
 	// Track changes
 	var changes []SchemaChange
-	
+
 	// Check for added fields
-	for name, _ := range newFields {
+	for name := range newFields {
 		if _, exists := oldFields[name]; !exists {
 			changes = append(changes, SchemaChange{
 				Type:      "add",
@@ -445,9 +445,9 @@ func (sm *DeltaSchemaManager) CompareSchemas(oldSchema, newSchema *DeltaSchema) 
 			logger.Debug("Field added", "tablePath", sm.tablePath, "field", name)
 		}
 	}
-	
+
 	// Check for removed fields
-	for name, _ := range oldFields {
+	for name := range oldFields {
 		if _, exists := newFields[name]; !exists {
 			changes = append(changes, SchemaChange{
 				Type:      "remove",
@@ -456,7 +456,7 @@ func (sm *DeltaSchemaManager) CompareSchemas(oldSchema, newSchema *DeltaSchema) 
 			logger.Debug("Field removed", "tablePath", sm.tablePath, "field", name)
 		}
 	}
-	
+
 	// Check for modified fields
 	for name, oldField := range oldFields {
 		if newField, exists := newFields[name]; exists {
@@ -466,20 +466,20 @@ func (sm *DeltaSchemaManager) CompareSchemas(oldSchema, newSchema *DeltaSchema) 
 					Type:      "type_change",
 					FieldName: name,
 				})
-				logger.Debug("Field type changed", "tablePath", sm.tablePath, "field", name, 
+				logger.Debug("Field type changed", "tablePath", sm.tablePath, "field", name,
 					"oldType", oldField.Type, "newType", newField.Type)
 			}
-			
+
 			// Check if nullability changed
 			if oldField.Nullable != newField.Nullable {
 				changes = append(changes, SchemaChange{
 					Type:      "nullability_change",
 					FieldName: name,
 				})
-				logger.Debug("Field nullability changed", "tablePath", sm.tablePath, "field", name, 
+				logger.Debug("Field nullability changed", "tablePath", sm.tablePath, "field", name,
 					"oldNullable", oldField.Nullable, "newNullable", newField.Nullable)
 			}
-			
+
 			// Check if metadata changed
 			if !reflect.DeepEqual(oldField.Metadata, newField.Metadata) {
 				changes = append(changes, SchemaChange{
@@ -490,7 +490,7 @@ func (sm *DeltaSchemaManager) CompareSchemas(oldSchema, newSchema *DeltaSchema) 
 			}
 		}
 	}
-	
+
 	logger.Debug("Schema comparison complete", "tablePath", sm.tablePath, "changes", len(changes))
 	return changes, nil
 }
@@ -499,18 +499,18 @@ func (sm *DeltaSchemaManager) CompareSchemas(oldSchema, newSchema *DeltaSchema) 
 func (sm *DeltaSchemaManager) ClearCache() {
 	logger := logging.GetLogger()
 	logger.Debug("Clearing schema manager cache", "tablePath", sm.tablePath)
-	
+
 	sm.mutex.Lock()
 	defer sm.mutex.Unlock()
-	
+
 	sm.historyCache = nil
 	sm.currentCache = nil
-	
+
 	// Clear version cache
 	for k := range sm.versionCache {
 		delete(sm.versionCache, k)
 	}
-	
+
 	logger.Debug("Schema manager cache cleared", "tablePath", sm.tablePath)
 }
 
@@ -520,7 +520,7 @@ func (sm *DeltaSchemaManager) ClearCache() {
 func (sm *DeltaSchemaManager) readHistory() (*SchemaHistory, error) {
 	logger := logging.GetLogger()
 	logger.Debug("Reading schema history from disk", "tablePath", sm.tablePath)
-	
+
 	// Create schema history directory if it doesn't exist
 	if err := os.MkdirAll(sm.metaDir, 0755); err != nil {
 		logger.Error("Failed to create schema history directory", "tablePath", sm.tablePath, "metaDir", sm.metaDir, "error", err)
@@ -559,7 +559,7 @@ func (sm *DeltaSchemaManager) readHistory() (*SchemaHistory, error) {
 func (sm *DeltaSchemaManager) writeHistory(history *SchemaHistory) error {
 	logger := logging.GetLogger()
 	logger.Debug("Writing schema history to disk", "tablePath", sm.tablePath, "versions", len(history.Versions))
-	
+
 	// Create schema history directory if it doesn't exist
 	if err := os.MkdirAll(sm.metaDir, 0755); err != nil {
 		logger.Error("Failed to create schema history directory", "tablePath", sm.tablePath, "metaDir", sm.metaDir, "error", err)

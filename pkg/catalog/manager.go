@@ -3,8 +3,8 @@ package catalog
 import (
 	"context"
 	"fmt"
-	"sync"
 	"github.com/nessi-dev/nessi/pkg/api/types"
+	"sync"
 )
 
 // CatalogManager manages data catalog providers
@@ -27,7 +27,7 @@ func NewCatalogManager() *CatalogManager {
 func (m *CatalogManager) RegisterCatalog(catalog types.DataCatalog) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	m.catalogs[catalog.Name()] = catalog
 	return nil
 }
@@ -37,12 +37,12 @@ func (m *CatalogManager) RegisterCatalog(catalog types.DataCatalog) error {
 func (m *CatalogManager) GetCatalog(name string) (types.DataCatalog, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	catalog, ok := m.catalogs[name]
 	if !ok {
 		return nil, fmt.Errorf("catalog %s not found", name)
 	}
-	
+
 	return catalog, nil
 }
 
@@ -50,12 +50,12 @@ func (m *CatalogManager) GetCatalog(name string) (types.DataCatalog, error) {
 func (m *CatalogManager) ListCatalogs() []string {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	var names []string
 	for name := range m.catalogs {
 		names = append(names, name)
 	}
-	
+
 	return names
 }
 
@@ -65,7 +65,7 @@ func (m *CatalogManager) ConnectCatalog(ctx context.Context, name string, config
 	if err != nil {
 		return err
 	}
-	
+
 	return catalog.Connect(ctx, config)
 }
 
@@ -75,7 +75,7 @@ func (m *CatalogManager) DisconnectCatalog(ctx context.Context, name string) err
 	if err != nil {
 		return err
 	}
-	
+
 	return catalog.Disconnect(ctx)
 }
 
@@ -83,7 +83,7 @@ func (m *CatalogManager) DisconnectCatalog(ctx context.Context, name string) err
 func (m *CatalogManager) DisconnectAll(ctx context.Context) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	for _, catalog := range m.catalogs {
 		_ = catalog.Disconnect(ctx)
 	}

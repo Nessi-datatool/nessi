@@ -92,15 +92,15 @@ func (m *MaintenanceManager) CreateCheckpoint(ctx context.Context, options Check
 
 	// Create checkpoint metadata
 	metadata := struct {
-		Version     int64     `json:"version"`
-		Timestamp   time.Time `json:"timestamp"`
-		NumActions  int       `json:"numActions"`
-		FileSize    int64     `json:"fileSize"`
+		Version    int64     `json:"version"`
+		Timestamp  time.Time `json:"timestamp"`
+		NumActions int       `json:"numActions"`
+		FileSize   int64     `json:"fileSize"`
 	}{
-		Version:     version,
-		Timestamp:   time.Now(),
-		NumActions:  len(actions),
-		FileSize:    getFileSize(checkpointPath),
+		Version:    version,
+		Timestamp:  time.Now(),
+		NumActions: len(actions),
+		FileSize:   getFileSize(checkpointPath),
 	}
 
 	// Write metadata
@@ -229,10 +229,10 @@ func (m *MaintenanceManager) ListCheckpoints(ctx context.Context) ([]CheckpointI
 			}
 
 			var metadata struct {
-				Version     int64     `json:"version"`
-				Timestamp   time.Time `json:"timestamp"`
-				NumActions  int       `json:"numActions"`
-				FileSize    int64     `json:"fileSize"`
+				Version    int64     `json:"version"`
+				Timestamp  time.Time `json:"timestamp"`
+				NumActions int       `json:"numActions"`
+				FileSize   int64     `json:"fileSize"`
 			}
 
 			if err := json.Unmarshal(data, &metadata); err != nil {
@@ -240,11 +240,11 @@ func (m *MaintenanceManager) ListCheckpoints(ctx context.Context) ([]CheckpointI
 			}
 
 			checkpoints = append(checkpoints, CheckpointInfo{
-				Version:     metadata.Version,
-				Timestamp:   metadata.Timestamp,
-				NumActions:  metadata.NumActions,
-				FileSize:    metadata.FileSize,
-				Path:        filepath.Join(logPath, file.Name()),
+				Version:    metadata.Version,
+				Timestamp:  metadata.Timestamp,
+				NumActions: metadata.NumActions,
+				FileSize:   metadata.FileSize,
+				Path:       filepath.Join(logPath, file.Name()),
 			})
 		}
 	}
@@ -258,11 +258,11 @@ func (m *MaintenanceManager) ListCheckpoints(ctx context.Context) ([]CheckpointI
 
 // CheckpointInfo represents information about a checkpoint
 type CheckpointInfo struct {
-	Version     int64
-	Timestamp   time.Time
-	NumActions  int
-	FileSize    int64
-	Path        string
+	Version    int64
+	Timestamp  time.Time
+	NumActions int
+	FileSize   int64
+	Path       string
 }
 
 // DeleteCheckpoint deletes a checkpoint

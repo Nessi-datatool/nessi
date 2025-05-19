@@ -6,14 +6,14 @@ import (
 
 // TableFreshnessStatus represents the freshness status of a table
 type TableFreshnessStatus struct {
-	TableName         string
-	TablePath         string
-	Status            string
-	LastUpdateTime    time.Time
-	TimeSinceUpdate   time.Duration
-	ExpectedFrequency time.Duration
+	TableName          string
+	TablePath          string
+	Status             string
+	LastUpdateTime     time.Time
+	TimeSinceUpdate    time.Duration
+	ExpectedFrequency  time.Duration
 	NextExpectedUpdate time.Time
-	SLAConfig         SLAConfigDetails
+	SLAConfig          SLAConfigDetails
 }
 
 // SLAConfigDetails contains details about the SLA configuration

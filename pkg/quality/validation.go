@@ -4,15 +4,15 @@ package quality
 type ValidationResults struct {
 	// Overall validation status
 	Valid bool `json:"valid"`
-	
+
 	// Individual rule results
 	RuleResults []*RuleResult `json:"rule_results"`
-	
+
 	// Summary statistics
-	TotalRules     int `json:"total_rules"`
-	PassedRules    int `json:"passed_rules"`
-	FailedRules    int `json:"failed_rules"`
-	SkippedRules   int `json:"skipped_rules"`
+	TotalRules   int `json:"total_rules"`
+	PassedRules  int `json:"passed_rules"`
+	FailedRules  int `json:"failed_rules"`
+	SkippedRules int `json:"skipped_rules"`
 }
 
 // RuleResult represents the result of a single validation rule

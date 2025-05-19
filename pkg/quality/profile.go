@@ -7,10 +7,10 @@ import (
 // Profile represents a data quality profile for a table
 type Profile struct {
 	// General information
-	TableName  string    `json:"table_name"`
-	Timestamp  time.Time `json:"timestamp"`
-	RowCount   int64     `json:"row_count"`
-	
+	TableName string    `json:"table_name"`
+	Timestamp time.Time `json:"timestamp"`
+	RowCount  int64     `json:"row_count"`
+
 	// Column profiles
 	Columns map[string]*ColumnProfile `json:"columns"`
 }
@@ -19,10 +19,10 @@ type Profile struct {
 type ColumnProfile struct {
 	// Basic statistics
 	Stats *ColumnStats `json:"stats"`
-	
+
 	// Data patterns
 	Patterns []string `json:"patterns,omitempty"`
-	
+
 	// Value distribution
 	Distribution *ValueDistribution `json:"distribution,omitempty"`
 }
@@ -40,10 +40,10 @@ type ColumnStats struct {
 
 // ValueDistribution represents the distribution of values in a column
 type ValueDistribution struct {
-	TopValues     map[string]int64 `json:"top_values"`
-	Frequencies   map[string]int64 `json:"frequencies"`
-	Percentiles   []float64        `json:"percentiles"`
-	StandardDev   float64          `json:"standard_dev"`
-	Skewness      float64          `json:"skewness"`
-	Kurtosis      float64          `json:"kurtosis"`
+	TopValues   map[string]int64 `json:"top_values"`
+	Frequencies map[string]int64 `json:"frequencies"`
+	Percentiles []float64        `json:"percentiles"`
+	StandardDev float64          `json:"standard_dev"`
+	Skewness    float64          `json:"skewness"`
+	Kurtosis    float64          `json:"kurtosis"`
 }

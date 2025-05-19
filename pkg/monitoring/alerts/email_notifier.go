@@ -16,38 +16,38 @@ import (
 type EmailConfig struct {
 	// Host is the SMTP host
 	Host string `json:"host"`
-	
+
 	// Port is the SMTP port
 	Port int `json:"port"`
-	
+
 	// Username is the SMTP username
 	Username string `json:"username"`
-	
+
 	// Password is the SMTP password
 	Password string `json:"password"`
-	
+
 	// From is the sender email address
 	From string `json:"from"`
-	
+
 	// FromName is the sender name
 	FromName string `json:"from_name"`
-	
+
 	// UseSSL indicates whether to use SSL
 	UseSSL bool `json:"use_ssl"`
-	
+
 	// UseHTML indicates whether to use HTML format
 	UseHTML bool `json:"use_html"`
-	
+
 	// Template is a custom email template
 	Template string `json:"template"`
-	
+
 	// TemplatePath is the path to the email template
 	TemplatePath string `json:"template_path"`
 }
 
 // EmailNotifier sends notifications via email
 type EmailNotifier struct {
-	config EmailConfig
+	config   EmailConfig
 	template *template.Template
 }
 
@@ -58,15 +58,15 @@ func NewEmailNotifier(config EmailConfig) (*EmailNotifier, error) {
 	if config.Template != "" {
 		templateContent = config.Template
 	}
-	
+
 	// Create template
 	tmpl, err := template.New("email").Parse(templateContent)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse template: %w", err)
 	}
-	
+
 	return &EmailNotifier{
-		config: config,
+		config:   config,
 		template: tmpl,
 	}, nil
 }
@@ -90,24 +90,24 @@ func (n *EmailNotifier) Send(alert *Alert, recipient string) (*AlertNotification
 		SentAt:    time.Now(),
 		Status:    "sending",
 	}
-	
+
 	// Determine content type and prepare message
 	var messageBody string
 	contentType := "text/plain"
-	
+
 	if n.config.UseHTML {
 		// HTML format
 		contentType = "text/html"
-		
+
 		// Prepare email data
 		data := map[string]interface{}{
-			"Alert":      alert,
-			"Recipient":  recipient,
-			"SenderName": n.config.FromName,
+			"Alert":       alert,
+			"Recipient":   recipient,
+			"SenderName":  n.config.FromName,
 			"SenderEmail": n.config.From,
-			"Timestamp":  time.Now().Format(time.RFC1123),
+			"Timestamp":   time.Now().Format(time.RFC1123),
 		}
-		
+
 		// Render email template
 		var body bytes.Buffer
 		if err := n.template.Execute(&body, data); err != nil {
@@ -115,7 +115,7 @@ func (n *EmailNotifier) Send(alert *Alert, recipient string) (*AlertNotification
 			notification.ErrorMessage = fmt.Sprintf("Failed to render template: %v", err)
 			return notification, fmt.Errorf("failed to render template: %w", err)
 		}
-		
+
 		messageBody = body.String()
 	} else {
 		// JSON format
@@ -125,11 +125,11 @@ func (n *EmailNotifier) Send(alert *Alert, recipient string) (*AlertNotification
 			notification.ErrorMessage = fmt.Sprintf("Failed to marshal alert to JSON: %v", err)
 			return notification, fmt.Errorf("failed to marshal alert to JSON: %w", err)
 		}
-		
+
 		messageBody = string(alertJSON)
 		contentType = "application/json"
 	}
-	
+
 	// Prepare email headers
 	headers := make(map[string]string)
 	headers["From"] = n.config.From
@@ -140,29 +140,29 @@ func (n *EmailNotifier) Send(alert *Alert, recipient string) (*AlertNotification
 	headers["Subject"] = fmt.Sprintf("[%s] %s", strings.ToUpper(string(alert.Severity)), alert.Name)
 	headers["MIME-Version"] = "1.0"
 	headers["Content-Type"] = contentType + "; charset=UTF-8"
-	
+
 	// Build message
 	message := ""
 	for k, v := range headers {
 		message += fmt.Sprintf("%s: %s\r\n", k, v)
 	}
 	message += "\r\n" + messageBody
-	
+
 	// Connect to SMTP server
 	var auth smtp.Auth
 	if n.config.Username != "" {
 		auth = smtp.PlainAuth("", n.config.Username, n.config.Password, n.config.Host)
 	}
-	
+
 	addr := fmt.Sprintf("%s:%d", n.config.Host, n.config.Port)
-	
+
 	// Use the sendMail function that can be mocked in tests
 	if err := sendMail(addr, auth, n.config.From, []string{recipient}, []byte(message)); err != nil {
 		notification.Status = "failed"
 		notification.ErrorMessage = fmt.Sprintf("Failed to send email: %v", err)
 		return notification, fmt.Errorf("Failed to send email: %w", err)
 	}
-	
+
 	notification.Status = "sent"
 	return notification, nil
 }

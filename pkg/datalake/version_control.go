@@ -29,19 +29,19 @@ type TransactionHistory struct {
 
 // Transaction represents a transaction in the Delta Lake log
 type Transaction struct {
-	ID            string                 `json:"id"`
-	Version       int                    `json:"version"`
-	Timestamp     int64                  `json:"timestamp"` // Milliseconds since epoch
-	Operation     string                 `json:"operation"`
-	CommitInfo    map[string]string      `json:"commit_info"`
-	AddedFiles    []string               `json:"added_files,omitempty"`
-	RemovedFiles  []string               `json:"removed_files,omitempty"`
-	MetadataChange *MetadataChange       `json:"metadata_change,omitempty"`
-	Stats         map[string]interface{} `json:"stats,omitempty"`
-	IsolationLevel string                `json:"isolation_level,omitempty"`
-	ReadVersion   int                    `json:"read_version,omitempty"`
-	UserID        string                 `json:"user_id,omitempty"`
-	ClientInfo    map[string]string      `json:"client_info,omitempty"`
+	ID             string                 `json:"id"`
+	Version        int                    `json:"version"`
+	Timestamp      int64                  `json:"timestamp"` // Milliseconds since epoch
+	Operation      string                 `json:"operation"`
+	CommitInfo     map[string]string      `json:"commit_info"`
+	AddedFiles     []string               `json:"added_files,omitempty"`
+	RemovedFiles   []string               `json:"removed_files,omitempty"`
+	MetadataChange *MetadataChange        `json:"metadata_change,omitempty"`
+	Stats          map[string]interface{} `json:"stats,omitempty"`
+	IsolationLevel string                 `json:"isolation_level,omitempty"`
+	ReadVersion    int                    `json:"read_version,omitempty"`
+	UserID         string                 `json:"user_id,omitempty"`
+	ClientInfo     map[string]string      `json:"client_info,omitempty"`
 }
 
 // MetadataChange represents a change to table metadata
@@ -55,11 +55,11 @@ type MetadataChange struct {
 
 // TransactionSummary represents a summary of transactions between two versions
 type TransactionSummary struct {
-	FromVersion   int           `json:"from_version"`
-	ToVersion     int           `json:"to_version"`
-	AddedFiles    int           `json:"added_files"`
-	RemovedFiles  int           `json:"removed_files"`
-	ModifiedRows  int           `json:"modified_rows"`
+	FromVersion   int            `json:"from_version"`
+	ToVersion     int            `json:"to_version"`
+	AddedFiles    int            `json:"added_files"`
+	RemovedFiles  int            `json:"removed_files"`
+	ModifiedRows  int            `json:"modified_rows"`
 	SchemaChanges []SchemaChange `json:"schema_changes"`
 	Operations    []string       `json:"operations"`
 	TimeSpan      int64          `json:"time_span_ms"` // Time span in milliseconds
@@ -115,15 +115,15 @@ func (vm *VersionManager) RecordTransaction(
 
 	// Create new transaction
 	transaction := &Transaction{
-		ID:            uuid.New().String(),
-		Version:       version,
-		Timestamp:     time.Now().UnixNano() / int64(time.Millisecond),
-		Operation:     operation,
-		CommitInfo:    commitInfo,
-		AddedFiles:    addedFiles,
-		RemovedFiles:  removedFiles,
+		ID:             uuid.New().String(),
+		Version:        version,
+		Timestamp:      time.Now().UnixNano() / int64(time.Millisecond),
+		Operation:      operation,
+		CommitInfo:     commitInfo,
+		AddedFiles:     addedFiles,
+		RemovedFiles:   removedFiles,
 		MetadataChange: metadataChange,
-		Stats:         stats,
+		Stats:          stats,
 	}
 
 	// Add transaction to history
@@ -300,7 +300,7 @@ func (vm *VersionManager) GetTransactionsBetween(fromTimestamp, toTimestamp time
 func (tx *Transaction) GetSummary() string {
 	// Convert timestamp from milliseconds to time.Time
 	timestamp := time.Unix(0, tx.Timestamp*int64(time.Millisecond))
-	
+
 	summary := fmt.Sprintf("Version %d (%s) - %s\n", tx.Version+1, timestamp.Format(time.RFC3339), tx.Operation)
 	if tx.CommitInfo != nil {
 		if message, ok := tx.CommitInfo["message"]; ok {
@@ -383,9 +383,9 @@ func (vm *VersionManager) saveTransactionHistory(history *TransactionHistory) er
 	historyPath := filepath.Join(vm.tablePath, "_delta_log", "transaction_history.json")
 	logger := logging.GetLogger()
 	logger.WithFields(map[string]interface{}{
-		"path":      historyPath,
-		"txCount":   len(history.Transactions),
-		"curIndex":  history.CurrentIndex,
+		"path":     historyPath,
+		"txCount":  len(history.Transactions),
+		"curIndex": history.CurrentIndex,
 	}).Debug("Saving transaction history")
 
 	// Create directory if it doesn't exist

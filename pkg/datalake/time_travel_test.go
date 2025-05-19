@@ -27,7 +27,7 @@ func TestTimeTravel(t *testing.T) {
 			{Name: "age", Type: "integer", Nullable: true},
 		},
 	}
-	
+
 	// Initialize schema with empty partition and z-order fields
 	_, err = sm.InitializeSchema(schema, []string{}, []string{})
 	require.NoError(t, err)
@@ -59,7 +59,7 @@ func TestTimeTravel(t *testing.T) {
 			{Name: "email", Type: "string", Nullable: true},
 		},
 	}
-	
+
 	// Update schema with empty metadata
 	_, err = sm.UpdateSchema(updatedSchema, map[string]string{})
 	require.NoError(t, err)
@@ -115,7 +115,7 @@ func TestTimeTravel(t *testing.T) {
 		for i, v := range history.Versions {
 			t.Logf("Schema version %d: Version=%d, Fields=%d", i, v.Version, len(v.SchemaFields))
 		}
-		
+
 		result, err := tt.QueryAtVersion(1)
 		require.NoError(t, err)
 		t.Logf("Result version: %d, Fields: %d", result.Version, len(result.Schema.Fields))

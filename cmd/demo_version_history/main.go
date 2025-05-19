@@ -89,14 +89,14 @@ func main() {
 	if len(history) > 0 {
 		oldestVersion := history[len(history)-1].Version
 		fmt.Printf("\nDemonstrating rollback to version %d...\n", oldestVersion)
-		
+
 		// Rollback to oldest version (force=true to bypass 30-day restriction for demo)
 		err := manager.RollbackToVersion(oldestVersion, true)
 		if err != nil {
 			fmt.Printf("Error rolling back: %v\n", err)
 		} else {
 			fmt.Printf("Successfully rolled back to version %d\n", oldestVersion)
-			
+
 			// Get updated version history
 			updatedHistory, err := manager.GetVersionHistory()
 			if err != nil {

@@ -33,7 +33,7 @@ func (c *AzurePurviewCatalog) Connect(ctx context.Context, config map[string]int
 
 	// Initialize Azure Purview client (placeholder)
 	// In a real implementation, this would create an actual Azure SDK client
-	
+
 	return nil
 }
 
@@ -53,7 +53,7 @@ func (c *AzurePurviewCatalog) Name() string {
 func (c *AzurePurviewCatalog) ListDatabases(ctx context.Context) ([]types.DatabaseInfo, error) {
 	// Placeholder implementation
 	// In a real implementation, this would call Azure Purview API
-	
+
 	// Return sample data for now
 	return []types.DatabaseInfo{
 		{
@@ -72,7 +72,7 @@ func (c *AzurePurviewCatalog) ListDatabases(ctx context.Context) ([]types.Databa
 func (c *AzurePurviewCatalog) ListTables(ctx context.Context, database string) ([]types.TableInfo, error) {
 	// Placeholder implementation
 	// In a real implementation, this would call Azure Purview API
-	
+
 	// Return sample data for now
 	return []types.TableInfo{
 		{
@@ -92,7 +92,7 @@ func (c *AzurePurviewCatalog) ListTables(ctx context.Context, database string) (
 func (c *AzurePurviewCatalog) GetTableDetails(ctx context.Context, database, table string) (*types.TableDetails, error) {
 	// Placeholder implementation
 	// In a real implementation, this would call Azure Purview API
-	
+
 	// Return sample data for now
 	details := &types.TableDetails{
 		Info: types.TableInfo{
@@ -142,17 +142,17 @@ func (c *AzurePurviewCatalog) GetTableDetails(ctx context.Context, database, tab
 			},
 		},
 		Metadata: &types.TableMetadata{
-			Owner:      "admin",
-			CreatedAt:  time.Now().Add(-24 * time.Hour),
-			UpdatedAt:  time.Now(),
-			Tags:       []string{"production", "data-quality"},
+			Owner:     "admin",
+			CreatedAt: time.Now().Add(-24 * time.Hour),
+			UpdatedAt: time.Now(),
+			Tags:      []string{"production", "data-quality"},
 			Properties: map[string]string{
 				"format":      "parquet",
 				"compression": "snappy",
 			},
 		},
 	}
-	
+
 	return details, nil
 }
 
@@ -160,19 +160,19 @@ func (c *AzurePurviewCatalog) GetTableDetails(ctx context.Context, database, tab
 func (c *AzurePurviewCatalog) GetTableMetadata(ctx context.Context, database, table string) (*types.TableMetadata, error) {
 	// Placeholder implementation
 	// In a real implementation, this would call Azure Purview API
-	
+
 	// Return sample data for now
 	metadata := &types.TableMetadata{
-		Owner:      "admin",
-		CreatedAt:  time.Now().Add(-24 * time.Hour),
-		UpdatedAt:  time.Now(),
-		Tags:       []string{"production", "data-quality"},
+		Owner:     "admin",
+		CreatedAt: time.Now().Add(-24 * time.Hour),
+		UpdatedAt: time.Now(),
+		Tags:      []string{"production", "data-quality"},
 		Properties: map[string]string{
 			"format":      "parquet",
 			"compression": "snappy",
 		},
 	}
-	
+
 	return metadata, nil
 }
 
@@ -187,7 +187,7 @@ func (c *AzurePurviewCatalog) UpdateTableMetadata(ctx context.Context, database,
 func (c *AzurePurviewCatalog) GetTableLineage(ctx context.Context, database, table string) (*types.LineageInfo, error) {
 	// Placeholder implementation
 	// In a real implementation, this would call Azure Purview API
-	
+
 	// Return sample data for now
 	lineage := &types.LineageInfo{
 		Upstream: []types.TableReference{
@@ -214,7 +214,7 @@ func (c *AzurePurviewCatalog) GetTableLineage(ctx context.Context, database, tab
 			"updated_by": "admin",
 		},
 	}
-	
+
 	return lineage, nil
 }
 
@@ -236,7 +236,7 @@ func (c *AzurePurviewCatalog) PublishQualityMetrics(ctx context.Context, databas
 func (c *AzurePurviewCatalog) GetQualityMetrics(ctx context.Context, database, table string) (*types.QualityMetrics, error) {
 	// Placeholder implementation
 	// In a real implementation, this would call Azure Purview API
-	
+
 	// Return sample data for now
 	metrics := &types.QualityMetrics{
 		TotalRows:        1000,
@@ -276,6 +276,6 @@ func (c *AzurePurviewCatalog) GetQualityMetrics(ctx context.Context, database, t
 			},
 		},
 	}
-	
+
 	return metrics, nil
 }

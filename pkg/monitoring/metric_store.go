@@ -7,8 +7,8 @@ import (
 
 // MetricStore implements the alerts.MetricStore interface
 type MetricStore struct {
-	gauges  map[string]interface{}
-	counters map[string]interface{}
+	gauges     map[string]interface{}
+	counters   map[string]interface{}
 	histograms map[string]interface{}
 }
 
@@ -76,7 +76,7 @@ func (m *MetricStore) RecordMetric(name string, value float64, labels ...map[str
 		gauge = m.RegisterGauge(gaugeKey, "Auto-registered gauge for "+name)
 		m.gauges[gaugeKey] = gauge
 	}
-	
+
 	// In a real implementation, this would set the gauge value
 	// For testing, we'll just store the value in the gauge name for now
 	m.gauges[gaugeKey] = value
@@ -129,7 +129,7 @@ func (m *MetricStore) GetMetricHistory(name string, start, end time.Time, labels
 	if err != nil {
 		return []float64{}, []time.Time{}, err
 	}
-	
+
 	// Generate some test data points
 	values := []float64{value * 0.9, value * 0.95, value, value * 1.05, value * 1.1}
 	times := []time.Time{
@@ -139,7 +139,7 @@ func (m *MetricStore) GetMetricHistory(name string, start, end time.Time, labels
 		start.Add(time.Duration(int(end.Sub(start)) * 3 / 4)),
 		end,
 	}
-	
+
 	return values, times, nil
 }
 

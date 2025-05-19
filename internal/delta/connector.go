@@ -23,16 +23,16 @@ import (
 // DeltaConnector represents a connection to a Delta table
 type DeltaConnector struct {
 	TablePath        string
-	Config          *Config
-	Schema          *arrow.Schema
-	Version         int64
+	Config           *Config
+	Schema           *arrow.Schema
+	Version          int64
 	PartitionColumns []string
-	MergeOptions    *MergeOptions
-	basePath    string
-	lastUpdated time.Time
-	partitions  []string
-	metadata    *TableMetadata
-	log         *TransactionLog
+	MergeOptions     *MergeOptions
+	basePath         string
+	lastUpdated      time.Time
+	partitions       []string
+	metadata         *TableMetadata
+	log              *TransactionLog
 }
 
 // TableMetadata represents Delta table metadata
@@ -148,7 +148,7 @@ func (c *DeltaConnector) processVersion(version int64) error {
 				if err := json.Unmarshal([]byte(action.Meta.SchemaString), &schemaObj); err != nil {
 					return fmt.Errorf("failed to parse schema string: %w", err)
 				}
-				
+
 				// Extract schema fields from the JSON representation
 				fieldsArr, ok := schemaObj["fields"].([]interface{})
 				if ok && len(fieldsArr) > 0 {
@@ -158,11 +158,11 @@ func (c *DeltaConnector) processVersion(version int64) error {
 						if !ok {
 							continue
 						}
-						
+
 						name, _ := fieldMap["name"].(string)
 						typeStr, _ := fieldMap["type"].(string)
 						nullable, _ := fieldMap["nullable"].(bool)
-						
+
 						// Map string type representation to arrow.DataType
 						var dataType arrow.DataType
 						switch typeStr {
@@ -186,14 +186,14 @@ func (c *DeltaConnector) processVersion(version int64) error {
 							// Default to string for unknown types
 							dataType = arrow.BinaryTypes.String
 						}
-						
+
 						fields = append(fields, arrow.Field{
 							Name:     name,
 							Type:     dataType,
 							Nullable: nullable,
 						})
 					}
-					
+
 					// Create a new schema with the extracted fields
 					if len(fields) > 0 {
 						c.Schema = arrow.NewSchema(fields, nil)
@@ -311,7 +311,7 @@ func (c *DeltaConnector) updateLog(partition, filename string, numRows int64) er
 
 	// Write the transaction to the log
 	logPath := filepath.Join(c.TablePath, "_delta_log", fmt.Sprintf("%020d.json", c.Version+1)) // Padded version number
-	data, err := json.Marshal(actionsToWrite) // Marshal the slice of actions
+	data, err := json.Marshal(actionsToWrite)                                                   // Marshal the slice of actions
 	if err != nil {
 		return fmt.Errorf("failed to marshal transaction actions: %w", err)
 	}
@@ -485,7 +485,7 @@ func readParquetFile(path string) (arrow.Record, error) {
 	for i := 0; i < int(table.NumCols()); i++ {
 		col := table.Column(i)
 		builderField := builder.Field(i)
-		
+
 		// Handle different data types
 		switch builder := builderField.(type) {
 		case *array.StringBuilder:

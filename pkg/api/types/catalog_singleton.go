@@ -4,7 +4,7 @@ import "sync"
 
 var (
 	defaultFactory *CatalogFactory
-	factoryOnce   sync.Once
+	factoryOnce    sync.Once
 )
 
 // GetCatalogFactory returns the singleton instance of CatalogFactory

@@ -30,21 +30,21 @@ func TestMockDeltaReader(t *testing.T) {
 		tablePath: "/path/to/table",
 		format:    "parquet",
 	}
-	
+
 	// Test ReadAllParsed
 	t.Run("ReadAllParsed", func(t *testing.T) {
 		// This is a basic test since the actual implementation is a stub
 		_, err := reader.ReadAllParsed()
-		
+
 		// We expect no error because we're returning an empty slice
 		assert.NoError(t, err)
 	})
-	
+
 	// Test ReadAll
 	t.Run("ReadAll", func(t *testing.T) {
 		// This is a basic test since the actual implementation is a stub
 		_, err := reader.ReadAll()
-		
+
 		// We expect no error because we're returning an empty reader
 		assert.NoError(t, err)
 	})

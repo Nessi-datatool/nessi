@@ -51,7 +51,7 @@ func TestValidatorHasFailures(t *testing.T) {
 	results.Summary.PassedRules = 1
 	results.Summary.FailedRules = 1
 	results.Summary.QualityScore = 50.0
-	
+
 	if !results.HasFailures() {
 		t.Errorf("HasFailures() should return true for validation results with failures")
 	}
@@ -144,7 +144,7 @@ enable_dbt_plugin: true
 dbt_project_path: "` + tempDir + `"
 delta_base_path: "/delta"
 `
-	
+
 	configPath := filepath.Join(tempDir, "config.yaml")
 	err = os.WriteFile(configPath, []byte(configData), 0644)
 	if err != nil {
@@ -155,13 +155,13 @@ delta_base_path: "/delta"
 	manifestData := `{
 		"nodes": {}
 	}`
-	
+
 	manifestDir := filepath.Join(tempDir, "target")
 	err = os.MkdirAll(manifestDir, 0755)
 	if err != nil {
 		t.Fatalf("Failed to create manifest directory: %v", err)
 	}
-	
+
 	manifestPath := filepath.Join(manifestDir, "manifest.json")
 	err = os.WriteFile(manifestPath, []byte(manifestData), 0644)
 	if err != nil {

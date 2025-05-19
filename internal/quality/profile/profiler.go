@@ -46,29 +46,29 @@ import (
 
 // Profile represents a complete data profile
 type Profile struct {
-	TableName      string
-	RowCount       int64
-	ColumnProfiles map[string]*ColumnProfile
-	CreatedAt      time.Time
+	TableName       string
+	RowCount        int64
+	ColumnProfiles  map[string]*ColumnProfile
+	CreatedAt       time.Time
 	ExecutionTimeMs int64
 }
 
 // ColumnProfile represents detailed statistics for a column
 type ColumnProfile struct {
-	Name            string
-	DataType        string
-	NullCount       int64
-	NullPercentage  float64
-	UniqueCount     int64
+	Name             string
+	DataType         string
+	NullCount        int64
+	NullPercentage   float64
+	UniqueCount      int64
 	UniquePercentage float64
-	Min             interface{}
-	Max             interface{}
-	Mean            float64
-	Median          float64
-	StdDev          float64
-	TopValues       []ValueCount
-	Histogram       []HistogramBin
-	Patterns        []PatternCount
+	Min              interface{}
+	Max              interface{}
+	Mean             float64
+	Median           float64
+	StdDev           float64
+	TopValues        []ValueCount
+	Histogram        []HistogramBin
+	Patterns         []PatternCount
 }
 
 // ValueCount represents a value and its frequency
@@ -95,21 +95,21 @@ type PatternCount struct {
 
 // NumericStats represents statistics for numeric columns
 type NumericStats struct {
-	Min     float64
-	Max     float64
-	Mean    float64
-	Median  float64
-	StdDev  float64
+	Min      float64
+	Max      float64
+	Mean     float64
+	Median   float64
+	StdDev   float64
 	Outliers []int
 }
 
 // StringStats represents statistics for string columns
 type StringStats struct {
-	MinLength    int
-	MaxLength    int
-	AvgLength    float64
-	Patterns     []PatternCount
-	TopValues    []ValueCount
+	MinLength int
+	MaxLength int
+	AvgLength float64
+	Patterns  []PatternCount
+	TopValues []ValueCount
 }
 
 // DateStats represents statistics for date columns
@@ -122,23 +122,23 @@ type DateStats struct {
 
 // QualityProfile represents the quality profile of a dataset
 type QualityProfile struct {
-	TablePath     string
-	Timestamp     time.Time
-	TotalRows     int64
-	TotalColumns  int
+	TablePath      string
+	Timestamp      time.Time
+	TotalRows      int64
+	TotalColumns   int
 	ColumnProfiles map[string]*ColumnProfile
-	DataQuality   *DataQuality
+	DataQuality    *DataQuality
 }
 
 // DataQuality represents overall data quality metrics
 type DataQuality struct {
-	Completeness   float64
-	Consistency    float64
-	Uniqueness     float64
-	Timeliness     float64
-	Validity       float64
-	OverallScore   float64
-	Issues         []*QualityIssue
+	Completeness float64
+	Consistency  float64
+	Uniqueness   float64
+	Timeliness   float64
+	Validity     float64
+	OverallScore float64
+	Issues       []*QualityIssue
 }
 
 // Anomaly represents a data anomaly in a column
@@ -152,11 +152,11 @@ type Anomaly struct {
 
 // QualityIssue represents a data quality issue
 type QualityIssue struct {
-	Column     string
-	Type       string
-	Description string
-	Severity    string
-	Impact      string
+	Column         string
+	Type           string
+	Description    string
+	Severity       string
+	Impact         string
 	Recommendation string
 }
 
@@ -185,8 +185,8 @@ type ProfilerConfig struct {
 
 // Profiler handles data profiling
 type Profiler struct {
-	reader *pkg.Reader
-	config *ProfilerConfig
+	reader      *pkg.Reader
+	config      *ProfilerConfig
 	concurrency int
 }
 
@@ -212,8 +212,8 @@ func NewProfiler(tablePath string, config *ProfilerConfig) (*Profiler, error) {
 	}
 
 	return &Profiler{
-		reader: reader,
-		config: config,
+		reader:      reader,
+		config:      config,
 		concurrency: 4, // default concurrency
 	}, nil
 }
@@ -223,7 +223,7 @@ func NewProfiler(tablePath string, config *ProfilerConfig) (*Profiler, error) {
 func (p *Profiler) ProfileTable() (*Profile, error) {
 	startTime := time.Now()
 
-	schemaMap := p.reader.GetSchema() // Returns map[string]string
+	schemaMap := p.reader.GetSchema()            // Returns map[string]string
 	if schemaMap == nil || len(schemaMap) == 0 { // Check if schema is empty or nil
 		return nil, fmt.Errorf("failed to get a valid schema from reader")
 	}
@@ -237,10 +237,10 @@ func (p *Profiler) ProfileTable() (*Profile, error) {
 	if len(records) == 0 { // This will currently be true
 		// Handle empty table or sample (or in this case, unparsed data)
 		return &Profile{
-			TableName:      p.reader.GetTablePath(),
-			RowCount:       0, // Actual row count would come from stats or parsed records
-			ColumnProfiles: make(map[string]*ColumnProfile),
-			CreatedAt:      time.Now(),
+			TableName:       p.reader.GetTablePath(),
+			RowCount:        0, // Actual row count would come from stats or parsed records
+			ColumnProfiles:  make(map[string]*ColumnProfile),
+			CreatedAt:       time.Now(),
 			ExecutionTimeMs: time.Since(startTime).Milliseconds(),
 		}, nil
 	}
@@ -273,10 +273,10 @@ func (p *Profiler) ProfileTable() (*Profile, error) {
 	wg.Wait()
 
 	return &Profile{
-		TableName:      p.reader.GetTablePath(),
-		RowCount:       int64(len(records)), // Will be 0 for now
-		ColumnProfiles: columnProfilesMap,
-		CreatedAt:      time.Now(),
+		TableName:       p.reader.GetTablePath(),
+		RowCount:        int64(len(records)), // Will be 0 for now
+		ColumnProfiles:  columnProfilesMap,
+		CreatedAt:       time.Now(),
 		ExecutionTimeMs: time.Since(startTime).Milliseconds(),
 	}, nil
 }
@@ -297,12 +297,12 @@ func (p *Profiler) GetDataQuality() (*QualityProfile, error) {
 
 	// Construct the QualityProfile to return
 	qp := &QualityProfile{
-		TablePath:     profile.TableName, // Or p.reader.GetTablePath() directly
-		Timestamp:     time.Now(),        // Or profile.CreatedAt
-		TotalRows:     profile.RowCount,  // This would be 0 if data parsing is not yet implemented
-		TotalColumns:  len(profile.ColumnProfiles),
+		TablePath:      profile.TableName, // Or p.reader.GetTablePath() directly
+		Timestamp:      time.Now(),        // Or profile.CreatedAt
+		TotalRows:      profile.RowCount,  // This would be 0 if data parsing is not yet implemented
+		TotalColumns:   len(profile.ColumnProfiles),
 		ColumnProfiles: profile.ColumnProfiles,
-		DataQuality:   dataQuality,
+		DataQuality:    dataQuality,
 	}
 
 	return qp, nil
@@ -779,12 +779,12 @@ func calculateDataQualityMetrics(profile *Profile) *DataQuality {
 	// 1. Calculating completeness, consistency, uniqueness, timeliness, and validity
 	// 2. Identifying data quality issues
 	return &DataQuality{
-		Completeness:   1.0,
-		Consistency:    1.0,
-		Uniqueness:     1.0,
-		Timeliness:     1.0,
-		Validity:       1.0,
-		OverallScore:   1.0,
-		Issues:         []*QualityIssue{},
+		Completeness: 1.0,
+		Consistency:  1.0,
+		Uniqueness:   1.0,
+		Timeliness:   1.0,
+		Validity:     1.0,
+		OverallScore: 1.0,
+		Issues:       []*QualityIssue{},
 	}
 }

@@ -70,4 +70,4 @@ func (m *Manager) DisableExtension(name string) error {
 	}
 	ext.Enabled = false
 	return nil
-} 
+}

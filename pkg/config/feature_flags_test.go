@@ -92,9 +92,9 @@ func TestFeatureFlagManager(t *testing.T) {
 		// Create a config
 		config := map[string]interface{}{
 			"feature_flags": map[string]interface{}{
-				"webhooks":            true,
-				"plugins":             false,
-				"advanced_metrics":    true,
+				"webhooks":             true,
+				"plugins":              false,
+				"advanced_metrics":     true,
 				"intelligent_alerting": false,
 			},
 		}

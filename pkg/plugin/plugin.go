@@ -36,10 +36,10 @@ type PluginInfo struct {
 
 // Plugin represents a loaded plugin
 type Plugin struct {
-	Info   PluginInfo      `json:"info"`
-	Path   string          `json:"path"`
-	Module *plugin.Plugin  `json:"-"`
-	Lookup map[string]any  `json:"-"`
+	Info   PluginInfo     `json:"info"`
+	Path   string         `json:"path"`
+	Module *plugin.Plugin `json:"-"`
+	Lookup map[string]any `json:"-"`
 }
 
 // PluginManager manages the loading and execution of plugins

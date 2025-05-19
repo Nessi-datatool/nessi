@@ -118,14 +118,14 @@ func xTestDashboard_HandleFreshnessStatusAPI(t *testing.T) {
 	}
 
 	status := freshness.TableFreshnessStatus{
-		TableName:         "test_table",
-		TablePath:         "/path/to/test_table",
-		LastUpdateTime:    now.Add(-30 * time.Minute),
-		TimeSinceUpdate:   30 * time.Minute,
-		ExpectedFrequency: time.Hour,
-		Status:            StatusOK,
+		TableName:          "test_table",
+		TablePath:          "/path/to/test_table",
+		LastUpdateTime:     now.Add(-30 * time.Minute),
+		TimeSinceUpdate:    30 * time.Minute,
+		ExpectedFrequency:  time.Hour,
+		Status:             StatusOK,
 		NextExpectedUpdate: now.Add(30 * time.Minute),
-		SLAConfig:         slaConfigDetails,
+		SLAConfig:          slaConfigDetails,
 	}
 
 	// Set up mock behavior
@@ -276,7 +276,7 @@ func xTestDashboard_HandleFreshnessTrendsAPI(t *testing.T) {
 
 	// Create test data
 	now := time.Now()
-	
+
 	// Create a simple trends object that matches the freshness package structure
 	trends := &freshness.FreshnessTrends{
 		Timestamps: []time.Time{now.Add(-24 * time.Hour), now},
@@ -349,14 +349,14 @@ func xTestDashboard_HandleFreshnessExportAPI(t *testing.T) {
 	}
 
 	status := freshness.TableFreshnessStatus{
-		TableName:         "test_table",
-		TablePath:         "/path/to/test_table",
-		LastUpdateTime:    now.Add(-30 * time.Minute),
-		TimeSinceUpdate:   30 * time.Minute,
-		ExpectedFrequency: time.Hour,
-		Status:            StatusOK,
+		TableName:          "test_table",
+		TablePath:          "/path/to/test_table",
+		LastUpdateTime:     now.Add(-30 * time.Minute),
+		TimeSinceUpdate:    30 * time.Minute,
+		ExpectedFrequency:  time.Hour,
+		Status:             StatusOK,
 		NextExpectedUpdate: now.Add(30 * time.Minute),
-		SLAConfig:         slaConfigDetails,
+		SLAConfig:          slaConfigDetails,
 	}
 
 	// Set up mock behavior

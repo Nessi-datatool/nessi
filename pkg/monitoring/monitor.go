@@ -12,31 +12,31 @@ import (
 
 // Monitor represents a monitoring system
 type Monitor struct {
-	mu                     sync.RWMutex
-	metricsPort            int
+	mu          sync.RWMutex
+	metricsPort int
 
-	metricStore            *MetricStore
-	authManager            *security.AuthManager
-	certManager            *security.CertManager
-	config                 *Config
-	metricRetention        *MetricRetention
-	stopCh                 chan struct{}
-	running                bool
-	configPath             string
-	metrics                map[string]interface{}
+	metricStore     *MetricStore
+	authManager     *security.AuthManager
+	certManager     *security.CertManager
+	config          *Config
+	metricRetention *MetricRetention
+	stopCh          chan struct{}
+	running         bool
+	configPath      string
+	metrics         map[string]interface{}
 }
 
 // MonitorOptions represents monitor configuration options
 type MonitorOptions struct {
-	MetricsPort  int
+	MetricsPort int
 }
 
 // New creates a new Monitor instance
 func New(options MonitorOptions) (*Monitor, error) {
 	monitor := &Monitor{
-		metricsPort:  options.MetricsPort,
+		metricsPort: options.MetricsPort,
 	}
-	
+
 	// Create metric store
 	monitor.metricStore = NewMetricStore()
 	return monitor, nil
@@ -47,13 +47,12 @@ func (m *Monitor) GetMetricsPort() int {
 	return m.metricsPort
 }
 
-
 // Export functionality is defined in export.go
 
 // AlertManagerOptions represents options for creating an AlertManager
 type AlertManagerOptions struct {
-	EnableEmail   bool
-	EmailConfig   *alerts.EmailConfig
+	EnableEmail bool
+	EmailConfig *alerts.EmailConfig
 	// Webhook support is limited in OSS version
 	EnableWebhook bool
 	WebhookConfig *alerts.WebhookConfig
@@ -75,10 +74,10 @@ func DefaultAlertManagerOptions() AlertManagerOptions {
 		},
 
 		WebhookConfig: &alerts.WebhookConfig{
-			URL:        "https://example.com/webhook",
-			Method:     "POST",
-			Headers:    map[string]string{"Content-Type": "application/json"},
-			MaxRetries: 3,
+			URL:           "https://example.com/webhook",
+			Method:        "POST",
+			Headers:       map[string]string{"Content-Type": "application/json"},
+			MaxRetries:    3,
 			RetryInterval: time.Second * 5,
 		},
 	}

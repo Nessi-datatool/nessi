@@ -11,10 +11,10 @@ type ConsistencyCheckType string
 const (
 	// SchemaConsistencyCheck checks for schema consistency between versions
 	SchemaConsistencyCheck ConsistencyCheckType = "schema"
-	
+
 	// TypeConsistencyCheck checks for type consistency between versions
 	TypeConsistencyCheck ConsistencyCheckType = "type"
-	
+
 	// FieldConsistencyCheck checks for field consistency between versions
 	FieldConsistencyCheck ConsistencyCheckType = "field"
 )
@@ -23,16 +23,16 @@ const (
 type ConsistencyCheckResult struct {
 	// The type of consistency check performed
 	CheckType ConsistencyCheckType
-	
+
 	// Whether the check passed
 	Passed bool
-	
+
 	// Issues found during the check
 	Issues []ConsistencyIssue
-	
+
 	// The versions that were compared
 	VersionsCompared []int64
-	
+
 	// The timestamp when the check was performed
 	Timestamp time.Time
 }
@@ -41,16 +41,16 @@ type ConsistencyCheckResult struct {
 type ConsistencyIssue struct {
 	// The type of issue
 	Type string
-	
+
 	// The field that has the issue
 	Field string
-	
+
 	// A description of the issue
 	Description string
-	
+
 	// The severity of the issue (warning, error)
 	Severity string
-	
+
 	// The versions where the issue was found
 	Versions []int64
 }
@@ -60,10 +60,10 @@ func (m *MetadataManager) CheckConsistency(checkType ConsistencyCheckType, versi
 	if len(versions) < 2 {
 		return nil, fmt.Errorf("at least two versions are required for consistency check")
 	}
-	
+
 	// Sort versions in ascending order
 	sortVersions(versions)
-	
+
 	// Get schema fields for each version
 	schemasByVersion := make(map[int64][]SchemaField)
 	for _, version := range versions {
@@ -73,7 +73,7 @@ func (m *MetadataManager) CheckConsistency(checkType ConsistencyCheckType, versi
 		}
 		schemasByVersion[version] = fields
 	}
-	
+
 	// Create result
 	result := &ConsistencyCheckResult{
 		CheckType:        checkType,
@@ -82,7 +82,7 @@ func (m *MetadataManager) CheckConsistency(checkType ConsistencyCheckType, versi
 		VersionsCompared: versions,
 		Timestamp:        time.Now(),
 	}
-	
+
 	// Perform the appropriate check
 	switch checkType {
 	case SchemaConsistencyCheck:
@@ -94,7 +94,7 @@ func (m *MetadataManager) CheckConsistency(checkType ConsistencyCheckType, versi
 	default:
 		return nil, fmt.Errorf("unsupported check type: %s", checkType)
 	}
-	
+
 	return result, nil
 }
 
@@ -106,15 +106,15 @@ func checkSchemaConsistency(schemasByVersion map[int64][]SchemaField, result *Co
 		versions = append(versions, version)
 	}
 	sortVersions(versions)
-	
+
 	// Compare schemas between consecutive versions
 	for i := 1; i < len(versions); i++ {
 		prevVersion := versions[i-1]
 		currVersion := versions[i]
-		
+
 		prevSchema := schemasByVersion[prevVersion]
 		currSchema := schemasByVersion[currVersion]
-		
+
 		// Check for added fields
 		for _, currField := range currSchema {
 			found := false
@@ -124,7 +124,7 @@ func checkSchemaConsistency(schemasByVersion map[int64][]SchemaField, result *Co
 					break
 				}
 			}
-			
+
 			if !found {
 				// Field was added
 				result.Issues = append(result.Issues, ConsistencyIssue{
@@ -136,7 +136,7 @@ func checkSchemaConsistency(schemasByVersion map[int64][]SchemaField, result *Co
 				})
 			}
 		}
-		
+
 		// Check for removed fields
 		for _, prevField := range prevSchema {
 			found := false
@@ -146,7 +146,7 @@ func checkSchemaConsistency(schemasByVersion map[int64][]SchemaField, result *Co
 					break
 				}
 			}
-			
+
 			if !found {
 				// Field was removed
 				result.Issues = append(result.Issues, ConsistencyIssue{
@@ -170,10 +170,10 @@ func checkTypeConsistency(schemasByVersion map[int64][]SchemaField, result *Cons
 		versions = append(versions, version)
 	}
 	sortVersions(versions)
-	
+
 	// Create a map of field names to their types in each version
 	fieldTypes := make(map[string]map[int64]string)
-	
+
 	// Collect field types for each version
 	for _, version := range versions {
 		schema := schemasByVersion[version]
@@ -184,25 +184,25 @@ func checkTypeConsistency(schemasByVersion map[int64][]SchemaField, result *Cons
 			fieldTypes[field.Name][version] = field.Type
 		}
 	}
-	
+
 	// Check for type changes
 	for fieldName, typesByVersion := range fieldTypes {
 		if len(typesByVersion) < 2 {
 			// Field only exists in one version, already handled by schema consistency check
 			continue
 		}
-		
+
 		// Check if the type changed across versions
 		var prevType string
 		var prevVersion int64
-		
+
 		for i, version := range versions {
 			fieldType, exists := typesByVersion[version]
 			if !exists {
 				// Field doesn't exist in this version, already handled by schema consistency check
 				continue
 			}
-			
+
 			if i > 0 && prevType != "" && fieldType != prevType {
 				// Type changed
 				result.Issues = append(result.Issues, ConsistencyIssue{
@@ -214,7 +214,7 @@ func checkTypeConsistency(schemasByVersion map[int64][]SchemaField, result *Cons
 				})
 				result.Passed = false
 			}
-			
+
 			prevType = fieldType
 			prevVersion = version
 		}
@@ -229,27 +229,27 @@ func checkFieldConsistency(schemasByVersion map[int64][]SchemaField, result *Con
 		versions = append(versions, version)
 	}
 	sortVersions(versions)
-	
+
 	// Get the latest version schema
 	latestVersion := versions[len(versions)-1]
 	latestSchema := schemasByVersion[latestVersion]
-	
+
 	// Track which fields have been reported as missing to avoid duplicates
 	reportedMissingFields := make(map[string]bool)
-	
+
 	// Check if all fields in the latest version exist in all previous versions
 	for _, latestField := range latestSchema {
 		// Skip fields that we've already reported as missing
 		if reportedMissingFields[latestField.Name] {
 			continue
 		}
-		
+
 		// Check if this field is new (added in the latest version)
 		isNewField := false
 		for i := 0; i < len(versions)-1; i++ {
 			version := versions[i]
 			schema := schemasByVersion[version]
-			
+
 			found := false
 			for _, field := range schema {
 				if field.Name == latestField.Name {
@@ -257,13 +257,13 @@ func checkFieldConsistency(schemasByVersion map[int64][]SchemaField, result *Con
 					break
 				}
 			}
-			
+
 			if !found {
 				isNewField = true
 				break
 			}
 		}
-		
+
 		// If this is a new field, report it once
 		if isNewField {
 			result.Issues = append(result.Issues, ConsistencyIssue{

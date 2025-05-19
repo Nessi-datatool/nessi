@@ -30,7 +30,7 @@ type Profile struct {
 	Distinct    int64
 	Patterns    []string
 	Anomalies   []Anomaly
-	Stats       Stats `json:"stats"`
+	Stats       Stats               `json:"stats"`
 	ValueCounts map[interface{}]int `json:"value_counts,omitempty"`
 }
 
@@ -62,7 +62,7 @@ func NewProfiler(tablePath string) *Profiler {
 func (p *Profiler) GenerateProfile() ([]*Profile, error) {
 	// Create profiles for each column
 	var profiles []*Profile
-	
+
 	// For now, return empty profiles since we don't have the pkg package
 	return profiles, nil
 }
@@ -198,25 +198,25 @@ func (p *Profiler) ProfileFromGzipReader(reader io.Reader) ([]*Profile, error) {
 func (p *Profiler) ProfileTable(record arrow.Record) ([]*Profile, error) {
 	// Create profiles for each column
 	var profiles []*Profile
-	
+
 	// Get the number of columns
 	numCols := int(record.NumCols())
 	numRows := int(record.NumRows())
-	
+
 	// Create a profile for each column
 	for i := 0; i < numCols; i++ {
 		col := record.Column(i)
 		field := record.Schema().Field(i)
-		
+
 		profile := &Profile{
 			Name:     field.Name,
 			RowCount: int64(numRows),
 		}
-		
+
 		// Determine column type
 		dataType := col.DataType().String()
 		profile.Type = dataType
-		
+
 		// Count nulls
 		var nullCount int64
 		for j := 0; j < numRows; j++ {
@@ -224,10 +224,10 @@ func (p *Profiler) ProfileTable(record arrow.Record) ([]*Profile, error) {
 				nullCount++
 			}
 		}
-		
+
 		profile.NullCount = nullCount
 		profile.NullPercent = float64(nullCount) / float64(numRows) * 100
-		
+
 		// Calculate statistics for numeric columns
 		if isNumeric(col.DataType().ID()) {
 			// Extract numeric values
@@ -236,7 +236,7 @@ func (p *Profiler) ProfileTable(record arrow.Record) ([]*Profile, error) {
 				if !col.IsValid(j) {
 					continue
 				}
-				
+
 				// Convert to float64 based on type
 				var val float64
 				switch col.DataType().ID() {
@@ -263,19 +263,19 @@ func (p *Profiler) ProfileTable(record arrow.Record) ([]*Profile, error) {
 				default:
 					continue
 				}
-				
+
 				values = append(values, val)
 			}
-			
+
 			// Calculate statistics
 			if len(values) > 0 {
 				profile.Stats = calculateStatistics(values)
 			}
 		}
-		
+
 		profiles = append(profiles, profile)
 	}
-	
+
 	return profiles, nil
 }
 

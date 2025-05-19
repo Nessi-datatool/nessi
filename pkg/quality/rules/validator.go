@@ -20,17 +20,17 @@ type RuleMetadata struct {
 	Name        string                 `json:"name"`
 	Description string                 `json:"description"`
 	Severity    string                 `json:"severity"`
-	Tags        []string              `json:"tags"`
+	Tags        []string               `json:"tags"`
 	Config      map[string]interface{} `json:"config"`
 }
 
 // ValidationError represents a single validation error
 type ValidationError struct {
-	RuleID      string `json:"rule_id"`
-	Field       string `json:"field"`
-	Value       string `json:"value"`
-	Message     string `json:"message"`
-	RowIndex    int64  `json:"row_index"`
+	RuleID   string `json:"rule_id"`
+	Field    string `json:"field"`
+	Value    string `json:"value"`
+	Message  string `json:"message"`
+	RowIndex int64  `json:"row_index"`
 }
 
 // ValidationStats tracks validation metrics
@@ -115,13 +115,13 @@ func NewNullCheckRule(fields []string, config RuleMetadata) *NullCheckRule {
 
 func (r *NullCheckRule) Validate(record arrow.Record) []ValidationError {
 	var errors []ValidationError
-	
+
 	for _, field := range r.fields {
 		colIdx := record.Schema().FieldIndices(field)
 		if len(colIdx) == 0 {
 			continue
 		}
-		
+
 		col := record.Column(colIdx[0])
 		for i := 0; i < int(record.NumRows()); i++ {
 			if col.IsNull(i) {
@@ -135,7 +135,7 @@ func (r *NullCheckRule) Validate(record arrow.Record) []ValidationError {
 			}
 		}
 	}
-	
+
 	return errors
 }
 
@@ -165,13 +165,13 @@ func NewRangeCheckRule(fields map[string]RangeConfig, config RuleMetadata) *Rang
 
 func (r *RangeCheckRule) Validate(record arrow.Record) []ValidationError {
 	var errors []ValidationError
-	
+
 	for field, rangeConfig := range r.fields {
 		colIdx := record.Schema().FieldIndices(field)
 		if len(colIdx) == 0 {
 			continue
 		}
-		
+
 		col := record.Column(colIdx[0])
 		if col.DataType().ID() != arrow.FLOAT64 {
 			continue
@@ -182,21 +182,21 @@ func (r *RangeCheckRule) Validate(record arrow.Record) []ValidationError {
 			if col.IsNull(i) {
 				continue
 			}
-			
+
 			value := floatCol.Value(i)
 			if value < rangeConfig.Min || value > rangeConfig.Max {
 				errors = append(errors, ValidationError{
-					RuleID:   r.config.ID,
-					Field:    field,
-					Value:    fmt.Sprintf("%f", value),
-					Message:  fmt.Sprintf("Value %f is outside range [%f, %f]",
+					RuleID: r.config.ID,
+					Field:  field,
+					Value:  fmt.Sprintf("%f", value),
+					Message: fmt.Sprintf("Value %f is outside range [%f, %f]",
 						value, rangeConfig.Min, rangeConfig.Max),
 					RowIndex: int64(i),
 				})
 			}
 		}
 	}
-	
+
 	return errors
 }
 

@@ -36,10 +36,12 @@ type Rule struct {
 }
 
 // RuleType defines the type of quality rule
+//
 //go:generate stringer -type=RuleType
 type RuleType string
 
 // Severity defines the severity level of a rule violation
+//
 //go:generate stringer -type=Severity
 type Severity string
 

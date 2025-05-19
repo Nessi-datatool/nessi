@@ -14,7 +14,7 @@ import (
 
 // SchemaManager handles schema operations for Delta Lake tables
 type SchemaManager struct {
-	tablePath      string
+	tablePath       string
 	metadataManager *MetadataManager
 	mutex           sync.RWMutex
 	historyCache    *SchemaHistory // Cache for schema history
@@ -24,9 +24,9 @@ type SchemaManager struct {
 func NewSchemaManager(tablePath string) *SchemaManager {
 	logger := logging.GetLogger()
 	logger.Debug("Creating new SchemaManager", "tablePath", tablePath)
-	
+
 	return &SchemaManager{
-		tablePath:      tablePath,
+		tablePath:       tablePath,
 		metadataManager: NewMetadataManager(tablePath),
 		historyCache:    nil,
 	}
@@ -34,8 +34,8 @@ func NewSchemaManager(tablePath string) *SchemaManager {
 
 // SchemaChange represents a change between two schema versions
 type SchemaChange struct {
-	Type      string      // "added", "removed", "type_changed"
-	FieldName string      // Name of the field that changed
+	Type      string         // "added", "removed", "type_changed"
+	FieldName string         // Name of the field that changed
 	OldType   arrow.DataType // Old data type (nil for added fields)
 	NewType   arrow.DataType // New data type (nil for removed fields)
 }
@@ -63,8 +63,8 @@ type SerializableField struct {
 
 // SerializableSchemaVersion is a JSON-serializable representation of SchemaVersion
 type SerializableSchemaVersion struct {
-	Version   int64              `json:"version"`
-	Timestamp time.Time          `json:"timestamp"`
+	Version   int64               `json:"version"`
+	Timestamp time.Time           `json:"timestamp"`
 	Fields    []SerializableField `json:"fields"`
 }
 
@@ -154,12 +154,12 @@ func (sm *SchemaManager) GetSchemaHistory() (*SchemaHistory, error) {
 	if len(versions) == 0 {
 		logger.Warn("No versions found for table")
 		emptyHistory := &SchemaHistory{Versions: []SchemaVersion{}}
-		
+
 		// Cache the empty history
 		sm.mutex.Lock()
 		sm.historyCache = emptyHistory
 		sm.mutex.Unlock()
-		
+
 		return emptyHistory, nil
 	}
 
@@ -257,8 +257,8 @@ func DiffSchemas(oldSchema, newSchema *arrow.Schema) []SchemaChange {
 			})
 		} else if !arrowTypesEqual(oldField.Type, newField.Type) {
 			// Field type changed
-			logger.Debug("Field type changed", "field", name, 
-				"oldType", formatArrowType(oldField.Type), 
+			logger.Debug("Field type changed", "field", name,
+				"oldType", formatArrowType(oldField.Type),
 				"newType", formatArrowType(newField.Type))
 			changes = append(changes, SchemaChange{
 				Type:      "type_changed",
@@ -311,7 +311,7 @@ func arrowTypesEqual(a, b arrow.DataType) bool {
 			return dec1.Precision == dec2.Precision && dec1.Scale == dec2.Scale
 		}
 		return false
-	
+
 	case arrow.TIMESTAMP:
 		// For timestamp types, check unit
 		ats, ok1 := a.(*arrow.TimestampType)
@@ -361,7 +361,7 @@ func FormatSchemaChanges(changes []SchemaChange) string {
 		case "removed":
 			sb.WriteString(fmt.Sprintf("- Removed field: %s (%s)\n", change.FieldName, formatArrowType(change.OldType)))
 		case "type_changed":
-			sb.WriteString(fmt.Sprintf("~ Changed type: %s from %s to %s\n", 
+			sb.WriteString(fmt.Sprintf("~ Changed type: %s from %s to %s\n",
 				change.FieldName, formatArrowType(change.OldType), formatArrowType(change.NewType)))
 		default:
 			logger.Warn("Unknown change type", "type", change.Type, "field", change.FieldName)
@@ -464,11 +464,11 @@ func max(a, b int) int {
 func ConvertToArrowSchema(schema *DeltaSchema) (*arrow.Schema, []arrow.Field, error) {
 	logger := logging.GetLogger()
 	logger.Debug("Converting Schema to Arrow Schema", "fields", len(schema.Fields))
-	
+
 	if schema == nil {
 		return nil, nil, fmt.Errorf("cannot convert nil schema to arrow schema")
 	}
-	
+
 	// Pre-allocate the slice for better performance
 	arrowFields := make([]arrow.Field, len(schema.Fields))
 	for i, field := range schema.Fields {
@@ -491,26 +491,26 @@ func ConvertToArrowSchema(schema *DeltaSchema) (*arrow.Schema, []arrow.Field, er
 			// Default to string for unknown types
 			dataType = arrow.BinaryTypes.String
 		}
-		
+
 		// Create metadata map if needed
 		var metadata map[string]string
 		if field.Metadata != nil && len(field.Metadata) > 0 {
 			metadata = field.Metadata
 		}
-		
+
 		// Create arrow field
 		arrowFields[i] = arrow.Field{
-			Name: field.Name, 
-			Type: dataType, 
+			Name:     field.Name,
+			Type:     dataType,
 			Nullable: field.Nullable,
 			Metadata: arrow.MetadataFrom(metadata),
 		}
 	}
-	
+
 	// Create arrow schema
 	arrowSchema := arrow.NewSchema(arrowFields, nil)
 	logger.Debug("Successfully converted Schema to Arrow Schema", "fields", len(arrowFields))
-	
+
 	return arrowSchema, arrowFields, nil
 }
 
@@ -518,11 +518,11 @@ func ConvertToArrowSchema(schema *DeltaSchema) (*arrow.Schema, []arrow.Field, er
 func ConvertFromArrowSchema(arrowSchema *arrow.Schema) (*DeltaSchema, error) {
 	logger := logging.GetLogger()
 	logger.Debug("Converting Arrow Schema to Schema", "fields", arrowSchema.NumFields())
-	
+
 	if arrowSchema == nil {
 		return nil, fmt.Errorf("cannot convert nil arrow schema to schema")
 	}
-	
+
 	// Create schema fields
 	fields := make([]DeltaField, arrowSchema.NumFields())
 	for i, arrowField := range arrowSchema.Fields() {
@@ -545,7 +545,7 @@ func ConvertFromArrowSchema(arrowSchema *arrow.Schema) (*DeltaSchema, error) {
 			// Default to string for unknown types
 			fieldType = "string"
 		}
-		
+
 		// Extract metadata
 		metadata := make(map[string]string)
 		if arrowField.Metadata.Len() > 0 {
@@ -553,21 +553,21 @@ func ConvertFromArrowSchema(arrowSchema *arrow.Schema) (*DeltaSchema, error) {
 				metadata[key] = arrowField.Metadata.Values()[arrowField.Metadata.FindKey(key)]
 			}
 		}
-		
+
 		// Create field
 		fields[i] = DeltaField{
-			Name: arrowField.Name,
-			Type: fieldType,
+			Name:     arrowField.Name,
+			Type:     fieldType,
 			Nullable: arrowField.Nullable,
 			Metadata: metadata,
 		}
 	}
-	
+
 	// Create schema
 	schema := &DeltaSchema{
 		Fields: fields,
 	}
-	
+
 	logger.Debug("Successfully converted Arrow Schema to Schema", "fields", len(fields))
 	return schema, nil
 }
@@ -628,10 +628,10 @@ func FormatSchemaHistory(history *SchemaHistory) string {
 
 			// Include description if available
 			if description != "" {
-				sb.WriteString(fmt.Sprintf("  - %s (%s): %s\n", 
+				sb.WriteString(fmt.Sprintf("  - %s (%s): %s\n",
 					field.Name, formatArrowType(field.Type), description))
 			} else {
-				sb.WriteString(fmt.Sprintf("  - %s (%s)\n", 
+				sb.WriteString(fmt.Sprintf("  - %s (%s)\n",
 					field.Name, formatArrowType(field.Type)))
 			}
 		}
@@ -639,10 +639,10 @@ func FormatSchemaHistory(history *SchemaHistory) string {
 		if i > 0 {
 			// Show diff with previous version
 			prevVersion := history.Versions[i-1]
-			
+
 			// Compare the current version with the previous version
 			changes := DiffSchemas(prevVersion.Schema, version.Schema)
-			
+
 			if len(changes) > 0 {
 				sb.WriteString("\nChanges from previous version:\n")
 				sb.WriteString(FormatSchemaChanges(changes))

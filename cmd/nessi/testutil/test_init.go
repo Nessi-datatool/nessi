@@ -12,17 +12,17 @@ import (
 func ResetCommandFlags(cmd *cobra.Command) {
 	cmd.ResetFlags()
 	cmd.ResetCommands()
-	
+
 	// Reset persistent flags
 	cmd.PersistentFlags().VisitAll(func(f *pflag.Flag) {
 		cmd.PersistentFlags().Set(f.Name, f.DefValue)
 	})
-	
+
 	// Reset local flags
 	cmd.Flags().VisitAll(func(f *pflag.Flag) {
 		cmd.Flags().Set(f.Name, f.DefValue)
 	})
-	
+
 	// Reset flags for all subcommands
 	for _, subCmd := range cmd.Commands() {
 		ResetCommandFlags(subCmd)
@@ -33,7 +33,7 @@ func ResetCommandFlags(cmd *cobra.Command) {
 func InitTestCommand(cmd *cobra.Command) {
 	// Reset all flags to avoid conflicts
 	ResetCommandFlags(cmd)
-	
+
 	// Create a clean environment for the command
 	cmd.SetArgs([]string{})
 	cmd.SetOut(nil)
@@ -56,22 +56,22 @@ func TeardownTestEnv() {
 func TestMain(m *testing.M, setup func(), teardown func()) int {
 	// Set up test environment
 	SetupTestEnv()
-	
+
 	// Run user-provided setup
 	if setup != nil {
 		setup()
 	}
-	
+
 	// Run tests
 	code := m.Run()
-	
+
 	// Run user-provided teardown
 	if teardown != nil {
 		teardown()
 	}
-	
+
 	// Clean up test environment
 	TeardownTestEnv()
-	
+
 	return code
 }

@@ -164,7 +164,7 @@ func GetFieldMetadata(schema *arrow.Schema, fieldName string) (*FieldMetadata, e
 	for i := 0; i < field.Metadata.Len(); i++ {
 		key := keys[i]
 		value := values[i]
-		
+
 		switch key {
 		case "description":
 			metadata.Description = value
@@ -276,7 +276,7 @@ func FormatAllFieldsMetadata(metadata *SchemaWithMetadata) string {
 
 	// Pre-allocate a reasonable buffer size based on the number of fields
 	// Assume average of 200 bytes per field
-	sb.Grow(200 * len(metadata.Fields) + 20)
+	sb.Grow(200*len(metadata.Fields) + 20)
 
 	sb.WriteString("Schema Fields:\n")
 

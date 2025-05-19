@@ -1,12 +1,12 @@
 package profile
 
 import (
+	"github.com/apache/arrow/go/v15/arrow"
+	"github.com/apache/arrow/go/v15/arrow/array"
+	"github.com/apache/arrow/go/v15/arrow/memory"
+	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
-	"github.com/stretchr/testify/require"
-	"github.com/apache/arrow/go/v15/arrow"
-	"github.com/apache/arrow/go/v15/arrow/memory"
-	"github.com/apache/arrow/go/v15/arrow/array"
 )
 
 func TestProfileFromReader_RealParquet(t *testing.T) {

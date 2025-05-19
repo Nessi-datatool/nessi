@@ -28,30 +28,30 @@ type ExchangeConfig struct {
 
 // ExchangeStats tracks performance metrics
 type ExchangeStats struct {
-	RowCount       int64
-	SizeBytes      int64
-	MemoryUsage    int64
-	SerializeMs    int64
-	DeserializeMs  int64
-	CompressionMs  int64
-	LastOperation  time.Time
+	RowCount      int64
+	SizeBytes     int64
+	MemoryUsage   int64
+	SerializeMs   int64
+	DeserializeMs int64
+	CompressionMs int64
+	LastOperation time.Time
 }
 
 // ExchangeManager orchestrates data exchange
 type ExchangeManager struct {
 	strategies []ExchangeStrategy
-	config    ExchangeConfig
-	stats     map[string]*ExchangeStats
-	pool      memory.Allocator
+	config     ExchangeConfig
+	stats      map[string]*ExchangeStats
+	pool       memory.Allocator
 }
 
 // NewExchangeManager creates a new exchange manager
 func NewExchangeManager(config ExchangeConfig) *ExchangeManager {
 	return &ExchangeManager{
 		strategies: make([]ExchangeStrategy, 0),
-		config:    config,
-		stats:     make(map[string]*ExchangeStats),
-		pool:      memory.NewGoAllocator(),
+		config:     config,
+		stats:      make(map[string]*ExchangeStats),
+		pool:       memory.NewGoAllocator(),
 	}
 }
 
