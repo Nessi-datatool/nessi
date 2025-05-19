@@ -12,9 +12,10 @@ type CatalogType string
 
 // Supported catalog types
 const (
-	AWSGlue       CatalogType = "aws_glue"
-	AzurePurview  CatalogType = "azure_purview"
+	AWSGlue        CatalogType = "aws_glue"
+	AzurePurview   CatalogType = "azure_purview"
 	GCPDataCatalog CatalogType = "gcp_data_catalog"
+	Databricks     CatalogType = "databricks"
 )
 
 // DatabaseInfo represents a database in a data catalog
@@ -95,20 +96,20 @@ type DataCatalog interface {
 	Name() string
 	Connect(ctx context.Context, config map[string]interface{}) error
 	Disconnect(ctx context.Context) error
-	
+
 	// Asset discovery
 	ListDatabases(ctx context.Context) ([]types.DatabaseInfo, error)
 	ListTables(ctx context.Context, database string) ([]types.TableInfo, error)
 	GetTableDetails(ctx context.Context, database, table string) (*types.TableDetails, error)
-	
+
 	// Metadata operations
 	GetTableMetadata(ctx context.Context, database, table string) (*types.TableMetadata, error)
 	UpdateTableMetadata(ctx context.Context, database, table string, metadata *types.TableMetadata) error
-	
+
 	// Lineage operations
 	GetTableLineage(ctx context.Context, database, table string) (*types.LineageInfo, error)
 	UpdateTableLineage(ctx context.Context, database, table string, lineage *types.LineageInfo) error
-	
+
 	// Quality metrics
 	PublishQualityMetrics(ctx context.Context, database, table string, metrics *types.QualityMetrics) error
 	GetQualityMetrics(ctx context.Context, database, table string) (*types.QualityMetrics, error)

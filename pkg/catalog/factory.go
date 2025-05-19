@@ -2,6 +2,9 @@ package catalog
 
 import (
 	"fmt"
+	"log"
+
+	"github.com/nessi-dev/nessi/pkg/catalog/databricks"
 )
 
 // CatalogFactory creates instances of data catalogs
@@ -21,6 +24,15 @@ func (f *CatalogFactory) CreateCatalog(catalogType CatalogType) (DataCatalog, er
 		return NewAzurePurviewCatalog(), nil
 	case GCPDataCatalog:
 		return NewGCPDataCatalog(), nil
+	case Databricks:
+		// Load configuration from environment variables
+		config, err := databricks.NewConfigFromEnv()
+		if err != nil {
+			log.Printf("Warning: Failed to load Databricks configuration: %v", err)
+			return nil, fmt.Errorf("failed to load Databricks configuration: %w", err)
+		}
+		
+		return NewDatabricksCatalog(config.BaseURL, config.Token, config.WorkspaceID, config.DefaultSchema)
 	default:
 		return nil, fmt.Errorf("unsupported catalog type: %s", catalogType)
 	}

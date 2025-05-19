@@ -1,0 +1,48 @@
+name: Run Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.20'
+          cache: true
+      
+      - name: Install dependencies
+        run: go mod download
+      
+      - name: Run core tests
+        run: |
+          # Test only the core Databricks integration and visualization packages
+          go test -v ./pkg/catalog/databricks/... -short
+          go test -v ./pkg/visualization/... -short
+      
+      - name: Run integration tests (if not in PR)
+        if: github.event_name != 'pull_request'
+        run: |
+          # Skip integration tests in PRs to avoid requiring credentials
+          go test -v ./... -run Integration
+      
+      - name: Check test coverage
+        run: |
+          # Generate coverage report for core packages only
+          go test -coverprofile=coverage.out ./pkg/catalog/databricks/... ./pkg/visualization/...
+          go tool cover -func=coverage.out
+      
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.out
+          retention-days: 5

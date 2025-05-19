@@ -6,13 +6,14 @@ package datalake
 import (
 	"testing"
 
+	"github.com/nessi-dev/nessi/pkg/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/nessi-dev/nessi/pkg/testutil"
 )
 
 // TestTrendDeviationIntegration tests the trend deviation functionality with a more realistic setup
 func TestTrendDeviationIntegration(t *testing.T) {
+	// Skip in short mode
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}
@@ -20,11 +21,6 @@ func TestTrendDeviationIntegration(t *testing.T) {
 	// Use test fixtures
 	fixtures := testutil.NewTestFixtures(t)
 	defer fixtures.Cleanup()
-TestTrendDeviationIntegration(t *testing.T) {
-	// Skip in short mode
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
-	}
 
 	// Create test metrics directory
 	metricsDir := fixtures.CreateTempDir("trend-deviation-metrics-")
@@ -70,7 +66,7 @@ TestTrendDeviationIntegration(t *testing.T) {
 		}
 	})
 
-		// Test with non-existent field
+	// Test with non-existent field
 	t.Run("NonExistentField", func(t *testing.T) {
 		// Create a SimpleTrendAnalyzer with no metrics for the field
 		analyzer := &SimpleTrendAnalyzer{
@@ -103,7 +99,7 @@ TestTrendDeviationIntegration(t *testing.T) {
 
 		result, err := infoAnalyzer.AnalyzeTrendDeviation("severity_test", 1)
 		require.NoError(t, err)
-		
+
 		// Check if alerts were generated
 		if len(result.Alerts) > 0 {
 			assert.Equal(t, InfoAlert, result.Alerts[0].Severity, "Should be info severity for 15% change")
@@ -123,7 +119,7 @@ TestTrendDeviationIntegration(t *testing.T) {
 
 		result, err = warningAnalyzer.AnalyzeTrendDeviation("severity_test", 2)
 		require.NoError(t, err)
-		
+
 		// Check if alerts were generated
 		if len(result.Alerts) > 0 {
 			assert.Equal(t, WarningAlert, result.Alerts[0].Severity, "Should be warning severity for 25% change")
@@ -143,7 +139,7 @@ TestTrendDeviationIntegration(t *testing.T) {
 
 		result, err = errorAnalyzer.AnalyzeTrendDeviation("severity_test", 3)
 		require.NoError(t, err)
-		
+
 		// Check if alerts were generated
 		if len(result.Alerts) > 0 {
 			assert.Equal(t, ErrorAlert, result.Alerts[0].Severity, "Should be error severity for 40% change")
@@ -177,11 +173,9 @@ TestTrendDeviationIntegration(t *testing.T) {
 		// Run with run number 0 (no previous runs)
 		result, err := customAnalyzer.AnalyzeTrendDeviation("new_field", 0)
 		require.NoError(t, err)
-		
+
 		// When run number is 0, there should be no metrics or alerts
 		assert.Empty(t, result.Metrics, "Should have no metrics with run number 0")
 		assert.Empty(t, result.Alerts, "Should have no alerts with run number 0")
 	})
 }
-
-

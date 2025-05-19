@@ -18,20 +18,30 @@ import (
 )
 
 // Additional SSL configuration fields used internally
+// SSLConfig represents SSL configuration options
+type SSLConfig struct {
+	Enabled      bool   `json:"enabled"`
+	CertPath     string `json:"cert_path"`
+	KeyPath      string `json:"key_path"`
+	CertFile     string `json:"cert_file"`
+	KeyFile      string `json:"key_file"`
+	AutoGenerate bool   `json:"auto_generate"`
+}
+
 type sslConfigInternal struct {
 	AutoGenerate bool `json:"auto_generate"`
 }
 
 // CertManager handles SSL certificates for CLI tools
 type CertManager struct {
-	config SSLConfig
+	config       SSLConfig
 	autoGenerate bool // Whether to auto-generate certificates
 }
 
 // NewCertManager creates a new CertManager
 func NewCertManager(config SSLConfig) *CertManager {
 	return &CertManager{
-		config: config,
+		config:       config,
 		autoGenerate: true, // Default to auto-generate for CLI tools
 	}
 }

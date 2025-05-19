@@ -9,16 +9,15 @@ import (
 	"testing"
 
 	"github.com/apache/arrow/go/v15/arrow"
+	"github.com/nessi-dev/nessi/pkg/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/nessi-dev/nessi/pkg/testutil"
 )
 
-func (t *testing.T) {
+func TestFormatDetection(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}
-TestFormatDetection(t *testing.T) {
 	// Create test directory
 	tempDir := fixtures.CreateTempDir("format-detection-")
 
@@ -54,9 +53,9 @@ TestFormatDetection(t *testing.T) {
 
 	// Test custom configuration
 	customConfig := FormatHandlerConfig{
-		DateFormats:           []string{"01/02/2006", "2006-01-02"},
-		CSVHasHeader:          false,
-		MaxRowsForInference:   500,
+		DateFormats:            []string{"01/02/2006", "2006-01-02"},
+		CSVHasHeader:           false,
+		MaxRowsForInference:    500,
 		MinConfidenceThreshold: 0.9,
 	}
 	customHandler := NewFormatHandlerWithConfig(customConfig)
@@ -94,21 +93,21 @@ func TestCSVSchemaInference(t *testing.T) {
 
 	// Verify schema fields
 	assert.Equal(t, 5, len(schema.Fields()))
-	
+
 	// Check field names
 	assert.Equal(t, "id", schema.Field(0).Name)
 	assert.Equal(t, "name", schema.Field(1).Name)
 	assert.Equal(t, "active", schema.Field(2).Name)
 	assert.Equal(t, "score", schema.Field(3).Name)
 	assert.Equal(t, "date", schema.Field(4).Name)
-	
+
 	// Check field types
 	assert.Equal(t, arrow.PrimitiveTypes.Int64, schema.Field(0).Type)
 	assert.Equal(t, arrow.BinaryTypes.String, schema.Field(1).Type)
 	assert.Equal(t, arrow.FixedWidthTypes.Boolean, schema.Field(2).Type)
 	assert.Equal(t, arrow.PrimitiveTypes.Float64, schema.Field(3).Type)
 	assert.Equal(t, arrow.FixedWidthTypes.Timestamp_s, schema.Field(4).Type)
-	
+
 	// Check record
 	assert.Equal(t, int64(5), record.NumRows())
 }
@@ -137,7 +136,7 @@ func TestCSVWithoutHeader(t *testing.T) {
 		CSVHasHeader: false,
 	}
 	handler := NewFormatHandlerWithConfig(config)
-	
+
 	record, schema, err := handler.ReadWithInference(csvFile)
 	require.NoError(t, err)
 	require.NotNil(t, schema)
@@ -145,7 +144,7 @@ func TestCSVWithoutHeader(t *testing.T) {
 
 	// Verify schema fields
 	assert.Equal(t, 5, len(schema.Fields()))
-	
+
 	// Check field names (should be col1, col2, etc.)
 	assert.Equal(t, "col1", schema.Field(0).Name)
 	assert.Equal(t, "col2", schema.Field(1).Name)

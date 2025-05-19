@@ -15,13 +15,13 @@ func ShouldSkipIntegrationTests(t *testing.T) bool {
 		t.Skip("Skipping integration test in short mode")
 		return true
 	}
-	
+
 	// Check for environment variable to skip security integration tests
 	if os.Getenv("SKIP_SECURITY_INTEGRATION") == "1" {
 		t.Skip("Skipping security integration test due to SKIP_SECURITY_INTEGRATION=1")
 		return true
 	}
-	
+
 	return false
 }
 
@@ -64,11 +64,9 @@ func CreateTestAuthManager() (*AuthManager, error) {
 	// Create a configuration that doesn't use file I/O for maximum performance
 	config := AuthConfig{
 		Enabled:      true,
-		JWTSecret:    "test-secret-" + random,
-		UsersFile:    "/tmp/nonexistent-users-file.json", // Won't be used
-		TokenExpiry:  1,                                  // 1 hour - minimum value for faster tests
-		RequireHTTPS: false,
-		InMemoryOnly: true, // Skip all file I/O for better performance
+		APIKeyPath:   "/tmp/nonexistent-apikeys-file.json", // Won't be used
+		UsersFile:    "/tmp/nonexistent-users-file.json",   // Won't be used
+		InMemoryOnly: true,                                 // Skip all file I/O for better performance
 	}
 
 	// Create the auth manager
@@ -83,7 +81,7 @@ func CreateTestAuthManager() (*AuthManager, error) {
 		Email:    "test" + random + "@example.com",
 		Role:     RoleUser,
 	}
-	
+
 	// Create user (should not error since username is unique)
 	err = am.CreateUser(testUser, "password123")
 	if err != nil {
@@ -96,7 +94,7 @@ func CreateTestAuthManager() (*AuthManager, error) {
 		Email:    "admin" + random + "@example.com",
 		Role:     RoleAdmin,
 	}
-	
+
 	// Create admin user (should not error since username is unique)
 	err = am.CreateUser(adminUser, "admin123")
 	if err != nil {
