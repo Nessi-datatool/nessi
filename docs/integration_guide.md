@@ -459,8 +459,8 @@ jobs:
       - name: Install Nessi
         run: |
           # Clone Nessi repository
-          git clone https://github.com/nessi-dev/nessi-dev.git
-          cd nessi-dev
+          git clone git@github.com:nessi-dev/nessi.git
+          cd nessi
           
           # Build and install Nessi
           make build
@@ -588,4 +588,4 @@ If you encounter issues when integrating Nessi with external systems, try the fo
 6. **Check for version compatibility**: Ensure that you're using a compatible version of Nessi.
 7. **Test commands manually**: Try running Nessi commands manually to verify they work as expected.
 
-For more help, refer to the [Nessi documentation](https://github.com/nessi-dev/nessi-dev) or open an issue on GitHub.
+For more help, refer to the [Nessi documentation](https://github.com/nessi-dev/nessi) or open an issue on GitHub.

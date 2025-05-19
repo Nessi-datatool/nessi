@@ -12,8 +12,8 @@ package main
 import (
 	"log"
 
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring"
-	"github.com/nessi-dev/nessi-dev/pkg/monitoring/alerts"
+	"github.com/nessi-dev/nessi/pkg/monitoring"
+	"github.com/nessi-dev/nessi/pkg/monitoring/alerts"
 )
 
 func main() {

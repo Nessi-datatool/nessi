@@ -8,8 +8,8 @@ The easiest way to get started with Nessi.dev is to use the provided Docker Comp
 
 ```bash
 # Clone the repository
-git clone https://github.com/nessi-dev/nessi-dev.git
-cd nessi-dev
+git clone git@github.com:nessi-dev/nessi.git
+cd nessi
 
 # Start all services
 docker-compose up -d
