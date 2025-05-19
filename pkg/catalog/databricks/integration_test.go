@@ -18,10 +18,10 @@ import (
 
 // testDatabricksClient is a test implementation of DatabricksAPI
 type testDatabricksClient struct {
-	baseURL     string
-	token       string
-	httpClient  *http.Client
-	workspaceID string
+	baseURL       string
+	token         string
+	httpClient    *http.Client
+	workspaceID   string
 	deltaTableDir string
 }
 
@@ -52,7 +52,7 @@ func (c *testDatabricksClient) GetTableDetails(ctx context.Context, workspaceID,
 		Schema: &types.TableSchema{
 			Format:  "delta",
 			Version: 1,
-			Fields:  []types.FieldInfo{
+			Fields: []types.FieldInfo{
 				{Name: "id", Type: "long", Nullable: false},
 				{Name: "name", Type: "string", Nullable: true},
 				{Name: "age", Type: "integer", Nullable: true},
@@ -118,10 +118,10 @@ func TestDatabricksIntegration(t *testing.T) {
 
 	// Create Databricks client
 	client := &testDatabricksClient{
-		baseURL:     "http://localhost:8080",
-		token:       "test-token",
-		httpClient:  &http.Client{},
-		workspaceID: "test-workspace",
+		baseURL:       "http://localhost:8080",
+		token:         "test-token",
+		httpClient:    &http.Client{},
+		workspaceID:   "test-workspace",
 		deltaTableDir: deltaTableDir,
 	}
 
@@ -186,10 +186,10 @@ func TestDatabricksIntegration(t *testing.T) {
 	// Read data from the Delta table using the location from table details
 	readData, err := deltaHandler.Read(tableDetails.Info.Location)
 	require.NoError(t, err, "Should read data from Delta table without error")
-	
+
 	// Verify the data was read correctly
 	require.Len(t, readData, len(testData), "Should read the same number of records")
-	
+
 	// Verify specific fields in the data
 	for i, record := range readData {
 		assert.Equal(t, testData[i]["id"], record["id"], "ID should match")

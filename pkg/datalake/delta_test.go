@@ -77,7 +77,7 @@ func TestIsDeltaLakeFormat(t *testing.T) {
 	assert.True(t, IsDeltaLakeFormat("DELTA"), "Should recognize 'DELTA' as Delta Lake format (case-insensitive)")
 	assert.True(t, IsDeltaLakeFormat("deltalake"), "Should recognize 'deltalake' as Delta Lake format")
 	assert.True(t, IsDeltaLakeFormat("DeltaLake"), "Should recognize 'DeltaLake' as Delta Lake format (case-insensitive)")
-	
+
 	assert.False(t, IsDeltaLakeFormat("parquet"), "Should not recognize 'parquet' as Delta Lake format")
 	assert.False(t, IsDeltaLakeFormat("csv"), "Should not recognize 'csv' as Delta Lake format")
 	assert.False(t, IsDeltaLakeFormat(""), "Should not recognize empty string as Delta Lake format")

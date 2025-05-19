@@ -68,7 +68,7 @@ func (t *DeltaTimeTravel) ReadAsOfVersion(path string, version int64) ([]map[str
 	// 1. Parse the transaction log up to the specified version
 	// 2. Build a list of valid data files
 	// 3. Read those data files
-	
+
 	// For this simplified implementation, we'll just read the current state
 	// In a production environment, this would need to reconstruct the table state
 	// as of the requested version
@@ -94,7 +94,7 @@ func (t *DeltaTimeTravel) ReadAsOfTimestamp(path string, timestamp time.Time) ([
 	// 1. Parse the transaction log files to extract timestamps
 	// 2. Find the latest version before or at the specified timestamp
 	// 3. Call ReadAsOfVersion with that version
-	
+
 	// For this simplified implementation, we'll just read the current state
 	// In a production environment, this would need to determine the correct version
 	// based on the timestamp
@@ -125,7 +125,7 @@ func (t *DeltaTimeTravel) GetVersionHistory(ctx context.Context, path string) ([
 			if err != nil {
 				continue
 			}
-			
+
 			// In a real implementation, we would parse the log file to extract
 			// the timestamp, operation type, and other metadata
 			// For now, we'll use the file modification time as a proxy for the commit timestamp
@@ -133,7 +133,7 @@ func (t *DeltaTimeTravel) GetVersionHistory(ctx context.Context, path string) ([
 			if err != nil {
 				continue
 			}
-			
+
 			versions = append(versions, DeltaVersion{
 				Version:   v,
 				Timestamp: fileInfo.ModTime(),

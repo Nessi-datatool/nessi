@@ -46,12 +46,12 @@ func TestDeltaFormatHandler_ReadWrite(t *testing.T) {
 
 	// Verify the Delta table structure
 	assert.True(t, handler.IsDeltaTable(deltaTableDir), "Should be a valid Delta table after writing")
-	
+
 	// Check that _delta_log contains at least one transaction file
 	files, err := os.ReadDir(filepath.Join(deltaTableDir, "_delta_log"))
 	require.NoError(t, err)
 	assert.GreaterOrEqual(t, len(files), 1, "Should have at least one transaction log file")
-	
+
 	// Check that at least one parquet file was created
 	parquetFiles, err := filepath.Glob(filepath.Join(deltaTableDir, "*.parquet"))
 	require.NoError(t, err)
@@ -60,10 +60,10 @@ func TestDeltaFormatHandler_ReadWrite(t *testing.T) {
 	// Read data from the Delta table
 	readData, err := handler.Read(deltaTableDir)
 	require.NoError(t, err, "Should read data from Delta table without error")
-	
+
 	// Verify the data was read correctly
 	require.Len(t, readData, len(testData), "Should read the same number of records")
-	
+
 	// Verify specific fields in the data
 	for i, record := range readData {
 		assert.Equal(t, testData[i]["id"], record["id"], "ID should match")
@@ -87,22 +87,22 @@ func TestDeltaFormatHandler_ReadWithInference(t *testing.T) {
 	// Create test data with various data types
 	testData := []map[string]interface{}{
 		{
-			"id":          int64(1),
-			"name":        "John Doe",
-			"age":         int32(30),
-			"salary":      float64(75000.50),
-			"active":      true,
-			"department":  "Engineering",
-			"hired_date":  "2022-01-15",
+			"id":         int64(1),
+			"name":       "John Doe",
+			"age":        int32(30),
+			"salary":     float64(75000.50),
+			"active":     true,
+			"department": "Engineering",
+			"hired_date": "2022-01-15",
 		},
 		{
-			"id":          int64(2),
-			"name":        "Jane Smith",
-			"age":         int32(25),
-			"salary":      float64(82000.75),
-			"active":      true,
-			"department":  "Marketing",
-			"hired_date":  "2021-08-10",
+			"id":         int64(2),
+			"name":       "Jane Smith",
+			"age":        int32(25),
+			"salary":     float64(82000.75),
+			"active":     true,
+			"department": "Marketing",
+			"hired_date": "2021-08-10",
 		},
 	}
 
@@ -129,24 +129,24 @@ func TestDeltaFormatHandler_ReadWithInference(t *testing.T) {
 	// Read data with schema inference
 	readData, inferredSchema, err := handler.ReadWithInference(deltaTableDir)
 	require.NoError(t, err, "Should read data with schema inference without error")
-	
+
 	// Verify the data was read correctly
 	require.Len(t, readData, len(testData), "Should read the same number of records")
-	
+
 	// Verify the inferred schema
 	require.NotNil(t, inferredSchema, "Should infer a schema")
-	
+
 	// Check that all fields are present in the inferred schema
 	schemaFields := inferredSchema.Fields()
 	fieldNames := make(map[string]bool)
 	for _, field := range schemaFields {
 		fieldNames[field.Name] = true
 	}
-	
+
 	for _, field := range schema.fields {
 		assert.True(t, fieldNames[field.Name], "Inferred schema should contain field: "+field.Name)
 	}
-	
+
 	// Verify specific fields in the data
 	for i, record := range readData {
 		assert.Equal(t, testData[i]["id"], record["id"], "ID should match")
