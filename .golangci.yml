@@ -9,6 +9,15 @@ run:
   skip-dirs:
     - vendor
     - node_modules
+    
+  # Allow multiple parallel golangci-lint instances running
+  allow-parallel-runners: true
+  
+  # Define the Go modules to analyze
+  modules-download-mode: readonly
+  
+  # Analyze Go files even if they don't compile
+  allow-serial-runners: true
 
 # Output configuration options
 output:
