@@ -159,7 +159,7 @@ func TestDatabricksIntegration(t *testing.T) {
 	assert.Equal(t, "delta_table", tableDetails.Info.Name)
 	assert.Equal(t, "delta", tableDetails.Schema.Format)
 	assert.Equal(t, deltaTableDir, tableDetails.Info.Location)
-	assert.Len(t, tableDetails.Schema.Fields, 3)
+	assert.Len(t, tableDetails.Schema.Fields, 4)
 
 	// Now create some test data and write it to the Delta table
 	testData := []map[string]interface{}{
