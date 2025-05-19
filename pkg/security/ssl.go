@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"math/big"
 	"net"
-	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -18,23 +17,22 @@ import (
 	"github.com/nessi-dev/nessi/pkg/logging"
 )
 
-// SSLConfig represents SSL configuration
-type SSLConfig struct {
-	Enabled      bool   `json:"enabled"`
-	CertFile     string `json:"cert_file"`
-	KeyFile      string `json:"key_file"`
-	AutoGenerate bool   `json:"auto_generate"`
+// Additional SSL configuration fields used internally
+type sslConfigInternal struct {
+	AutoGenerate bool `json:"auto_generate"`
 }
 
-// CertManager handles SSL certificates
+// CertManager handles SSL certificates for CLI tools
 type CertManager struct {
 	config SSLConfig
+	autoGenerate bool // Whether to auto-generate certificates
 }
 
 // NewCertManager creates a new CertManager
 func NewCertManager(config SSLConfig) *CertManager {
 	return &CertManager{
 		config: config,
+		autoGenerate: true, // Default to auto-generate for CLI tools
 	}
 }
 
@@ -48,7 +46,7 @@ func (cm *CertManager) GetTLSConfig() (*tls.Config, error) {
 	certExists, keyExists := cm.certificateFilesExist()
 
 	// Generate self-signed certificate if needed
-	if cm.config.AutoGenerate && (!certExists || !keyExists) {
+	if cm.autoGenerate && (!certExists || !keyExists) {
 		if err := cm.generateSelfSignedCert(); err != nil {
 			return nil, fmt.Errorf("failed to generate self-signed certificate: %w", err)
 		}
@@ -161,25 +159,12 @@ func (cm *CertManager) generateSelfSignedCert() error {
 	return nil
 }
 
-// StartHTTPSServer starts an HTTPS server
-func (cm *CertManager) StartHTTPSServer(addr string, handler http.Handler) error {
-	if !cm.config.Enabled {
-		return fmt.Errorf("SSL is not enabled")
-	}
+// GetCertificatePath returns the path to the certificate file
+func (cm *CertManager) GetCertificatePath() string {
+	return cm.config.CertFile
+}
 
-	// Get TLS config
-	tlsConfig, err := cm.GetTLSConfig()
-	if err != nil {
-		return err
-	}
-
-	// Create server
-	server := &http.Server{
-		Addr:      addr,
-		Handler:   handler,
-		TLSConfig: tlsConfig,
-	}
-
-	logging.Info(fmt.Sprintf("Starting HTTPS server on %s", addr))
-	return server.ListenAndServeTLS("", "")
+// GetKeyPath returns the path to the key file
+func (cm *CertManager) GetKeyPath() string {
+	return cm.config.KeyFile
 }

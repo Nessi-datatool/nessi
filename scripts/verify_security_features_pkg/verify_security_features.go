@@ -45,19 +45,15 @@ func main() {
 
 	// Create auth config
 	authConfig := security.AuthConfig{
-		Enabled:      true,
-		JWTSecret:    "verification-test-secret",
-		UsersFile:    usersFilePath,
-		TokenExpiry:  24,
-		RequireHTTPS: false,
+		Enabled:   true,
+		UsersFile: usersFilePath,
 	}
 
 	// Create SSL config
 	sslConfig := security.SSLConfig{
-		Enabled:      true,
-		CertFile:     certFile,
-		KeyFile:      keyFile,
-		AutoGenerate: true,
+		Enabled:  true,
+		CertFile: certFile,
+		KeyFile:  keyFile,
 	}
 
 	fmt.Println("\n1. Creating Auth Manager...")
@@ -95,21 +91,17 @@ func main() {
 	fmt.Printf("✓ Found %d users\n", len(users))
 
 	fmt.Println("\n4. Testing Authentication...")
-	// Authenticate
-	token, err := authManager.Authenticate("testuser", "testpassword")
+	// Authenticate with password
+	authenticated, err := authManager.Authenticate("testuser", "testpassword")
 	if err != nil {
 		fmt.Printf("Error authenticating: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Println("✓ Authentication successful")
-
-	// Validate token
-	claims, err := authManager.ValidateToken(token)
-	if err != nil {
-		fmt.Printf("Error validating token: %v\n", err)
+	if !authenticated {
+		fmt.Println("Error: Authentication failed but no error was returned")
 		os.Exit(1)
 	}
-	fmt.Printf("✓ Token validated successfully for user: %v\n", claims["username"])
+	fmt.Println("✓ Password authentication successful")
 
 	fmt.Println("\n5. Testing API Key Management...")
 	// Generate API key

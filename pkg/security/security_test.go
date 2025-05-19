@@ -1,98 +1,71 @@
 package security
 
 import (
+	"os"
 	"testing"
 
-	"github.com/nessi-dev/nessi/pkg/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// TestLegacySecurityManager tests the backward compatibility of the SecurityManager
-func TestLegacySecurityManager(t *testing.T) {
-	// No longer using testutil.RunInParallel(t) to avoid duplicate t.Parallel() calls
-	// Tests will still run efficiently with the Go test runner
-	
-	// Use the helper to run with timeout
-	testutil.RunWithTimeout(t, func() {
-		// Use the optimized test helper to create a SecurityManager
-		s := CreateTestSecurityManager()
-		
-		assert.NotNil(t, s)
-		assert.NotNil(t, s.AuthManager)
+// TestSecurityManager tests the SecurityManager for CLI-only approach
+func TestSecurityManager(t *testing.T) {
+	// Create temporary directory for test files
+	tempDir, err := os.MkdirTemp("", "security-test-")
+	require.NoError(t, err)
+	defer os.RemoveAll(tempDir)
 
-		t.Run("AddUser and Authenticate", func(t *testing.T) {
-			// Add test user
-			var err error
-			err = s.AddUser("legacyuser", "password", []string{"user"})
-			require.NoError(t, err)
+	// Create test config
+	config := Config{
+		Auth: AuthConfig{
+			Enabled:      true,
+			UsersFile:    tempDir + "/users.json",
+			InMemoryOnly: true,
+		},
+		SSL: SSLConfig{
+			CertFile: tempDir + "/cert.pem",
+			KeyFile:  tempDir + "/key.pem",
+		},
+	}
 
-			// Test with correct credentials
-			token, err := s.Authenticate("legacyuser", "password")
-			require.NoError(t, err)
-			assert.NotEmpty(t, token)
+	// Create security manager
+	s, err := NewSecurityManager(config)
+	require.NoError(t, err)
+	assert.NotNil(t, s)
+	assert.NotNil(t, s.AuthManager)
+	assert.NotNil(t, s.SSLManager)
 
-			// Test with incorrect password
-			token, err = s.Authenticate("legacyuser", "wrongpassword")
-			require.Error(t, err)
-			assert.Empty(t, token)
+	t.Run("User Management", func(t *testing.T) {
+		// Create test user
+		testUser := User{
+			Username: "securityuser",
+			Email:    "security@example.com",
+			Role:     RoleUser,
+		}
+		err = s.AuthManager.CreateUser(testUser, "password123")
+		require.NoError(t, err)
 
-			// Test with non-existent user
-			token, err = s.Authenticate("nonexistent", "password")
-			require.Error(t, err)
-			assert.Empty(t, token)
-		})
+		// Get user
+		user, err := s.AuthManager.GetUser("securityuser")
+		require.NoError(t, err)
+		assert.Equal(t, "securityuser", user.Username)
+		assert.Equal(t, "security@example.com", user.Email)
+		assert.Equal(t, RoleUser, user.Role)
+	})
 
-		t.Run("ValidateToken", func(t *testing.T) {
-			// Get valid token
-			token, err := s.Authenticate("legacyuser", "password")
-			require.NoError(t, err)
+	t.Run("API Key Management", func(t *testing.T) {
+		// Generate API key
+		apiKey, err := s.AuthManager.RegenerateAPIKey("securityuser")
+		require.NoError(t, err)
+		assert.NotEmpty(t, apiKey)
 
-			// Validate token
-			claims, err := s.ValidateToken(token)
-			require.NoError(t, err)
-			assert.Equal(t, "legacyuser", claims.Username)
-			assert.Contains(t, claims.Roles, "user")
-		})
+		// Authenticate with API key
+		user, err := s.AuthManager.AuthenticateWithAPIKey(apiKey)
+		require.NoError(t, err)
+		assert.Equal(t, "securityuser", user.Username)
 
-		t.Run("API Key Management", func(t *testing.T) {
-			// Create API key
-			apiKey, err := s.CreateAPIKey("legacyuser")
-			require.NoError(t, err)
-			assert.NotEmpty(t, apiKey)
-
-			// Validate API key
-			username, err := s.ValidateAPIKey(apiKey)
-			require.NoError(t, err)
-			assert.Equal(t, "legacyuser", username)
-
-			// Validate non-existent API key
-			_, err = s.ValidateAPIKey("nonexistent-key")
-			require.Error(t, err)
-		})
-
-		t.Run("Add Duplicate User", func(t *testing.T) {
-			// Try adding same user again
-			var err error
-			err = s.AddUser("legacyuser", "password", []string{"user"})
-			require.Error(t, err)
-		})
-
-		t.Run("Add Admin User", func(t *testing.T) {
-			// Add admin user
-			err := s.AddUser("legacyadmin", "adminpass", []string{"admin"})
-			require.NoError(t, err)
-
-			// Verify user can authenticate
-			token, err := s.Authenticate("legacyadmin", "adminpass")
-			require.NoError(t, err)
-			assert.NotEmpty(t, token)
-
-			// Validate token and check role
-			claims, err := s.ValidateToken(token)
-			require.NoError(t, err)
-			assert.Equal(t, "legacyadmin", claims.Username)
-			assert.Contains(t, claims.Roles, "admin")
-		})
+		// Test with invalid API key
+		_, err = s.AuthManager.AuthenticateWithAPIKey("invalid-key")
+		assert.Error(t, err)
 	})
 }

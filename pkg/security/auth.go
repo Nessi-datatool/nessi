@@ -4,13 +4,10 @@ import (
 	"crypto/subtle"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"os"
-	"strings"
 	"sync"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/nessi-dev/nessi/pkg/logging"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -36,10 +33,7 @@ const (
 // AuthConfig represents authentication configuration
 type AuthConfig struct {
 	Enabled      bool   `json:"enabled"`
-	JWTSecret    string `json:"jwt_secret"`
 	UsersFile    string `json:"users_file"`
-	TokenExpiry  int    `json:"token_expiry"` // in hours
-	RequireHTTPS bool   `json:"require_https"`
 	InMemoryOnly bool   `json:"in_memory_only"` // If true, disables all file I/O for tests
 }
 
@@ -151,62 +145,43 @@ func (am *AuthManager) saveUsers() error {
 }
 
 // Authenticate authenticates a user with username and password
-func (am *AuthManager) Authenticate(username, password string) (string, error) {
+func (am *AuthManager) Authenticate(username, password string) (bool, error) {
 	if !am.config.Enabled {
-		return "", fmt.Errorf("authentication is disabled")
+		return false, fmt.Errorf("authentication is disabled")
 	}
 
-	// Use read lock to check if user exists and get their password
 	am.mu.RLock()
-	user, ok := am.users[username]
-	passHash := user.Password // Copy password hash while under read lock
+	user, exists := am.users[username]
 	am.mu.RUnlock()
 
-	if !ok {
-		return "", fmt.Errorf("invalid username or password")
+	if !exists {
+		return false, fmt.Errorf("user not found")
 	}
 
-	// Check password - do this outside the lock for better performance
-	if err := bcrypt.CompareHashAndPassword([]byte(passHash), []byte(password)); err != nil {
-		return "", fmt.Errorf("invalid username or password")
+	// Check password
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return false, fmt.Errorf("invalid password")
 	}
 
-	// Update last login time - use write lock only for the update
+	// Update last login time
 	am.mu.Lock()
 	user.LastLogin = time.Now()
 	am.users[username] = user
 	am.mu.Unlock()
 
-	// Generate token - this doesn't need a lock
-	token, err := am.generateToken(user)
-	if err != nil {
-		return "", fmt.Errorf("failed to generate token: %w", err)
-	}
+	// Save users to file
+	go am.saveUsers() // Non-blocking save
 
-	return token, nil
+	return true, nil
 }
 
-// RefreshToken generates a new token for the specified user
-func (am *AuthManager) RefreshToken(username string) (string, error) {
+// RefreshAPIKey generates a new API key for the specified user
+func (am *AuthManager) RefreshAPIKey(username string) (string, error) {
 	if !am.config.Enabled {
 		return "", fmt.Errorf("authentication is disabled")
 	}
 
-	am.mu.RLock()
-	user, ok := am.users[username]
-	am.mu.RUnlock()
-
-	if !ok {
-		return "", fmt.Errorf("user not found")
-	}
-
-	// Generate new JWT token
-	token, err := am.generateToken(user)
-	if err != nil {
-		return "", err
-	}
-
-	return token, nil
+	return am.RegenerateAPIKey(username)
 }
 
 // AuthenticateWithAPIKey authenticates a user with an API key
@@ -413,197 +388,59 @@ func (am *AuthManager) RegenerateAPIKey(username string) (string, error) {
 	return newAPIKey, nil
 }
 
-// generateToken generates a JWT token for a user
-func (am *AuthManager) generateToken(user User) (string, error) {
-	// Create token
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"username": user.Username,
-		"role":     user.Role,
-		"exp":      time.Now().Add(time.Duration(am.config.TokenExpiry) * time.Hour).Unix(),
-	})
-
-	// Sign token
-	tokenString, err := token.SignedString([]byte(am.config.JWTSecret))
-	if err != nil {
-		return "", err
-	}
-
-	return tokenString, nil
-}
-
-// ValidateToken validates a JWT token
-func (am *AuthManager) ValidateToken(tokenString string) (jwt.MapClaims, error) {
+// ValidateAPIKey validates an API key and returns the associated user
+func (am *AuthManager) ValidateAPIKey(apiKey string) (User, error) {
+	// Skip authentication if disabled
 	if !am.config.Enabled {
-		return nil, fmt.Errorf("authentication is disabled")
+		return User{}, fmt.Errorf("authentication is disabled")
 	}
 
-	// Parse token
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Validate signing method
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
+	// Check for API key
+	if apiKey == "" {
+		return User{}, fmt.Errorf("API key is required")
+	}
 
-		return []byte(am.config.JWTSecret), nil
-	})
-
+	// Authenticate with API key
+	user, err := am.AuthenticateWithAPIKey(apiKey)
 	if err != nil {
-		return nil, err
+		return User{}, fmt.Errorf("invalid API key: %w", err)
 	}
 
-	// Validate token
-	if !token.Valid {
-		return nil, fmt.Errorf("invalid token")
-	}
-
-	// Get claims
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return nil, fmt.Errorf("invalid token claims")
-	}
-
-	return claims, nil
+	return user, nil
 }
 
-// AuthMiddleware creates a middleware for authentication
-func (am *AuthManager) AuthMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Skip authentication if disabled
-		if !am.config.Enabled {
-			next.ServeHTTP(w, r)
-			return
+// CheckUserRole checks if a user has one of the specified roles
+func (am *AuthManager) CheckUserRole(user User, roles ...string) bool {
+	// Skip authorization if authentication is disabled
+	if !am.config.Enabled {
+		return true
+	}
+
+	// Check if user has required role
+	for _, role := range roles {
+		if user.Role == role {
+			return true
 		}
+	}
 
-		// Check if HTTPS is required
-		if am.config.RequireHTTPS && r.TLS == nil {
-			http.Error(w, "HTTPS is required", http.StatusForbidden)
-			return
-		}
-
-		// Check for API key in header
-		apiKey := r.Header.Get("X-API-Key")
-		if apiKey != "" {
-			user, err := am.AuthenticateWithAPIKey(apiKey)
-			if err != nil {
-				http.Error(w, "Invalid API key", http.StatusUnauthorized)
-				return
-			}
-
-			// Add user to request context
-			r = r.WithContext(WithUser(r.Context(), user))
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		// Check for JWT token in Authorization header
-		authHeader := r.Header.Get("Authorization")
-		if authHeader != "" {
-			// Extract token from "Bearer <token>"
-			parts := strings.Split(authHeader, " ")
-			if len(parts) != 2 || parts[0] != "Bearer" {
-				http.Error(w, "Invalid authorization header", http.StatusUnauthorized)
-				return
-			}
-
-			tokenString := parts[1]
-			claims, err := am.ValidateToken(tokenString)
-			if err != nil {
-				http.Error(w, "Invalid token", http.StatusUnauthorized)
-				return
-			}
-
-			// Get username from claims
-			username, ok := claims["username"].(string)
-			if !ok {
-				http.Error(w, "Invalid token claims", http.StatusUnauthorized)
-				return
-			}
-
-			// Get user
-			user, err := am.GetUser(username)
-			if err != nil {
-				http.Error(w, "User not found", http.StatusUnauthorized)
-				return
-			}
-
-			// Add user to request context
-			r = r.WithContext(WithUser(r.Context(), user))
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		// No authentication provided
-		http.Error(w, "Authentication required", http.StatusUnauthorized)
-	})
+	return false
 }
 
-// RoleMiddleware creates a middleware for role-based authorization
-func (am *AuthManager) RoleMiddleware(roles ...string) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Skip authorization if authentication is disabled
-			if !am.config.Enabled {
-				next.ServeHTTP(w, r)
-				return
-			}
-
-			// Get user from context
-			user, ok := UserFromContext(r.Context())
-			if !ok {
-				http.Error(w, "Authentication required", http.StatusUnauthorized)
-				return
-			}
-
-			// Check if user has required role
-			hasRole := false
-			for _, role := range roles {
-				if user.Role == role {
-					hasRole = true
-					break
-				}
-			}
-
-			if !hasRole {
-				http.Error(w, "Insufficient permissions", http.StatusForbidden)
-				return
-			}
-
-			next.ServeHTTP(w, r)
-		})
-	}
-}
-
-// LoginHandler handles user login
-func (am *AuthManager) LoginHandler(w http.ResponseWriter, r *http.Request) {
-	// Only allow POST requests
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	// Parse request
-	var req struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
-		return
-	}
-
+// Login authenticates a user with username and password and returns an API key
+func (am *AuthManager) Login(username, password string) (string, error) {
 	// Authenticate user
-	token, err := am.Authenticate(req.Username, req.Password)
-	if err != nil {
-		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
-		return
+	authenticated, err := am.Authenticate(username, password)
+	if err != nil || !authenticated {
+		return "", fmt.Errorf("invalid username or password")
 	}
 
-	// Return token
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
-		"token": token,
-	})
+	// Get or regenerate API key
+	apiKey, err := am.RefreshAPIKey(username)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate API key: %w", err)
+	}
+
+	return apiKey, nil
 }
 
 // hashPassword hashes a password using bcrypt

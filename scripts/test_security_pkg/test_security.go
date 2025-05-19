@@ -40,19 +40,15 @@ func main() {
 
 	// Create auth config
 	authConfig := security.AuthConfig{
-		Enabled:      true,
-		JWTSecret:    "test-secret",
-		UsersFile:    usersFile,
-		TokenExpiry:  24,
-		RequireHTTPS: false,
+		Enabled:   true,
+		UsersFile: usersFile,
 	}
 
 	// Create SSL config
 	sslConfig := security.SSLConfig{
-		Enabled:      true,
-		CertFile:     certFile,
-		KeyFile:      keyFile,
-		AutoGenerate: true,
+		Enabled:  true,
+		CertFile: certFile,
+		KeyFile:  keyFile,
 	}
 
 	// Run tests
@@ -96,21 +92,12 @@ func main() {
 		Error:       err,
 	})
 
-	// Test 4: Authenticate user
-	token, err := authManager.Authenticate("testuser", "password123")
+	// Test 4: Authenticate user with password
+	authenticated, err := authManager.Authenticate("testuser", "password123")
 	results = append(results, TestResult{
 		Name:        "Authenticate User",
-		Passed:      err == nil && token != "",
+		Passed:      err == nil && authenticated,
 		Description: "Authenticating with username and password",
-		Error:       err,
-	})
-
-	// Test 5: Validate token
-	claims, err := authManager.ValidateToken(token)
-	results = append(results, TestResult{
-		Name:        "Validate Token",
-		Passed:      err == nil && claims["username"] == "testuser",
-		Description: "Validating JWT token",
 		Error:       err,
 	})
 
@@ -146,13 +133,14 @@ func main() {
 		Error:       err,
 	})
 
-	// Test 9: Test role middleware
-	adminMiddleware := authManager.RoleMiddleware(security.RoleAdmin)
+	// Test 9: Test role check
+	adminUser, userErr := authManager.GetUser("adminuser")
+	hasAdminRole := userErr == nil && authManager.CheckUserRole(adminUser, security.RoleAdmin)
 	results = append(results, TestResult{
-		Name:        "Create Role Middleware",
-		Passed:      adminMiddleware != nil,
-		Description: "Creating role-based middleware",
-		Error:       nil,
+		Name:        "Check Admin Role",
+		Passed:      hasAdminRole,
+		Description: "Checking if user has admin role",
+		Error:       userErr,
 	})
 
 	// Test 10: Test SSL certificate generation
