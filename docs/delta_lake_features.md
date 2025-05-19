@@ -1,15 +1,16 @@
 # Delta Lake Features
 
-Nessi.dev provides comprehensive support for Delta Lake, enabling advanced data quality monitoring and management capabilities for Delta Lake tables.
+Nessi provides comprehensive support for Delta Lake, enabling advanced data quality monitoring and management capabilities for Delta Lake tables.
 
 ## Overview
 
-Delta Lake is an open-source storage layer that brings ACID transactions to Apache Spark and big data workloads. Nessi.dev extends Delta Lake with:
+Delta Lake is an open-source storage layer that brings ACID transactions to Apache Spark and big data workloads. Nessi extends Delta Lake with:
 
 - Schema management and evolution tracking
 - Time travel capabilities
 - Version control and history
 - Data quality validation
+- Databricks Unity Catalog integration
 
 ## Schema Management
 
@@ -28,15 +29,47 @@ nessi schema diff --path /path/to/delta/table --version1 0 --version2 1
 
 ### Schema Evolution Tracking
 
-Nessi.dev tracks schema changes over time, allowing you to:
+Nessi tracks schema changes over time, allowing you to:
 
-- View the history of schema changes
-- Understand how your schema has evolved
-- Identify potential compatibility issues
+- Identify potential issues with schema changes
+- Plan for data migrations and updates
 
 ```bash
 # View schema history
 nessi schema history --path /path/to/delta/table
+
+## Databricks Integration
+
+Nessi provides seamless integration with Databricks for working with Delta Lake tables:
+
+### Connecting to Databricks
+
+```bash
+# Set up Databricks connection
+export DATABRICKS_HOST="https://your-workspace.cloud.databricks.com"
+export DATABRICKS_TOKEN="your-personal-access-token"
+export DATABRICKS_WORKSPACE_ID="your-workspace-id"  # Optional, defaults to "0"
+export DATABRICKS_DEFAULT_SCHEMA="default"          # Optional, defaults to "default"
+export DATABRICKS_DEFAULT_CATALOG="hive_metastore"  # Optional, defaults to "hive_metastore"
+```
+
+### Working with Databricks Delta Tables
+
+```bash
+# List catalogs in Databricks
+nessi catalog list --type databricks
+
+# List tables in a specific catalog and schema
+nessi catalog tables --type databricks --database main.default
+
+# Get details of a specific table
+nessi catalog describe --type databricks --database main.default --table customers
+
+# Run quality checks on a Databricks Delta table
+nessi quality check --catalog databricks --database main.default --table customers
+```
+
+For more detailed information on Databricks integration, see [Databricks Integration](databricks-integration.md).
 
 # Get schema at a specific version
 nessi schema show --path /path/to/delta/table --version 5
@@ -73,7 +106,7 @@ nessi time-travel diff-stats --path /path/to/delta/table --version1 2 --version2
 
 ## Version Control
 
-Nessi.dev provides version control capabilities for Delta Lake tables:
+Nessi provides version control capabilities for Delta Lake tables:
 
 ### Version History
 
@@ -136,7 +169,7 @@ nessi delta optimize-recommend --path /path/to/delta/table
 
 ## Configuration
 
-Delta Lake features can be configured in your Nessi.dev configuration file:
+Delta Lake features can be configured in your Nessi configuration file:
 
 ```yaml
 delta_lake:

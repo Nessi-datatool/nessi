@@ -1,6 +1,6 @@
 # Data Catalog Integration
 
-This document describes how to use Nessi.dev's Data Catalog Integration feature to connect with popular data catalogs like AWS Glue, Azure Purview, and Google Cloud Data Catalog.
+This document describes how to use Nessi.dev's Data Catalog Integration feature to connect with popular data catalogs like AWS Glue, Azure Purview, Google Cloud Data Catalog, and Databricks Unity Catalog.
 
 ## Overview
 
@@ -19,6 +19,7 @@ Nessi.dev currently supports the following data catalogs:
 - **AWS Glue Data Catalog**
 - **Azure Purview**
 - **Google Cloud Data Catalog**
+- **Databricks Unity Catalog**
 
 Support for the following catalogs is planned for future releases:
 
