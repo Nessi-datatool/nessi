@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDatabricksClient_GetWorkspaces(t *testing.T) {
+func TestDatabricksClient_GetWorkspacesMock(t *testing.T) {
 	// Create a mock server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/api/2.0/workspaces", r.URL.Path)
@@ -43,7 +43,7 @@ func TestDatabricksClient_GetWorkspaces(t *testing.T) {
 	assert.Equal(t, "Test Workspace", workspaces[0].Name)
 }
 
-func TestDatabricksClient_GetCatalogs(t *testing.T) {
+func TestDatabricksClient_GetCatalogsMock(t *testing.T) {
 	// Create a mock server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/api/2.1/unity-catalog/catalogs", r.URL.Path)
@@ -75,7 +75,7 @@ func TestDatabricksClient_GetCatalogs(t *testing.T) {
 	assert.Equal(t, "main", catalogs[0].Name)
 }
 
-func TestDatabricksClient_GetSchemas(t *testing.T) {
+func TestDatabricksClient_GetSchemasMock(t *testing.T) {
 	// Create a mock server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/api/2.1/unity-catalog/schemas", r.URL.Path)
@@ -108,7 +108,7 @@ func TestDatabricksClient_GetSchemas(t *testing.T) {
 	assert.Equal(t, "main", schemas[0].CatalogName)
 }
 
-func TestDatabricksClient_ErrorHandling(t *testing.T) {
+func TestDatabricksClient_BasicErrorHandling(t *testing.T) {
 	// Create a mock server that returns errors
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
