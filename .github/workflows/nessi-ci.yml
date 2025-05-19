@@ -1,0 +1,88 @@
+name: Nessi CLI Pipeline
+# New CI pipeline created on 2025-05-19
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: false
+      
+      - name: Check for Go files
+        id: check-go-files
+        run: |
+          if [ -d "pkg/catalog/databricks" ] && [ "$(find pkg/catalog/databricks -name '*.go' | wc -l)" -gt 0 ]; then
+            echo "has_files=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_files=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run gofmt
+        if: steps.check-go-files.outputs.has_files == 'true'
+        run: |
+          # Run gofmt on specific directories
+          gofmt -l -w pkg/catalog/databricks pkg/datalake
+          
+          # Check if any files were changed by gofmt
+          GOFMT_CHANGES=$(git diff --name-only)
+          if [ -n "$GOFMT_CHANGES" ]; then
+            echo "The following files need formatting:"
+            echo "$GOFMT_CHANGES"
+            exit 1
+          fi
+
+      - name: Run go vet and check imports
+        if: steps.check-go-files.outputs.has_files == 'true'
+        run: |
+          # Run go vet on specific directories
+          go vet ./pkg/catalog/databricks/... ./pkg/datalake/...
+          
+          # Check for unused imports
+          ! grep -r "imported and not used" <(go build ./pkg/catalog/databricks/... ./pkg/datalake/... 2>&1)
+  
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+      
+      - name: Install dependencies
+        run: go mod download
+      
+      - name: Run core tests
+        run: |
+          # Test only the core Databricks integration and Delta Lake packages
+          go test -v ./pkg/catalog/databricks/... -short
+          go test -v ./pkg/datalake/... -short
+      
+      - name: Check test coverage
+        run: |
+          # Generate coverage report for core packages only
+          go test -coverprofile=coverage.out ./pkg/catalog/databricks/... ./pkg/datalake/...
+          go tool cover -func=coverage.out
+      
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.out
+          retention-days: 5
