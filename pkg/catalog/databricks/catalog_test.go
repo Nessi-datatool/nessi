@@ -61,11 +61,11 @@ func TestDatabricksClient_GetCatalogs(t *testing.T) {
 	catalogs, err := client.GetCatalogs(context.Background(), "test-workspace")
 	require.NoError(t, err)
 	require.Len(t, catalogs, 2)
-	
+
 	assert.Equal(t, "main", catalogs[0].Name)
 	assert.Equal(t, "Main catalog", catalogs[0].Description)
 	assert.Equal(t, "test-user", catalogs[0].Owner)
-	
+
 	assert.Equal(t, "samples", catalogs[1].Name)
 	assert.Equal(t, "Sample data", catalogs[1].Description)
 }
@@ -109,11 +109,11 @@ func TestDatabricksClient_GetSchemas(t *testing.T) {
 	schemas, err := client.GetSchemas(context.Background(), "test-workspace", "main")
 	require.NoError(t, err)
 	require.Len(t, schemas, 2)
-	
+
 	assert.Equal(t, "default", schemas[0].Name)
 	assert.Equal(t, "main", schemas[0].CatalogName)
 	assert.Equal(t, "Default schema", schemas[0].Description)
-	
+
 	assert.Equal(t, "sales", schemas[1].Name)
 	assert.Equal(t, "Sales data", schemas[1].Description)
 }
@@ -162,13 +162,13 @@ func TestDatabricksClient_GetTables(t *testing.T) {
 	tables, err := client.GetTables(context.Background(), "test-workspace", "main", "default")
 	require.NoError(t, err)
 	require.Len(t, tables, 2)
-	
+
 	assert.Equal(t, "customers", tables[0].Name)
 	assert.Equal(t, "main", tables[0].CatalogName)
 	assert.Equal(t, "default", tables[0].SchemaName)
 	assert.Equal(t, "Customer data", tables[0].Description)
 	assert.Equal(t, "DELTA", tables[0].Format)
-	
+
 	assert.Equal(t, "orders", tables[1].Name)
 	assert.Equal(t, "Order data", tables[1].Description)
 }
