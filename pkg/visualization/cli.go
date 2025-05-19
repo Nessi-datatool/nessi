@@ -28,7 +28,7 @@ func (r *CLIRenderer) RenderTable(headers []string, rows [][]string) error {
 	for i, h := range headers {
 		colWidths[i] = len(h)
 	}
-	
+
 	for _, row := range rows {
 		for i, cell := range row {
 			if i < len(colWidths) && len(cell) > colWidths[i] {
@@ -36,13 +36,13 @@ func (r *CLIRenderer) RenderTable(headers []string, rows [][]string) error {
 			}
 		}
 	}
-	
+
 	// Print headers
 	for i, h := range headers {
 		fmt.Fprintf(r.output, "%-*s", colWidths[i]+2, h)
 	}
 	fmt.Fprintln(r.output)
-	
+
 	// Print separator
 	for _, w := range colWidths {
 		for i := 0; i < w+2; i++ {
@@ -50,7 +50,7 @@ func (r *CLIRenderer) RenderTable(headers []string, rows [][]string) error {
 		}
 	}
 	fmt.Fprintln(r.output)
-	
+
 	// Print rows
 	for _, row := range rows {
 		for i, cell := range row {
@@ -60,7 +60,7 @@ func (r *CLIRenderer) RenderTable(headers []string, rows [][]string) error {
 		}
 		fmt.Fprintln(r.output)
 	}
-	
+
 	return nil
 }
 
@@ -70,12 +70,12 @@ func (r *CLIRenderer) RenderGraph(nodes []string, edges [][2]string) error {
 	for _, node := range nodes {
 		fmt.Fprintf(r.output, "- %s\n", node)
 	}
-	
+
 	fmt.Fprintln(r.output, "\nGraph Edges:")
 	for _, edge := range edges {
 		fmt.Fprintf(r.output, "- %s -> %s\n", edge[0], edge[1])
 	}
-	
+
 	return nil
 }
 
