@@ -1,5 +1,8 @@
 name: Fix Go.mod Format
 
+permissions:
+  contents: write
+
 on:
   push:
     branches: [ main, fix-databricks-tests, fix-go-mod-version, security-update-crypto ]
