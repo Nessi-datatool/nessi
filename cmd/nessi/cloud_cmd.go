@@ -44,7 +44,7 @@ You can either provide a configuration file or enter the configuration interacti
 		configFile, _ := cmd.Flags().GetString("config-file")
 		providerName, _ := cmd.Flags().GetString("name")
 		providerType, _ := cmd.Flags().GetString("provider")
-		
+
 		if configFile != "" {
 			// Load configuration from file
 			configData, err := os.ReadFile(configFile)
@@ -52,31 +52,31 @@ You can either provide a configuration file or enter the configuration interacti
 				fmt.Printf("Error reading config file: %v\n", err)
 				os.Exit(1)
 			}
-			
+
 			var config common.CloudConfig
 			if strings.HasSuffix(configFile, ".yaml") || strings.HasSuffix(configFile, ".yml") {
 				err = yaml.Unmarshal(configData, &config)
 			} else {
 				err = json.Unmarshal(configData, &config)
 			}
-			
+
 			if err != nil {
 				fmt.Printf("Error parsing config file: %v\n", err)
 				os.Exit(1)
 			}
-			
+
 			// Override provider type if specified
 			if providerType != "" {
 				config.Provider = providerType
 			}
-			
+
 			// Create provider
 			_, err = cloudManager.CreateProvider(providerName, config)
 			if err != nil {
 				fmt.Printf("Error creating cloud provider: %v\n", err)
 				os.Exit(1)
 			}
-			
+
 			fmt.Printf("Cloud provider '%s' configured successfully.\n", providerName)
 		} else {
 			// Interactive configuration
@@ -84,7 +84,7 @@ You can either provide a configuration file or enter the configuration interacti
 				fmt.Print("Enter a name for this cloud provider configuration: ")
 				fmt.Scanln(&providerName)
 			}
-			
+
 			if providerType == "" {
 				fmt.Println("Available provider types:")
 				for _, p := range cloudManager.ListSupportedProviders() {
@@ -93,12 +93,12 @@ You can either provide a configuration file or enter the configuration interacti
 				fmt.Print("Enter provider type (aws, azure, gcp): ")
 				fmt.Scanln(&providerType)
 			}
-			
+
 			config := common.CloudConfig{
 				Provider:    providerType,
 				Credentials: make(map[string]interface{}),
 			}
-			
+
 			// Provider-specific configuration
 			switch providerType {
 			case "aws":
@@ -111,16 +111,16 @@ You can either provide a configuration file or enter the configuration interacti
 				fmt.Printf("Unsupported provider type: %s\n", providerType)
 				os.Exit(1)
 			}
-			
+
 			// Create provider
 			_, err := cloudManager.CreateProvider(providerName, config)
 			if err != nil {
 				fmt.Printf("Error creating cloud provider: %v\n", err)
 				os.Exit(1)
 			}
-			
+
 			fmt.Printf("Cloud provider '%s' configured successfully.\n", providerName)
-			
+
 			// Save configuration to file
 			saveConfig, _ := cmd.Flags().GetBool("save")
 			if saveConfig {
@@ -128,19 +128,19 @@ You can either provide a configuration file or enter the configuration interacti
 				if saveConfigFile == "" {
 					saveConfigFile = fmt.Sprintf("%s_config.yaml", providerName)
 				}
-				
+
 				configData, err := yaml.Marshal(config)
 				if err != nil {
 					fmt.Printf("Error serializing configuration: %v\n", err)
 					os.Exit(1)
 				}
-				
+
 				err = os.WriteFile(saveConfigFile, configData, 0600)
 				if err != nil {
 					fmt.Printf("Error saving configuration: %v\n", err)
 					os.Exit(1)
 				}
-				
+
 				fmt.Printf("Configuration saved to %s\n", saveConfigFile)
 			}
 		}
@@ -154,20 +154,20 @@ var cloudListCmd = &cobra.Command{
 	Long:  `List all cloud providers configured for use with Nessi.dev.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		providers := cloudManager.ListProviders()
-		
+
 		if len(providers) == 0 {
 			fmt.Println("No cloud providers configured.")
 			return
 		}
-		
+
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 		fmt.Fprintln(w, "NAME\tTYPE\tSTATUS")
-		
+
 		for _, name := range providers {
 			provider, _ := cloudManager.GetProvider(name)
 			fmt.Fprintf(w, "%s\t%s\tConnected\n", name, provider.Name())
 		}
-		
+
 		w.Flush()
 	},
 }
@@ -179,18 +179,18 @@ var cloudRemoveCmd = &cobra.Command{
 	Long:  `Remove a cloud provider configuration from Nessi.dev.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		providerName, _ := cmd.Flags().GetString("name")
-		
+
 		if providerName == "" {
 			fmt.Println("Provider name is required.")
 			os.Exit(1)
 		}
-		
+
 		err := cloudManager.RemoveProvider(providerName)
 		if err != nil {
 			fmt.Printf("Error removing cloud provider: %v\n", err)
 			os.Exit(1)
 		}
-		
+
 		fmt.Printf("Cloud provider '%s' removed successfully.\n", providerName)
 	},
 }
@@ -202,28 +202,28 @@ var cloudTestCmd = &cobra.Command{
 	Long:  `Test the connection to a cloud provider.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		providerName, _ := cmd.Flags().GetString("name")
-		
+
 		if providerName == "" {
 			fmt.Println("Provider name is required.")
 			os.Exit(1)
 		}
-		
+
 		provider, exists := cloudManager.GetProvider(providerName)
 		if !exists {
 			fmt.Printf("Cloud provider '%s' not found.\n", providerName)
 			os.Exit(1)
 		}
-		
+
 		// Test connection by listing buckets
 		buckets, err := provider.ListBuckets(cmd.Context())
 		if err != nil {
 			fmt.Printf("Connection test failed: %v\n", err)
 			os.Exit(1)
 		}
-		
+
 		fmt.Println("Connection test successful.")
 		fmt.Printf("Found %d buckets:\n", len(buckets))
-		
+
 		for _, bucket := range buckets {
 			fmt.Printf("  - %s (created: %s)\n", bucket.Name, bucket.CreationDate)
 		}
@@ -239,30 +239,30 @@ var cloudDeltaListCmd = &cobra.Command{
 		providerName, _ := cmd.Flags().GetString("name")
 		bucket, _ := cmd.Flags().GetString("bucket")
 		prefix, _ := cmd.Flags().GetString("prefix")
-		
+
 		if providerName == "" {
 			fmt.Println("Provider name is required.")
 			os.Exit(1)
 		}
-		
+
 		if bucket == "" {
 			fmt.Println("Bucket name is required.")
 			os.Exit(1)
 		}
-		
+
 		provider, exists := cloudManager.GetProvider(providerName)
 		if !exists {
 			fmt.Printf("Cloud provider '%s' not found.\n", providerName)
 			os.Exit(1)
 		}
-		
+
 		// List objects with the given prefix
 		objects, err := provider.ListObjects(cmd.Context(), bucket, prefix)
 		if err != nil {
 			fmt.Printf("Error listing objects: %v\n", err)
 			os.Exit(1)
 		}
-		
+
 		// Find Delta Lake tables (look for _delta_log directories)
 		deltaLogPaths := make(map[string]bool)
 		for _, obj := range objects {
@@ -272,14 +272,14 @@ var cloudDeltaListCmd = &cobra.Command{
 				deltaLogPaths[tablePath] = true
 			}
 		}
-		
+
 		if len(deltaLogPaths) == 0 {
 			fmt.Println("No Delta Lake tables found.")
 			return
 		}
-		
+
 		fmt.Printf("Found %d Delta Lake tables:\n", len(deltaLogPaths))
-		
+
 		for tablePath := range deltaLogPaths {
 			fmt.Printf("  - %s\n", tablePath)
 		}
@@ -288,7 +288,7 @@ var cloudDeltaListCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(cloudCmd)
-	
+
 	// Configure command
 	cloudCmd.AddCommand(cloudConfigureCmd)
 	cloudConfigureCmd.Flags().String("config-file", "", "Path to cloud provider configuration file")
@@ -296,20 +296,20 @@ func init() {
 	cloudConfigureCmd.Flags().String("provider", "", "Cloud provider type (aws, azure, gcp)")
 	cloudConfigureCmd.Flags().Bool("save", false, "Save configuration to file")
 	cloudConfigureCmd.Flags().String("save-file", "", "Path to save configuration file")
-	
+
 	// List command
 	cloudCmd.AddCommand(cloudListCmd)
-	
+
 	// Remove command
 	cloudCmd.AddCommand(cloudRemoveCmd)
 	cloudRemoveCmd.Flags().String("name", "", "Name of the cloud provider to remove")
 	cloudRemoveCmd.MarkFlagRequired("name")
-	
+
 	// Test command
 	cloudCmd.AddCommand(cloudTestCmd)
 	cloudTestCmd.Flags().String("name", "", "Name of the cloud provider to test")
 	cloudTestCmd.MarkFlagRequired("name")
-	
+
 	// Delta list command
 	cloudCmd.AddCommand(cloudDeltaListCmd)
 	cloudDeltaListCmd.Flags().String("name", "", "Name of the cloud provider")
@@ -323,34 +323,34 @@ func init() {
 func configureAWS(config *common.CloudConfig) {
 	var accessKey, secretKey, region, endpoint string
 	var useIAMRole bool
-	
+
 	fmt.Print("Use IAM role for authentication? (y/n): ")
 	var useIAMRoleStr string
 	fmt.Scanln(&useIAMRoleStr)
 	useIAMRole = strings.ToLower(useIAMRoleStr) == "y"
-	
+
 	if !useIAMRole {
 		fmt.Print("AWS Access Key ID: ")
 		fmt.Scanln(&accessKey)
-		
+
 		fmt.Print("AWS Secret Access Key: ")
 		fmt.Scanln(&secretKey)
 	}
-	
+
 	fmt.Print("AWS Region (e.g., us-west-2): ")
 	fmt.Scanln(&region)
-	
+
 	fmt.Print("S3 Endpoint (optional, press Enter to skip): ")
 	fmt.Scanln(&endpoint)
-	
+
 	fmt.Print("Default S3 Bucket: ")
 	fmt.Scanln(&config.DefaultBucket)
-	
+
 	config.Region = region
 	config.Credentials["access_key"] = accessKey
 	config.Credentials["secret_key"] = secretKey
 	config.Credentials["use_iam_role"] = useIAMRole
-	
+
 	if endpoint != "" {
 		config.EndpointOverride = endpoint
 	}
@@ -360,14 +360,14 @@ func configureAWS(config *common.CloudConfig) {
 func configureAzure(config *common.CloudConfig) {
 	var accountName, accountKey, sasToken, endpoint string
 	var useAzureAD bool
-	
+
 	fmt.Print("Azure Storage Account Name: ")
 	fmt.Scanln(&accountName)
-	
+
 	fmt.Print("Authentication Method (key, sas, azuread): ")
 	var authMethod string
 	fmt.Scanln(&authMethod)
-	
+
 	switch strings.ToLower(authMethod) {
 	case "key":
 		fmt.Print("Azure Storage Account Key: ")
@@ -382,18 +382,18 @@ func configureAzure(config *common.CloudConfig) {
 		fmt.Println("Invalid authentication method. Using Azure AD.")
 		useAzureAD = true
 	}
-	
+
 	fmt.Print("Azure Storage Endpoint (optional, press Enter to skip): ")
 	fmt.Scanln(&endpoint)
-	
+
 	fmt.Print("Default Container: ")
 	fmt.Scanln(&config.DefaultBucket)
-	
+
 	config.Credentials["account_name"] = accountName
 	config.Credentials["account_key"] = accountKey
 	config.Credentials["sas_token"] = sasToken
 	config.Credentials["use_azure_ad"] = useAzureAD
-	
+
 	if endpoint != "" {
 		config.EndpointOverride = endpoint
 	}
@@ -402,19 +402,19 @@ func configureAzure(config *common.CloudConfig) {
 // configureGCP configures GCP-specific settings
 func configureGCP(config *common.CloudConfig) {
 	var projectID, credentialsFile string
-	
+
 	fmt.Print("GCP Project ID: ")
 	fmt.Scanln(&projectID)
-	
+
 	fmt.Print("GCP Credentials File Path (optional, press Enter to use default): ")
 	fmt.Scanln(&credentialsFile)
-	
+
 	fmt.Print("Default GCS Bucket: ")
 	fmt.Scanln(&config.DefaultBucket)
-	
+
 	config.AdditionalOptions = make(map[string]interface{})
 	config.AdditionalOptions["project_id"] = projectID
-	
+
 	if credentialsFile != "" {
 		config.Credentials["credentials_file"] = credentialsFile
 	}

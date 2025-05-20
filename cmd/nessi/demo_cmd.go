@@ -34,10 +34,10 @@ func runDemo() {
 	successColor := color.New(color.FgHiGreen)
 	errorColor := color.New(color.FgHiRed)
 	infoColor := color.New(color.FgHiYellow)
-	
+
 	// Clear the screen
 	clearScreen()
-	
+
 	// Display welcome message
 	titleColor.Println("╔════════════════════════════════════════════╗")
 	titleColor.Println("║            NESSI QUICKSTART DEMO           ║")
@@ -51,20 +51,20 @@ func runDemo() {
 	fmt.Println()
 	infoColor.Println("Press Enter to continue...")
 	waitForEnter()
-	
+
 	// Step 1: Create a demo Delta Lake table
 	clearScreen()
 	subtitleColor.Println("Step 1: Creating a demo Delta Lake table")
 	fmt.Println()
-	
+
 	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
 	s.Suffix = " Creating demo table..."
 	s.Start()
-	
+
 	// Simulate table creation
 	time.Sleep(2 * time.Second)
 	s.Stop()
-	
+
 	successColor.Println("✓ Demo table created at ./demo_data/users")
 	fmt.Println()
 	fmt.Println("Table schema:")
@@ -82,19 +82,19 @@ func runDemo() {
 	fmt.Println()
 	infoColor.Println("Press Enter to continue...")
 	waitForEnter()
-	
+
 	// Step 2: Run data quality validation
 	clearScreen()
 	subtitleColor.Println("Step 2: Running data quality validation")
 	fmt.Println()
-	
+
 	s.Suffix = " Validating data quality..."
 	s.Start()
-	
+
 	// Simulate validation
 	time.Sleep(2 * time.Second)
 	s.Stop()
-	
+
 	successColor.Println("✓ Validation complete")
 	fmt.Println()
 	fmt.Println("Quality metrics:")
@@ -109,19 +109,19 @@ func runDemo() {
 	fmt.Println()
 	infoColor.Println("Press Enter to continue...")
 	waitForEnter()
-	
+
 	// Step 3: Schema evolution tracking
 	clearScreen()
 	subtitleColor.Println("Step 3: Schema evolution tracking")
 	fmt.Println()
-	
+
 	s.Suffix = " Tracking schema evolution..."
 	s.Start()
-	
+
 	// Simulate schema tracking
 	time.Sleep(2 * time.Second)
 	s.Stop()
-	
+
 	successColor.Println("✓ Schema history retrieved")
 	fmt.Println()
 	fmt.Println("Schema changes:")
@@ -131,29 +131,29 @@ func runDemo() {
 	fmt.Println()
 	infoColor.Println("Press Enter to continue...")
 	waitForEnter()
-	
+
 	// Step 4: Visualization
 	clearScreen()
 	subtitleColor.Println("Step 4: Data quality visualization")
 	fmt.Println()
-	
+
 	s.Suffix = " Generating visualization..."
 	s.Start()
-	
+
 	// Simulate visualization generation
 	time.Sleep(2 * time.Second)
 	s.Stop()
-	
+
 	successColor.Println("✓ Visualization generated")
 	fmt.Println()
 	fmt.Println("Data quality heatmap by partition:")
 	fmt.Println()
-	
+
 	// Display ASCII heatmap
 	blue := color.New(color.BgBlue).SprintFunc()
 	yellow := color.New(color.BgYellow).SprintFunc()
 	red := color.New(color.BgRed).SprintFunc()
-	
+
 	fmt.Println(blue("   ") + blue("   ") + blue("   ") + yellow("   ") + yellow("   "))
 	fmt.Println(blue("   ") + blue("   ") + yellow("   ") + yellow("   ") + yellow("   "))
 	fmt.Println(blue("   ") + yellow("   ") + yellow("   ") + yellow("   ") + red("   "))
@@ -164,7 +164,7 @@ func runDemo() {
 	fmt.Println()
 	infoColor.Println("Press Enter to continue...")
 	waitForEnter()
-	
+
 	// Final step: Summary
 	clearScreen()
 	titleColor.Println("╔════════════════════════════════════════════╗")

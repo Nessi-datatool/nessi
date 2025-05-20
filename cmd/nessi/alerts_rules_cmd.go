@@ -75,7 +75,7 @@ var alertsRulesListCmd = &cobra.Command{
 			fmt.Println(string(jsonData))
 		} else {
 			// Output as table
-			fmt.Printf("%-36s %-30s %-10s %-10s %-15s %-10s %-10s\n", 
+			fmt.Printf("%-36s %-30s %-10s %-10s %-15s %-10s %-10s\n",
 				"ID", "NAME", "TYPE", "SEVERITY", "METRIC", "THRESHOLD", "ENABLED")
 			fmt.Println(strings.Repeat("-", 130))
 			for _, r := range rulesList {
@@ -143,7 +143,7 @@ var alertsRulesGetCmd = &cobra.Command{
 			fmt.Printf("Enabled:             %t\n", rule.Enabled)
 			fmt.Printf("Created At:          %s\n", rule.CreatedAt.Format(time.RFC3339))
 			fmt.Printf("Created By:          %s\n", rule.CreatedBy)
-			
+
 			if !rule.UpdatedAt.IsZero() {
 				fmt.Printf("Updated At:          %s\n", rule.UpdatedAt.Format(time.RFC3339))
 			}
@@ -207,8 +207,8 @@ var alertsRulesCreateCmd = &cobra.Command{
 		recipients, _ := cmd.Flags().GetStringSlice("recipient")
 
 		// Validate required fields
-		if name == "" || description == "" || ruleType == "" || severity == "" || 
-		   source == "" || metric == "" || operator == "" {
+		if name == "" || description == "" || ruleType == "" || severity == "" ||
+			source == "" || metric == "" || operator == "" {
 			fmt.Println("Error: name, description, type, severity, source, metric, and operator are required")
 			os.Exit(1)
 		}
@@ -222,24 +222,24 @@ var alertsRulesCreateCmd = &cobra.Command{
 
 		// Create rule
 		rule := &alerts.AlertRule{
-			ID:                 uuid.New().String(),
-			Name:               name,
-			Description:        description,
-			Type:               alerts.AlertType(ruleType),
-			Severity:           alerts.AlertSeverity(severity),
-			Source:             source,
-			Metric:             metric,
-			Threshold:          threshold,
-			ComparisonOperator: operator,
-			WindowSize:         windowSize,
-			EvaluationInterval: evalInterval,
-			Labels:             labels,
-			Annotations:        annotations,
+			ID:                   uuid.New().String(),
+			Name:                 name,
+			Description:          description,
+			Type:                 alerts.AlertType(ruleType),
+			Severity:             alerts.AlertSeverity(severity),
+			Source:               source,
+			Metric:               metric,
+			Threshold:            threshold,
+			ComparisonOperator:   operator,
+			WindowSize:           windowSize,
+			EvaluationInterval:   evalInterval,
+			Labels:               labels,
+			Annotations:          annotations,
 			NotificationChannels: channels,
-			Recipients:         recipients,
-			Enabled:            enabled,
-			CreatedAt:          time.Now(),
-			CreatedBy:          user,
+			Recipients:           recipients,
+			Enabled:              enabled,
+			CreatedAt:            time.Now(),
+			CreatedBy:            user,
 		}
 
 		// Save rule

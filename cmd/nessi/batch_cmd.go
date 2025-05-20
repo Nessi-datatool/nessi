@@ -27,14 +27,14 @@ type BatchConfig struct {
 
 // BatchResult represents the result of a batch job
 type BatchResult struct {
-	BatchName   string    `json:"batch_name"`
-	StartTime   time.Time `json:"start_time"`
-	EndTime     time.Time `json:"end_time"`
-	Duration    string    `json:"duration"`
-	TablesTotal int       `json:"tables_total"`
-	TablesPassed int      `json:"tables_passed"`
-	TablesFailed int      `json:"tables_failed"`
-	Results     []string  `json:"results"`
+	BatchName    string    `json:"batch_name"`
+	StartTime    time.Time `json:"start_time"`
+	EndTime      time.Time `json:"end_time"`
+	Duration     string    `json:"duration"`
+	TablesTotal  int       `json:"tables_total"`
+	TablesPassed int       `json:"tables_passed"`
+	TablesFailed int       `json:"tables_failed"`
+	Results      []string  `json:"results"`
 }
 
 var (
@@ -136,10 +136,10 @@ Example:
 		// Process each table
 		for _, table := range config.Tables {
 			fmt.Printf("Processing table: %s\n", table)
-			
+
 			// Run the check command for this table
 			outputFile := filepath.Join(outputDir, fmt.Sprintf("%s.json", filepath.Base(table)))
-			
+
 			// Build the command arguments
 			args := []string{
 				"check",
@@ -148,21 +148,21 @@ Example:
 				"--output", "json",
 				"--output-file", outputFile,
 			}
-			
+
 			// Add any custom parameters
 			for k, v := range config.Params {
 				args = append(args, fmt.Sprintf("--%s", k), v)
 			}
-			
+
 			// Create a new root command for execution
 			cmd := &cobra.Command{Use: "nessi"}
-			
+
 			// Add the check command
 			cmd.AddCommand(checkCmd)
-			
+
 			// Set the arguments
 			cmd.SetArgs(args)
-			
+
 			// Execute the command
 			err := cmd.Execute()
 			if err != nil {
@@ -172,7 +172,7 @@ Example:
 				fmt.Printf("Successfully processed table: %s\n", table)
 				results.TablesPassed++
 			}
-			
+
 			results.Results = append(results.Results, outputFile)
 		}
 

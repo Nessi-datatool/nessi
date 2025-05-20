@@ -5,11 +5,10 @@ import (
 	"os"
 	"testing"
 
-
 	"github.com/nessi-dev/nessi/pkg/webhook"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/spf13/viper"
 )
 
 func TestWebhookConfig(t *testing.T) {

@@ -143,7 +143,7 @@ func printTimeTravelResult(result *datalake.DeltaTimeTravelResult, format string
 		fmt.Printf("Version: %d\n", result.Version)
 		fmt.Printf("Timestamp: %s\n", result.Timestamp.Format(time.RFC3339))
 		fmt.Printf("\nSchema (%d fields):\n", len(result.SchemaFields))
-		
+
 		for _, field := range result.SchemaFields {
 			fmt.Printf("  %s: %s\n", field.Name, field.Type)
 		}

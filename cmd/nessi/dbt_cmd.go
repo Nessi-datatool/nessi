@@ -59,32 +59,32 @@ Examples:
 		includeDBTTests, _ := cmd.Flags().GetBool("include-dbt-tests")
 		lineageAware, _ := cmd.Flags().GetBool("lineage-aware")
 		failOnError, _ := cmd.Flags().GetBool("fail-on-error")
-		
+
 		// Initialize dbt validator
 		validator, err := dbt.NewValidator(configPath)
 		if err != nil {
 			fmt.Printf("Error initializing dbt validator: %v\n", err)
 			os.Exit(1)
 		}
-		
+
 		// Set validator options
 		validator.SetIncludeDBTTests(includeDBTTests)
 		validator.SetLineageAware(lineageAware)
-		
+
 		// Run validation
 		results, err := validator.Validate(modelSelection)
 		if err != nil {
 			fmt.Printf("Error validating dbt models: %v\n", err)
 			os.Exit(1)
 		}
-		
+
 		// Output results
 		err = outputResults(results, outputFormat)
 		if err != nil {
 			fmt.Printf("Error outputting results: %v\n", err)
 			os.Exit(1)
 		}
-		
+
 		// Check if we should exit with error
 		if failOnError && results.HasFailures() {
 			os.Exit(1)
@@ -116,31 +116,31 @@ Examples:
 		outputFormat, _ := cmd.Flags().GetString("output")
 		profileType, _ := cmd.Flags().GetString("profile-type")
 		failOnError, _ := cmd.Flags().GetBool("fail-on-error")
-		
+
 		// Initialize dbt profiler
 		profiler, err := dbt.NewProfiler(configPath)
 		if err != nil {
 			fmt.Printf("Error initializing dbt profiler: %v\n", err)
 			os.Exit(1)
 		}
-		
+
 		// Set profiler options
 		profiler.SetProfileType(profileType)
-		
+
 		// Run profiling
 		results, err := profiler.Profile(modelSelection)
 		if err != nil {
 			fmt.Printf("Error profiling dbt models: %v\n", err)
 			os.Exit(1)
 		}
-		
+
 		// Output results
 		err = outputResults(results, outputFormat)
 		if err != nil {
 			fmt.Printf("Error outputting results: %v\n", err)
 			os.Exit(1)
 		}
-		
+
 		// Check if we should exit with error
 		if failOnError && results.HasFailures() {
 			os.Exit(1)
@@ -166,22 +166,22 @@ func init() {
 	rootCmd.AddCommand(dbtCmd)
 	dbtCmd.AddCommand(dbtValidateCmd)
 	dbtCmd.AddCommand(dbtProfileCmd)
-	
+
 	// Global dbt command flags
 	dbtCmd.PersistentFlags().Bool("enable-dbt-plugin", false, "Enable the dbt plugin")
 	dbtCmd.PersistentFlags().String("config", "", "Path to configuration file")
 	dbtCmd.PersistentFlags().String("output", "table", "Output format (table, json, csv)")
 	dbtCmd.PersistentFlags().Bool("fail-on-error", false, "Exit with non-zero code if validation/profiling fails")
-	
+
 	// Validate command flags
 	dbtValidateCmd.Flags().StringSlice("select", []string{}, "dbt model selection syntax (e.g., tag:daily, model_name+downstream)")
 	dbtValidateCmd.Flags().Bool("include-dbt-tests", false, "Include dbt test results in validation")
 	dbtValidateCmd.Flags().Bool("lineage-aware", false, "Enable lineage-aware validation")
-	
+
 	// Profile command flags
 	dbtProfileCmd.Flags().StringSlice("select", []string{}, "dbt model selection syntax (e.g., tag:daily, model_name+downstream)")
 	dbtProfileCmd.Flags().String("profile-type", "basic", "Profile type (basic, enhanced)")
-	
+
 	// Register flags with viper
 	viper.BindPFlag("enable_dbt_plugin", dbtCmd.PersistentFlags().Lookup("enable-dbt-plugin"))
 }

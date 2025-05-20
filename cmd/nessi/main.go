@@ -28,11 +28,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/nessi-dev/nessi/cmd/nessi/cli"
 	"github.com/nessi-dev/nessi/internal/extensions"
 	"github.com/nessi-dev/nessi/pkg"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -44,9 +44,9 @@ var (
 	extManager *extensions.Manager // Added extension manager instance
 
 	// Serve command flags
-	host      string
-	port      int
-	tls       bool
+	host string
+	port int
+	tls  bool
 
 	// Check command flags
 	rulesFile string

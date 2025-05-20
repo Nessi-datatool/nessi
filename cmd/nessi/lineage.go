@@ -82,10 +82,10 @@ var lineageGetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// Parse arguments
 		tableName := args[0]
-		
+
 		// Create catalog manager
 		catalogManager := catalog.NewCatalogManager()
-		
+
 		// Create lineage service
 		service, err := NewLineageService(catalogManager)
 		if err != nil {
@@ -93,7 +93,7 @@ var lineageGetCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Get lineage
 		ctx := context.Background()
 		snapshot, err := service.GetLineage(ctx, tableName)
@@ -102,11 +102,11 @@ var lineageGetCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Display lineage
 		fmt.Printf("Lineage for table %s:\n", tableName)
 		fmt.Printf("  Created: %s\n", snapshot.Created.Format(time.RFC3339))
-		
+
 		fmt.Println("  Upstream tables:")
 		if len(snapshot.Upstream) == 0 {
 			fmt.Println("    None")
@@ -115,7 +115,7 @@ var lineageGetCmd = &cobra.Command{
 				fmt.Printf("    - %s\n", table)
 			}
 		}
-		
+
 		fmt.Println("  Downstream tables:")
 		if len(snapshot.Downstream) == 0 {
 			fmt.Println("    None")
@@ -124,11 +124,11 @@ var lineageGetCmd = &cobra.Command{
 				fmt.Printf("    - %s\n", table)
 			}
 		}
-		
+
 		if snapshot.Description != "" {
 			fmt.Printf("  Description: %s\n", snapshot.Description)
 		}
-		
+
 		if len(snapshot.Tags) > 0 {
 			fmt.Printf("  Tags: %s\n", strings.Join(snapshot.Tags, ", "))
 		}
@@ -143,7 +143,7 @@ var lineageListCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// Create catalog manager
 		catalogManager := catalog.NewCatalogManager()
-		
+
 		// Create lineage service
 		service, err := NewLineageService(catalogManager)
 		if err != nil {
@@ -151,7 +151,7 @@ var lineageListCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Get all lineage
 		ctx := context.Background()
 		snapshots, err := service.GetAllLineage(ctx)
@@ -160,31 +160,31 @@ var lineageListCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Display lineage
 		if len(snapshots) == 0 {
 			fmt.Println("No lineage information found.")
 			return
 		}
-		
+
 		fmt.Println("Lineage information:")
 		fmt.Println("-------------------")
-		
+
 		for _, snapshot := range snapshots {
 			fmt.Printf("Table: %s\n", snapshot.TableName)
 			fmt.Printf("  Created: %s\n", snapshot.Created.Format(time.RFC3339))
-			
+
 			fmt.Printf("  Upstream tables: %d\n", len(snapshot.Upstream))
 			fmt.Printf("  Downstream tables: %d\n", len(snapshot.Downstream))
-			
+
 			if snapshot.Description != "" {
 				fmt.Printf("  Description: %s\n", snapshot.Description)
 			}
-			
+
 			if len(snapshot.Tags) > 0 {
 				fmt.Printf("  Tags: %s\n", strings.Join(snapshot.Tags, ", "))
 			}
-			
+
 			fmt.Println()
 		}
 	},
@@ -199,10 +199,10 @@ var lineageUpdateCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// Parse arguments
 		tableName := args[0]
-		
+
 		// Create catalog manager
 		catalogManager := catalog.NewCatalogManager()
-		
+
 		// Create lineage service
 		service, err := NewLineageService(catalogManager)
 		if err != nil {
@@ -210,7 +210,7 @@ var lineageUpdateCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Get current lineage
 		ctx := context.Background()
 		snapshot, err := service.GetLineage(ctx, tableName)
@@ -219,37 +219,37 @@ var lineageUpdateCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Update lineage
 		snapshot.Created = time.Now()
-		
+
 		// Update upstream tables if specified
 		if len(lineageUpstream) > 0 {
 			snapshot.Upstream = lineageUpstream
 		}
-		
+
 		// Update downstream tables if specified
 		if len(lineageDownstream) > 0 {
 			snapshot.Downstream = lineageDownstream
 		}
-		
+
 		// Update description if specified
 		if lineageDescription != "" {
 			snapshot.Description = lineageDescription
 		}
-		
+
 		// Update tags if specified
 		if len(lineageTags) > 0 {
 			snapshot.Tags = lineageTags
 		}
-		
+
 		// Save lineage
 		if err := service.UpdateLineage(ctx, tableName, snapshot); err != nil {
 			logging.Error(fmt.Sprintf("Failed to update lineage for table %s", tableName), err)
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		fmt.Printf("Lineage updated for table %s\n", tableName)
 	},
 }
@@ -263,10 +263,10 @@ var lineageVisualizeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// Parse arguments
 		tableName := args[0]
-		
+
 		// Create catalog manager
 		catalogManager := catalog.NewCatalogManager()
-		
+
 		// Create lineage service
 		service, err := NewLineageService(catalogManager)
 		if err != nil {
@@ -274,7 +274,7 @@ var lineageVisualizeCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Get lineage
 		ctx := context.Background()
 		snapshot, err := service.GetLineage(ctx, tableName)
@@ -283,10 +283,10 @@ var lineageVisualizeCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Generate DOT file
 		dotFile := filepath.Join(appConfig.DataDir, fmt.Sprintf("%s_lineage.dot", tableName))
-		
+
 		// Create DOT file
 		file, err := os.Create(dotFile)
 		if err != nil {
@@ -295,28 +295,28 @@ var lineageVisualizeCmd = &cobra.Command{
 			return
 		}
 		defer file.Close()
-		
+
 		// Write DOT file header
 		fmt.Fprintf(file, "digraph %s {\n", strings.ReplaceAll(tableName, "-", "_"))
 		fmt.Fprintf(file, "  rankdir=LR;\n")
 		fmt.Fprintf(file, "  node [shape=box, style=filled, fillcolor=lightblue];\n")
-		
+
 		// Write table node
 		fmt.Fprintf(file, "  \"%s\" [fillcolor=lightgreen];\n", tableName)
-		
+
 		// Write upstream edges
 		for _, upstream := range snapshot.Upstream {
 			fmt.Fprintf(file, "  \"%s\" -> \"%s\";\n", upstream, tableName)
 		}
-		
+
 		// Write downstream edges
 		for _, downstream := range snapshot.Downstream {
 			fmt.Fprintf(file, "  \"%s\" -> \"%s\";\n", tableName, downstream)
 		}
-		
+
 		// Write DOT file footer
 		fmt.Fprintf(file, "}\n")
-		
+
 		fmt.Printf("Lineage visualization generated for table %s at %s\n", tableName, dotFile)
 		fmt.Println("You can convert this DOT file to an image using Graphviz:")
 		fmt.Printf("  dot -Tpng %s -o %s_lineage.png\n", dotFile, tableName)
@@ -326,13 +326,13 @@ var lineageVisualizeCmd = &cobra.Command{
 var (
 	// lineageUpstream is a list of upstream tables
 	lineageUpstream []string
-	
+
 	// lineageDownstream is a list of downstream tables
 	lineageDownstream []string
-	
+
 	// lineageDescription is a description of the lineage
 	lineageDescription string
-	
+
 	// lineageTags are tags for the lineage
 	lineageTags []string
 )
@@ -343,7 +343,7 @@ func init() {
 	lineageCmd.AddCommand(lineageListCmd)
 	lineageCmd.AddCommand(lineageUpdateCmd)
 	lineageCmd.AddCommand(lineageVisualizeCmd)
-	
+
 	// Add flags
 	lineageUpdateCmd.Flags().StringSliceVar(&lineageUpstream, "upstream", []string{}, "Upstream tables (comma-separated)")
 	lineageUpdateCmd.Flags().StringSliceVar(&lineageDownstream, "downstream", []string{}, "Downstream tables (comma-separated)")

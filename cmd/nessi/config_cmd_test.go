@@ -65,31 +65,31 @@ func TestConfigExportImport(t *testing.T) {
 func TestResetConfig(t *testing.T) {
 	// Save the original config
 	originalConfig := viper.AllSettings()
-	
+
 	// Create a temporary directory for the config file
 	tempDir, err := os.MkdirTemp("", "config_reset_test")
 	require.NoError(t, err)
 	defer os.RemoveAll(tempDir)
-	
+
 	// Set a temporary config file path
 	configFile := filepath.Join(tempDir, ".nessi.yaml")
 	viper.SetConfigFile(configFile)
-	
+
 	// Set some custom values
 	viper.Set("server.host", "custom-host")
 	viper.Set("server.port", 9090)
 	viper.Set("logging.level", "debug")
-	
+
 	// Reset the config
 	err = resetConfig()
 	require.NoError(t, err)
-	
+
 	// Verify reset values
 	assert.Equal(t, "localhost", viper.GetString("server.host"))
 	assert.Equal(t, 8080, viper.GetInt("server.port"))
 	assert.Equal(t, false, viper.GetBool("server.tls"))
 	assert.Equal(t, "info", viper.GetString("logging.level"))
-	
+
 	// Restore the original config
 	for k, v := range originalConfig {
 		viper.Set(k, v)
@@ -129,27 +129,27 @@ func TestPrintValue(t *testing.T) {
 			expected: "map[key:value]",
 		},
 	}
-	
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Capture stdout
 			oldStdout := os.Stdout
 			r, w, _ := os.Pipe()
 			os.Stdout = w
-			
+
 			// Call printValue
 			printValue(tc.value)
-			
+
 			// Restore stdout
 			w.Close()
 			os.Stdout = oldStdout
-			
+
 			// Read captured output
 			var buf []byte
 			buf = make([]byte, 1024)
 			n, _ := r.Read(buf)
 			output := string(buf[:n])
-			
+
 			// Verify output
 			assert.Equal(t, tc.expected, output)
 		})
@@ -159,36 +159,36 @@ func TestPrintValue(t *testing.T) {
 func TestSetConfigValue(t *testing.T) {
 	// Save the original config
 	originalConfig := viper.AllSettings()
-	
+
 	// Create a temporary directory for the config file
 	tempDir, err := os.MkdirTemp("", "config_set_test")
 	require.NoError(t, err)
 	defer os.RemoveAll(tempDir)
-	
+
 	// Set a temporary config file path
 	configFile := filepath.Join(tempDir, ".nessi.yaml")
 	viper.SetConfigFile(configFile)
-	
+
 	// Test setting a string value
 	err = setConfigValue("server.host", "test-host")
 	require.NoError(t, err)
 	assert.Equal(t, "test-host", viper.GetString("server.host"))
-	
+
 	// Test setting a numeric value
 	err = setConfigValue("server.port", "9090")
 	require.NoError(t, err)
 	assert.Equal(t, "9090", viper.GetString("server.port"))
-	
+
 	// Test setting a boolean value
 	err = setConfigValue("server.tls", "true")
 	require.NoError(t, err)
 	assert.Equal(t, "true", viper.GetString("server.tls"))
-	
+
 	// Test setting a nested value
 	err = setConfigValue("logging.level", "debug")
 	require.NoError(t, err)
 	assert.Equal(t, "debug", viper.GetString("logging.level"))
-	
+
 	// Restore the original config
 	for k, v := range originalConfig {
 		viper.Set(k, v)

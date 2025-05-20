@@ -158,7 +158,7 @@ var schemaGetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// Parse arguments
 		tableName := args[0]
-		
+
 		// Create schema manager
 		sm, err := NewSchemaManager(appConfig.DataDir)
 		if err != nil {
@@ -166,7 +166,7 @@ var schemaGetCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Get schema
 		ctx := context.Background()
 		schema, err := sm.GetSchema(ctx, tableName)
@@ -175,7 +175,7 @@ var schemaGetCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Display schema
 		if schemaOutputFormat == "json" {
 			// JSON output
@@ -193,22 +193,22 @@ var schemaGetCmd = &cobra.Command{
 			if schema.Description != "" {
 				fmt.Printf("Description: %s\n", schema.Description)
 			}
-			
+
 			fmt.Println("\nFields:")
 			fmt.Printf("%-20s %-15s %-10s %-30s %s\n", "Name", "Type", "Nullable", "Description", "Tags")
 			fmt.Printf("%-20s %-15s %-10s %-30s %s\n", "----", "----", "--------", "-----------", "----")
-			
+
 			for _, field := range schema.Fields {
 				nullable := "No"
 				if field.Nullable {
 					nullable = "Yes"
 				}
-				
+
 				tags := ""
 				if len(field.Tags) > 0 {
 					tags = strings.Join(field.Tags, ", ")
 				}
-				
+
 				fmt.Printf("%-20s %-15s %-10s %-30s %s\n", field.Name, field.Type, nullable, field.Description, tags)
 			}
 		}
@@ -224,7 +224,7 @@ var schemaHistoryCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// Parse arguments
 		tableName := args[0]
-		
+
 		// Create schema manager
 		sm, err := NewSchemaManager(appConfig.DataDir)
 		if err != nil {
@@ -232,7 +232,7 @@ var schemaHistoryCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Get schema history
 		ctx := context.Background()
 		history, err := sm.GetSchemaHistory(ctx, tableName)
@@ -241,7 +241,7 @@ var schemaHistoryCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Display schema history
 		if schemaOutputFormat == "json" {
 			// JSON output
@@ -255,31 +255,31 @@ var schemaHistoryCmd = &cobra.Command{
 		} else {
 			// Table output
 			fmt.Printf("Schema history for table %s:\n", tableName)
-			
+
 			for i, schema := range history {
 				fmt.Printf("\nVersion %d:\n", schema.Version)
 				fmt.Printf("  Created: %s\n", schema.Created.Format(time.RFC3339))
 				if schema.Description != "" {
 					fmt.Printf("  Description: %s\n", schema.Description)
 				}
-				
+
 				// Show changes for all versions except the first one
 				if i > 0 {
 					fmt.Println("  Changes: Added field 'date'")
 				}
-				
+
 				fmt.Println("  Fields:")
 				for _, field := range schema.Fields {
 					nullable := "No"
 					if field.Nullable {
 						nullable = "Yes"
 					}
-					
+
 					tags := ""
 					if len(field.Tags) > 0 {
 						tags = strings.Join(field.Tags, ", ")
 					}
-					
+
 					fmt.Printf("    - %s (%s, nullable: %s)", field.Name, field.Type, nullable)
 					if tags != "" {
 						fmt.Printf(" [%s]", tags)
@@ -301,7 +301,7 @@ var schemaUpdateCmd = &cobra.Command{
 		// Parse arguments
 		tableName := args[0]
 		schemaFile := args[1]
-		
+
 		// Read schema file
 		schemaData, err := os.ReadFile(schemaFile)
 		if err != nil {
@@ -309,7 +309,7 @@ var schemaUpdateCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Parse schema file
 		var schema SchemaVersion
 		if err := json.Unmarshal(schemaData, &schema); err != nil {
@@ -317,7 +317,7 @@ var schemaUpdateCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Create schema manager
 		sm, err := NewSchemaManager(appConfig.DataDir)
 		if err != nil {
@@ -325,7 +325,7 @@ var schemaUpdateCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Validate schema
 		ctx := context.Background()
 		if err := sm.ValidateSchema(ctx, tableName, &schema); err != nil {
@@ -333,14 +333,14 @@ var schemaUpdateCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Update schema
 		if err := sm.UpdateSchema(ctx, tableName, &schema); err != nil {
 			logging.Error(fmt.Sprintf("Failed to update schema for table %s", tableName), err)
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		fmt.Printf("Schema updated for table %s\n", tableName)
 	},
 }
@@ -355,7 +355,7 @@ var schemaPartitioningCmd = &cobra.Command{
 		// Parse arguments
 		tableName := args[0]
 		fieldName := args[1]
-		
+
 		// Create schema manager
 		sm, err := NewSchemaManager(appConfig.DataDir)
 		if err != nil {
@@ -363,7 +363,7 @@ var schemaPartitioningCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Update partitioning
 		ctx := context.Background()
 		if err := sm.UpdateSchema(ctx, tableName, nil); err != nil {
@@ -371,7 +371,7 @@ var schemaPartitioningCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		fmt.Printf("Partitioning updated for table %s using field %s\n", tableName, fieldName)
 	},
 }
@@ -386,7 +386,7 @@ var schemaValidateCmd = &cobra.Command{
 		// Parse arguments
 		tableName := args[0]
 		dataFile := args[1]
-		
+
 		// Create schema manager
 		sm, err := NewSchemaManager(appConfig.DataDir)
 		if err != nil {
@@ -394,7 +394,7 @@ var schemaValidateCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Validate data
 		ctx := context.Background()
 		if err := sm.ValidateSchema(ctx, tableName, nil); err != nil {
@@ -402,7 +402,7 @@ var schemaValidateCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		fmt.Printf("Data file %s is valid for table %s\n", dataFile, tableName)
 	},
 }
@@ -416,7 +416,7 @@ var schemaOptimizeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// Parse arguments
 		tableName := args[0]
-		
+
 		// Create schema manager
 		sm, err := NewSchemaManager(appConfig.DataDir)
 		if err != nil {
@@ -424,7 +424,7 @@ var schemaOptimizeCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Get optimization hints
 		ctx := context.Background()
 		schema, err := sm.GetSchema(ctx, tableName)
@@ -433,13 +433,13 @@ var schemaOptimizeCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Display optimization hints
 		fmt.Printf("Optimization hints for table %s:\n", tableName)
 		fmt.Println("1. Consider partitioning by 'date' field")
 		fmt.Println("2. Add clustering by 'id' field")
 		fmt.Println("3. Use Parquet format for better compression")
-		
+
 		// Show current partitioning
 		partitionFields := []string{}
 		for _, field := range schema.Fields {
@@ -449,7 +449,7 @@ var schemaOptimizeCmd = &cobra.Command{
 				}
 			}
 		}
-		
+
 		if len(partitionFields) > 0 {
 			fmt.Printf("\nCurrent partitioning: %s\n", strings.Join(partitionFields, ", "))
 		} else {
@@ -468,7 +468,7 @@ var schemaMetadataCmd = &cobra.Command{
 		// Parse arguments
 		tableName := args[0]
 		fieldName := args[1]
-		
+
 		// Create schema manager
 		sm, err := NewSchemaManager(appConfig.DataDir)
 		if err != nil {
@@ -476,7 +476,7 @@ var schemaMetadataCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Get schema
 		ctx := context.Background()
 		schema, err := sm.GetSchema(ctx, tableName)
@@ -485,7 +485,7 @@ var schemaMetadataCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Find field
 		var field *SchemaField
 		for i := range schema.Fields {
@@ -494,12 +494,12 @@ var schemaMetadataCmd = &cobra.Command{
 				break
 			}
 		}
-		
+
 		if field == nil {
 			fmt.Printf("Field %s not found in table %s\n", fieldName, tableName)
 			return
 		}
-		
+
 		// Display field metadata
 		fmt.Printf("Metadata for field %s in table %s:\n", fieldName, tableName)
 		fmt.Printf("  Type: %s\n", field.Type)
@@ -510,7 +510,7 @@ var schemaMetadataCmd = &cobra.Command{
 		if len(field.Tags) > 0 {
 			fmt.Printf("  Tags: %s\n", strings.Join(field.Tags, ", "))
 		}
-		
+
 		// Display additional metadata based on field type
 		switch field.Type {
 		case "string":
@@ -544,7 +544,7 @@ func init() {
 	schemaCmd.AddCommand(schemaValidateCmd)
 	schemaCmd.AddCommand(schemaOptimizeCmd)
 	schemaCmd.AddCommand(schemaMetadataCmd)
-	
+
 	// Add flags
 	schemaGetCmd.Flags().StringVar(&schemaOutputFormat, "format", "table", "Output format (table or json)")
 	schemaHistoryCmd.Flags().StringVar(&schemaOutputFormat, "format", "table", "Output format (table or json)")

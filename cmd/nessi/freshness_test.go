@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-
 	"github.com/nessi-dev/nessi/pkg/freshness"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -56,7 +55,7 @@ func TestFreshnessCommand(t *testing.T) {
 	// Set up mock behavior
 	now := time.Now()
 	lastModified := now.Add(-30 * time.Minute) // 30 minutes ago, should be "info" status
-	
+
 	mockConnector.On("GetTableMetadata", "/path/to/test_table").Return(&freshness.TableMetadata{
 		LastModified: &lastModified,
 	}, nil)

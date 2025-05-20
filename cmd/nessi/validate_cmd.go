@@ -25,10 +25,10 @@ type ValidationResult struct {
 
 var (
 	// Validate command flags
-	validateFormat    string
+	validateFormat     string
 	validateOutputFile string
-	validateVerbose   bool
-	validateThreshold float64
+	validateVerbose    bool
+	validateThreshold  float64
 )
 
 // deltaValidateCmd represents the delta validate command
@@ -45,15 +45,15 @@ Examples:
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		tablePath := args[0]
-		
+
 		// Check if the table exists
 		if _, err := os.Stat(tablePath); os.IsNotExist(err) {
 			fmt.Printf("Error: Table not found at %s\n", tablePath)
 			os.Exit(1)
 		}
-		
+
 		startTime := time.Now()
-		
+
 		// Create a validation result
 		result := &ValidationResult{
 			TablePath:    tablePath,
@@ -63,9 +63,9 @@ Examples:
 			FailedChecks: 0,
 			Details:      make([]string, 0),
 		}
-		
+
 		// Perform basic validation checks
-		
+
 		// 1. Check if it's a valid Delta table
 		isDelta, err := isValidDeltaTable(tablePath)
 		result.TotalChecks++
@@ -79,7 +79,7 @@ Examples:
 			result.PassedChecks++
 			result.Details = append(result.Details, "Valid Delta table format")
 		}
-		
+
 		// 2. Check for schema
 		hasSchema, err := hasValidSchema(tablePath)
 		result.TotalChecks++
@@ -93,7 +93,7 @@ Examples:
 			result.PassedChecks++
 			result.Details = append(result.Details, "Valid schema found")
 		}
-		
+
 		// 3. Check for data files
 		hasData, err := hasDataFiles(tablePath)
 		result.TotalChecks++
@@ -107,7 +107,7 @@ Examples:
 			result.PassedChecks++
 			result.Details = append(result.Details, "Data files found")
 		}
-		
+
 		// 4. Check for transaction log
 		hasLog, err := hasTransactionLog(tablePath)
 		result.TotalChecks++
@@ -121,15 +121,15 @@ Examples:
 			result.PassedChecks++
 			result.Details = append(result.Details, "Transaction log found")
 		}
-		
+
 		// Calculate validation result
 		endTime := time.Now()
 		result.Duration = endTime.Sub(startTime).String()
-		
+
 		// Determine if the table is valid based on the threshold
 		passRate := float64(result.PassedChecks) / float64(result.TotalChecks)
 		result.Valid = passRate >= validateThreshold
-		
+
 		// Output the result
 		outputValidationResult(result)
 	},
@@ -146,7 +146,7 @@ func isValidDeltaTable(path string) (bool, error) {
 		}
 		return false, err
 	}
-	
+
 	return info.IsDir(), nil
 }
 
@@ -154,13 +154,13 @@ func isValidDeltaTable(path string) (bool, error) {
 func hasValidSchema(path string) (bool, error) {
 	// Check for schema in the latest transaction log file
 	deltaLogPath := filepath.Join(path, "_delta_log")
-	
+
 	// List files in the _delta_log directory
 	files, err := os.ReadDir(deltaLogPath)
 	if err != nil {
 		return false, err
 	}
-	
+
 	// Look for JSON files (transaction log files)
 	for _, file := range files {
 		if !file.IsDir() && strings.HasSuffix(file.Name(), ".json") {
@@ -168,7 +168,7 @@ func hasValidSchema(path string) (bool, error) {
 			return true, nil
 		}
 	}
-	
+
 	return false, nil
 }
 
@@ -179,13 +179,13 @@ func hasDataFiles(path string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	
+
 	for _, file := range files {
 		if !file.IsDir() && strings.HasSuffix(file.Name(), ".parquet") {
 			return true, nil
 		}
 	}
-	
+
 	return false, nil
 }
 
@@ -193,13 +193,13 @@ func hasDataFiles(path string) (bool, error) {
 func hasTransactionLog(path string) (bool, error) {
 	// Check if the _delta_log directory exists and has files
 	deltaLogPath := filepath.Join(path, "_delta_log")
-	
+
 	// List files in the _delta_log directory
 	files, err := os.ReadDir(deltaLogPath)
 	if err != nil {
 		return false, err
 	}
-	
+
 	return len(files) > 0, nil
 }
 
@@ -223,7 +223,7 @@ func outputJSON(result *ValidationResult) {
 		fmt.Printf("Error creating JSON: %v\n", err)
 		return
 	}
-	
+
 	// Write to file if specified
 	if validateOutputFile != "" {
 		if err := os.WriteFile(validateOutputFile, jsonData, 0644); err != nil {
@@ -239,21 +239,21 @@ func outputJSON(result *ValidationResult) {
 func outputText(result *ValidationResult) {
 	// Create text output
 	var output strings.Builder
-	
+
 	output.WriteString(fmt.Sprintf("Table: %s\n", result.TablePath))
 	output.WriteString(fmt.Sprintf("Timestamp: %s\n", result.Timestamp.Format(time.RFC3339)))
 	output.WriteString(fmt.Sprintf("Valid: %t\n", result.Valid))
-	output.WriteString(fmt.Sprintf("Checks: %d total, %d passed, %d failed\n", 
+	output.WriteString(fmt.Sprintf("Checks: %d total, %d passed, %d failed\n",
 		result.TotalChecks, result.PassedChecks, result.FailedChecks))
 	output.WriteString(fmt.Sprintf("Duration: %s\n", result.Duration))
-	
+
 	if validateVerbose {
 		output.WriteString("\nDetails:\n")
 		for _, detail := range result.Details {
 			output.WriteString(fmt.Sprintf("- %s\n", detail))
 		}
 	}
-	
+
 	// Write to file if specified
 	if validateOutputFile != "" {
 		if err := os.WriteFile(validateOutputFile, []byte(output.String()), 0644); err != nil {
@@ -267,7 +267,7 @@ func outputText(result *ValidationResult) {
 
 func init() {
 	rootCmd.AddCommand(deltaValidateCmd)
-	
+
 	// Add flags to the validate command
 	deltaValidateCmd.Flags().StringVar(&validateFormat, "format", "text", "Output format (text, json)")
 	deltaValidateCmd.Flags().StringVar(&validateOutputFile, "output-file", "", "File to write output to")

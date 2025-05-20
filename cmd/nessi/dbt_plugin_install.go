@@ -23,31 +23,31 @@ The plugin is opt-in by default and must be explicitly enabled via configuration
 or command-line flags.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Installing dbt plugin for Nessi.dev...")
-		
+
 		// In a real implementation, this would download the plugin from a repository
 		// For now, we'll just enable the built-in plugin
-		
+
 		// Get config directory
 		configDir := GetConfigDir()
 		if err := os.MkdirAll(configDir, 0755); err != nil {
 			fmt.Printf("Error creating config directory: %v\n", err)
 			os.Exit(1)
 		}
-		
+
 		// Create or update nessi.yaml to enable the dbt plugin
 		configPath := filepath.Join(configDir, "nessi.yaml")
 		if err := enableDBTPluginInConfig(configPath); err != nil {
 			fmt.Printf("Error updating configuration: %v\n", err)
 			os.Exit(1)
 		}
-		
+
 		// Create sample dbt plugin configuration
 		sampleConfigPath := filepath.Join(configDir, "nessi_dbt.yaml.sample")
 		if err := createSampleDBTConfig(sampleConfigPath); err != nil {
 			fmt.Printf("Error creating sample configuration: %v\n", err)
 			os.Exit(1)
 		}
-		
+
 		fmt.Println("dbt plugin installed successfully!")
 		fmt.Println("The plugin is now available but still requires explicit activation.")
 		fmt.Println("To use the plugin, run commands with the --enable-dbt-plugin flag:")
@@ -71,13 +71,13 @@ func enableDBTPluginInConfig(configPath string) error {
 		// Create new config file
 		return os.WriteFile(configPath, []byte("# Nessi.dev configuration\n\n# Uncomment to enable the dbt plugin\n# enable_dbt_plugin: true\n"), 0644)
 	}
-	
+
 	// Read existing config
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return fmt.Errorf("failed to read config file: %w", err)
 	}
-	
+
 	// Check if enable_dbt_plugin is already in the config
 	if !containsString(string(data), "enable_dbt_plugin") {
 		// Append to config
@@ -86,12 +86,12 @@ func enableDBTPluginInConfig(configPath string) error {
 			return fmt.Errorf("failed to open config file: %w", err)
 		}
 		defer f.Close()
-		
+
 		if _, err := f.WriteString("\n# Uncomment to enable the dbt plugin\n# enable_dbt_plugin: true\n"); err != nil {
 			return fmt.Errorf("failed to update config file: %w", err)
 		}
 	}
-	
+
 	return nil
 }
 

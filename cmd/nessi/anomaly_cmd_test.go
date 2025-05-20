@@ -50,7 +50,7 @@ func TestAnomalyCommands(t *testing.T) {
 		err = json.Unmarshal(jsonData, &data)
 		assert.NoError(t, err)
 		assert.Equal(t, 10, len(data))
-		
+
 		// Verify the spike
 		middleIndex := len(data) / 2
 		middleValue := data[middleIndex]["value"].(float64)
@@ -68,7 +68,7 @@ func TestAnomalyCommands(t *testing.T) {
 		csvData, err := os.ReadFile(csvFile)
 		assert.NoError(t, err)
 		assert.Contains(t, string(csvData), "timestamp,value")
-		
+
 		// Test other patterns
 		patterns := []string{"constant-change", "oscillation", "trend-deviation", "complex", "random"}
 		for _, pattern := range patterns {
@@ -95,21 +95,21 @@ func TestAnomalyCommands(t *testing.T) {
 			generateCmd.AddCommand(generateSampleDataCmd)
 			_, err := executeCommand(generateCmd, "generate-sample-data", file, "--pattern", pattern, "--points", "30")
 			assert.NoError(t, err)
-			
+
 			// Test detection with text output
 			output, err := executeCommand(cmd, "detect-patterns", file)
 			assert.NoError(t, err)
 			assert.Contains(t, output, "Detected")
-			
+
 			// Test detection with JSON output
 			output, err = executeCommand(cmd, "detect-patterns", file, "--format", "json")
 			assert.NoError(t, err)
-			
+
 			// Verify JSON output
 			var results []*anomaly.PatternDetectionResult
 			err = json.Unmarshal([]byte(output), &results)
 			assert.NoError(t, err)
-			
+
 			// For specific patterns, verify we detect the expected pattern type
 			if pattern == "spike" {
 				foundSpike := false
@@ -149,10 +149,10 @@ func TestAnomalyCommands(t *testing.T) {
 				assert.True(t, foundOscillation, "Should detect an oscillation pattern")
 			}
 		}
-		
+
 		// Test with custom configuration
 		file := filepath.Join(tempDir, "sample-spike.json")
-		output, err := executeCommand(cmd, "detect-patterns", file, 
+		output, err := executeCommand(cmd, "detect-patterns", file,
 			"--min-data-points", "5",
 			"--spike-threshold", "0.1",
 			"--dip-threshold", "0.1",
@@ -163,7 +163,7 @@ func TestAnomalyCommands(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Contains(t, output, "Detected")
 	})
-	
+
 	// Test readTimeSeriesData function
 	t.Run("ReadTimeSeriesData", func(t *testing.T) {
 		// Create a JSON file with time series data
@@ -187,7 +187,7 @@ func TestAnomalyCommands(t *testing.T) {
 		require.NoError(t, err)
 		err = os.WriteFile(jsonFile, jsonBytes, 0644)
 		require.NoError(t, err)
-		
+
 		// Test reading JSON data
 		data, err := readTimeSeriesData(jsonFile)
 		assert.NoError(t, err)
@@ -195,16 +195,16 @@ func TestAnomalyCommands(t *testing.T) {
 		assert.Equal(t, 100.0, data[0].Value)
 		assert.Equal(t, 110.0, data[1].Value)
 		assert.Equal(t, 120.0, data[2].Value)
-		
+
 		// Create a CSV file with time series data
 		csvFile := filepath.Join(tempDir, "test-data.csv")
 		csvContent := "timestamp,value\n" +
 			now.Format(time.RFC3339) + ",100.0\n" +
 			now.Add(time.Hour).Format(time.RFC3339) + ",110.0\n" +
-			now.Add(2 * time.Hour).Format(time.RFC3339) + ",120.0\n"
+			now.Add(2*time.Hour).Format(time.RFC3339) + ",120.0\n"
 		err = os.WriteFile(csvFile, []byte(csvContent), 0644)
 		require.NoError(t, err)
-		
+
 		// Test reading CSV data
 		data, err = readTimeSeriesData(csvFile)
 		assert.NoError(t, err)
@@ -212,29 +212,29 @@ func TestAnomalyCommands(t *testing.T) {
 		assert.Equal(t, 100.0, data[0].Value)
 		assert.Equal(t, 110.0, data[1].Value)
 		assert.Equal(t, 120.0, data[2].Value)
-		
+
 		// Test with invalid file format
 		invalidFile := filepath.Join(tempDir, "invalid-data.txt")
 		err = os.WriteFile(invalidFile, []byte("invalid data"), 0644)
 		require.NoError(t, err)
-		
+
 		_, err = readTimeSeriesData(invalidFile)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "unsupported file format")
-		
+
 		// Test with invalid JSON data
 		invalidJsonFile := filepath.Join(tempDir, "invalid-data.json")
 		err = os.WriteFile(invalidJsonFile, []byte("invalid json"), 0644)
 		require.NoError(t, err)
-		
+
 		_, err = readTimeSeriesData(invalidJsonFile)
 		assert.Error(t, err)
-		
+
 		// Test with invalid CSV data
 		invalidCsvFile := filepath.Join(tempDir, "invalid-data.csv")
 		err = os.WriteFile(invalidCsvFile, []byte("invalid csv"), 0644)
 		require.NoError(t, err)
-		
+
 		_, err = readTimeSeriesData(invalidCsvFile)
 		assert.Error(t, err)
 	})

@@ -6,10 +6,12 @@
 
 - Data Quality Checks
 - System Metrics
-- Web Dashboard
-- CLI & Python API
-- Custom Rule Extensions
-- Data Profiling
+- CLI Interface
+- Python API
+- Reporting System
+- Alerting System
+- Metrics Export
+- Profiling
 - Freshness Monitoring
 - Workflow Integrations
 - Email Alerting
@@ -23,11 +25,11 @@
 2. Installation & Quickstart
 3. Core Concepts
 4. Security Features
-5. Web Dashboard
-6. Command-Line Interface
-7. Python API
-8. Data Quality Features
-9. Monitoring
+5. Command-Line Interface
+6. Python API
+7. Data Quality Features
+8. Reporting System
+9. Monitoring & Metrics
 10. Integrations
 11. Configuration
 12. Best Practices
@@ -44,7 +46,7 @@ Nessi is a comprehensive monitoring system designed for data quality and system 
 
 - **Delta Lake Support**: Schema evolution tracking, version control, and time travel
 - **Data Quality**: Profiling, validation rules, and quality scoring
-- **Monitoring**: Real-time metrics, dashboards, and alerting
+- **Monitoring**: Real-time metrics, comprehensive reporting, and alerting
 - **Integration**: dbt, Airflow, and other workflow tools
 
 ## Installation & Quickstart
@@ -97,22 +99,34 @@ Nessi includes several security features:
 - API key management
 - Security headers
 
-## Web Dashboard
+## Reporting System
 
-The web dashboard provides:
+Nessi provides a comprehensive reporting system with multiple output formats:
 
-- Quality score cards
-- Trend visualizations
-- System metrics
-- Data profiles
+- **HTML Reports**: Interactive reports with quality score cards and visualizations
+- **PDF Reports**: Static reports for sharing and documentation
+- **JSON/CSV**: Machine-readable formats for integration with other tools
 
-To access the dashboard:
+Generate reports using the CLI:
 
 ```bash
-nessi dashboard start
+# Generate a quality report for a table
+nessi report --table path/to/table --format html --output report.html
+
+# Generate a freshness report
+nessi freshness report --format pdf --output freshness.pdf
+
+# Export metrics as JSON for integration
+nessi metrics export --format json --output metrics.json
 ```
 
-Then open http://localhost:8080 in your browser.
+Reports include detailed information about:
+
+- Data quality scores and trends
+- Schema evolution and changes
+- Freshness monitoring results
+- Validation rule results
+- System performance metrics
 
 ## Command-Line Interface
 

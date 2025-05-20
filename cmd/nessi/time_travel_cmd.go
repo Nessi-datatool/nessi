@@ -17,15 +17,15 @@ type TimeTravel struct {
 }
 
 type TimeTravelResult struct {
-	TableName    string
-	Version      int64
-	Timestamp    time.Time
-	Operation    string
-	OperationID  string
-	UserID       string
-	NumRows      int64
-	SizeBytes    int64
-	Description  string
+	TableName   string
+	Version     int64
+	Timestamp   time.Time
+	Operation   string
+	OperationID string
+	UserID      string
+	NumRows     int64
+	SizeBytes   int64
+	Description string
 }
 
 // NewTimeTravel creates a new time travel manager
@@ -36,30 +36,30 @@ func NewTimeTravel(dataDir string) (*TimeTravel, error) {
 // GetVersion gets a specific version of a table
 func (tt *TimeTravel) GetVersion(ctx context.Context, tableName string, version int64) (*TimeTravelResult, error) {
 	return &TimeTravelResult{
-		TableName:    tableName,
-		Version:      version,
-		Timestamp:    time.Now().Add(-24 * time.Hour),
-		Operation:    "UPDATE",
-		OperationID:  "op-123",
-		UserID:       "user1",
-		NumRows:      1000,
-		SizeBytes:    1024 * 1024,
-		Description:  "Sample version",
+		TableName:   tableName,
+		Version:     version,
+		Timestamp:   time.Now().Add(-24 * time.Hour),
+		Operation:   "UPDATE",
+		OperationID: "op-123",
+		UserID:      "user1",
+		NumRows:     1000,
+		SizeBytes:   1024 * 1024,
+		Description: "Sample version",
 	}, nil
 }
 
 // GetVersionAtTime gets a version of a table at a specific time
 func (tt *TimeTravel) GetVersionAtTime(ctx context.Context, tableName string, timestamp time.Time) (*TimeTravelResult, error) {
 	return &TimeTravelResult{
-		TableName:    tableName,
-		Version:      1,
-		Timestamp:    timestamp,
-		Operation:    "UPDATE",
-		OperationID:  "op-123",
-		UserID:       "user1",
-		NumRows:      1000,
-		SizeBytes:    1024 * 1024,
-		Description:  "Sample version",
+		TableName:   tableName,
+		Version:     1,
+		Timestamp:   timestamp,
+		Operation:   "UPDATE",
+		OperationID: "op-123",
+		UserID:      "user1",
+		NumRows:     1000,
+		SizeBytes:   1024 * 1024,
+		Description: "Sample version",
 	}, nil
 }
 
@@ -67,26 +67,26 @@ func (tt *TimeTravel) GetVersionAtTime(ctx context.Context, tableName string, ti
 func (tt *TimeTravel) GetVersions(ctx context.Context, tableName string) ([]*TimeTravelResult, error) {
 	return []*TimeTravelResult{
 		{
-			TableName:    tableName,
-			Version:      1,
-			Timestamp:    time.Now().Add(-48 * time.Hour),
-			Operation:    "CREATE",
-			OperationID:  "op-123",
-			UserID:       "user1",
-			NumRows:      500,
-			SizeBytes:    512 * 1024,
-			Description:  "Initial version",
+			TableName:   tableName,
+			Version:     1,
+			Timestamp:   time.Now().Add(-48 * time.Hour),
+			Operation:   "CREATE",
+			OperationID: "op-123",
+			UserID:      "user1",
+			NumRows:     500,
+			SizeBytes:   512 * 1024,
+			Description: "Initial version",
 		},
 		{
-			TableName:    tableName,
-			Version:      2,
-			Timestamp:    time.Now().Add(-24 * time.Hour),
-			Operation:    "UPDATE",
-			OperationID:  "op-456",
-			UserID:       "user2",
-			NumRows:      1000,
-			SizeBytes:    1024 * 1024,
-			Description:  "Updated version",
+			TableName:   tableName,
+			Version:     2,
+			Timestamp:   time.Now().Add(-24 * time.Hour),
+			Operation:   "UPDATE",
+			OperationID: "op-456",
+			UserID:      "user2",
+			NumRows:     1000,
+			SizeBytes:   1024 * 1024,
+			Description: "Updated version",
 		},
 	}, nil
 }
@@ -95,26 +95,26 @@ func (tt *TimeTravel) GetVersions(ctx context.Context, tableName string) ([]*Tim
 func (tt *TimeTravel) GetVersionsInRange(ctx context.Context, tableName string, startTime, endTime time.Time) ([]*TimeTravelResult, error) {
 	return []*TimeTravelResult{
 		{
-			TableName:    tableName,
-			Version:      1,
-			Timestamp:    time.Now().Add(-48 * time.Hour),
-			Operation:    "CREATE",
-			OperationID:  "op-123",
-			UserID:       "user1",
-			NumRows:      500,
-			SizeBytes:    512 * 1024,
-			Description:  "Initial version",
+			TableName:   tableName,
+			Version:     1,
+			Timestamp:   time.Now().Add(-48 * time.Hour),
+			Operation:   "CREATE",
+			OperationID: "op-123",
+			UserID:      "user1",
+			NumRows:     500,
+			SizeBytes:   512 * 1024,
+			Description: "Initial version",
 		},
 		{
-			TableName:    tableName,
-			Version:      2,
-			Timestamp:    time.Now().Add(-24 * time.Hour),
-			Operation:    "UPDATE",
-			OperationID:  "op-456",
-			UserID:       "user2",
-			NumRows:      1000,
-			SizeBytes:    1024 * 1024,
-			Description:  "Updated version",
+			TableName:   tableName,
+			Version:     2,
+			Timestamp:   time.Now().Add(-24 * time.Hour),
+			Operation:   "UPDATE",
+			OperationID: "op-456",
+			UserID:      "user2",
+			NumRows:     1000,
+			SizeBytes:   1024 * 1024,
+			Description: "Updated version",
 		},
 	}, nil
 }
@@ -141,7 +141,7 @@ var timeTravelGetCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Create time travel manager
 		tt, err := NewTimeTravel(appConfig.DataDir)
 		if err != nil {
@@ -149,7 +149,7 @@ var timeTravelGetCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Get version
 		ctx := context.Background()
 		result, err := tt.GetVersion(ctx, tableName, version)
@@ -158,7 +158,7 @@ var timeTravelGetCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Display version
 		if timeTravelOutputFormat == "json" {
 			// JSON output
@@ -195,7 +195,7 @@ var timeTravelAtCmd = &cobra.Command{
 		// Parse arguments
 		tableName := args[0]
 		timestampStr := args[1]
-		
+
 		// Parse timestamp
 		var timestamp time.Time
 		var err error
@@ -210,7 +210,7 @@ var timeTravelAtCmd = &cobra.Command{
 				return
 			}
 		}
-		
+
 		// Create time travel manager
 		tt, err := NewTimeTravel(appConfig.DataDir)
 		if err != nil {
@@ -218,7 +218,7 @@ var timeTravelAtCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Get version at time
 		ctx := context.Background()
 		result, err := tt.GetVersionAtTime(ctx, tableName, timestamp)
@@ -227,7 +227,7 @@ var timeTravelAtCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Display version
 		if timeTravelOutputFormat == "json" {
 			// JSON output
@@ -264,7 +264,7 @@ var timeTravelHistoryCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// Parse arguments
 		tableName := args[0]
-		
+
 		// Create time travel manager
 		tt, err := NewTimeTravel(appConfig.DataDir)
 		if err != nil {
@@ -272,11 +272,11 @@ var timeTravelHistoryCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Get versions
 		ctx := context.Background()
 		var versions []*TimeTravelResult
-		
+
 		if timeTravelStartTime != "" && timeTravelEndTime != "" {
 			// Parse start time
 			startTime, err := time.Parse(time.RFC3339, timeTravelStartTime)
@@ -286,7 +286,7 @@ var timeTravelHistoryCmd = &cobra.Command{
 				fmt.Println("Start time must be in RFC3339 format (e.g., 2023-01-01T12:00:00Z)")
 				return
 			}
-			
+
 			// Parse end time
 			endTime, err := time.Parse(time.RFC3339, timeTravelEndTime)
 			if err != nil {
@@ -295,7 +295,7 @@ var timeTravelHistoryCmd = &cobra.Command{
 				fmt.Println("End time must be in RFC3339 format (e.g., 2023-01-01T12:00:00Z)")
 				return
 			}
-			
+
 			// Get versions in time range
 			versions, err = tt.GetVersionsInRange(ctx, tableName, startTime, endTime)
 			if err != nil {
@@ -312,7 +312,7 @@ var timeTravelHistoryCmd = &cobra.Command{
 				return
 			}
 		}
-		
+
 		// Display versions
 		if timeTravelOutputFormat == "json" {
 			// JSON output
@@ -328,7 +328,7 @@ var timeTravelHistoryCmd = &cobra.Command{
 			fmt.Printf("Version history for table %s:\n", tableName)
 			fmt.Printf("%-10s %-25s %-15s %-15s %-15s %-10s %-15s %s\n", "Version", "Timestamp", "Operation", "Operation ID", "User ID", "Rows", "Size", "Description")
 			fmt.Printf("%-10s %-25s %-15s %-15s %-15s %-10s %-15s %s\n", "-------", "---------", "---------", "------------", "-------", "----", "----", "-----------")
-			
+
 			for _, version := range versions {
 				// Format size
 				size := fmt.Sprintf("%d bytes", version.SizeBytes)
@@ -339,7 +339,7 @@ var timeTravelHistoryCmd = &cobra.Command{
 				} else if version.SizeBytes >= 1024 {
 					size = fmt.Sprintf("%.2f KB", float64(version.SizeBytes)/1024)
 				}
-				
+
 				fmt.Printf("%-10d %-25s %-15s %-15s %-15s %-10d %-15s %s\n",
 					version.Version,
 					version.Timestamp.Format(time.RFC3339),
@@ -358,10 +358,10 @@ var timeTravelHistoryCmd = &cobra.Command{
 var (
 	// timeTravelOutputFormat is the output format for time travel commands
 	timeTravelOutputFormat string
-	
+
 	// timeTravelStartTime is the start time for time travel history
 	timeTravelStartTime string
-	
+
 	// timeTravelEndTime is the end time for time travel history
 	timeTravelEndTime string
 )
@@ -371,7 +371,7 @@ func init() {
 	timeTravelCmd.AddCommand(timeTravelGetCmd)
 	timeTravelCmd.AddCommand(timeTravelAtCmd)
 	timeTravelCmd.AddCommand(timeTravelHistoryCmd)
-	
+
 	// Add flags
 	timeTravelGetCmd.Flags().StringVar(&timeTravelOutputFormat, "format", "table", "Output format (table or json)")
 	timeTravelAtCmd.Flags().StringVar(&timeTravelOutputFormat, "format", "table", "Output format (table or json)")

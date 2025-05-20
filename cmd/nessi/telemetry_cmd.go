@@ -75,14 +75,14 @@ var badgeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		repoURL, _ := cmd.Flags().GetString("repo")
 		outputPath, _ := cmd.Flags().GetString("output")
-		
+
 		// Generate the badge
 		badge, err := telemetry.GenerateBadge(repoURL)
 		if err != nil {
 			fmt.Printf("Error generating badge: %v\n", err)
 			os.Exit(1)
 		}
-		
+
 		// If output path is provided, save the badge to a file
 		if outputPath != "" {
 			err = os.WriteFile(outputPath, []byte(badge), 0644)
@@ -106,7 +106,7 @@ func init() {
 	telemetryCmd.AddCommand(telemetryDisableCmd)
 	telemetryCmd.AddCommand(telemetryStatusCmd)
 	telemetryCmd.AddCommand(badgeCmd)
-	
+
 	// Add flags for the badge command
 	badgeCmd.Flags().StringP("repo", "r", "", "GitHub repository URL (e.g., https://github.com/username/repo)")
 	badgeCmd.Flags().StringP("output", "o", "", "Output file path for the badge markdown")

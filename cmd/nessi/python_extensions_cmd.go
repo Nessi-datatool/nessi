@@ -93,11 +93,11 @@ func checkPythonEnvironment() {
 	}
 
 	fmt.Println("\nChecking required packages:")
-	
+
 	for _, pkg := range requiredPackages {
 		pipCmd := exec.Command("pip", "show", pkg)
 		pipOutput, err := pipCmd.CombinedOutput()
-		
+
 		if err != nil {
 			fmt.Printf("❌ %s not found\n", pkg)
 		} else {
@@ -168,9 +168,9 @@ func enablePythonExtensions() {
 	// Enable Python extensions in feature flags
 	featureFlagManager := config.NewFeatureFlagManager()
 	// TODO: Load feature flags from config file
-	
+
 	featureFlagManager.SetFlag(config.FeatureFlagPythonExtensions, true)
-	
+
 	// TODO: Save feature flags to config file
 
 	fmt.Println("✅ Python extensions enabled successfully.")
@@ -187,9 +187,9 @@ func disablePythonExtensions() {
 	// Disable Python extensions in feature flags
 	featureFlagManager := config.NewFeatureFlagManager()
 	// TODO: Load feature flags from config file
-	
+
 	featureFlagManager.SetFlag(config.FeatureFlagPythonExtensions, false)
-	
+
 	// TODO: Save feature flags to config file
 
 	fmt.Println("✅ Python extensions disabled successfully.")
@@ -203,22 +203,22 @@ func showPythonExtensionsStatus() {
 
 	fmt.Println("Python Extensions Status:")
 	fmt.Println("========================")
-	
+
 	pythonExtensionsEnabled := featureFlagManager.IsEnabled(config.FeatureFlagPythonExtensions)
-	
+
 	if pythonExtensionsEnabled {
 		fmt.Println("✅ Python extensions: Enabled")
 	} else {
 		fmt.Println("❌ Python extensions: Disabled")
 	}
-	
+
 	// Check individual features
 	features := map[string]config.FeatureFlag{
-		"ML-based anomaly detection":       config.FeatureFlagMLAnomalyDetection,
-		"Advanced Delta Lake features":     config.FeatureFlagAdvancedDeltaLake,
-		"Advanced visualization":           config.FeatureFlagAdvancedVisualization,
+		"ML-based anomaly detection":   config.FeatureFlagMLAnomalyDetection,
+		"Advanced Delta Lake features": config.FeatureFlagAdvancedDeltaLake,
+		"Advanced visualization":       config.FeatureFlagAdvancedVisualization,
 	}
-	
+
 	fmt.Println("\nIndividual Features:")
 	for name, flag := range features {
 		if featureFlagManager.IsEnabled(flag) && pythonExtensionsEnabled {
@@ -227,7 +227,7 @@ func showPythonExtensionsStatus() {
 			fmt.Printf("❌ %s: Disabled\n", name)
 		}
 	}
-	
+
 	// Show Python environment status
 	fmt.Println("\nPython Environment:")
 	pythonCmd := exec.Command("python", "--version")

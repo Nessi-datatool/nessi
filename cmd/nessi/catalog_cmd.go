@@ -339,12 +339,12 @@ Example:
 		fmt.Printf("Owner: %s\n", details.Metadata.Owner)
 		fmt.Printf("Created: %s\n", details.Metadata.CreatedAt.Format(time.RFC3339))
 		fmt.Printf("Updated: %s\n", details.Metadata.UpdatedAt.Format(time.RFC3339))
-		
+
 		// Print tags
 		if len(details.Metadata.Tags) > 0 {
 			fmt.Printf("Tags: %s\n", strings.Join(details.Metadata.Tags, ", "))
 		}
-		
+
 		// Print schema
 		if details.Schema != nil && len(details.Schema.Fields) > 0 {
 			fmt.Printf("\nSchema:\n")
@@ -485,7 +485,7 @@ Example:
 		if len(profile.Columns) > 0 && profile.Columns[0].Stats.Count > 0 {
 			totalRows = profile.Columns[0].Stats.Count
 		}
-		
+
 		metrics := &types.QualityMetrics{
 			TotalRows:        totalRows,
 			LastUpdated:      time.Now(),
@@ -523,7 +523,7 @@ Example:
 						CustomMetrics: make(map[string]interface{}),
 					}
 				}
-				
+
 				// Store rule result in custom metrics
 				metrics.ColumnMetrics[colName].CustomMetrics[result.Rule.Name] = map[string]interface{}{
 					"type":    result.Rule.Type,
@@ -572,7 +572,7 @@ Example:
 				} else {
 					timeliness = 0.4
 				}
-				
+
 				// Store in custom metrics
 				if metrics.ColumnMetrics == nil {
 					metrics.ColumnMetrics = make(map[string]*types.ColumnQualityMetrics)
@@ -600,14 +600,14 @@ Example:
 		// Calculate overall score - store as custom metric
 		scoreValue := (metrics.DataCompleteness*0.25 + metrics.DataAccuracy*0.35 +
 			metrics.DataConsistency*0.25)
-		
+
 		// Add timeliness component if available
 		if metrics.ColumnMetrics != nil && metrics.ColumnMetrics["_table"] != nil {
 			if timeliness, ok := metrics.ColumnMetrics["_table"].CustomMetrics["timeliness"].(float64); ok {
 				scoreValue += timeliness * 0.15
 			}
 		}
-		
+
 		// Store overall score
 		if metrics.ColumnMetrics == nil {
 			metrics.ColumnMetrics = make(map[string]*types.ColumnQualityMetrics)

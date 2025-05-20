@@ -22,8 +22,7 @@ nessi/
 │   │   └── anomaly/    # Anomaly detection algorithms
 │   ├── monitoring/     # Metrics & monitoring (Go)
 │   │   ├── metrics/    # Metrics collection & storage
-│   │   ├── alerts/     # Alerting system
-│   │   └── dashboard/  # Web dashboard
+│   │   └── alerts/     # Alerting system
 │   ├── security/       # Security (Go)
 │   │   ├── auth/       # Authentication system
 │   │   └── ssl/        # SSL/TLS support
@@ -1524,9 +1523,9 @@ func (r *RangeCheckRule) Validate(record arrow.Record) []ValidationError {
   - Sudden spikes/dips: Temporary anomalies that return to normal
   - Oscillations: Alternating patterns in metric values
 
-### Phase 5: Advanced Monitoring & Alerting (2 weeks)
+### Phase 5: Advanced Reporting & Alerting (2 weeks)
 
-#### Monitoring System
+#### Metrics System
 ```go
 // pkg/monitoring/metrics/collector.go
 type MetricsCollector interface {
@@ -1535,7 +1534,7 @@ type MetricsCollector interface {
     GetMetricHistory(name string, options *HistoryOptions) ([]*MetricPoint, error)
     GetMetricStats(name string) (*MetricStats, error)
     RegisterMetricSource(source MetricSource) error
-    GetDashboardData(timeRange *TimeRange) (*DashboardData, error)
+    GetReportData(timeRange *TimeRange) (*ReportData, error)
 }
 
 type Metric struct {
@@ -1578,11 +1577,12 @@ type MetricStats struct {
     LastUpdate  time.Time `json:"last_update"`
 }
 
-type DashboardData struct {
+type ReportData struct {
     Metrics     map[string][]*MetricPoint `json:"metrics"`
     Alerts      []*Alert                 `json:"alerts"`
     Stats       map[string]*MetricStats   `json:"stats"`
     TimeRange   *TimeRange               `json:"time_range"`
+    Format      string                   `json:"format"` // html, pdf, json, csv
 }
 ```
 

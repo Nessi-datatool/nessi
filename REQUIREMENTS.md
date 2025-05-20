@@ -58,8 +58,9 @@ Nessi is an open-source data quality and Delta Lake management tool with a Go-fi
 
 ### Monitoring Capabilities
 - ✅ Core monitoring functionality via CLI commands
-- ✅ Metrics export for external visualization
+- ✅ Metrics export for external visualization in JSON/CSV formats
 - ✅ System health status commands
+- ✅ Simple metrics collection without external dependencies
 
 ### Alerting
 - ✅ Email notifications for critical issues
@@ -75,6 +76,7 @@ Nessi is an open-source data quality and Delta Lake management tool with a Go-fi
 ### CLI Reports
 - ✅ Quality score summaries via CLI
 - ✅ Table and column level summaries
+- ✅ Comprehensive HTML and PDF report generation
 - ✅ Trend data for external visualization
 - ✅ Distribution data export
 - ✅ Pattern frequency analysis

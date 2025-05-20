@@ -363,11 +363,11 @@ var webhookTestCmd = &cobra.Command{
 
 		// Create test payload
 		payload := map[string]interface{}{
-			"test":        true,
-			"message":     "This is a test event",
-			"webhook_id":  id,
-			"event_type":  eventType,
-			"timestamp":   time.Now().Format(time.RFC3339),
+			"test":       true,
+			"message":    "This is a test event",
+			"webhook_id": id,
+			"event_type": eventType,
+			"timestamp":  time.Now().Format(time.RFC3339),
 		}
 
 		// Trigger event

@@ -229,13 +229,13 @@ func init() {
 func runFormatValidation(tablePath string, options datalake.FormatValidationOptions, outputFormat string) error {
 	// Create metadata manager
 	manager := datalake.NewMetadataManager(tablePath)
-	
+
 	// Run format validation
 	result, err := manager.ValidateFormat(options)
 	if err != nil {
 		return fmt.Errorf("format validation failed: %w", err)
 	}
-	
+
 	// Output the result
 	printFormatValidationResult(result, outputFormat)
 	return nil
@@ -252,7 +252,7 @@ func printFormatValidationResult(result *datalake.FormatValidationResult, format
 			return
 		}
 		fmt.Println(string(jsonData))
-		
+
 	default: // text format
 		fmt.Printf("Format Validation Result: %s\n", result.FormatType)
 		fmt.Printf("Field: %s\n", result.Field)
@@ -261,7 +261,7 @@ func printFormatValidationResult(result *datalake.FormatValidationResult, format
 		fmt.Printf("Total Values: %d\n", result.TotalValues)
 		fmt.Printf("Valid Values: %d\n", result.ValidValues)
 		fmt.Printf("Invalid Values: %d\n", result.InvalidValues)
-		
+
 		if len(result.InvalidExamples) > 0 {
 			fmt.Printf("\nInvalid Examples (%d):\n", len(result.InvalidExamples))
 			for i, example := range result.InvalidExamples {

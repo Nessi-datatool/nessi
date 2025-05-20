@@ -112,21 +112,21 @@ Examples:
 				v.Set(k, val)
 			}
 			v.SetConfigType("yaml")
-			
+
 			// Write to a temporary file
 			tempFile := filepath.Join(os.TempDir(), "nessi-config-temp.yaml")
 			if err := v.WriteConfigAs(tempFile); err != nil {
 				fmt.Printf("Error writing configuration: %v\n", err)
 				os.Exit(1)
 			}
-			
+
 			// Read the temporary file
 			data, err = os.ReadFile(tempFile)
 			if err != nil {
 				fmt.Printf("Error reading temporary file: %v\n", err)
 				os.Exit(1)
 			}
-			
+
 			// Clean up
 			os.Remove(tempFile)
 		} else {
@@ -171,7 +171,7 @@ Examples:
 
 		// Create a new viper instance
 		v := viper.New()
-		
+
 		if ext == ".json" {
 			v.SetConfigType("json")
 		} else if ext == ".yaml" || ext == ".yml" {
@@ -216,7 +216,7 @@ func printSettings(settings map[string]interface{}, indent int) {
 	for k, v := range settings {
 		// Print the key with indentation
 		fmt.Printf("%s%s: ", strings.Repeat("  ", indent), k)
-		
+
 		// Check if the value is a nested map
 		if nested, ok := v.(map[string]interface{}); ok {
 			fmt.Println()
@@ -251,7 +251,7 @@ func printValue(value interface{}) {
 func setConfigValue(key, value string) error {
 	// Set the value in viper
 	viper.Set(key, value)
-	
+
 	// Save the configuration
 	return viper.WriteConfig()
 }
@@ -263,7 +263,7 @@ func resetConfig() error {
 	if err != nil {
 		return fmt.Errorf("failed to get user home directory: %w", err)
 	}
-	
+
 	// Create default configuration
 	defaultConfig := map[string]interface{}{
 		"server": map[string]interface{}{
@@ -289,15 +289,15 @@ func resetConfig() error {
 			"stdout": true,
 		},
 	}
-	
+
 	// Reset viper
 	viper.Reset()
-	
+
 	// Set default values
 	for k, v := range defaultConfig {
 		viper.Set(k, v)
 	}
-	
+
 	// Save the configuration
 	viper.SetConfigFile(filepath.Join(home, ".nessi.yaml"))
 	return viper.WriteConfig()
@@ -307,7 +307,7 @@ func init() {
 	rootCmd.AddCommand(configCmd)
 	configCmd.AddCommand(configExportCmd)
 	configCmd.AddCommand(configImportCmd)
-	
+
 	// Add flags to the config command
 	configCmd.Flags().StringVar(&configValue, "set", "", "Set the configuration value")
 	configCmd.Flags().BoolVar(&configReset, "reset", false, "Reset configuration to defaults")

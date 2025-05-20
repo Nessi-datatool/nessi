@@ -73,24 +73,24 @@ func printSchemaTree(schema *datalake.Schema, maxDepth int, showTypes, showNulla
 func printField(field *datalake.Field, prefix, childPrefix string, depth, maxDepth int, showTypes, showNullable bool) {
 	// Print field name
 	fieldInfo := field.Name
-	
+
 	// Add type information if requested
 	if showTypes {
 		fieldInfo += fmt.Sprintf(" (%s)", field.Type)
 	}
-	
+
 	// Add nullable information if requested
 	if showNullable && field.Nullable {
 		fieldInfo += " [nullable]"
 	}
-	
+
 	fmt.Println(prefix + fieldInfo)
-	
+
 	// Stop recursion if we've reached the maximum depth
 	if depth >= maxDepth {
 		return
 	}
-	
+
 	// Print nested fields for struct types
 	if field.Type == "struct" && field.Children != nil {
 		for i, child := range field.Children {
@@ -102,12 +102,12 @@ func printField(field *datalake.Field, prefix, childPrefix string, depth, maxDep
 			}
 		}
 	}
-	
+
 	// Print array element type for array types
 	if strings.HasPrefix(field.Type, "array") && field.Children != nil && len(field.Children) > 0 {
 		printField(field.Children[0], childPrefix+"└── [elements] ", childPrefix+"    ", depth+1, maxDepth, showTypes, showNullable)
 	}
-	
+
 	// Print key-value types for map types
 	if strings.HasPrefix(field.Type, "map") && field.Children != nil && len(field.Children) >= 2 {
 		printField(field.Children[0], childPrefix+"├── [keys] ", childPrefix+"│   ", depth+1, maxDepth, showTypes, showNullable)
