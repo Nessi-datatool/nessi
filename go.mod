@@ -178,4 +178,4 @@ replace github.com/nessi-dev/nessi-dev/pkg/logger => ./pkg/logger
 // Use older versions of packages that are compatible with Go 1.20
 replace github.com/klauspost/compress => github.com/klauspost/compress v1.16.7
 
-replace golang.org/x/sys => golang.org/x/sys v0.15.0
+replace golang.org/x/sys => golang.org/x/sys v0.33.0
