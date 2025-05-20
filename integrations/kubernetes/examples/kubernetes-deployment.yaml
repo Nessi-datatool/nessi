@@ -1,0 +1,244 @@
+---
+# Namespace for Nessi resources
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nessi
+  labels:
+    app: nessi
+
+---
+# ConfigMap for Nessi configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nessi-config
+  namespace: nessi
+data:
+  nessi.yaml: |
+    server:
+      port: 8080
+      host: "0.0.0.0"
+    storage:
+      type: "s3"
+      s3:
+        bucket: "nessi-data"
+        region: "us-west-2"
+        endpoint: ""  # Leave empty for AWS S3
+    logging:
+      level: "info"
+      format: "json"
+
+---
+# Secret for Nessi API credentials
+apiVersion: v1
+kind: Secret
+metadata:
+  name: nessi-secrets
+  namespace: nessi
+type: Opaque
+data:
+  # These are example values - replace with your actual credentials
+  # Values should be base64 encoded
+  api-key: "ZXhhbXBsZS1hcGkta2V5"  # example-api-key
+  api-secret: "ZXhhbXBsZS1hcGktc2VjcmV0"  # example-api-secret
+  aws-access-key: "ZXhhbXBsZS1hd3MtYWNjZXNzLWtleQ=="  # example-aws-access-key
+  aws-secret-key: "ZXhhbXBsZS1hd3Mtc2VjcmV0LWtleQ=="  # example-aws-secret-key
+
+---
+# Service Account for Nessi
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nessi-service-account
+  namespace: nessi
+
+---
+# Role for Nessi
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: nessi-role
+  namespace: nessi
+rules:
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["create", "get", "list", "watch", "delete"]
+- apiGroups: [""]
+  resources: ["pods", "pods/log"]
+  verbs: ["get", "list", "watch"]
+
+---
+# Role Binding for Nessi
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: nessi-role-binding
+  namespace: nessi
+subjects:
+- kind: ServiceAccount
+  name: nessi-service-account
+  namespace: nessi
+roleRef:
+  kind: Role
+  name: nessi-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Deployment for Nessi API server
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nessi-api
+  namespace: nessi
+  labels:
+    app: nessi
+    component: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nessi
+      component: api
+  template:
+    metadata:
+      labels:
+        app: nessi
+        component: api
+    spec:
+      serviceAccountName: nessi-service-account
+      containers:
+      - name: nessi-api
+        image: nessi/nessi:latest
+        imagePullPolicy: IfNotPresent
+        command: ["nessi", "server", "start"]
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: NESSI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: nessi-secrets
+              key: api-key
+        - name: NESSI_API_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: nessi-secrets
+              key: api-secret
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: nessi-secrets
+              key: aws-access-key
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: nessi-secrets
+              key: aws-secret-key
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/nessi
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: config-volume
+        configMap:
+          name: nessi-config
+
+---
+# Service for Nessi API
+apiVersion: v1
+kind: Service
+metadata:
+  name: nessi-api
+  namespace: nessi
+  labels:
+    app: nessi
+    component: api
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: nessi
+    component: api
+
+---
+# Job Template for Nessi Data Quality Check
+# This is an example template - not meant to be applied directly
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nessi-quality-check-example
+  namespace: nessi
+  labels:
+    app: nessi
+    component: quality-check
+spec:
+  ttlSecondsAfterFinished: 3600  # Auto-delete after 1 hour
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: nessi
+        component: quality-check
+    spec:
+      serviceAccountName: nessi-service-account
+      containers:
+      - name: nessi
+        image: nessi/nessi:latest
+        imagePullPolicy: IfNotPresent
+        command: ["nessi"]
+        args: ["quality", "check", "/path/to/table", "--format", "json"]
+        env:
+        - name: NESSI_API_HOST
+          value: "http://nessi-api:8080"
+        - name: NESSI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: nessi-secrets
+              key: api-key
+        - name: NESSI_API_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: nessi-secrets
+              key: api-secret
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: nessi-secrets
+              key: aws-access-key
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: nessi-secrets
+              key: aws-secret-key
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+      restartPolicy: Never

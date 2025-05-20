@@ -1,0 +1,40 @@
+name: Databricks Integration Tests
+
+on:
+  push:
+    branches: [ main, fresh-ci-pipeline, databricks-ci ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Test Databricks Integration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        run: |
+          git clone https://github.com/nessi-dev/nessi.git .
+          git checkout $GITHUB_SHA
+      
+      - name: Set up Go
+        run: |
+          wget https://go.dev/dl/go1.24.3.linux-amd64.tar.gz
+          sudo tar -C /usr/local -xzf go1.24.3.linux-amd64.tar.gz
+          echo 'export PATH=$PATH:/usr/local/go/bin' >> $GITHUB_ENV
+          echo 'export GO111MODULE=on' >> $GITHUB_ENV
+      
+      - name: Install dependencies
+        run: |
+          go mod download
+      
+      - name: Run Databricks integration tests
+        run: |
+          # Test only the Databricks integration and Delta Lake packages
+          go test -v ./pkg/catalog/databricks/... -short
+          go test -v ./pkg/datalake/... -short
+      
+      - name: Check test coverage
+        run: |
+          # Generate coverage report for Databricks packages only
+          go test -coverprofile=coverage.out ./pkg/catalog/databricks/... ./pkg/datalake/...
+          go tool cover -func=coverage.out

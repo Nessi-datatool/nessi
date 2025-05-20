@@ -1,0 +1,47 @@
+{
+    "metrics": {
+        "enabled": true,
+        "port": 9091
+    },
+    "alerts": {
+        "enabled": true,
+        "thresholds": {
+            "table_size": {
+                "warning": 1000000,
+                "critical": 5000000
+            },
+            "record_count": {
+                "warning": 10000,
+                "critical": 50000
+            }
+        },
+        "silence_period": "5m",
+        "cooldown_period": "15m",
+        "check_interval": "1m",
+        "notification_channels": ["slack", "email"]
+    },
+    "notifications": {
+        "slack": {
+            "webhook_url": "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX",
+            "channel": "#nessi-monitoring",
+            "username": "nessi-monitor",
+            "icon_emoji": ":nessi:"
+        },
+        "email": {
+            "smtp_host": "smtp.example.com",
+            "smtp_port": 587,
+            "from_email": "monitor@example.com",
+            "to_emails": ["admin@example.com"],
+            "smtp_username": "monitor",
+            "smtp_password": "password"
+        },
+        "webhook": {
+            "url": "https://webhook.example.com/monitoring",
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "payload_template": "{\"alert\": \"{{.Name}}\", \"severity\": \"{{.Severity}}\", \"message\": \"{{.Message}}\"}"
+        }
+    }
+}

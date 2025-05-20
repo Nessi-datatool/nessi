@@ -1,0 +1,26 @@
+{
+	"alerts": {
+		"enabled": true,
+		"thresholds": {
+			"test_alert": {
+				"warning": 50,
+				"critical": 100
+			}
+		},
+		"silence_period": "1m",
+		"cooldown_period": "5m",
+		"check_interval": "10s",
+		"notification_channels": ["slack"]
+	},
+	"metrics": {
+		"enabled": true,
+		"port": 8080
+	},
+	"notifications": {
+		"slack": {
+			"webhook_url": "http://mock-slack-webhook:8080/test",
+			"channel": "#nessi-monitoring",
+			"username": "nessi-monitor"
+		}
+	}
+}

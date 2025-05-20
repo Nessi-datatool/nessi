@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nessi - Data Freshness Dashboard</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body>
+    <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
+        <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/">Nessi Monitoring</a>
+        <ul class="navbar-nav px-3">
+            <li class="nav-item text-nowrap">
+                <a class="nav-link" href="/logout">Sign out</a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+                <div class="sidebar-sticky">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">
+                                <span data-feather="home"></span>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/data-quality">
+                                <span data-feather="check-circle"></span>
+                                Data Quality
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/metrics">
+                                <span data-feather="bar-chart-2"></span>
+                                Metrics
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/alerts">
+                                <span data-feather="alert-triangle"></span>
+                                Alerts
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/freshness">
+                                <span data-feather="clock"></span>
+                                Data Freshness <span class="sr-only">(current)</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Data Freshness Dashboard</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group mr-2">
+                            <button class="btn btn-sm btn-outline-secondary" id="refreshBtn">Refresh</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="exportBtn">Export</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs for different freshness views -->
+                <ul class="nav nav-tabs" id="freshnessTabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="status-tab" data-toggle="tab" href="#status" role="tab" aria-controls="status" aria-selected="true">Status</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="sla-tab" data-toggle="tab" href="#sla" role="tab" aria-controls="sla" aria-selected="false">SLA Configurations</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="trends-tab" data-toggle="tab" href="#trends" role="tab" aria-controls="trends" aria-selected="false">Trends</a>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="freshnessTabContent">
+                    <!-- Status Tab -->
+                    <div class="tab-pane fade show active" id="status" role="tabpanel" aria-labelledby="status-tab">
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Current Freshness Status</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped table-sm" id="freshnessTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Table</th>
+                                                        <th>Last Update</th>
+                                                        <th>Time Since Update</th>
+                                                        <th>Expected Frequency</th>
+                                                        <th>Next Expected Update</th>
+                                                        <th>Status</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="freshnessTableBody">
+                                                    <!-- Freshness data will be populated here -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SLA Configurations Tab -->
+                    <div class="tab-pane fade" id="sla" role="tabpanel" aria-labelledby="sla-tab">
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between">
+                                        <h5>SLA Configurations</h5>
+                                        <button class="btn btn-sm btn-primary" id="addSlaBtn">Add SLA</button>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped table-sm" id="slaTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Table</th>
+                                                        <th>Path</th>
+                                                        <th>Expected Frequency</th>
+                                                        <th>Warning Threshold</th>
+                                                        <th>Critical Threshold</th>
+                                                        <th>Enabled</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="slaTableBody">
+                                                    <!-- SLA data will be populated here -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trends Tab -->
+                    <div class="tab-pane fade" id="trends" role="tabpanel" aria-labelledby="trends-tab">
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Freshness Trends</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <canvas id="freshnessHistoryChart"></canvas>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <canvas id="slaComplianceChart"></canvas>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-4">
+                                            <div class="col-12">
+                                                <h5>Table Selection</h5>
+                                                <div class="form-group">
+                                                    <select class="form-control" id="tableSelector">
+                                                        <option value="all">All Tables</option>
+                                                        <!-- Table options will be populated here -->
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add/Edit SLA Modal -->
+                <div class="modal fade" id="slaModal" tabindex="-1" role="dialog" aria-labelledby="slaModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="slaModalLabel">Add SLA Configuration</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="slaForm">
+                                    <div class="form-group">
+                                        <label for="tableName">Table Name</label>
+                                        <input type="text" class="form-control" id="tableName" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="tablePath">Table Path</label>
+                                        <input type="text" class="form-control" id="tablePath" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="expectedFrequency">Expected Frequency</label>
+                                        <select class="form-control" id="expectedFrequency" required>
+                                            <option value="hourly">Hourly</option>
+                                            <option value="daily">Daily</option>
+                                            <option value="weekly">Weekly</option>
+                                            <option value="monthly">Monthly</option>
+                                            <option value="custom">Custom</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" id="customFrequencyGroup" style="display: none;">
+                                        <label for="customFrequency">Custom Frequency (e.g., 2h, 30m)</label>
+                                        <input type="text" class="form-control" id="customFrequency">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="warningThreshold">Warning Threshold (%)</label>
+                                        <input type="number" class="form-control" id="warningThreshold" value="150" min="100" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="criticalThreshold">Critical Threshold (%)</label>
+                                        <input type="number" class="form-control" id="criticalThreshold" value="200" min="100" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="description">Description</label>
+                                        <textarea class="form-control" id="description" rows="3"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="tags">Tags (comma-separated)</label>
+                                        <input type="text" class="form-control" id="tags">
+                                    </div>
+                                    
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="enabled" checked>
+                                        <label class="form-check-label" for="enabled">Enabled</label>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" id="saveSlaBtn">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Details Modal -->
+                <div class="modal fade" id="tableDetailsModal" tabindex="-1" role="dialog" aria-labelledby="tableDetailsModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="tableDetailsModalLabel">Table Details</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body" id="tableDetailsContent">
+                                <!-- Table details will be populated here -->
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="/static/js/jquery-3.6.0.min.js"></script>
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/feather.min.js"></script>
+    <script src="/static/js/chart.js"></script>
+    <script src="/static/js/freshness-dashboard.js"></script>
+</body>
+<footer style="margin-top:2em;text-align:center;font-size:1em;color:#888;">
+  Want live dashboards, team alerts, and RCA?<br>
+  Try LakeDiff for Teams → <a href="https://lakediff.com" target="_blank">https://lakediff.com</a>
+</footer>
+</html>

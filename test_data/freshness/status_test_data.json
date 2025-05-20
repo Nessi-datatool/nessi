@@ -1,0 +1,102 @@
+[
+  {
+    "table_name": "customer_orders",
+    "table_path": "/data/warehouse/customer_orders",
+    "last_update_time": "2025-05-15T08:15:00Z",
+    "time_since_update": 4200,
+    "expected_frequency": 3600,
+    "next_expected_update": "2025-05-15T09:15:00Z",
+    "status": "warning",
+    "sla_config": {
+      "table_name": "customer_orders",
+      "table_path": "/data/warehouse/customer_orders",
+      "expected_frequency": 3600,
+      "warning_threshold": 150,
+      "critical_threshold": 200,
+      "enabled": true,
+      "description": "Customer orders table with hourly updates",
+      "tags": ["sales", "core", "production"],
+      "grafana_dashboard_url": "https://grafana.example.com/d/abc123/customer-orders"
+    }
+  },
+  {
+    "table_name": "product_inventory",
+    "table_path": "/data/warehouse/product_inventory",
+    "last_update_time": "2025-05-14T09:30:00Z",
+    "time_since_update": 86100,
+    "expected_frequency": 86400,
+    "next_expected_update": "2025-05-15T09:30:00Z",
+    "status": "info",
+    "sla_config": {
+      "table_name": "product_inventory",
+      "table_path": "/data/warehouse/product_inventory",
+      "expected_frequency": 86400,
+      "warning_threshold": 125,
+      "critical_threshold": 150,
+      "enabled": true,
+      "description": "Product inventory table with daily updates",
+      "tags": ["inventory", "core", "production"],
+      "grafana_dashboard_url": "https://grafana.example.com/d/def456/product-inventory"
+    }
+  },
+  {
+    "table_name": "marketing_campaigns",
+    "table_path": "/data/warehouse/marketing_campaigns",
+    "last_update_time": "2025-05-01T10:00:00Z",
+    "time_since_update": 1209600,
+    "expected_frequency": 604800,
+    "next_expected_update": "2025-05-08T10:00:00Z",
+    "status": "critical",
+    "sla_config": {
+      "table_name": "marketing_campaigns",
+      "table_path": "/data/warehouse/marketing_campaigns",
+      "expected_frequency": 604800,
+      "warning_threshold": 120,
+      "critical_threshold": 150,
+      "enabled": true,
+      "description": "Marketing campaigns table with weekly updates",
+      "tags": ["marketing", "non-critical"],
+      "grafana_dashboard_url": "https://grafana.example.com/d/ghi789/marketing-campaigns"
+    }
+  },
+  {
+    "table_name": "financial_reports",
+    "table_path": "/data/warehouse/financial_reports",
+    "last_update_time": "2025-04-15T12:00:00Z",
+    "time_since_update": 2592000,
+    "expected_frequency": 2592000,
+    "next_expected_update": "2025-05-15T12:00:00Z",
+    "status": "warning",
+    "sla_config": {
+      "table_name": "financial_reports",
+      "table_path": "/data/warehouse/financial_reports",
+      "expected_frequency": 2592000,
+      "warning_threshold": 110,
+      "critical_threshold": 125,
+      "enabled": true,
+      "description": "Financial reports table with monthly updates",
+      "tags": ["finance", "reporting", "compliance"],
+      "grafana_dashboard_url": "https://grafana.example.com/d/jkl012/financial-reports"
+    }
+  },
+  {
+    "table_name": "user_activity",
+    "table_path": "/data/warehouse/user_activity",
+    "last_update_time": "2025-05-15T09:20:00Z",
+    "time_since_update": 300,
+    "expected_frequency": 900,
+    "next_expected_update": "2025-05-15T09:35:00Z",
+    "status": "info",
+    "sla_config": {
+      "table_name": "user_activity",
+      "table_path": "/data/warehouse/user_activity",
+      "expected_frequency": 900,
+      "warning_threshold": 200,
+      "critical_threshold": 300,
+      "enabled": true,
+      "description": "User activity table with 15-minute updates",
+      "tags": ["user", "activity", "high-frequency"],
+      "grafana_dashboard_url": "https://grafana.example.com/d/mno345/user-activity"
+    }
+  }
+]

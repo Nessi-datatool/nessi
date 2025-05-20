@@ -1,0 +1,89 @@
+name: Databricks Integration Pipeline
+
+# Created on 2025-05-19 - Fresh pipeline for Databricks integration
+on:
+  push:
+    branches: [ main, fresh-ci-pipeline ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.20'
+          cache: false
+      
+      - name: Fix dependencies
+        run: |
+          chmod +x ./scripts/fix-dependencies.sh
+          ./scripts/fix-dependencies.sh
+      
+      - name: Format Check
+        run: |
+          # Check if files need formatting
+          GOFMT_OUTPUT=$(gofmt -l pkg/catalog/databricks pkg/visualization)
+          if [ -n "$GOFMT_OUTPUT" ]; then
+            echo "The following files need formatting:"
+            echo "$GOFMT_OUTPUT"
+            exit 1
+          fi
+      
+      - name: Vet Check
+        run: |
+          # Run go vet on specific directories
+          go vet ./pkg/catalog/databricks/... ./pkg/visualization/...
+      
+      - name: Import Check
+        run: |
+          # Check for unused imports
+          ! grep -r "imported and not used" <(go build ./pkg/catalog/databricks/... ./pkg/visualization/... 2>&1)
+  
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.20'
+          cache: true
+      
+      - name: Fix dependencies
+        run: |
+          chmod +x ./scripts/fix-dependencies.sh
+          ./scripts/fix-dependencies.sh
+      
+      - name: Run Databricks tests
+        run: |
+          go test -v ./pkg/catalog/databricks/... -short
+      
+      - name: Run Delta Lake tests
+        run: |
+          go test -v ./pkg/datalake/... -short
+      
+      - name: Run visualization tests
+        run: |
+          go test -v ./pkg/visualization/... -short
+      
+      - name: Generate coverage report
+        run: |
+          go test -coverprofile=coverage.out ./pkg/catalog/databricks/... ./pkg/datalake/... ./pkg/visualization/...
+          go tool cover -func=coverage.out
+      
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: databricks-coverage-report
+          path: coverage.out
+          retention-days: 5

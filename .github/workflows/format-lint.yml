@@ -1,0 +1,64 @@
+name: Format and Lint
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  format-lint:
+    name: Format and Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.20'
+          cache: false
+      
+      - name: Verify go.mod format
+        run: |
+          echo "Verifying go.mod format..."
+          # Create a temporary copy of go.mod
+          cp go.mod go.mod.orig
+          
+          # Format go.mod
+          go mod edit -fmt
+          
+          # Check if formatting changed anything
+          if ! diff -q go.mod go.mod.orig > /dev/null; then
+            echo "Error: go.mod is not properly formatted"
+            echo "Run 'go mod edit -fmt' to fix"
+            exit 1
+          fi
+      
+      - name: Verify Go formatting
+        run: |
+          echo "Verifying Go formatting..."
+          # Check if any .go files need formatting
+          UNFORMATTED=$(gofmt -l .)
+          if [ -n "$UNFORMATTED" ]; then
+            echo "Error: The following files are not properly formatted:"
+            echo "$UNFORMATTED"
+            echo "Run 'go fmt ./...' to fix"
+            exit 1
+          fi
+      
+      - name: Install golangci-lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.55.2
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+      
+      - name: Run linting
+        run: |
+          echo "Running linting..."
+          golangci-lint run --timeout=5m
+          if [ $? -ne 0 ]; then
+            echo "Error: linting failed"
+            exit 1
+          fi

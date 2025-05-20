@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nessi - Data Quality Dashboard</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body>
+    <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
+        <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/">Nessi Monitoring</a>
+        <ul class="navbar-nav px-3">
+            <li class="nav-item text-nowrap">
+                <a class="nav-link" href="/logout">Sign out</a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+                <div class="sidebar-sticky">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">
+                                <span data-feather="home"></span>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/data-quality">
+                                <span data-feather="check-circle"></span>
+                                Data Quality <span class="sr-only">(current)</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/metrics">
+                                <span data-feather="bar-chart-2"></span>
+                                Metrics
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/alerts">
+                                <span data-feather="alert-triangle"></span>
+                                Alerts
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Data Quality Dashboard</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group mr-2">
+                            <button class="btn btn-sm btn-outline-secondary" id="refreshBtn">Refresh</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="exportBtn">Export</button>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="tableSelector" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Select Table
+                            </button>
+                            <div class="dropdown-menu" aria-labelledby="tableSelector" id="tableDropdown">
+                                <!-- Tables will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs for different data quality views -->
+                <ul class="nav nav-tabs" id="qualityTabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="true">Profiles</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="rules-tab" data-toggle="tab" href="#rules" role="tab" aria-controls="rules" aria-selected="false">Rules</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="validation-tab" data-toggle="tab" href="#validation" role="tab" aria-controls="validation" aria-selected="false">Validation</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="trends-tab" data-toggle="tab" href="#trends" role="tab" aria-controls="trends" aria-selected="false">Trends</a>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="qualityTabContent">
+                    <!-- Profiles Tab -->
+                    <div class="tab-pane fade show active" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Column Profiles</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped table-sm" id="profileTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Column</th>
+                                                        <th>Type</th>
+                                                        <th>Null %</th>
+                                                        <th>Quality Score</th>
+                                                        <th>Anomalies</th>
+                                                        <th>Patterns</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <!-- Profile data will be populated here -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rules Tab -->
+                    <div class="tab-pane fade" id="rules" role="tabpanel" aria-labelledby="rules-tab">
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between">
+                                        <h5>Validation Rules</h5>
+                                        <button class="btn btn-sm btn-primary" id="addRuleBtn">Add Rule</button>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped table-sm" id="rulesTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>ID</th>
+                                                        <th>Name</th>
+                                                        <th>Type</th>
+                                                        <th>Severity</th>
+                                                        <th>Description</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <!-- Rules data will be populated here -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Validation Tab -->
+                    <div class="tab-pane fade" id="validation" role="tabpanel" aria-labelledby="validation-tab">
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between">
+                                        <h5>Validation Results</h5>
+                                        <button class="btn btn-sm btn-primary" id="runValidationBtn">Run Validation</button>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped table-sm" id="validationTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Rule</th>
+                                                        <th>Severity</th>
+                                                        <th>Status</th>
+                                                        <th>Errors</th>
+                                                        <th>Timestamp</th>
+                                                        <th>Details</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <!-- Validation results will be populated here -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trends Tab -->
+                    <div class="tab-pane fade" id="trends" role="tabpanel" aria-labelledby="trends-tab">
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Quality Trends</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <canvas id="qualityScoreChart"></canvas>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <canvas id="validationTrendChart"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal for Profile Details -->
+    <div class="modal fade" id="profileDetailModal" tabindex="-1" role="dialog" aria-labelledby="profileDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="profileDetailModalLabel">Column Profile Details</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="profileDetailContent">
+                    <!-- Profile details will be populated here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Rule Details -->
+    <div class="modal fade" id="ruleDetailModal" tabindex="-1" role="dialog" aria-labelledby="ruleDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ruleDetailModalLabel">Rule Details</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="ruleDetailContent">
+                    <!-- Rule details will be populated here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="editRuleBtn">Edit Rule</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/feather.min.js"></script>
+    <script src="/static/js/chart.min.js"></script>
+    <script src="/static/js/data-quality.js"></script>
+</body>
+<footer style="margin-top:2em;text-align:center;font-size:1em;color:#888;">
+  Want live dashboards, team alerts, and RCA?<br>
+  Try LakeDiff for Teams → <a href="https://lakediff.com" target="_blank">https://lakediff.com</a>
+</footer>
+</html>

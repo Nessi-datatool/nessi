@@ -1,0 +1,1 @@
+{"files":["part-00000.parquet"],"metadata":{},"partitions":{},"schema":{"fields":[{"name":"id","type":"int32"},{"name":"name","type":"utf8"},{"name":"value","type":"float64"}]},"stats":null,"timestamp":1747055887,"version":3}

@@ -1,0 +1,142 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nessi-quality-check
+  namespace: nessi
+  labels:
+    app: nessi
+    component: quality-check
+spec:
+  ttlSecondsAfterFinished: 3600  # Clean up job after 1 hour
+  backoffLimit: 3  # Retry up to 3 times
+  template:
+    metadata:
+      labels:
+        app: nessi
+        component: quality-check
+    spec:
+      containers:
+      - name: nessi
+        image: nessi/nessi:latest
+        imagePullPolicy: IfNotPresent
+        command: 
+          - "python"
+          - "-m"
+          - "nessi_k8s.cli"
+          - "quality-check"
+          - "--table"
+          - "my_table"
+          - "--format"
+          - "json"
+          - "--output"
+          - "/tmp/results.json"
+        env:
+        - name: NESSI_K8S_API_HOST
+          value: "http://nessi-api:8080"
+        - name: NESSI_K8S_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: nessi-secrets
+              key: api-key
+        - name: NESSI_K8S_API_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: nessi-secrets
+              key: api-secret
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        volumeMounts:
+        - name: results
+          mountPath: /tmp
+      volumes:
+      - name: results
+        emptyDir: {}
+      restartPolicy: Never
+      serviceAccountName: nessi-service-account
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nessi-rules
+  namespace: nessi
+data:
+  rules.json: |
+    [
+      {
+        "name": "not_null_check",
+        "description": "Check that id column is not null",
+        "rule_type": "not_null",
+        "column": "id"
+      },
+      {
+        "name": "unique_check",
+        "description": "Check that id column is unique",
+        "rule_type": "unique",
+        "column": "id"
+      }
+    ]
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: nessi-secrets
+  namespace: nessi
+type: Opaque
+data:
+  api-key: eW91ci1hcGkta2V5  # Base64 encoded "your-api-key"
+  api-secret: eW91ci1hcGktc2VjcmV0  # Base64 encoded "your-api-secret"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nessi-service-account
+  namespace: nessi
+---
+# Example CronJob for scheduled quality checks
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: nessi-scheduled-quality-check
+  namespace: nessi
+spec:
+  schedule: "0 0 * * *"  # Run daily at midnight
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 3600
+      backoffLimit: 3
+      template:
+        spec:
+          containers:
+          - name: nessi
+            image: nessi/nessi:latest
+            command: 
+              - "python"
+              - "-m"
+              - "nessi_k8s.cli"
+              - "quality-check"
+              - "--table"
+              - "my_table"
+              - "--rules"
+              - "/etc/nessi/rules.json"
+            env:
+            - name: NESSI_K8S_API_HOST
+              value: "http://nessi-api:8080"
+            - name: NESSI_K8S_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: nessi-secrets
+                  key: api-key
+            volumeMounts:
+            - name: rules-volume
+              mountPath: /etc/nessi
+          volumes:
+          - name: rules-volume
+            configMap:
+              name: nessi-rules
+          restartPolicy: Never
+          serviceAccountName: nessi-service-account

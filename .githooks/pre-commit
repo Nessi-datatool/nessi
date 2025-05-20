@@ -1,0 +1,53 @@
+#!/bin/bash
+
+echo "Running pre-commit checks..."
+
+# Check if go is installed
+if ! command -v go &> /dev/null; then
+    echo "Error: go is not installed or not in PATH"
+    exit 1
+fi
+
+# Format go files
+echo "Formatting Go files..."
+GO_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep "\.go$")
+if [ -n "$GO_FILES" ]; then
+    # Format each directory separately
+    go fmt ./...
+    if [ $? -ne 0 ]; then
+        echo "Error: go fmt failed"
+        exit 1
+    fi
+    # Add formatted files back to staging
+    git add $GO_FILES
+fi
+
+# Format go.mod file
+if git diff --cached --name-only --diff-filter=ACM | grep -q "go\.mod$"; then
+    echo "Formatting go.mod file..."
+    go mod edit -fmt
+    if [ $? -ne 0 ]; then
+        echo "Error: go mod edit -fmt failed"
+        exit 1
+    fi
+    # Add formatted go.mod back to staging
+    git add go.mod
+fi
+
+# Run linting
+echo "Running linting..."
+if ! command -v golangci-lint &> /dev/null; then
+    echo "Warning: golangci-lint is not installed, skipping linting"
+else
+    LINT_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep "\.go$")
+    if [ -n "$LINT_FILES" ]; then
+        golangci-lint run $LINT_FILES
+        if [ $? -ne 0 ]; then
+            echo "Error: linting failed"
+            exit 1
+        fi
+    fi
+fi
+
+echo "Pre-commit checks passed!"
+exit 0
