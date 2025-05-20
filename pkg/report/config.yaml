@@ -1,0 +1,19 @@
+reports:
+  styles:
+    css_path: "../../assets/styles/report-styles.css"
+    font_family: "Inter, -apple-system, sans-serif"
+  branding:
+    primary_color: "#2e7d32"
+    logo_path: "../../assets/images/Nessi_Logo_Transparent.png"
+  sections:
+    - summary
+    - quality_score
+    - anomalies
+    - distribution
+    - schema_changes
+    - validation_results
+  templates:
+    quality: "../../examples/templates/quality_report.html"
+    schema: "../../examples/templates/schema_report.html"
+    freshness: "../../examples/templates/freshness_report.html"
+    performance: "../../examples/templates/performance_report.html"

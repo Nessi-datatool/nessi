@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nessi.dev | Enhanced Performance Report</title>
+    <link rel="stylesheet" href="../../assets/styles/nessi-report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="report-container">
+        <div class="report-header">
+            <h1>Performance Report: {{.table_path}}</h1>
+            <div class="report-meta">
+                <div class="report-meta-item">
+                    <i class="fas fa-calendar"></i>
+                    <span>{{.timestamp}}</span>
+                </div>
+                <div class="report-meta-item">
+                    <i class="fas fa-database"></i>
+                    <span>Delta Lake</span>
+                </div>
+                <div class="report-meta-item">
+                    <i class="fas fa-code-branch"></i>
+                    <span>Transaction: {{.transaction_id}}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="report-body">
+            <!-- Report tabs for navigation -->
+            <div class="report-tabs">
+                <div class="report-tab active" data-tab="overview">Overview</div>
+                <div class="report-tab" data-tab="files">File Stats</div>
+                <div class="report-tab" data-tab="recommendations">Recommendations</div>
+            </div>
+            
+            <!-- Overview Tab Content -->
+            <div id="overview" class="tab-content active">
+                <div class="report-summary">
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
+                        <h3>{{.performance_score}}%</h3>
+                        <p>Performance Score</p>
+                    </div>
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-file"></i>
+                        </div>
+                        <h3>{{.file_count}}</h3>
+                        <p>Total Files</p>
+                    </div>
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <h3>{{.total_size}}</h3>
+                        <p>Total Size</p>
+                    </div>
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <h3>{{.partition_count}}</h3>
+                        <p>Partitions</p>
+                    </div>
+                </div>
+                
+                <div class="report-section">
+                    <h2><i class="fas fa-chart-pie"></i> Performance Analysis</h2>
+                    <div class="data-quality-score">
+                        <div class="score-circle" style="background: conic-gradient(var(--primary-color) 0% {{.performance_score}}%, var(--light-gray) {{.performance_score}}% 100%);">
+                            <div class="score-value">{{.performance_score}}%</div>
+                        </div>
+                        <div class="score-details">
+                            <h3>Performance Score Breakdown</h3>
+                            <div class="score-metrics">
+                                <div class="metric-item">
+                                    <div class="metric-icon success">
+                                        <i class="fas fa-file"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <h4>File Size Score</h4>
+                                        <div class="metric-bar">
+                                            <div class="metric-progress" style="width: {{.file_size_score}}%"></div>
+                                        </div>
+                                        <div class="metric-value">{{.file_size_score}}%</div>
+                                    </div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-icon success">
+                                        <i class="fas fa-layer-group"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <h4>Partition Score</h4>
+                                        <div class="metric-bar">
+                                            <div class="metric-progress" style="width: {{.partition_score}}%"></div>
+                                        </div>
+                                        <div class="metric-value">{{.partition_score}}%</div>
+                                    </div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-icon success">
+                                        <i class="fas fa-sort-alpha-down"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <h4>Z-Order Score</h4>
+                                        <div class="metric-bar">
+                                            <div class="metric-progress" style="width: {{.z_order_score}}%"></div>
+                                        </div>
+                                        <div class="metric-value">{{.z_order_score}}%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="report-section">
+                    <h2><i class="fas fa-lightbulb"></i> Performance Recommendations</h2>
+                    <div class="issues-list">
+                        <div class="issue-card warning">
+                            <div class="issue-header">
+                                <div class="issue-icon">
+                                    <i class="fas fa-file"></i>
+                                </div>
+                                <div class="issue-title">
+                                    <h3>File Size Optimization</h3>
+                                    <p>{{.file_size_recommendation}}</p>
+                                </div>
+                            </div>
+                            <div class="issue-details">
+                                <p><strong>Recommended Action:</strong></p>
+                                <pre><code>{{.file_size_command}}</code></pre>
+                                <div class="issue-actions">
+                                    <button class="btn btn-sm btn-primary">Apply</button>
+                                    <button class="btn btn-sm btn-outline">Ignore</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="issue-card warning">
+                            <div class="issue-header">
+                                <div class="issue-icon">
+                                    <i class="fas fa-sort-alpha-down"></i>
+                                </div>
+                                <div class="issue-title">
+                                    <h3>Z-Order Optimization</h3>
+                                    <p>{{.z_order_recommendation}}</p>
+                                </div>
+                            </div>
+                            <div class="issue-details">
+                                <p><strong>Recommended Action:</strong></p>
+                                <pre><code>{{.z_order_command}}</code></pre>
+                                <div class="issue-actions">
+                                    <button class="btn btn-sm btn-primary">Apply</button>
+                                    <button class="btn btn-sm btn-outline">Ignore</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Files Tab Content -->
+            <div id="files" class="tab-content">
+                <div class="report-section">
+                    <h2><i class="fas fa-file"></i> File Statistics</h2>
+                    <div class="schema-changes">
+                        <table class="schema-table">
+                            <tr>
+                                <th>Metric</th>
+                                <th>Value</th>
+                                <th>Recommendation</th>
+                                <th>Status</th>
+                            </tr>
+                            {{range .file_stats}}
+                            <tr>
+                                <td>{{.metric}}</td>
+                                <td>{{.value}}</td>
+                                <td>{{.recommendation}}</td>
+                                <td>
+                                    {{if eq .status "OK"}}
+                                    <span class="status status-success">OK</span>
+                                    {{else if eq .status "WARNING"}}
+                                    <span class="status status-warning">Warning</span>
+                                    {{else}}
+                                    <span class="status status-danger">Critical</span>
+                                    {{end}}
+                                </td>
+                            </tr>
+                            {{end}}
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recommendations Tab Content -->
+            <div id="recommendations" class="tab-content">
+                <div class="report-section">
+                    <h2><i class="fas fa-lightbulb"></i> Optimization Recommendations</h2>
+                    <div class="issues-list">
+                        <div class="issue-card warning">
+                            <div class="issue-header">
+                                <div class="issue-icon">
+                                    <i class="fas fa-file"></i>
+                                </div>
+                                <div class="issue-title">
+                                    <h3>File Size Optimization</h3>
+                                    <p>{{.file_size_recommendation}}</p>
+                                </div>
+                            </div>
+                            <div class="issue-details">
+                                <p><strong>Recommended Action:</strong></p>
+                                <pre><code>{{.file_size_command}}</code></pre>
+                                <div class="issue-actions">
+                                    <button class="btn btn-sm btn-primary">Apply</button>
+                                    <button class="btn btn-sm btn-outline">Ignore</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="issue-card warning">
+                            <div class="issue-header">
+                                <div class="issue-icon">
+                                    <i class="fas fa-layer-group"></i>
+                                </div>
+                                <div class="issue-title">
+                                    <h3>Partition Optimization</h3>
+                                    <p>{{.partition_recommendation}}</p>
+                                </div>
+                            </div>
+                            <div class="issue-details">
+                                <p><strong>Recommended Action:</strong></p>
+                                <pre><code>{{.partition_command}}</code></pre>
+                                <div class="issue-actions">
+                                    <button class="btn btn-sm btn-primary">Apply</button>
+                                    <button class="btn btn-sm btn-outline">Ignore</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="issue-card warning">
+                            <div class="issue-header">
+                                <div class="issue-icon">
+                                    <i class="fas fa-sort-alpha-down"></i>
+                                </div>
+                                <div class="issue-title">
+                                    <h3>Z-Order Optimization</h3>
+                                    <p>{{.z_order_recommendation}}</p>
+                                </div>
+                            </div>
+                            <div class="issue-details">
+                                <p><strong>Recommended Action:</strong></p>
+                                <pre><code>{{.z_order_command}}</code></pre>
+                                <div class="issue-actions">
+                                    <button class="btn btn-sm btn-primary">Apply</button>
+                                    <button class="btn btn-sm btn-outline">Ignore</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Simple tab switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.report-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs and contents
+                    document.querySelectorAll('.report-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab and corresponding content
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

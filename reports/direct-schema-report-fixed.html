@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nessi.dev | Enhanced Schema Report</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/enhanced-report.css">
+    <link rel="stylesheet" href="css/enhanced-report-part2.css">
+    <link rel="stylesheet" href="nessi-tabs.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="report-container">
+        <div class="report-header">
+            <h1>Schema Report: {{ .TableName }}</h1>
+            <div class="report-meta">
+                <div class="report-meta-item">
+                    <i class="fas fa-calendar"></i>
+                    <span>{{ .Timestamp }}</span>
+                </div>
+                <div class="report-meta-item">
+                    <i class="fas fa-database"></i>
+                    <span>Path: {{ .TablePath }}</span>
+                </div>
+                <div class="report-meta-item">
+                    <i class="fas fa-code-branch"></i>
+                    <span>Scan ID: {{ .ScanID }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="report-body">
+            
+            <div class="report-tabs">
+                <div class="report-tab active" data-tab="overview">Overview</div>
+                <div class="report-tab" data-tab="fields">Fields</div>
+                <div class="report-tab" data-tab="changes">Changes</div>
+            </div>
+            
+            
+            <div id="overview" class="tab-content active">
+                <div class="report-summary">
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <h3>5</h3>
+                        <p>Schema Version</p>
+                    </div>
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-columns"></i>
+                        </div>
+                        <h3>12</h3>
+                        <p>Total Fields</p>
+                    </div>
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <h3>May 15</h3>
+                        <p>Last Updated</p>
+                    </div>
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        <h3>3</h3>
+                        <p>Recent Changes</p>
+                    </div>
+                </div>
+                
+                <div class="report-section">
+                    <h2><i class="fas fa-history"></i> Schema Evolution</h2>
+                    <div class="activity-timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-icon">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h3>Added field 'last_login_date'</h3>
+                                <p>Added timestamp field to track user's last login time</p>
+                                <div class="timeline-meta">
+                                    <span><i class="fas fa-calendar"></i> 2025-05-15</span>
+                                    <span><i class="fas fa-user"></i> John Doe</span>
+                                    <span><i class="fas fa-code-branch"></i> Version 5</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <div class="timeline-icon">
+                                <i class="fas fa-edit"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h3>Modified field 'email'</h3>
+                                <p>Changed email field to be non-nullable</p>
+                                <div class="timeline-meta">
+                                    <span><i class="fas fa-calendar"></i> 2025-04-20</span>
+                                    <span><i class="fas fa-user"></i> Jane Smith</span>
+                                    <span><i class="fas fa-code-branch"></i> Version 4</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <div class="timeline-icon">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h3>Added field 'status'</h3>
+                                <p>Added string field to track user account status</p>
+                                <div class="timeline-meta">
+                                    <span><i class="fas fa-calendar"></i> 2025-03-10</span>
+                                    <span><i class="fas fa-user"></i> John Doe</span>
+                                    <span><i class="fas fa-code-branch"></i> Version 3</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            
+            <div id="fields" class="tab-content">
+                <div class="report-section">
+                    <h2><i class="fas fa-columns"></i> Schema Fields</h2>
+                    <div class="schema-changes">
+                        <table class="schema-table">
+                            <tr>
+                                <th>Field Name</th>
+                                <th>Type</th>
+                                <th>Nullable</th>
+                                <th>Description</th>
+                            </tr>
+                            <tr>
+                                <td>id</td>
+                                <td>string</td>
+                                <td>No</td>
+                                <td>Primary key</td>
+                            </tr>
+                            <tr>
+                                <td>name</td>
+                                <td>string</td>
+                                <td>No</td>
+                                <td>User's full name</td>
+                            </tr>
+                            <tr>
+                                <td>email</td>
+                                <td>string</td>
+                                <td>No</td>
+                                <td>User's email address</td>
+                            </tr>
+                            <tr>
+                                <td>created_at</td>
+                                <td>timestamp</td>
+                                <td>No</td>
+                                <td>Account creation timestamp</td>
+                            </tr>
+                            <tr>
+                                <td>updated_at</td>
+                                <td>timestamp</td>
+                                <td>Yes</td>
+                                <td>Last update timestamp</td>
+                            </tr>
+                            <tr>
+                                <td>age</td>
+                                <td>integer</td>
+                                <td>Yes</td>
+                                <td>User's age</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            
+            <div id="changes" class="tab-content">
+                <div class="report-section">
+                    <h2><i class="fas fa-history"></i> Schema Change History</h2>
+                    <div class="schema-changes">
+                        <table class="schema-table">
+                            <tr>
+                                <th>Date</th>
+                                <th>Version</th>
+                                <th>Change Type</th>
+                                <th>Field</th>
+                                <th>Details</th>
+                            </tr>
+                            <tr>
+                                <td>2025-05-15</td>
+                                <td>5</td>
+                                <td>Add</td>
+                                <td>last_login_date</td>
+                                <td>Added timestamp field to track user's last login time</td>
+                            </tr>
+                            <tr>
+                                <td>2025-04-20</td>
+                                <td>4</td>
+                                <td>Modify</td>
+                                <td>email</td>
+                                <td>Changed email field to be non-nullable</td>
+                            </tr>
+                            <tr>
+                                <td>2025-03-10</td>
+                                <td>3</td>
+                                <td>Add</td>
+                                <td>status</td>
+                                <td>Added string field to track user account status</td>
+                            </tr>
+                            <tr>
+                                <td>2025-02-05</td>
+                                <td>2</td>
+                                <td>Add</td>
+                                <td>updated_at</td>
+                                <td>Added timestamp field for tracking updates</td>
+                            </tr>
+                            <tr>
+                                <td>2025-01-01</td>
+                                <td>1</td>
+                                <td>Create</td>
+                                <td>All</td>
+                                <td>Initial schema creation with id, name, email, age, created_at fields</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.report-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    
+                    document.querySelectorAll('.report-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

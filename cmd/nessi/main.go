@@ -29,6 +29,7 @@ import (
 	"path/filepath"
 
 	"github.com/nessi-dev/nessi/cmd/nessi/cli"
+	"github.com/nessi-dev/nessi/cmd/nessi/report_cmd"
 	"github.com/nessi-dev/nessi/internal/extensions"
 	"github.com/nessi-dev/nessi/pkg"
 	"github.com/spf13/cobra"
@@ -272,8 +273,9 @@ func init() {
 	extensionsCmd.AddCommand(enableExtensionCmd)
 	extensionsCmd.AddCommand(disableExtensionCmd)
 
-	// Register field-metadata commands
-	RegisterCommands(cli.CLI.RootCmd)
+	// Register report commands
+	reportCmd := report_cmd.NewReportCommand()
+	cli.CLI.RootCmd.AddCommand(reportCmd)
 
 	// Initialize Cobra
 	cobra.OnInitialize(func() {

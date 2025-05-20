@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nessi Performance Report</title>
+    <link rel="stylesheet" href="../../assets/styles/report-styles-new.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Fallback styles in case the external CSS doesn't load */
+        body {
+            font-family: 'Segoe UI', 'Roboto', -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <!-- Header -->
+        <div class="report-header">
+            <h1>Performance Report: {{.table_path}}</h1>
+            <div class="report-meta">
+                <div class="report-meta-item">
+                    <i class="far fa-calendar"></i>
+                    <span>{{.timestamp}}</span>
+                </div>
+                <div class="report-meta-item">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Performance Analysis</span>
+                </div>
+                <div class="report-meta-item">
+                    <i class="fas fa-database"></i>
+                    <span>Delta Lake</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Body -->
+        <div class="report-body">
+            <!-- Summary Cards -->
+            <div class="report-summary">
+                <div class="summary-card">
+                    <div class="icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>{{.performance_score}}%</h3>
+                    <p>Performance Score</p>
+                </div>
+                <div class="summary-card">
+                    <div class="icon">
+                        <i class="fas fa-file"></i>
+                    </div>
+                    <h3>{{.file_count}}</h3>
+                    <p>Total Files</p>
+                </div>
+                <div class="summary-card">
+                    <div class="icon">
+                        <i class="fas fa-hdd"></i>
+                    </div>
+                    <h3>{{.total_size}}</h3>
+                    <p>Total Size</p>
+                </div>
+                <div class="summary-card">
+                    <div class="icon">
+                        <i class="fas fa-filter"></i>
+                    </div>
+                    <h3>{{.partition_count}}</h3>
+                    <p>Partitions</p>
+                </div>
+            </div>
+            
+            <!-- Performance Score Section -->
+            <div class="section-header">
+                <i class="fas fa-chart-line"></i>
+                <span>Performance Analysis</span>
+            </div>
+            <div class="data-quality-score">
+                <div class="score-circle" style="background: conic-gradient(var(--primary-color) 0% {{.performance_score}}%, #e6edf5 {{.performance_score}}% 100%);">
+                    <div class="score-value">{{.performance_score}}%</div>
+                </div>
+                <div>
+                    <p>Your data performance score is {{if ge .performance_score 90}}excellent{{else if ge .performance_score 70}}good{{else if ge .performance_score 50}}fair{{else}}poor{{end}}. Here's a breakdown:</p>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>File Size Distribution</span>
+                            <span>{{.file_size_score}}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{.file_size_score}}%"></div>
+                        </div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>Partition Optimization</span>
+                            <span>{{.partition_score}}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{.partition_score}}%"></div>
+                        </div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>Z-Order Optimization</span>
+                            <span>{{.z_order_score}}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{.z_order_score}}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recommendations Section -->
+            <div class="section-header">
+                <i class="fas fa-lightbulb"></i>
+                <span>Performance Recommendations</span>
+            </div>
+            <div class="recommendations-section">
+                <div class="recommendation-card">
+                    <div class="recommendation-header">
+                        <i class="fas fa-file-medical"></i>
+                        <h3>File Size Optimization</h3>
+                    </div>
+                    <p>{{.file_size_recommendation}}</p>
+                    <div class="recommendation-action">
+                        <code>{{.file_size_command}}</code>
+                    </div>
+                </div>
+                
+                <div class="recommendation-card">
+                    <div class="recommendation-header">
+                        <i class="fas fa-layer-group"></i>
+                        <h3>Partition Strategy</h3>
+                    </div>
+                    <p>{{.partition_recommendation}}</p>
+                    <div class="recommendation-action">
+                        <code>{{.partition_command}}</code>
+                    </div>
+                </div>
+                
+                <div class="recommendation-card">
+                    <div class="recommendation-header">
+                        <i class="fas fa-sort-alpha-down"></i>
+                        <h3>Z-Order Optimization</h3>
+                    </div>
+                    <p>{{.z_order_recommendation}}</p>
+                    <div class="recommendation-action">
+                        <code>{{.z_order_command}}</code>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- File Statistics Section -->
+            <div class="section-header">
+                <i class="fas fa-file-alt"></i>
+                <span>File Statistics</span>
+            </div>
+            <div class="schema-changes">
+                <table class="schema-table">
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                        <th>Recommendation</th>
+                        <th>Status</th>
+                    </tr>
+                    {{range .file_stats}}
+                    <tr>
+                        <td>{{.metric}}</td>
+                        <td>{{.value}}</td>
+                        <td>{{.recommendation}}</td>
+                        <td>
+                            <span class="status {{if eq .status "OK"}}status-success{{else if eq .status "WARNING"}}status-warning{{else}}status-danger{{end}}">
+                                {{.status}}
+                            </span>
+                        </td>
+                    </tr>
+                    {{end}}
+                </table>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="report-footer">
+            <div>Generated by <a href="https://nessi.dev">Nessi.dev</a> v0.10.3</div>
+            <div>Delta Lake Transaction ID: {{.transaction_id}}</div>
+        </div>
+    </div>
+</body>
+</html>

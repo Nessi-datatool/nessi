@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nessi.dev | Enhanced Data Quality Report</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/enhanced-report.css">
+    <link rel="stylesheet" href="css/enhanced-report-part2.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Report-specific styles */
+        .report-container {
+            max-width: 1200px;
+            margin: 80px auto 40px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+        
+        .report-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 25px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .report-header h1 {
+            font-size: 24px;
+            margin: 0;
+        }
+        
+        .report-meta {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .report-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .report-body {
+            padding: 30px;
+        }
+        
+        .report-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .summary-card {
+            background-color: var(--light-color);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .summary-card .icon {
+            font-size: 24px;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        
+        .summary-card h3 {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+            color: var(--dark-color);
+        }
+        
+        .summary-card p {
+            font-size: 14px;
+            color: var(--gray-color);
+            margin: 5px 0 0;
+        }
+        
+        .report-section {
+            margin-bottom: 40px;
+        }
+        
+        .report-section h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: var(--dark-color);
+            border-bottom: 1px solid var(--light-gray);
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .report-section h2 i {
+            color: var(--primary-color);
+        }
+        
+        .report-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--light-gray);
+            margin-bottom: 20px;
+        }
+        
+        .report-tab {
+            padding: 12px 20px;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: var(--transition);
+        }
+        
+        .report-tab.active {
+            border-bottom-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .report-tab:hover:not(.active) {
+            border-bottom-color: var(--light-gray);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <div class="report-header">
+            <h1>Data Quality Report: customer_transactions</h1>
+            <div class="report-meta">
+                <div class="report-meta-item">
+                    <i class="fas fa-calendar"></i>
+                    <span>May 20, 2025</span>
+                </div>
+                <div class="report-meta-item">
+                    <i class="fas fa-database"></i>
+                    <span>production.sales</span>
+                </div>
+                <div class="report-meta-item">
+                    <i class="fas fa-code-branch"></i>
+                    <span>Transaction: 0000012abd56e4</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="report-body">
+            <!-- Report tabs for navigation -->
+            <div class="report-tabs">
+                <div class="report-tab active" data-tab="overview">Overview</div>
+                <div class="report-tab" data-tab="profiling">Data Profiling</div>
+                <div class="report-tab" data-tab="anomalies">Anomalies</div>
+                <div class="report-tab" data-tab="schema">Schema Changes</div>
+                <div class="report-tab" data-tab="lineage">Data Lineage</div>
+                <div class="report-tab" data-tab="rules">Rule Validation</div>
+            </div>
+            
+            <!-- Overview Tab Content -->
+            <div id="overview" class="tab-content active">
+                <div class="report-summary">
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h3>92%</h3>
+                        <p>Quality Score</p>
+                    </div>
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h3>3</h3>
+                        <p>Anomalies Detected</p>
+                    </div>
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-code-branch"></i>
+                        </div>
+                        <h3>2</h3>
+                        <p>Schema Changes</p>
+                    </div>
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-table"></i>
+                        </div>
+                        <h3>1.2M</h3>
+                        <p>Records Processed</p>
+                    </div>
+                </div>
+                
+                <div class="report-section">
+                    <h2><i class="fas fa-chart-pie"></i> Data Quality Score</h2>
+                    <div class="data-quality-score">
+                        <div class="score-circle">
+                            <div class="score-value">92%</div>
+                        </div>
+                        <div class="score-details">
+                            <h3>Quality Assessment</h3>
+                            <div class="score-metrics">
+                                <div class="metric-item">
+                                    <div class="metric-icon success">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <h4>Completeness</h4>
+                                        <div class="metric-bar">
+                                            <div class="metric-progress" style="width: 98%;"></div>
+                                        </div>
+                                        <div class="metric-value">98%</div>
+                                    </div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-icon success">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <h4>Consistency</h4>
+                                        <div class="metric-bar">
+                                            <div class="metric-progress" style="width: 95%;"></div>
+                                        </div>
+                                        <div class="metric-value">95%</div>
+                                    </div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-icon warning">
+                                        <i class="fas fa-exclamation"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <h4>Accuracy</h4>
+                                        <div class="metric-bar">
+                                            <div class="metric-progress" style="width: 87%;"></div>
+                                        </div>
+                                        <div class="metric-value">87%</div>
+                                    </div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-icon success">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <h4>Timeliness</h4>
+                                        <div class="metric-bar">
+                                            <div class="metric-progress" style="width: 93%;"></div>
+                                        </div>
+                                        <div class="metric-value">93%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="report-section">
+                    <h2><i class="fas fa-exclamation-circle"></i> Critical Issues</h2>
+                    <div class="issues-list">
+                        <div class="issue-card warning">
+                            <div class="issue-header">
+                                <div class="issue-icon">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="issue-title">
+                                    <h3>Anomaly Detected: transaction_amount</h3>
+                                    <p>Z-score threshold exceeded (4.2)</p>
+                                </div>
+                            </div>
+                            <div class="issue-details">
+                                <p>Unusual spike in transaction amounts detected in the last 24 hours. Values exceed 3 standard deviations from the mean.</p>
+                                <div class="issue-actions">
+                                    <a href="#" class="btn btn-secondary btn-sm">Investigate</a>
+                                    <a href="#" class="btn btn-outline btn-sm">Ignore</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="issue-card danger">
+                            <div class="issue-header">
+                                <div class="issue-icon">
+                                    <i class="fas fa-times-circle"></i>
+                                </div>
+                                <div class="issue-title">
+                                    <h3>Rule Violation: customer_id</h3>
+                                    <p>Uniqueness constraint failed</p>
+                                </div>
+                            </div>
+                            <div class="issue-details">
+                                <p>3 duplicate customer_id values found in recent transactions. This violates the primary key constraint.</p>
+                                <div class="issue-actions">
+                                    <a href="#" class="btn btn-secondary btn-sm">View Details</a>
+                                    <a href="#" class="btn btn-outline btn-sm">Create Alert</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="report-section">
+                    <h2><i class="fas fa-history"></i> Recent Activity</h2>
+                    <div class="activity-timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-icon">
+                                <i class="fas fa-plus-circle"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h4>Schema Change</h4>
+                                <p>Added field: customer_segment (STRING)</p>
+                                <div class="timeline-meta">
+                                    <span><i class="fas fa-calendar"></i> May 18, 2025</span>
+                                    <span><i class="fas fa-code-branch"></i> 00000128ab42f9</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-icon">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h4>Anomaly Detected</h4>
+                                <p>Unusual pattern in transaction_fee column</p>
+                                <div class="timeline-meta">
+                                    <span><i class="fas fa-calendar"></i> May 17, 2025</span>
+                                    <span><i class="fas fa-user"></i> Automated Detection</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h4>Rule Validation</h4>
+                                <p>All 24 data quality rules passed successfully</p>
+                                <div class="timeline-meta">
+                                    <span><i class="fas fa-calendar"></i> May 16, 2025</span>
+                                    <span><i class="fas fa-clock"></i> Daily Check</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="report-actions">
+                    <div class="action-buttons">
+                        <a href="#" class="btn btn-primary"><i class="fas fa-file-pdf"></i> Export as PDF</a>
+                        <a href="#" class="btn btn-outline"><i class="fas fa-envelope"></i> Schedule Alerts</a>
+                    </div>
+                    <div>
+                        <a href="#" class="btn btn-secondary"><i class="fas fa-share"></i> Share Report</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Data Profiling Tab Content -->
+            <div id="profiling" class="tab-content">
+                <div class="report-section">
+                    <h2><i class="fas fa-chart-bar"></i> Column Statistics</h2>
+                    
+                    <div class="column-selector">
+                        <label for="column-select">Select Column:</label>
+                        <select id="column-select" class="form-select">
+                            <option value="transaction_amount">transaction_amount</option>
+                            <option value="customer_id">customer_id</option>
+                            <option value="transaction_date">transaction_date</option>
+                            <option value="product_id">product_id</option>
+                            <option value="store_id">store_id</option>
+                        </select>
+                    </div>
+                    
+                    <div class="data-distribution">
+                        <div class="distribution-chart">
+                            <h3>Distribution Histogram</h3>
+                            <div class="histogram-container">
+                                <div class="histogram-bar" style="height: 15%;"></div>
+                                <div class="histogram-bar" style="height: 25%;"></div>
+                                <div class="histogram-bar" style="height: 40%;"></div>
+                                <div class="histogram-bar" style="height: 65%;"></div>
+                                <div class="histogram-bar" style="height: 85%;"></div>
+                                <div class="histogram-bar" style="height: 100%;"></div>
+                                <div class="histogram-bar" style="height: 75%;"></div>
+                                <div class="histogram-bar" style="height: 45%;"></div>
+                                <div class="histogram-bar" style="height: 30%;"></div>
+                                <div class="histogram-bar" style="height: 20%;"></div>
+                            </div>
+                            <div class="x-axis">
+                                <div class="x-axis-label">$0</div>
+                                <div class="x-axis-label">$250</div>
+                                <div class="x-axis-label">$500</div>
+                                <div class="x-axis-label">$750</div>
+                                <div class="x-axis-label">$1000+</div>
+                            </div>
+                            <div class="y-axis">
+                                <div class="y-axis-label">Frequency</div>
+                            </div>
+                        </div>
+                        
+                        <div class="distribution-stats">
+                            <h3>Statistical Summary</h3>
+                            <ul class="stats-list">
+                                <li>
+                                    <span class="stats-label">Min Value</span>
+                                    <span class="stats-value">$0.99</span>
+                                </li>
+                                <li>
+                                    <span class="stats-label">Max Value</span>
+                                    <span class="stats-value">$1,249.99</span>
+                                </li>
+                                <li>
+                                    <span class="stats-label">Mean</span>
+                                    <span class="stats-value">$142.87</span>
+                                </li>
+                                <li>
+                                    <span class="stats-label">Median</span>
+                                    <span class="stats-value">$118.50</span>
+                                </li>
+                                <li>
+                                    <span class="stats-label">Standard Deviation</span>
+                                    <span class="stats-value">$87.32</span>
+                                </li>
+                                <li>
+                                    <span class="stats-label">25th Percentile</span>
+                                    <span class="stats-value">$79.99</span>
+                                </li>
+                                <li>
+                                    <span class="stats-label">75th Percentile</span>
+                                    <span class="stats-value">$189.99</span>
+                                </li>
+                                <li>
+                                    <span class="stats-label">IQR</span>
+                                    <span class="stats-value">$110.00</span>
+                                </li>
+                                <li>
+                                    <span class="stats-label">Skewness</span>
+                                    <span class="stats-value">1.87 (Right-skewed)</span>
+                                </li>
+                                <li>
+                                    <span class="stats-label">Null Count</span>
+                                    <span class="stats-value">0 (0%)</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="report-section">
+                    <h2><i class="fas fa-random"></i> Correlation Analysis</h2>
+                    <div class="correlation-matrix">
+                        <table class="correlation-table">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>transaction_amount</th>
+                                    <th>transaction_fee</th>
+                                    <th>customer_age</th>
+                                    <th>items_count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>transaction_amount</td>
+                                    <td class="corr-high">1.00</td>
+                                    <td class="corr-medium">0.78</td>
+                                    <td class="corr-low">0.12</td>
+                                    <td class="corr-high">0.92</td>
+                                </tr>
+                                <tr>
+                                    <td>transaction_fee</td>
+                                    <td class="corr-medium">0.78</td>
+                                    <td class="corr-high">1.00</td>
+                                    <td class="corr-low">0.08</td>
+                                    <td class="corr-medium">0.65</td>
+                                </tr>
+                                <tr>
+                                    <td>customer_age</td>
+                                    <td class="corr-low">0.12</td>
+                                    <td class="corr-low">0.08</td>
+                                    <td class="corr-high">1.00</td>
+                                    <td class="corr-low">0.21</td>
+                                </tr>
+                                <tr>
+                                    <td>items_count</td>
+                                    <td class="corr-high">0.92</td>
+                                    <td class="corr-medium">0.65</td>
+                                    <td class="corr-low">0.21</td>
+                                    <td class="corr-high">1.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="correlation-legend">
+                        <div class="legend-item">
+                            <div class="legend-color corr-high"></div>
+                            <span>Strong (>0.7)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color corr-medium"></div>
+                            <span>Medium (0.4-0.7)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color corr-low"></div>
+                            <span>Weak (<0.4)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="report-section">
+                    <h2><i class="fas fa-fingerprint"></i> Unique Value Analysis</h2>
+                    <div class="unique-values-grid">
+                        <div class="unique-value-card">
+                            <h3>customer_id</h3>
+                            <div class="unique-value-stats">
+                                <div class="unique-stat">
+                                    <span class="stat-label">Distinct Values</span>
+                                    <span class="stat-value">845,231</span>
+                                </div>
+                                <div class="unique-stat">
+                                    <span class="stat-label">Uniqueness</span>
+                                    <span class="stat-value">99.7%</span>
+                                </div>
+                                <div class="unique-stat">
+                                    <span class="stat-label">Top Value</span>
+                                    <span class="stat-value">CID-78342 (12 occurrences)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="unique-value-card">
+                            <h3>product_id</h3>
+                            <div class="unique-value-stats">
+                                <div class="unique-stat">
+                                    <span class="stat-label">Distinct Values</span>
+                                    <span class="stat-value">5,842</span>
+                                </div>
+                                <div class="unique-stat">
+                                    <span class="stat-label">Uniqueness</span>
+                                    <span class="stat-value">0.5%</span>
+                                </div>
+                                <div class="unique-stat">
+                                    <span class="stat-label">Top Value</span>
+                                    <span class="stat-value">PID-1001 (8,742 occurrences)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="unique-value-card">
+                            <h3>store_id</h3>
+                            <div class="unique-value-stats">
+                                <div class="unique-stat">
+                                    <span class="stat-label">Distinct Values</span>
+                                    <span class="stat-value">128</span>
+                                </div>
+                                <div class="unique-stat">
+                                    <span class="stat-label">Uniqueness</span>
+                                    <span class="stat-value">0.01%</span>
+                                </div>
+                                <div class="unique-stat">
+                                    <span class="stat-label">Top Value</span>
+                                    <span class="stat-value">STORE-042 (24,531 occurrences)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="report-actions">
+                    <div class="action-buttons">
+                        <a href="#" class="btn btn-primary"><i class="fas fa-download"></i> Export Profile Data</a>
+                        <a href="#" class="btn btn-outline"><i class="fas fa-sync"></i> Refresh Analysis</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anomalies Tab Content -->
+    <div id="anomalies" class="tab-content">
+        <div class="report-section">
+            <h2><i class="fas fa-exclamation-triangle"></i> Detected Anomalies</h2>
+            
+            <div class="anomalies-grid">
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-severity high">High</div>
+                        <h3>Z-Score Anomaly: transaction_amount</h3>
+                    </div>
+                    <div class="anomaly-details">
+                        <p>Values detected that exceed 3 standard deviations from the mean.</p>
+                        <div class="anomaly-chart">
+                            <img src="images/z-score-anomaly.png" alt="Z-Score Anomaly Chart" class="anomaly-img">
+                        </div>
+                        <div class="anomaly-stats">
+                            <div class="anomaly-stat">
+                                <span class="stat-label">Detection Method</span>
+                                <span class="stat-value">Z-Score (threshold: 3.0)</span>
+                            </div>
+                            <div class="anomaly-stat">
+                                <span class="stat-label">Affected Records</span>
+                                <span class="stat-value">42 (0.0035%)</span>
+                            </div>
+                            <div class="anomaly-stat">
+                                <span class="stat-label">Max Z-Score</span>
+                                <span class="stat-value">4.2</span>
+                            </div>
+                        </div>
+                        <div class="anomaly-actions">
+                            <a href="#" class="btn btn-secondary btn-sm">Investigate</a>
+                            <a href="#" class="btn btn-outline btn-sm">Ignore</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-severity medium">Medium</div>
+                        <h3>IQR Anomaly: transaction_fee</h3>
+                    </div>
+                    <div class="anomaly-details">
+                        <p>Values detected that fall outside 1.5 times the interquartile range.</p>
+                        <div class="anomaly-chart">
+                            <img src="images/iqr-anomaly.png" alt="IQR Anomaly Chart" class="anomaly-img">
+                        </div>
+                        <div class="anomaly-stats">
+                            <div class="anomaly-stat">
+                                <span class="stat-label">Detection Method</span>
+                                <span class="stat-value">IQR (threshold: 1.5)</span>
+                            </div>
+                            <div class="anomaly-stat">
+                                <span class="stat-label">Affected Records</span>
+                                <span class="stat-value">128 (0.0107%)</span>
+                            </div>
+                            <div class="anomaly-stat">
+                                <span class="stat-label">Outlier Range</span>
+                                <span class="stat-value">Below $0.50, Above $12.50</span>
+                            </div>
+                        </div>
+                        <div class="anomaly-actions">
+                            <a href="#" class="btn btn-secondary btn-sm">Investigate</a>
+                            <a href="#" class="btn btn-outline btn-sm">Ignore</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-severity low">Low</div>
+                        <h3>Sudden Change: daily_transactions</h3>
+                    </div>
+                    <div class="anomaly-details">
+                        <p>Sudden change detected in the number of daily transactions.</p>
+                        <div class="anomaly-chart">
+                            <img src="images/sudden-change-anomaly.png" alt="Sudden Change Anomaly Chart" class="anomaly-img">
+                        </div>
+                        <div class="anomaly-stats">
+                            <div class="anomaly-stat">
+                                <span class="stat-label">Detection Method</span>
+                                <span class="stat-value">Sudden Change (threshold: 25%)</span>
+                            </div>
+                            <div class="anomaly-stat">
+                                <span class="stat-label">Change Magnitude</span>
+                                <span class="stat-value">-18.2%</span>
+                            </div>
+                            <div class="anomaly-stat">
+                                <span class="stat-label">Date Detected</span>
+                                <span class="stat-value">May 19, 2025</span>
+                            </div>
+                        </div>
+                        <div class="anomaly-actions">
+                            <a href="#" class="btn btn-secondary btn-sm">Investigate</a>
+                            <a href="#" class="btn btn-outline btn-sm">Ignore</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="report-section">
+            <h2><i class="fas fa-cog"></i> Anomaly Detection Settings</h2>
+            
+            <div class="settings-grid">
+                <div class="settings-card">
+                    <h3>Z-Score Detection</h3>
+                    <div class="settings-content">
+                        <div class="setting-item">
+                            <span class="setting-label">Enabled</span>
+                            <span class="setting-value">Yes</span>
+                        </div>
+                        <div class="setting-item">
+                            <span class="setting-label">Threshold</span>
+                            <span class="setting-value">3.0</span>
+                        </div>
+                        <div class="setting-item">
+                            <span class="setting-label">Applied To</span>
+                            <span class="setting-value">All numeric columns</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-card">
+                    <h3>IQR Detection</h3>
+                    <div class="settings-content">
+                        <div class="setting-item">
+                            <span class="setting-label">Enabled</span>
+                            <span class="setting-value">Yes</span>
+                        </div>
+                        <div class="setting-item">
+                            <span class="setting-label">Threshold</span>
+                            <span class="setting-value">1.5</span>
+                        </div>
+                        <div class="setting-item">
+                            <span class="setting-label">Applied To</span>
+                            <span class="setting-value">Selected columns only</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-card">
+                    <h3>Sudden Change Detection</h3>
+                    <div class="settings-content">
+                        <div class="setting-item">
+                            <span class="setting-label">Enabled</span>
+                            <span class="setting-value">Yes</span>
+                        </div>
+                        <div class="setting-item">
+                            <span class="setting-label">Threshold</span>
+                            <span class="setting-value">25%</span>
+                        </div>
+                        <div class="setting-item">
+                            <span class="setting-label">Window Size</span>
+                            <span class="setting-value">7 days</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-card">
+                    <h3>Oscillation Detection</h3>
+                    <div class="settings-content">
+                        <div class="setting-item">
+                            <span class="setting-label">Enabled</span>
+                            <span class="setting-value">Yes</span>
+                        </div>
+                        <div class="setting-item">
+                            <span class="setting-label">Sensitivity</span>
+                            <span class="setting-value">Medium</span>
+                        </div>
+                        <div class="setting-item">
+                            <span class="setting-label">Min Oscillations</span>
+                            <span class="setting-value">3</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="report-actions">
+            <div class="action-buttons">
+                <a href="#" class="btn btn-primary"><i class="fas fa-cog"></i> Configure Detection</a>
+                <a href="#" class="btn btn-outline"><i class="fas fa-history"></i> View History</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Schema Changes Tab Content -->
+    <div id="schema" class="tab-content">
+        <div class="report-section">
+            <h2><i class="fas fa-code-branch"></i> Schema Evolution</h2>
+            
+            <div class="schema-changes">
+                <table class="schema-table">
+                    <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Type</th>
+                            <th>Change</th>
+                            <th>Date</th>
+                            <th>Transaction</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>customer_segment</td>
+                            <td>STRING</td>
+                            <td><span class="change-type added"><i class="fas fa-plus"></i> Added</span></td>
+                            <td>May 18, 2025</td>
+                            <td>00000128ab42f9</td>
+                        </tr>
+                        <tr>
+                            <td>transaction_fee</td>
+                            <td>DECIMAL(10,2)</td>
+                            <td><span class="change-type modified"><i class="fas fa-pencil-alt"></i> Modified</span></td>
+                            <td>May 15, 2025</td>
+                            <td>00000127de31c8</td>
+                        </tr>
+                        <tr>
+                            <td>promotion_code</td>
+                            <td>STRING</td>
+                            <td><span class="change-type removed"><i class="fas fa-minus"></i> Removed</span></td>
+                            <td>May 10, 2025</td>
+                            <td>00000126fc29b7</td>
+                        </tr>
+                        <tr>
+                            <td>payment_method</td>
+                            <td>STRING</td>
+                            <td><span class="change-type added"><i class="fas fa-plus"></i> Added</span></td>
+                            <td>May 5, 2025</td>
+                            <td>00000125ba18a6</td>
+                        </tr>
+                        <tr>
+                            <td>customer_location</td>
+                            <td>STRUCT</td>
+                            <td><span class="change-type modified"><i class="fas fa-pencil-alt"></i> Modified</span></td>
+                            <td>May 1, 2025</td>
+                            <td>00000124a907b5</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="schema-details">
+                <h3>Change Details: transaction_fee</h3>
+                <div class="change-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Previous Type</span>
+                        <span class="detail-value">DECIMAL(8,2)</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">New Type</span>
+                        <span class="detail-value">DECIMAL(10,2)</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Reason</span>
+                        <span class="detail-value">Increased precision for international transactions</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Changed By</span>
+                        <span class="detail-value">data_pipeline_job</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="report-section">
+            <h2><i class="fas fa-table"></i> Current Schema</h2>
+            
+            <div class="current-schema">
+                <table class="schema-table">
+                    <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Type</th>
+                            <th>Nullable</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>transaction_id</td>
+                            <td>STRING</td>
+                            <td>No</td>
+                            <td>Unique identifier for the transaction</td>
+                        </tr>
+                        <tr>
+                            <td>customer_id</td>
+                            <td>STRING</td>
+                            <td>No</td>
+                            <td>Customer identifier</td>
+                        </tr>
+                        <tr>
+                            <td>transaction_date</td>
+                            <td>TIMESTAMP</td>
+                            <td>No</td>
+                            <td>Date and time of the transaction</td>
+                        </tr>
+                        <tr>
+                            <td>transaction_amount</td>
+                            <td>DECIMAL(10,2)</td>
+                            <td>No</td>
+                            <td>Amount of the transaction</td>
+                        </tr>
+                        <tr>
+                            <td>transaction_fee</td>
+                            <td>DECIMAL(10,2)</td>
+                            <td>Yes</td>
+                            <td>Fee associated with the transaction</td>
+                        </tr>
+                        <tr>
+                            <td>product_id</td>
+                            <td>STRING</td>
+                            <td>No</td>
+                            <td>Product identifier</td>
+                        </tr>
+                        <tr>
+                            <td>store_id</td>
+                            <td>STRING</td>
+                            <td>No</td>
+                            <td>Store identifier</td>
+                        </tr>
+                        <tr>
+                            <td>payment_method</td>
+                            <td>STRING</td>
+                            <td>Yes</td>
+                            <td>Method of payment</td>
+                        </tr>
+                        <tr>
+                            <td>customer_segment</td>
+                            <td>STRING</td>
+                            <td>Yes</td>
+                            <td>Customer segment classification</td>
+                        </tr>
+                        <tr>
+                            <td>customer_location</td>
+                            <td>STRUCT</td>
+                            <td>Yes</td>
+                            <td>Customer location information</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="report-actions">
+            <div class="action-buttons">
+                <a href="#" class="btn btn-primary"><i class="fas fa-code-branch"></i> View Full History</a>
+                <a href="#" class="btn btn-outline"><i class="fas fa-clock"></i> Time Travel</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Data Lineage Tab Content -->
+    <div id="lineage" class="tab-content">
+        <div class="report-section">
+            <h2><i class="fas fa-project-diagram"></i> Data Lineage Visualization</h2>
+            
+            <div class="lineage-controls">
+                <div class="lineage-view-options">
+                    <button class="lineage-btn active" data-view="upstream">Upstream</button>
+                    <button class="lineage-btn" data-view="downstream">Downstream</button>
+                    <button class="lineage-btn" data-view="full">Full Lineage</button>
+                </div>
+                <div class="lineage-depth-control">
+                    <label for="lineage-depth">Depth:</label>
+                    <select id="lineage-depth" class="form-select">
+                        <option value="1">1 Level</option>
+                        <option value="2" selected>2 Levels</option>
+                        <option value="3">3 Levels</option>
+                        <option value="all">All Levels</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="lineage-graph">
+                <img src="images/data-lineage-graph.png" alt="Data Lineage Graph" class="lineage-img">
+                <div class="lineage-overlay">
+                    <div class="lineage-node" style="top: 45%; left: 50%;">
+                        <div class="node-content">
+                            <span class="node-title">customer_transactions</span>
+                            <span class="node-type">Delta Table</span>
+                        </div>
+                    </div>
+                    <div class="lineage-node" style="top: 25%; left: 25%;">
+                        <div class="node-content">
+                            <span class="node-title">raw_transactions</span>
+                            <span class="node-type">Source Table</span>
+                        </div>
+                    </div>
+                    <div class="lineage-node" style="top: 25%; left: 75%;">
+                        <div class="node-content">
+                            <span class="node-title">customer_data</span>
+                            <span class="node-type">Dimension Table</span>
+                        </div>
+                    </div>
+                    <div class="lineage-node" style="top: 65%; left: 25%;">
+                        <div class="node-content">
+                            <span class="node-title">transaction_metrics</span>
+                            <span class="node-type">Derived Table</span>
+                        </div>
+                    </div>
+                    <div class="lineage-node" style="top: 65%; left: 75%;">
+                        <div class="node-content">
+                            <span class="node-title">customer_insights</span>
+                            <span class="node-type">Derived Table</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="lineage-details">
+                <h3>Selected Node: customer_transactions</h3>
+                <div class="node-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Full Path</span>
+                        <span class="detail-value">production.sales.customer_transactions</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Type</span>
+                        <span class="detail-value">Delta Lake Table</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Last Updated</span>
+                        <span class="detail-value">May 20, 2025 08:45 AM</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Upstream Dependencies</span>
+                        <span class="detail-value">2 tables</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Downstream Dependencies</span>
+                        <span class="detail-value">2 tables</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="report-section">
+            <h2><i class="fas fa-code"></i> Transformation Details</h2>
+            
+            <div class="transformation-details">
+                <div class="transformation-item">
+                    <h3>raw_transactions → customer_transactions</h3>
+                    <div class="transformation-code">
+                        <pre><code>-- SQL Transformation
+SELECT
+  rt.transaction_id,
+  rt.customer_id,
+  rt.transaction_date,
+  rt.transaction_amount,
+  rt.transaction_fee,
+  rt.product_id,
+  rt.store_id,
+  rt.payment_method,
+  cd.customer_segment,
+  cd.customer_location
+FROM
+  raw_transactions rt
+JOIN
+  customer_data cd ON rt.customer_id = cd.customer_id
+WHERE
+  rt.transaction_date >= current_date() - INTERVAL 30 DAYS</code></pre>
+                    </div>
+                    <div class="transformation-meta">
+                        <span><i class="fas fa-calendar"></i> Last Run: May 20, 2025</span>
+                        <span><i class="fas fa-clock"></i> Duration: 4m 12s</span>
+                        <span><i class="fas fa-check-circle"></i> Status: Success</span>
+                    </div>
+                </div>
+                
+                <div class="transformation-item">
+                    <h3>customer_transactions → transaction_metrics</h3>
+                    <div class="transformation-code">
+                        <pre><code>-- SQL Transformation
+SELECT
+  store_id,
+  DATE(transaction_date) as transaction_day,
+  COUNT(*) as daily_transactions,
+  SUM(transaction_amount) as daily_amount,
+  AVG(transaction_amount) as avg_transaction_value,
+  MIN(transaction_amount) as min_transaction_value,
+  MAX(transaction_amount) as max_transaction_value
+FROM
+  customer_transactions
+GROUP BY
+  store_id, DATE(transaction_date)
+ORDER BY
+  store_id, transaction_day</code></pre>
+                    </div>
+                    <div class="transformation-meta">
+                        <span><i class="fas fa-calendar"></i> Last Run: May 20, 2025</span>
+                        <span><i class="fas fa-clock"></i> Duration: 2m 38s</span>
+                        <span><i class="fas fa-check-circle"></i> Status: Success</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="report-section">
+            <h2><i class="fas fa-exclamation-triangle"></i> Impact Analysis</h2>
+            
+            <div class="impact-analysis">
+                <h3>Schema Change Impact: customer_segment (Added)</h3>
+                <p>The following downstream tables and processes are affected by this schema change:</p>
+                
+                <div class="impact-list">
+                    <div class="impact-item">
+                        <div class="impact-icon warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="impact-content">
+                            <h4>customer_insights</h4>
+                            <p>This table references the new column and requires updates to its transformation logic.</p>
+                            <div class="impact-actions">
+                                <a href="#" class="btn btn-secondary btn-sm">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="impact-item">
+                        <div class="impact-icon info">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div class="impact-content">
+                            <h4>transaction_metrics</h4>
+                            <p>This table does not reference the new column and requires no changes.</p>
+                            <div class="impact-actions">
+                                <a href="#" class="btn btn-outline btn-sm">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="impact-item">
+                        <div class="impact-icon warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="impact-content">
+                            <h4>customer_segmentation_report</h4>
+                            <p>This report depends on the new column and requires updates to its visualization logic.</p>
+                            <div class="impact-actions">
+                                <a href="#" class="btn btn-secondary btn-sm">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="report-actions">
+            <div class="action-buttons">
+                <a href="#" class="btn btn-primary"><i class="fas fa-download"></i> Export Lineage</a>
+                <a href="#" class="btn btn-outline"><i class="fas fa-expand"></i> Full Screen View</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Rule Validation Tab Content -->
+    <div id="rules" class="tab-content">
+        <div class="report-section">
+            <h2><i class="fas fa-check-square"></i> Rule Validation Results</h2>
+            
+            <div class="rules-summary">
+                <div class="rule-stat-card success">
+                    <div class="rule-stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="rule-stat-content">
+                        <h3>22</h3>
+                        <p>Passed Rules</p>
+                    </div>
+                </div>
+                
+                <div class="rule-stat-card warning">
+                    <div class="rule-stat-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="rule-stat-content">
+                        <h3>1</h3>
+                        <p>Warning Rules</p>
+                    </div>
+                </div>
+                
+                <div class="rule-stat-card danger">
+                    <div class="rule-stat-icon">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="rule-stat-content">
+                        <h3>1</h3>
+                        <p>Failed Rules</p>
+                    </div>
+                </div>
+                
+                <div class="rule-stat-card">
+                    <div class="rule-stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="rule-stat-content">
+                        <h3>24</h3>
+                        <p>Total Rules</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="rules-list">
+                <div class="rules-header">
+                    <div class="rules-filter">
+                        <label for="rule-status-filter">Filter by Status:</label>
+                        <select id="rule-status-filter" class="form-select">
+                            <option value="all">All Rules</option>
+                            <option value="passed">Passed</option>
+                            <option value="warning">Warning</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                    </div>
+                    <div class="rules-search">
+                        <input type="text" placeholder="Search rules..." class="form-input">
+                    </div>
+                </div>
+                
+                <table class="rules-table">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Rule Name</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Last Run</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="rule-row failed">
+                            <td>
+                                <span class="rule-status failed">
+                                    <i class="fas fa-times-circle"></i>
+                                </span>
+                            </td>
+                            <td>unique_customer_id</td>
+                            <td>SQL</td>
+                            <td>Customer ID must be unique across all transactions</td>
+                            <td>May 20, 2025</td>
+                            <td>
+                                <div class="rule-actions">
+                                    <a href="#" class="btn btn-secondary btn-sm">Details</a>
+                                    <a href="#" class="btn btn-outline btn-sm">History</a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="rule-row warning">
+                            <td>
+                                <span class="rule-status warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </span>
+                            </td>
+                            <td>transaction_amount_range</td>
+                            <td>Python</td>
+                            <td>Transaction amount should be between $0.01 and $10,000.00</td>
+                            <td>May 20, 2025</td>
+                            <td>
+                                <div class="rule-actions">
+                                    <a href="#" class="btn btn-secondary btn-sm">Details</a>
+                                    <a href="#" class="btn btn-outline btn-sm">History</a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="rule-row success">
+                            <td>
+                                <span class="rule-status success">
+                                    <i class="fas fa-check-circle"></i>
+                                </span>
+                            </td>
+                            <td>not_null_transaction_id</td>
+                            <td>YAML</td>
+                            <td>Transaction ID must not be null</td>
+                            <td>May 20, 2025</td>
+                            <td>
+                                <div class="rule-actions">
+                                    <a href="#" class="btn btn-secondary btn-sm">Details</a>
+                                    <a href="#" class="btn btn-outline btn-sm">History</a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="rule-row success">
+                            <td>
+                                <span class="rule-status success">
+                                    <i class="fas fa-check-circle"></i>
+                                </span>
+                            </td>
+                            <td>valid_transaction_date</td>
+                            <td>SQL</td>
+                            <td>Transaction date must not be in the future</td>
+                            <td>May 20, 2025</td>
+                            <td>
+                                <div class="rule-actions">
+                                    <a href="#" class="btn btn-secondary btn-sm">Details</a>
+                                    <a href="#" class="btn btn-outline btn-sm">History</a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="report-section">
+            <h2><i class="fas fa-code"></i> Rule Definition Example</h2>
+            
+            <div class="rule-definition">
+                <h3>Rule: unique_customer_id</h3>
+                
+                <div class="rule-code">
+                    <pre><code>-- SQL Rule Definition
+SELECT
+  customer_id,
+  COUNT(*) as occurrence_count
+FROM
+  customer_transactions
+GROUP BY
+  customer_id
+HAVING
+  COUNT(*) > 1</code></pre>
+                </div>
+                
+                <div class="rule-failure-details">
+                    <h4>Failure Details</h4>
+                    <p>3 records found that violate this rule:</p>
+                    
+                    <table class="failure-table">
+                        <thead>
+                            <tr>
+                                <th>customer_id</th>
+                                <th>occurrence_count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>CID-78342</td>
+                                <td>12</td>
+                            </tr>
+                            <tr>
+                                <td>CID-65219</td>
+                                <td>3</td>
+                            </tr>
+                            <tr>
+                                <td>CID-91087</td>
+                                <td>2</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="report-section">
+            <h2><i class="fas fa-history"></i> Rule Execution History</h2>
+            
+            <div class="rule-history-chart">
+                <img src="images/rule-history-chart.png" alt="Rule Execution History Chart" class="rule-history-img">
+            </div>
+            
+            <div class="rule-history-legend">
+                <div class="legend-item">
+                    <div class="legend-color success"></div>
+                    <span>Passed</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color warning"></div>
+                    <span>Warning</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color danger"></div>
+                    <span>Failed</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="report-actions">
+            <div class="action-buttons">
+                <a href="#" class="btn btn-primary"><i class="fas fa-plus"></i> Create New Rule</a>
+                <a href="#" class="btn btn-outline"><i class="fas fa-download"></i> Export Rules</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Simple tab functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.report-tab');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs
+                    tabs.forEach(t => t.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+                    
+                    // Hide all tab content
+                    const tabContents = document.querySelectorAll('.tab-content');
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    // Show the corresponding tab content
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

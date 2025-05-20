@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nessi.dev | Enhanced Schema Report</title>
+    <link rel="stylesheet" href="../../assets/styles/nessi-report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="report-container">
+        <div class="report-header">
+            <h1>Schema Report: {{.table_path}}</h1>
+            <div class="report-meta">
+                <div class="report-meta-item">
+                    <i class="fas fa-calendar"></i>
+                    <span>{{.timestamp}}</span>
+                </div>
+                <div class="report-meta-item">
+                    <i class="fas fa-database"></i>
+                    <span>Delta Lake</span>
+                </div>
+                <div class="report-meta-item">
+                    <i class="fas fa-code-branch"></i>
+                    <span>Transaction: {{.transaction_id}}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="report-body">
+            <!-- Report tabs for navigation -->
+            <div class="report-tabs">
+                <div class="report-tab active" data-tab="overview">Overview</div>
+                <div class="report-tab" data-tab="fields">Fields</div>
+                <div class="report-tab" data-tab="history">Schema History</div>
+            </div>
+            
+            <!-- Overview Tab Content -->
+            <div id="overview" class="tab-content active">
+                <div class="report-summary">
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-code-branch"></i>
+                        </div>
+                        <h3>v{{.schema_version}}</h3>
+                        <p>Schema Version</p>
+                    </div>
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-table"></i>
+                        </div>
+                        <h3>{{len .fields}}</h3>
+                        <p>Total Fields</p>
+                    </div>
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <h3>{{.last_updated}}</h3>
+                        <p>Last Updated</p>
+                    </div>
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <h3>{{.changes_count}}</h3>
+                        <p>Recent Changes</p>
+                    </div>
+                </div>
+                
+                <div class="report-section">
+                    <h2><i class="fas fa-code-branch"></i> Schema Evolution</h2>
+                    <div class="activity-timeline">
+                        {{range .schema_history}}
+                        <div class="timeline-item">
+                            <div class="timeline-icon">
+                                {{if eq .type "created"}}
+                                <i class="fas fa-plus"></i>
+                                {{else if eq .type "added"}}
+                                <i class="fas fa-plus"></i>
+                                {{else if eq .type "modified"}}
+                                <i class="fas fa-edit"></i>
+                                {{else}}
+                                <i class="fas fa-minus"></i>
+                                {{end}}
+                            </div>
+                            <div class="timeline-content">
+                                <h4>
+                                    {{if eq .type "created"}}
+                                    Initial Schema Created
+                                    {{else if eq .type "added"}}
+                                    Added Field: {{.field_name}}
+                                    {{else if eq .type "modified"}}
+                                    Modified Field: {{.field_name}}
+                                    {{else}}
+                                    Removed Field: {{.field_name}}
+                                    {{end}}
+                                </h4>
+                                <p>{{.details}}</p>
+                                <div class="timeline-meta">
+                                    <span><i class="fas fa-code-branch"></i> Version {{.version}}</span>
+                                    <span><i class="fas fa-calendar"></i> {{.timestamp}}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {{end}}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Fields Tab Content -->
+            <div id="fields" class="tab-content">
+                <div class="report-section">
+                    <h2><i class="fas fa-table"></i> Schema Fields</h2>
+                    <div class="schema-changes">
+                        <table class="schema-table">
+                            <tr>
+                                <th>Field Name</th>
+                                <th>Type</th>
+                                <th>Nullable</th>
+                                <th>Description</th>
+                            </tr>
+                            {{range .fields}}
+                            <tr>
+                                <td>{{.name}}</td>
+                                <td>{{.type}}</td>
+                                <td>{{if .nullable}}Yes{{else}}No{{end}}</td>
+                                <td>{{.description}}</td>
+                            </tr>
+                            {{end}}
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- History Tab Content -->
+            <div id="history" class="tab-content">
+                <div class="report-section">
+                    <h2><i class="fas fa-history"></i> Schema History</h2>
+                    <div class="schema-changes">
+                        <table class="schema-table">
+                            <tr>
+                                <th>Version</th>
+                                <th>Change Type</th>
+                                <th>Field</th>
+                                <th>Details</th>
+                                <th>Date</th>
+                            </tr>
+                            {{range .schema_history}}
+                            <tr>
+                                <td>v{{.version}}</td>
+                                <td>
+                                    {{if eq .type "created"}}
+                                    <span class="status status-success">Created</span>
+                                    {{else if eq .type "added"}}
+                                    <span class="status status-success">Added</span>
+                                    {{else if eq .type "modified"}}
+                                    <span class="status status-warning">Modified</span>
+                                    {{else}}
+                                    <span class="status status-danger">Removed</span>
+                                    {{end}}
+                                </td>
+                                <td>{{.field_name}}</td>
+                                <td>{{.details}}</td>
+                                <td>{{.timestamp}}</td>
+                            </tr>
+                            {{end}}
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Simple tab switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.report-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs and contents
+                    document.querySelectorAll('.report-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab and corresponding content
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

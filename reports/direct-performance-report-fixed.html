@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nessi.dev | Enhanced Performance Report</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/enhanced-report.css">
+    <link rel="stylesheet" href="css/enhanced-report-part2.css">
+    <link rel="stylesheet" href="nessi-tabs.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="report-container">
+        <div class="report-header">
+            <h1>Performance Report: {{ .TableName }}</h1>
+            <div class="report-meta">
+                <div class="report-meta-item">
+                    <i class="fas fa-calendar"></i>
+                    <span>{{ .Timestamp }}</span>
+                </div>
+                <div class="report-meta-item">
+                    <i class="fas fa-database"></i>
+                    <span>Path: {{ .TablePath }}</span>
+                </div>
+                <div class="report-meta-item">
+                    <i class="fas fa-code-branch"></i>
+                    <span>Scan ID: {{ .ScanID }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="report-body">
+            
+            <div class="report-tabs">
+                <div class="report-tab active" data-tab="overview">Overview</div>
+                <div class="report-tab" data-tab="files">File Stats</div>
+                <div class="report-tab" data-tab="recommendations">Recommendations</div>
+            </div>
+            
+            
+            <div id="overview" class="tab-content active">
+                <div class="report-summary">
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
+                        <h3>{{ if .PerformanceScore }}{{ .PerformanceScore }}{{ else }}78%{{ end }}</h3>
+                        <p>Performance Score</p>
+                    </div>
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-file"></i>
+                        </div>
+                        <h3>{{ .IoOperations }}</h3>
+                        <p>I/O Operations</p>
+                    </div>
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <h3>{{ .BytesProcessed }} bytes</h3>
+                        <p>Bytes Processed</p>
+                    </div>
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <h3>{{ .RowsProcessed }}</h3>
+                        <p>Rows Processed</p>
+                    </div>
+                </div>
+                
+                <div class="report-section">
+                    <h2><i class="fas fa-chart-pie"></i> Performance Analysis</h2>
+                    <div class="data-quality-score">
+                        <div class="score-circle" style="background: conic-gradient(var(--primary-color) 0% 78%, var(--light-gray) 78% 100%);">
+                            <div class="score-value">78%</div>
+                        </div>
+                        <div class="score-details">
+                            <h3>Performance Score Breakdown</h3>
+                            <div class="score-metrics">
+                                <div class="metric-item">
+                                    <div class="metric-icon success">
+                                        <i class="fas fa-file"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <h4>I/O Efficiency</h4>
+                                        <div class="metric-bar">
+                                            <div class="metric-progress" style="width: 85%;"></div>
+                                        </div>
+                                        <div class="metric-value">85%</div>
+                                    </div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-icon success">
+                                        <i class="fas fa-sort-alpha-down"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <h4>Sort Efficiency</h4>
+                                        <div class="metric-bar">
+                                            <div class="metric-progress" style="width: 80%;"></div>
+                                        </div>
+                                        <div class="metric-value">80%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="report-section">
+                    <h2><i class="fas fa-lightbulb"></i> Performance Recommendations</h2>
+                    <div class="issues-list">
+                        <div class="issue-card warning">
+                            <div class="issue-header">
+                                <div class="issue-icon">
+                                    <i class="fas fa-file"></i>
+                                </div>
+                                <div class="issue-title">
+                                    <h3>Small File Problem</h3>
+                                    <p>Consider compacting small files. Current average file size is 2.1 MB, target should be 128+ MB.</p>
+                                </div>
+                            </div>
+                            <div class="issue-details">
+                                <p><strong>Recommended Action:</strong></p>
+                                <pre><code>OPTIMIZE delta.`/path/to/table`</code></pre>
+                                <div class="issue-actions">
+                                    <button class="btn btn-sm btn-primary">Apply</button>
+                                    <button class="btn btn-sm btn-outline">Ignore</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="issue-card warning">
+                            <div class="issue-header">
+                                <div class="issue-icon">
+                                    <i class="fas fa-layer-group"></i>
+                                </div>
+                                <div class="issue-title">
+                                    <h3>Partition Optimization</h3>
+                                    <p>Current partitioning strategy is optimal. No changes needed.</p>
+                                </div>
+                            </div>
+                            <div class="issue-details">
+                                <p><strong>Recommended Action:</strong></p>
+                                <pre><code>N/A</code></pre>
+                                <div class="issue-actions">
+                                    <button class="btn btn-sm btn-primary">View Details</button>
+                                    <button class="btn btn-sm btn-outline">Ignore</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="issue-card warning">
+                            <div class="issue-header">
+                                <div class="issue-icon">
+                                    <i class="fas fa-sort-alpha-down"></i>
+                                </div>
+                                <div class="issue-title">
+                                    <h3>Z-Order Optimization</h3>
+                                    <p>Consider Z-Ordering by 'id' and 'created_at' fields to improve query performance.</p>
+                                </div>
+                            </div>
+                            <div class="issue-details">
+                                <p><strong>Recommended Action:</strong></p>
+                                <pre><code>OPTIMIZE delta.`/path/to/table` ZORDER BY (id, created_at)</code></pre>
+                                <div class="issue-actions">
+                                    <button class="btn btn-sm btn-primary">Apply</button>
+                                    <button class="btn btn-sm btn-outline">Ignore</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="files" class="tab-content">
+                <div class="report-section">
+                    <h2><i class="fas fa-file"></i> File Statistics</h2>
+                    <div class="schema-changes">
+                        <table class="schema-table">
+                            <tr>
+                                <th>Metric</th>
+                                <th>Value</th>
+                                <th>Status</th>
+                            </tr>
+                            <tr>
+                                <td>Total Files</td>
+                                <td>1,250</td>
+                                <td><span class="status status-warning">WARNING</span></td>
+                            </tr>
+                            <tr>
+                                <td>Average File Size</td>
+                                <td>2.1 MB</td>
+                                <td><span class="status status-warning">WARNING</span></td>
+                            </tr>
+                            <tr>
+                                <td>Total Size</td>
+                                <td>2.5 GB</td>
+                                <td><span class="status status-success">GOOD</span></td>
+                            </tr>
+                            <tr>
+                                <td>Files per Partition</td>
+                                <td>250</td>
+                                <td><span class="status status-warning">WARNING</span></td>
+                            </tr>
+                            <tr>
+                                <td>Compression Ratio</td>
+                                <td>4.2:1</td>
+                                <td><span class="status status-success">GOOD</span></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.report-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.report-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nessi Freshness Report</title>
+    <link rel="stylesheet" href="../../assets/styles/report-styles-new.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Fallback styles in case the external CSS doesn't load */
+        body {
+            font-family: 'Segoe UI', 'Roboto', -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <!-- Header -->
+        <div class="report-header">
+            <h1>Freshness Report: {{.table_path}}</h1>
+            <div class="report-meta">
+                <div class="report-meta-item">
+                    <i class="far fa-calendar"></i>
+                    <span>{{.timestamp}}</span>
+                </div>
+                <div class="report-meta-item">
+                    <i class="fas fa-sync"></i>
+                    <span>Full Scan</span>
+                </div>
+                <div class="report-meta-item">
+                    <i class="fas fa-database"></i>
+                    <span>Delta Lake</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Body -->
+        <div class="report-body">
+            <!-- Summary Cards -->
+            <div class="report-summary">
+                <div class="summary-card">
+                    <div class="icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3>{{.freshness_score}}%</h3>
+                    <p>Freshness Score</p>
+                </div>
+                <div class="summary-card">
+                    <div class="icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h3>{{.last_update_age}}</h3>
+                    <p>Since Last Update</p>
+                </div>
+                <div class="summary-card">
+                    <div class="icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <h3>{{.update_frequency}}</h3>
+                    <p>Update Frequency</p>
+                </div>
+                <div class="summary-card">
+                    <div class="icon">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <h3>{{len .partitions}}</h3>
+                    <p>Partitions</p>
+                </div>
+            </div>
+            
+            <!-- Freshness Score Section -->
+            <div class="section-header">
+                <i class="fas fa-chart-pie"></i>
+                <span>Freshness Score</span>
+            </div>
+            <div class="data-quality-score">
+                <div class="score-circle" style="background: conic-gradient(var(--primary-color) 0% {{.freshness_score}}%, #e6edf5 {{.freshness_score}}% 100%);">
+                    <div class="score-value">{{.freshness_score}}%</div>
+                </div>
+                <div>
+                    <p>Your data freshness score is {{if ge .freshness_score 90}}excellent{{else if ge .freshness_score 70}}good{{else if ge .freshness_score 50}}fair{{else}}poor{{end}}. Here's a breakdown:</p>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>Last Update</span>
+                            <span>{{.last_update_score}}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{.last_update_score}}%"></div>
+                        </div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>Update Frequency</span>
+                            <span>{{.frequency_score}}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{.frequency_score}}%"></div>
+                        </div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>Consistency</span>
+                            <span>{{.consistency_score}}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{.consistency_score}}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Partitions Section -->
+            <div class="section-header">
+                <i class="fas fa-layer-group"></i>
+                <span>Partition Freshness</span>
+            </div>
+            <div class="schema-changes">
+                <table class="schema-table">
+                    <tr>
+                        <th>Partition</th>
+                        <th>Last Update</th>
+                        <th>Age (hours)</th>
+                        <th>Update Frequency</th>
+                        <th>Freshness Score</th>
+                        <th>Status</th>
+                    </tr>
+                    {{range .partitions}}
+                    <tr>
+                        <td>{{.name}}</td>
+                        <td>{{.last_update}}</td>
+                        <td>{{.age_hours}}</td>
+                        <td>{{.update_frequency_days}} day(s)</td>
+                        <td>{{.freshness_score}}</td>
+                        <td>
+                            <span class="status {{if eq .status "OK"}}status-success{{else if eq .status "WARNING"}}status-warning{{else}}status-danger{{end}}">
+                                {{.status}}
+                            </span>
+                        </td>
+                    </tr>
+                    {{end}}
+                </table>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="report-footer">
+            <div>Generated by <a href="https://nessi.dev">Nessi.dev</a> v0.10.3</div>
+            <div>Delta Lake Transaction ID: {{.transaction_id}}</div>
+        </div>
+    </div>
+</body>
+</html>

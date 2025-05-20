@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nessi.dev | Enhanced Data Quality Report</title>
+    <link rel="stylesheet" href="../../assets/styles/nessi-report.css">
+    <!-- This is a template file for the enhanced quality report -->
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="report-container">
+        <div class="report-header">
+            <h1>Data Quality Report: {{.table_path}}</h1>
+            <div class="report-meta">
+                <div class="report-meta-item">
+                    <i class="fas fa-calendar"></i>
+                    <span>{{.timestamp}}</span>
+                </div>
+                <div class="report-meta-item">
+                    <i class="fas fa-database"></i>
+                    <span>Delta Lake</span>
+                </div>
+                <div class="report-meta-item">
+                    <i class="fas fa-code-branch"></i>
+                    <span>Transaction: {{.transaction_id}}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="report-body">
+            <!-- Report tabs for navigation -->
+            <div class="report-tabs">
+                <div class="report-tab active" data-tab="overview">Overview</div>
+                <div class="report-tab" data-tab="profiling">Data Profiling</div>
+                <div class="report-tab" data-tab="anomalies">Anomalies</div>
+                <div class="report-tab" data-tab="schema">Schema</div>
+            </div>
+            
+            <!-- Overview Tab Content -->
+            <div id="overview" class="tab-content active">
+                <div class="report-summary">
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h3>{{.quality_score}}%</h3>
+                        <p>Quality Score</p>
+                    </div>
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-table"></i>
+                        </div>
+                        <h3>{{.total_rows}}</h3>
+                        <p>Total Rows</p>
+                    </div>
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h3>{{len .anomalies}}</h3>
+                        <p>Anomalies Detected</p>
+                    </div>
+                    <div class="summary-card">
+                        <div class="icon">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <h3>{{.valid_rows}}</h3>
+                        <p>Valid Rows</p>
+                    </div>
+                </div>
+                
+                <div class="report-section">
+                    <h2><i class="fas fa-chart-pie"></i> Data Quality Score</h2>
+                    <div class="data-quality-score">
+                        <div class="score-circle" style="background: conic-gradient(var(--primary-color) 0% {{.quality_score}}%, var(--light-gray) {{.quality_score}}% 100%);">
+                            <div class="score-value">{{.quality_score}}%</div>
+                        </div>
+                        <div class="score-details">
+                            <h3>Quality Score Breakdown</h3>
+                            <div class="score-metrics">
+                                <div class="metric-item">
+                                    <div class="metric-icon success">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <h4>Completeness</h4>
+                                        <div class="metric-bar">
+                                            <div class="metric-progress" style="width: {{.completeness}}%"></div>
+                                        </div>
+                                        <div class="metric-value">{{.completeness}}%</div>
+                                    </div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-icon success">
+                                        <i class="fas fa-fingerprint"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <h4>Uniqueness</h4>
+                                        <div class="metric-bar">
+                                            <div class="metric-progress" style="width: {{.uniqueness}}%"></div>
+                                        </div>
+                                        <div class="metric-value">{{.uniqueness}}%</div>
+                                    </div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-icon success">
+                                        <i class="fas fa-balance-scale"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <h4>Consistency</h4>
+                                        <div class="metric-bar">
+                                            <div class="metric-progress" style="width: {{.consistency}}%"></div>
+                                        </div>
+                                        <div class="metric-value">{{.consistency}}%</div>
+                                    </div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-icon success">
+                                        <i class="fas fa-bullseye"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <h4>Accuracy</h4>
+                                        <div class="metric-bar">
+                                            <div class="metric-progress" style="width: {{.accuracy}}%"></div>
+                                        </div>
+                                        <div class="metric-value">{{.accuracy}}%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="report-section">
+                    <h2><i class="fas fa-exclamation-triangle"></i> Detected Anomalies</h2>
+                    <div class="issues-list">
+                        {{range .anomalies}}
+                        <div class="issue-card warning">
+                            <div class="issue-header">
+                                <div class="issue-icon">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="issue-title">
+                                    <h3>{{.type}} Issue in '{{.column}}' Column</h3>
+                                    <p>{{.description}}</p>
+                                </div>
+                            </div>
+                            <div class="issue-details">
+                                <p>Found {{.count}} instances ({{.percentage}}% of data) with this issue.</p>
+                                <p><strong>Examples:</strong> {{range .examples}}{{.}}, {{end}}</p>
+                                <div class="issue-actions">
+                                    <button class="btn btn-sm btn-primary">View Details</button>
+                                    <button class="btn btn-sm btn-outline">Ignore</button>
+                                </div>
+                            </div>
+                        </div>
+                        {{end}}
+                    </div>
+                </div>
+                
+                <div class="report-section">
+                    <h2><i class="fas fa-table"></i> Column Statistics</h2>
+                    <div class="schema-changes">
+                        <table class="schema-table">
+                            <tr>
+                                <th>Column</th>
+                                <th>Type</th>
+                                <th>Completeness</th>
+                                <th>Uniqueness</th>
+                                <th>Validity</th>
+                                <th>Status</th>
+                            </tr>
+                            {{range .columns}}
+                            <tr>
+                                <td>{{.name}}</td>
+                                <td>{{.type}}</td>
+                                <td>{{.completeness}}%</td>
+                                <td>{{.uniqueness}}%</td>
+                                <td>{{.validity}}%</td>
+                                <td>
+                                    {{if eq .status "OK"}}
+                                    <span class="status status-success">OK</span>
+                                    {{else if eq .status "WARNING"}}
+                                    <span class="status status-warning">Warning</span>
+                                    {{else}}
+                                    <span class="status status-danger">Error</span>
+                                    {{end}}
+                                </td>
+                            </tr>
+                            {{end}}
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Other tabs would be implemented here -->
+            <div id="profiling" class="tab-content">
+                <div class="report-section">
+                    <h2><i class="fas fa-chart-bar"></i> Data Profiling</h2>
+                    <p>Detailed data profiling information would appear here.</p>
+                </div>
+            </div>
+            
+            <div id="anomalies" class="tab-content">
+                <div class="report-section">
+                    <h2><i class="fas fa-exclamation-triangle"></i> Anomalies</h2>
+                    <p>Detailed anomalies information would appear here.</p>
+                </div>
+            </div>
+            
+            <div id="schema" class="tab-content">
+                <div class="report-section">
+                    <h2><i class="fas fa-code-branch"></i> Schema</h2>
+                    <p>Schema information would appear here.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Simple tab switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.report-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs and contents
+                    document.querySelectorAll('.report-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab and corresponding content
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

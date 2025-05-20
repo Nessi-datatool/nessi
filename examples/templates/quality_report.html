@@ -2,180 +2,284 @@
 <html>
 <head>
     <title>Nessi Quality Report</title>
+    <link rel="stylesheet" href="../../assets/styles/report-styles-new.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        /* Fallback styles in case the external CSS doesn't load */
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', 'Roboto', -apple-system, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            background-color: #f5f7fa;
             color: #333;
-        }
-        .header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .section {
-            margin-bottom: 30px;
-            border: 1px solid #ddd;
-            padding: 15px;
-            border-radius: 5px;
-        }
-        h1, h2, h3 {
-            color: #2c3e50;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        .metric-good {
-            color: green;
-        }
-        .metric-warning {
-            color: orange;
-        }
-        .metric-critical {
-            color: red;
-        }
-        .footer {
-            margin-top: 30px;
-            text-align: center;
-            font-size: 0.8em;
-            color: #777;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Nessi Quality Report</h1>
-        <p>Generated on: {{.timestamp}}</p>
-    </div>
-
-    <div class="section">
-        <h2>Table Information</h2>
-        <p><strong>Table Path:</strong> {{.table_path}}</p>
-        <p><strong>Format:</strong> Delta Lake</p>
-    </div>
-
-    <div class="section">
-        <h2>Data Quality Metrics</h2>
-        <table>
-            <tr>
-                <th>Metric</th>
-                <th>Value</th>
-                <th>Status</th>
-            </tr>
-            <tr>
-                <td>Row Count</td>
-                <td>10,245</td>
-                <td class="metric-good">Good</td>
-            </tr>
-            <tr>
-                <td>Null Values</td>
-                <td>2.3%</td>
-                <td class="metric-good">Good</td>
-            </tr>
-            <tr>
-                <td>Schema Compliance</td>
-                <td>100%</td>
-                <td class="metric-good">Good</td>
-            </tr>
-            <tr>
-                <td>Data Freshness</td>
-                <td>Last updated 2 hours ago</td>
-                <td class="metric-warning">Warning</td>
-            </tr>
-        </table>
-    </div>
-
-    <div class="section">
-        <h2>Column Statistics</h2>
-        <table>
-            <tr>
-                <th>Column</th>
-                <th>Type</th>
-                <th>Min</th>
-                <th>Max</th>
-                <th>Avg</th>
-                <th>Null %</th>
-            </tr>
-            <tr>
-                <td>id</td>
-                <td>integer</td>
-                <td>1</td>
-                <td>10245</td>
-                <td>5123</td>
-                <td>0%</td>
-            </tr>
-            <tr>
-                <td>name</td>
-                <td>string</td>
-                <td>-</td>
-                <td>-</td>
-                <td>-</td>
-                <td>0.5%</td>
-            </tr>
-            <tr>
-                <td>created_at</td>
-                <td>timestamp</td>
-                <td>2023-01-01</td>
-                <td>2023-12-31</td>
-                <td>-</td>
-                <td>0%</td>
-            </tr>
-            <tr>
-                <td>value</td>
-                <td>double</td>
-                <td>0.0</td>
-                <td>999.99</td>
-                <td>452.37</td>
-                <td>2.1%</td>
-            </tr>
-        </table>
-    </div>
-
-    <div class="section">
-        <h2>Validation Results</h2>
-        <table>
-            <tr>
-                <th>Rule</th>
-                <th>Status</th>
-                <th>Details</th>
-            </tr>
-            <tr>
-                <td>No duplicate IDs</td>
-                <td class="metric-good">Passed</td>
-                <td>All IDs are unique</td>
-            </tr>
-            <tr>
-                <td>Value range check</td>
-                <td class="metric-good">Passed</td>
-                <td>All values within expected range</td>
-            </tr>
-            <tr>
-                <td>Required fields</td>
-                <td class="metric-warning">Warning</td>
-                <td>51 rows with missing optional fields</td>
-            </tr>
-            <tr>
-                <td>Date format</td>
-                <td class="metric-good">Passed</td>
-                <td>All dates in correct format</td>
-            </tr>
-        </table>
-    </div>
-
-    <div class="footer">
-        <p>Generated by Nessi CLI v0.10.3 | u00a9 2023-2025 Nessi Project</p>
+    <div class="report-container">
+        <!-- Header -->
+        <div class="report-header">
+            <h1>Data Quality Report: {{.table_path}}</h1>
+            <div class="report-meta">
+                <div class="report-meta-item">
+                    <i class="far fa-calendar"></i>
+                    <span>{{.timestamp}}</span>
+                </div>
+                <div class="report-meta-item">
+                    <i class="fas fa-sync"></i>
+                    <span>Full Scan</span>
+                </div>
+                <div class="report-meta-item">
+                    <i class="fas fa-database"></i>
+                    <span>Delta Lake</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Body -->
+        <div class="report-body">
+            <!-- Summary Cards -->
+            <div class="report-summary">
+                <div class="summary-card">
+                    <div class="icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3>95%</h3>
+                    <p>Quality Score</p>
+                </div>
+                <div class="summary-card">
+                    <div class="icon">
+                        <i class="fas fa-table"></i>
+                    </div>
+                    <h3>10,245</h3>
+                    <p>Total Rows</p>
+                </div>
+                <div class="summary-card">
+                    <div class="icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h3>2.3%</h3>
+                    <p>Null Values</p>
+                </div>
+                <div class="summary-card">
+                    <div class="icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h3>2h</h3>
+                    <p>Since Last Update</p>
+                </div>
+            </div>
+            
+            <!-- Quality Score Section -->
+            <div class="section-header">
+                <i class="fas fa-chart-pie"></i>
+                <span>Data Quality Score</span>
+            </div>
+            <div class="data-quality-score">
+                <div class="score-circle" style="background: conic-gradient(var(--primary-color) 0% 95%, #e6edf5 95% 100%);">
+                    <div class="score-value">95%</div>
+                </div>
+                <div>
+                    <p>Your data quality score is excellent. Here's a breakdown of the components:</p>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>Completeness</span>
+                            <span>98%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 98%"></div>
+                        </div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>Consistency</span>
+                            <span>95%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 95%"></div>
+                        </div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>Freshness</span>
+                            <span>92%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 92%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Anomalies Section -->
+            <div class="section-header">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Detected Anomalies</span>
+            </div>
+            <div class="anomalies-grid">
+                <div class="anomaly-card">
+                    <h4><i class="fas fa-exclamation-circle"></i> Data Freshness Warning</h4>
+                    <p>Last update was 2 hours ago, which exceeds the recommended 1-hour threshold.</p>
+                    <span class="status status-warning">Warning</span>
+                </div>
+                <div class="anomaly-card">
+                    <h4><i class="fas fa-exclamation-circle"></i> Null Values in 'name' Column</h4>
+                    <p>0.5% of values in the 'name' column are null.</p>
+                    <span class="status status-success">Low Impact</span>
+                </div>
+                <div class="anomaly-card">
+                    <h4><i class="fas fa-exclamation-circle"></i> Outliers in 'value' Column</h4>
+                    <p>3 outliers detected in the 'value' column.</p>
+                    <span class="status status-warning">Warning</span>
+                </div>
+            </div>
+            
+            <!-- Column Statistics Section -->
+            <div class="section-header">
+                <i class="fas fa-table"></i>
+                <span>Column Statistics</span>
+            </div>
+            <div class="schema-changes">
+                <table class="schema-table">
+                    <tr>
+                        <th>Column</th>
+                        <th>Type</th>
+                        <th>Min</th>
+                        <th>Max</th>
+                        <th>Avg</th>
+                        <th>Null %</th>
+                    </tr>
+                    <tr>
+                        <td>id</td>
+                        <td>integer</td>
+                        <td>1</td>
+                        <td>10245</td>
+                        <td>5123</td>
+                        <td>0%</td>
+                    </tr>
+                    <tr>
+                        <td>name</td>
+                        <td>string</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>0.5%</td>
+                    </tr>
+                    <tr>
+                        <td>created_at</td>
+                        <td>timestamp</td>
+                        <td>2023-01-01</td>
+                        <td>2023-12-31</td>
+                        <td>-</td>
+                        <td>0%</td>
+                    </tr>
+                    <tr>
+                        <td>value</td>
+                        <td>double</td>
+                        <td>0.0</td>
+                        <td>999.99</td>
+                        <td>452.37</td>
+                        <td>2.1%</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <!-- Schema Changes Section -->
+            <div class="section-header">
+                <i class="fas fa-code-branch"></i>
+                <span>Validation Results</span>
+            </div>
+            <div class="schema-changes">
+                <table class="schema-table">
+                    <tr>
+                        <th>Rule</th>
+                        <th>Status</th>
+                        <th>Details</th>
+                    </tr>
+                    <tr>
+                        <td>No duplicate IDs</td>
+                        <td><span class="status status-success">Passed</span></td>
+                        <td>All IDs are unique</td>
+                    </tr>
+                    <tr>
+                        <td>Value range check</td>
+                        <td><span class="status status-success">Passed</span></td>
+                        <td>All values within expected range</td>
+                    </tr>
+                    <tr>
+                        <td>Required fields</td>
+                        <td><span class="status status-warning">Warning</span></td>
+                        <td>51 rows with missing optional fields</td>
+                    </tr>
+                    <tr>
+                        <td>Date format</td>
+                        <td><span class="status status-success">Passed</span></td>
+                        <td>All dates in correct format</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <!-- Distribution Chart Section -->
+            <div class="section-header">
+                <i class="fas fa-chart-bar"></i>
+                <span>Data Distribution</span>
+            </div>
+            <div class="distribution-chart">
+                <h3>Value Distribution</h3>
+                <p>Distribution of values across the dataset:</p>
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span>0-200</span>
+                        <span>25%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 25%"></div>
+                    </div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span>201-400</span>
+                        <span>30%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 30%"></div>
+                    </div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span>401-600</span>
+                        <span>20%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 20%"></div>
+                    </div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span>601-800</span>
+                        <span>15%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 15%"></div>
+                    </div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span>801-1000</span>
+                        <span>10%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 10%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="report-footer">
+            <div>Generated by <a href="https://nessi.dev">Nessi.dev</a> v0.10.3</div>
+            <div>Delta Lake Transaction ID: 7f8e9d2a-bc3d-4f56-8e1a-2b3c4d5e6f7g</div>
+        </div>
     </div>
 </body>
 </html>

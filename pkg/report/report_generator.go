@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/nessi-dev/nessi/pkg/api/types/report"
+	"gopkg.in/yaml.v3"
 )
 
 // ReportFormat represents the format of a report
@@ -25,10 +26,25 @@ const (
 	CSV  ReportFormat = "csv"
 )
 
+// ReportConfig holds the configuration for report generation
+type ReportConfig struct {
+	Styles struct {
+		CSSPath    string `yaml:"css_path"`
+		FontFamily string `yaml:"font_family"`
+	} `yaml:"styles"`
+	Branding struct {
+		PrimaryColor string `yaml:"primary_color"`
+		LogoPath     string `yaml:"logo_path"`
+	} `yaml:"branding"`
+	Sections  []string          `yaml:"sections"`
+	Templates map[string]string `yaml:"templates"`
+}
+
 // ReportGenerator generates reports in various formats
 type ReportGenerator struct {
 	templatesDir string
 	outputDir    string
+	config       *ReportConfig
 }
 
 // NewReportGenerator creates a new report generator
@@ -38,10 +54,57 @@ func NewReportGenerator(templatesDir, outputDir string) (*ReportGenerator, error
 		return nil, fmt.Errorf("failed to create output directory: %w", err)
 	}
 
+	// Load configuration if available
+	config, err := loadReportConfig()
+	if err != nil {
+		// Use default config if config file not found
+		config = &ReportConfig{}
+		config.Styles.CSSPath = "../../assets/styles/nessi-report.css"
+		config.Styles.FontFamily = "Inter, -apple-system, sans-serif"
+		config.Branding.PrimaryColor = "#1976d2"
+		config.Sections = []string{"summary", "quality_score", "anomalies", "distribution", "schema_changes"}
+		config.Templates = map[string]string{
+			"quality":              "quality_report.html",
+			"schema":               "schema_report.html",
+			"freshness":            "freshness_report.html",
+			"performance":          "performance_report.html",
+			"enhanced-quality":     "enhanced-quality-report.html",
+			"enhanced-schema":      "enhanced-schema-report.html",
+			"enhanced-freshness":   "enhanced-freshness-report.html",
+			"enhanced-performance": "enhanced-performance-report.html",
+		}
+	}
+
 	return &ReportGenerator{
 		templatesDir: templatesDir,
 		outputDir:    outputDir,
+		config:       config,
 	}, nil
+}
+
+// loadReportConfig loads the report configuration from the YAML file
+func loadReportConfig() (*ReportConfig, error) {
+	configPath := "pkg/report/config.yaml"
+	// Check if config file exists
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		return nil, fmt.Errorf("config file not found: %w", err)
+	}
+
+	// Read config file
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read config file: %w", err)
+	}
+
+	// Parse config
+	var config struct {
+		Reports ReportConfig `yaml:"reports"`
+	}
+	if err := yaml.Unmarshal(data, &config); err != nil {
+		return nil, fmt.Errorf("failed to parse config file: %w", err)
+	}
+
+	return &config.Reports, nil
 }
 
 // GenerateReport generates a report in the specified format
@@ -73,19 +136,146 @@ func (g *ReportGenerator) generateHTMLReport(data interface{}, reportType string
 		return "", fmt.Errorf("failed to create output directory: %w", err)
 	}
 
-	// Find the template file
-	templateFile := filepath.Join(g.templatesDir, fmt.Sprintf("%s.html", reportType))
-	if _, err := os.Stat(templateFile); os.IsNotExist(err) {
-		// Use default template if specific template doesn't exist
-		templateFile = filepath.Join(g.templatesDir, "default.html")
-		if _, err := os.Stat(templateFile); os.IsNotExist(err) {
-			// Create a basic default template if it doesn't exist
-			return g.createDefaultHTMLReport(data, outputPath)
+	// Check if we should use enhanced templates
+	enhancedTemplate := false
+	if strings.HasPrefix(reportType, "enhanced-") {
+		enhancedTemplate = true
+		// Remove the enhanced- prefix for template lookup
+		reportType = strings.TrimPrefix(reportType, "enhanced-")
+	}
+
+	// Check if we have a template for this report type
+	templateFile := ""
+	if g.config != nil && g.config.Templates != nil {
+		if enhancedTemplate {
+			// Look for enhanced template first
+			if tmpl, ok := g.config.Templates["enhanced-"+reportType]; ok {
+				templateFile = tmpl
+			}
+		} else {
+			// Look for regular template
+			if tmpl, ok := g.config.Templates[reportType]; ok {
+				templateFile = tmpl
+			}
+		}
+	}
+
+	// If enhanced template is requested but not found, try to use a fixed template
+	if enhancedTemplate && templateFile == "" {
+		fixedTemplatePath := filepath.Join("reports", fmt.Sprintf("direct-%s-report-fixed.html", reportType))
+		if _, err := os.Stat(fixedTemplatePath); err == nil {
+			templateFile = filepath.Base(fixedTemplatePath)
+		}
+	}
+
+	// If no template is specified, create a default HTML report
+	if templateFile == "" {
+		return g.createDefaultHTMLReport(data, reportType, outputPath)
+	}
+
+	// Check if template exists
+	templateFilePath := filepath.Join(g.templatesDir, templateFile)
+	if _, err := os.Stat(templateFilePath); os.IsNotExist(err) {
+		// Try to find the template in the reports directory
+		templateFilePath = filepath.Join("reports", templateFile)
+		if _, err := os.Stat(templateFilePath); os.IsNotExist(err) {
+			// If still not found, create a default HTML report
+			return g.createDefaultHTMLReport(data, reportType, outputPath)
+		}
+	}
+
+	// Prepare template data with additional fields for enhanced reports
+	templateData := map[string]interface{}{
+		"Data":       data,
+		"ReportType": reportType,
+		"Timestamp":  time.Now().Format("2006-01-02 15:04:05"),
+	}
+
+	// Add specific data for different report types
+	switch d := data.(type) {
+	case *report.ScanResult:
+		templateData["TableName"] = filepath.Base(d.TablePath)
+		templateData["ScanID"] = d.ScanID
+		templateData["RowCount"] = d.RowCount
+		templateData["ColumnCount"] = d.ColumnCount
+		templateData["Duration"] = d.Duration.String()
+
+		// Calculate overall quality score if quality metrics exist
+		if d.QualityMetrics != nil {
+			var totalScore float64
+			var metricCount int
+
+			// Calculate average completeness
+			if len(d.QualityMetrics.Completeness) > 0 {
+				var completenessSum float64
+				for _, v := range d.QualityMetrics.Completeness {
+					completenessSum += v
+				}
+				totalScore += completenessSum / float64(len(d.QualityMetrics.Completeness))
+				metricCount++
+			}
+
+			// Calculate average accuracy
+			if len(d.QualityMetrics.Accuracy) > 0 {
+				var accuracySum float64
+				for _, v := range d.QualityMetrics.Accuracy {
+					accuracySum += v
+				}
+				totalScore += accuracySum / float64(len(d.QualityMetrics.Accuracy))
+				metricCount++
+			}
+
+			// Calculate average consistency
+			if len(d.QualityMetrics.Consistency) > 0 {
+				var consistencySum float64
+				for _, v := range d.QualityMetrics.Consistency {
+					consistencySum += v
+				}
+				totalScore += consistencySum / float64(len(d.QualityMetrics.Consistency))
+				metricCount++
+			}
+
+			// Calculate average uniqueness
+			if len(d.QualityMetrics.Uniqueness) > 0 {
+				var uniquenessSum float64
+				for _, v := range d.QualityMetrics.Uniqueness {
+					uniquenessSum += v
+				}
+				totalScore += uniquenessSum / float64(len(d.QualityMetrics.Uniqueness))
+				metricCount++
+			}
+
+			// Calculate average timeliness
+			if len(d.QualityMetrics.Timeliness) > 0 {
+				var timelinessSum float64
+				for _, v := range d.QualityMetrics.Timeliness {
+					timelinessSum += v
+				}
+				totalScore += timelinessSum / float64(len(d.QualityMetrics.Timeliness))
+				metricCount++
+			}
+
+			// Calculate overall score
+			if metricCount > 0 {
+				overallScore := (totalScore / float64(metricCount)) * 100
+				templateData["QualityScore"] = fmt.Sprintf("%.0f%%", overallScore)
+				templateData["QualityScoreValue"] = int(overallScore)
+			}
+		}
+
+		// Add performance metrics if they exist
+		if d.PerformanceMetrics != nil {
+			templateData["ScanDurationMs"] = d.PerformanceMetrics.ScanDurationMs
+			templateData["MemoryUsageMb"] = d.PerformanceMetrics.MemoryUsageMb
+			templateData["CpuUsagePercent"] = d.PerformanceMetrics.CpuUsagePercent
+			templateData["IoOperations"] = d.PerformanceMetrics.IoOperations
+			templateData["RowsProcessed"] = d.PerformanceMetrics.RowsProcessed
+			templateData["BytesProcessed"] = d.PerformanceMetrics.BytesProcessed
 		}
 	}
 
 	// Parse the template
-	tmpl, err := template.ParseFiles(templateFile)
+	tmpl, err := template.ParseFiles(templateFilePath)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse template: %w", err)
 	}
@@ -98,7 +288,7 @@ func (g *ReportGenerator) generateHTMLReport(data interface{}, reportType string
 	defer file.Close()
 
 	// Execute the template
-	if err := tmpl.Execute(file, data); err != nil {
+	if err := tmpl.Execute(file, templateData); err != nil {
 		return "", fmt.Errorf("failed to execute template: %w", err)
 	}
 
@@ -106,25 +296,103 @@ func (g *ReportGenerator) generateHTMLReport(data interface{}, reportType string
 }
 
 // createDefaultHTMLReport creates a basic HTML report when no template is available
-func (g *ReportGenerator) createDefaultHTMLReport(data interface{}, outputPath string) (string, error) {
-	// Create a basic HTML template
+func (g *ReportGenerator) createDefaultHTMLReport(data interface{}, reportType string, outputPath string) (string, error) {
+	// Create a basic HTML template with the new styling
 	basicTemplate := `<!DOCTYPE html>
 <html>
 <head>
     <title>Nessi Report</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        h1 { color: #333; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
+        :root {
+          --primary-color: #2e7d32; /* Elegant dark green */
+          --secondary-color: #4caf50; /* Medium green */
+          --accent-color: #81c784; /* Light green */
+          --dark-color: #1a2e1a; /* Very dark green */
+          --light-color: #f5f8f5; /* Off-white with green tint */
+          --gray-color: #6c7b6c; /* Green-tinted gray */
+          --light-gray: #e8ede8; /* Very light green-gray */
+          --success-color: #388e3c; /* Success green */
+          --warning-color: #f9a825; /* Amber warning */
+          --danger-color: #c62828; /* Dark red for danger */
+          --border-radius: 6px;
+          --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: var(--dark-color);
+        }
+        
+        .report-container {
+          max-width: 1200px;
+          margin: 0 auto;
+          background-color: white;
+          border-radius: 12px;
+          box-shadow: var(--box-shadow);
+          overflow: hidden;
+        }
+        
+        .report-header {
+          background-color: var(--primary-color);
+          color: white;
+          padding: 25px 30px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        
+        .report-header h1 {
+          font-size: 24px;
+          margin: 0;
+        }
+        
+        .report-body {
+          padding: 30px;
+        }
+        
+        .report-footer {
+          background-color: var(--light-color);
+          padding: 20px 30px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 14px;
+          color: var(--gray-color);
+        }
+        
+        .report-footer a {
+          color: var(--primary-color);
+          font-weight: 500;
+          text-decoration: none;
+        }
+        
+        pre {
+          background-color: var(--light-color);
+          padding: 15px;
+          border-radius: var(--border-radius);
+          overflow: auto;
+          font-size: 14px;
+          line-height: 1.5;
+        }
     </style>
 </head>
 <body>
-    <h1>Nessi Report</h1>
-    <p>Generated on {{.Timestamp}}</p>
-    <pre>{{.Data}}</pre>
+    <div class="report-container">
+        <div class="report-header">
+            <h1>Nessi Report</h1>
+            <div>{{.Timestamp}}</div>
+        </div>
+        <div class="report-body">
+            <pre>{{.Data}}</pre>
+        </div>
+        <div class="report-footer">
+            <div>Generated by <a href="https://nessi.dev">Nessi.dev</a> v0.10.3</div>
+            <div>{{.ReportType}} Report</div>
+        </div>
+    </div>
 </body>
 </html>`
 
@@ -149,8 +417,9 @@ func (g *ReportGenerator) createDefaultHTMLReport(data interface{}, outputPath s
 
 	// Prepare template data
 	templateData := map[string]interface{}{
-		"Timestamp": time.Now().Format(time.RFC3339),
-		"Data":      string(dataJSON),
+		"Timestamp":  time.Now().Format(time.RFC3339),
+		"Data":       string(dataJSON),
+		"ReportType": strings.Title(reportType),
 	}
 
 	// Execute the template

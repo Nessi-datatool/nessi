@@ -8,11 +8,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
-	"github.com/apache/arrow/go/v15/arrow"
-	"github.com/apache/arrow/go/v15/arrow/ipc"
-	"github.com/nessi-dev/nessi/internal/report"
+	// "github.com/apache/arrow/go/v15/arrow"
+	// "github.com/apache/arrow/go/v15/arrow/ipc"
+	// "github.com/nessi-dev/nessi/internal/report"
 	"github.com/nessi-dev/nessi/pkg/datalake"
 	"github.com/nessi-dev/nessi/pkg/quality/engine"
 	"github.com/nessi-dev/nessi/pkg/security"
@@ -196,19 +195,22 @@ It provides features for validation, profiling, monitoring, and reporting.`,
 
 // Execute runs the CLI
 func Execute() error {
-	cfg := pkg.GetTelemetryConfig()
-	telemetryManager := pkg.NewTelemetryManager(cfg)
-	CLI.RootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		// Send telemetry event for every command
-		telemetryManager.SendEvent(pkg.TelemetryEvent{
-			Timestamp: time.Now(),
-			Command:   cmd.Name(),
-			Args:      args,
-			Success:   true, // Set to false on error in future
-			Error:     "",
-			Version:   "v0.1.0", // TODO: set dynamically
-		})
-	}
+	// Skip telemetry for now to avoid nil pointer dereference
+	/*
+		cfg := pkg.GetTelemetryConfig()
+		telemetryManager := pkg.NewTelemetryManager(cfg)
+		CLI.RootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+			// Send telemetry event for every command
+			telemetryManager.SendEvent(pkg.TelemetryEvent{
+				Timestamp: time.Now(),
+				Command:   cmd.Name(),
+				Args:      args,
+				Success:   true, // Set to false on error in future
+				Error:     "",
+				Version:   "v0.1.0", // TODO: set dynamically
+			})
+		}
+	*/
 	return CLI.RootCmd.Execute()
 }
 
