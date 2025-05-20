@@ -39,8 +39,8 @@ require (
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/zap v1.27.0
-	golang.org/x/crypto v0.24.0
-	golang.org/x/term v0.21.0
+	golang.org/x/crypto v0.38.0
+	golang.org/x/term v0.32.0
 	golang.org/x/time v0.11.0
 	google.golang.org/api v0.155.0
 	google.golang.org/protobuf v1.36.6
@@ -159,11 +159,11 @@ require (
 	golang.org/x/arch v0.8.0 // indirect
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/mod v0.22.0 // indirect
-	golang.org/x/net v0.26.0 // indirect
+	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sync v0.14.0 // indirect
-	golang.org/x/sys v0.21.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/text v0.25.0 // indirect
 	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/genproto v0.0.0-20231212172506-995d672761c0 // indirect
@@ -178,4 +178,4 @@ replace github.com/nessi-dev/nessi-dev/pkg/logger => ./pkg/logger
 // Use older versions of packages that are compatible with Go 1.20
 replace github.com/klauspost/compress => github.com/klauspost/compress v1.16.7
 
-replace golang.org/x/sys => golang.org/x/sys v0.15.0
+replace golang.org/x/sys => golang.org/x/sys v0.33.0
