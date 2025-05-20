@@ -1,0 +1,59 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  pr-checks:
+    name: PR Checks
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Check PR title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types:
+            - feat
+            - fix
+            - docs
+            - style
+            - refactor
+            - perf
+            - test
+            - build
+            - ci
+            - chore
+            - revert
+            - security
+          requireScope: false
+      
+      - name: Check for PR description
+        run: |
+          PR_BODY="$(jq -r '.pull_request.body' "${GITHUB_EVENT_PATH}")"
+          if [[ -z "$PR_BODY" || "$PR_BODY" == "null" ]]; then
+            echo "Error: PR description is empty. Please add a meaningful description."
+            exit 1
+          fi
+          
+          # Check minimum length (at least 30 characters)
+          if [[ ${#PR_BODY} -lt 30 ]]; then
+            echo "Error: PR description is too short. Please provide a more detailed description."
+            exit 1
+          fi
+      
+      - name: Check for linked issues
+        run: |
+          PR_BODY="$(jq -r '.pull_request.body' "${GITHUB_EVENT_PATH}")"
+          if ! echo "$PR_BODY" | grep -E '(close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved) #[0-9]+'; then
+            echo "Warning: No linked issues found in PR description. Consider linking related issues."
+            # Not failing the check, just a warning
+          fi
