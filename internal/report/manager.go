@@ -1,8 +1,12 @@
 package report
 
 import (
+	"bytes"
 	"context"
+	"encoding/csv"
+	"encoding/json"
 	"fmt"
+	"html/template"
 	"os"
 	"path/filepath"
 	"time"
@@ -159,42 +163,125 @@ func (m *ReportManager) generatePDF(template ReportTemplate, parameters map[stri
 
 // generateCSV generates a CSV report
 func (m *ReportManager) generateCSV(template ReportTemplate, parameters map[string]interface{}) (interface{}, error) {
-	// TODO: Implement CSV generation
-	// This would involve creating a CSV file with headers and data
-	return nil, fmt.Errorf("CSV generation not implemented")
+	// Check if data parameter exists and is a slice or map
+	data, ok := parameters["data"]
+	if !ok {
+		return nil, fmt.Errorf("missing data parameter for CSV generation")
+	}
+
+	// Create a CSV buffer
+	var buf bytes.Buffer
+	writer := csv.NewWriter(&buf)
+
+	// Handle different data types
+	switch d := data.(type) {
+	case [][]string:
+		// Data is already in CSV format
+		for _, row := range d {
+			if err := writer.Write(row); err != nil {
+				return nil, fmt.Errorf("failed to write CSV row: %w", err)
+			}
+		}
+	case []map[string]interface{}:
+		// Data is a slice of maps, extract headers from first item
+		if len(d) == 0 {
+			return nil, fmt.Errorf("empty data for CSV generation")
+		}
+
+		// Extract headers from first map
+		headers := make([]string, 0, len(d[0]))
+		for k := range d[0] {
+			headers = append(headers, k)
+		}
+
+		// Write headers
+		if err := writer.Write(headers); err != nil {
+			return nil, fmt.Errorf("failed to write CSV headers: %w", err)
+		}
+
+		// Write data rows
+		for _, item := range d {
+			row := make([]string, len(headers))
+			for i, header := range headers {
+				val, ok := item[header]
+				if !ok {
+					row[i] = ""
+				} else {
+					row[i] = fmt.Sprintf("%v", val)
+				}
+			}
+			if err := writer.Write(row); err != nil {
+				return nil, fmt.Errorf("failed to write CSV row: %w", err)
+			}
+		}
+	default:
+		return nil, fmt.Errorf("unsupported data type for CSV generation")
+	}
+
+	writer.Flush()
+	if err := writer.Error(); err != nil {
+		return nil, fmt.Errorf("failed to flush CSV writer: %w", err)
+	}
+
+	return buf.String(), nil
 }
 
 // generateHTML generates an HTML report
 func (m *ReportManager) generateHTML(template ReportTemplate, parameters map[string]interface{}) (interface{}, error) {
-	// TODO: Implement HTML generation
-	// This would involve creating an HTML file with proper formatting and styling
-	return nil, fmt.Errorf("HTML generation not implemented")
+	// Create a template from the template string
+	tmpl, err := template.New("report").Parse(template.Template)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse template: %w", err)
+	}
+
+	// Execute the template with the parameters
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, parameters); err != nil {
+		return nil, fmt.Errorf("failed to execute template: %w", err)
+	}
+
+	return buf.String(), nil
 }
 
 // generateJSON generates a JSON report
 func (m *ReportManager) generateJSON(template ReportTemplate, parameters map[string]interface{}) (interface{}, error) {
-	// TODO: Implement JSON generation
-	// This would involve creating a JSON file with the report data
-	return nil, fmt.Errorf("JSON generation not implemented")
+	// For JSON reports, we simply return the parameters as JSON
+	jsonData, err := json.MarshalIndent(parameters, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal JSON: %w", err)
+	}
+
+	return string(jsonData), nil
 }
 
 // SaveReport saves a report to a file
 func (m *ReportManager) SaveReport(report *Report) error {
+	// Create output file
 	filename := filepath.Join(m.outputDir, fmt.Sprintf("%s.%s", report.ID, report.Format))
+	file, err := os.Create(filename)
+	if err != nil {
+		return fmt.Errorf("failed to create output file: %w", err)
+	}
+	defer file.Close()
 
+	// Write report content to file
 	switch report.Format {
 	case PDF:
+		// Handle PDF content
 		if pdf, ok := report.Content.(*gofpdf.Fpdf); ok {
 			return pdf.OutputFileAndClose(filename)
 		}
+		return fmt.Errorf("invalid content type for PDF report")
 	case CSV, HTML, JSON:
-		// TODO: Implement file saving for other formats
-		return fmt.Errorf("file saving not implemented for format: %s", report.Format)
+		// Write string content to file
+		if content, ok := report.Content.(string); ok {
+			_, err := file.WriteString(content)
+			return err
+		}
+		return fmt.Errorf("invalid content type for %s report", report.Format)
 	default:
 		return fmt.Errorf("unsupported report format: %s", report.Format)
 	}
-
-	return nil
 }
 
 // GetReport returns a report by ID
@@ -324,18 +411,85 @@ func (m *ReportManager) generateTablePDF(template ReportTemplate, table [][]stri
 
 // generateTableCSV generates a CSV report from a table
 func (m *ReportManager) generateTableCSV(template ReportTemplate, table [][]string) (interface{}, error) {
-	// TODO: Implement CSV generation
-	return nil, fmt.Errorf("CSV generation not implemented")
+	// Create a CSV buffer
+	var buf bytes.Buffer
+	writer := csv.NewWriter(&buf)
+
+	// Write headers
+	if err := writer.Write(table[0]); err != nil {
+		return nil, fmt.Errorf("failed to write CSV headers: %w", err)
+	}
+
+	// Write data rows
+	for _, row := range table[1:] {
+		if err := writer.Write(row); err != nil {
+			return nil, fmt.Errorf("failed to write CSV row: %w", err)
+		}
+	}
+
+	writer.Flush()
+	if err := writer.Error(); err != nil {
+		return nil, fmt.Errorf("failed to flush CSV writer: %w", err)
+	}
+
+	return buf.String(), nil
 }
 
 // generateTableHTML generates an HTML report from a table
 func (m *ReportManager) generateTableHTML(template ReportTemplate, table [][]string) (interface{}, error) {
-	// TODO: Implement HTML generation
-	return nil, fmt.Errorf("HTML generation not implemented")
+	// Create an HTML buffer
+	var buf bytes.Buffer
+
+	// Write HTML header
+	buf.WriteString("<html><body><table border='1'>")
+
+	// Write headers
+	buf.WriteString("<tr>")
+	for _, header := range table[0] {
+		buf.WriteString(fmt.Sprintf("<th>%s</th>", header))
+	}
+	buf.WriteString("</tr>")
+
+	// Write data rows
+	for _, row := range table[1:] {
+		buf.WriteString("<tr>")
+		for _, cell := range row {
+			buf.WriteString(fmt.Sprintf("<td>%s</td>", cell))
+		}
+		buf.WriteString("</tr>")
+	}
+
+	// Write HTML footer
+	buf.WriteString("</table></body></html>")
+
+	return buf.String(), nil
 }
 
 // generateTableJSON generates a JSON report from a table
 func (m *ReportManager) generateTableJSON(template ReportTemplate, table [][]string) (interface{}, error) {
-	// TODO: Implement JSON generation
-	return nil, fmt.Errorf("JSON generation not implemented")
+	// Create a JSON buffer
+	var buf bytes.Buffer
+
+	// Write JSON header
+	buf.WriteString("[")
+
+	// Write data rows
+	for i, row := range table[1:] {
+		if i > 0 {
+			buf.WriteString(",")
+		}
+		buf.WriteString("{")
+		for j, cell := range row {
+			buf.WriteString(fmt.Sprintf("\"%s\":\"%s\"", table[0][j], cell))
+			if j < len(row)-1 {
+				buf.WriteString(",")
+			}
+		}
+		buf.WriteString("}")
+	}
+
+	// Write JSON footer
+	buf.WriteString("]")
+
+	return buf.String(), nil
 }
