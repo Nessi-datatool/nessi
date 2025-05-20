@@ -1,0 +1,64 @@
+name: Pre-CI Go.mod Fix
+
+on:
+  push:
+    branches: [ '*' ]
+  pull_request:
+    branches: [ '*' ]
+
+jobs:
+  fix-go-mod:
+    name: Fix Go.mod Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.20'
+          cache: false
+      
+      - name: Fix go.mod file directly
+        run: |
+          echo "Fixing go.mod file format..."
+          
+          # Display original go.mod content
+          echo "Original go.mod content:"
+          cat go.mod | head -10
+          
+          # Create a new go.mod file with the correct format
+          awk 'BEGIN {fixed=0} 
+               /^go 1.23.0/ {print "go 1.20"; fixed=1; next} 
+               /^toolchain go1.24.3/ {fixed=1; next} 
+               {print}' go.mod > go.mod.new
+          
+          # Replace the original file
+          mv go.mod.new go.mod
+          
+          # Format the go.mod file
+          go mod edit -fmt
+          
+          # Display fixed go.mod content
+          echo "\nFixed go.mod content:"
+          cat go.mod | head -10
+          
+          # Run go mod tidy to ensure dependencies are properly updated
+          go mod tidy
+      
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add go.mod go.sum
+          git diff --staged --quiet || git commit -m "Fix go.mod: Update Go version to 1.20 and remove toolchain directive"
+      
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}

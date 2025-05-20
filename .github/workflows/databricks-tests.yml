@@ -17,7 +17,20 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: '1.20'
-          cache: true
+          cache: false
+      
+      - name: Fix go.mod file format
+        run: |
+          # Fix the invalid Go version format
+          awk 'BEGIN {fixed=0} 
+               /^go 1.23.0/ {print "go 1.20"; fixed=1; next} 
+               /^toolchain go1.24.3/ {fixed=1; next} 
+               {print}' go.mod > go.mod.new
+          mv go.mod.new go.mod
+          # Format the go.mod file
+          go mod edit -fmt
+          # Run go mod tidy
+          go mod tidy
       
       - name: Fix go.mod file
         run: |
