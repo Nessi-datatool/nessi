@@ -7,8 +7,8 @@ toolchain go1.24.3
 require (
 	cloud.google.com/go/datacatalog v1.19.2
 	cloud.google.com/go/storage v1.36.0
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.9.1
-	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.6.0-beta.2
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.11.1
+	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.6.0
 	github.com/apache/arrow/go/v12 v12.0.1
 	github.com/apache/arrow/go/v14 v14.0.2
 	github.com/apache/arrow/go/v15 v15.0.2
@@ -39,8 +39,8 @@ require (
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/zap v1.27.0
-	golang.org/x/crypto v0.35.0
-	golang.org/x/term v0.29.0
+	golang.org/x/crypto v0.38.0
+	golang.org/x/term v0.32.0
 	golang.org/x/time v0.11.0
 	google.golang.org/api v0.155.0
 	google.golang.org/protobuf v1.36.6
@@ -52,7 +52,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.4.0 // indirect
 	cloud.google.com/go/iam v1.1.5 // indirect
 	cloud.google.com/go/longrunning v0.5.4 // indirect
-	github.com/Azure/azure-sdk-for-go/sdk/internal v1.5.1 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/internal v1.8.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.4.2 // indirect
 	github.com/JohnCGriffin/overflow v0.0.0-20211019200055-46fa312c352c // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
@@ -159,11 +159,11 @@ require (
 	golang.org/x/arch v0.8.0 // indirect
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/mod v0.22.0 // indirect
-	golang.org/x/net v0.25.0 // indirect
+	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sync v0.14.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/text v0.25.0 // indirect
 	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/genproto v0.0.0-20231212172506-995d672761c0 // indirect
