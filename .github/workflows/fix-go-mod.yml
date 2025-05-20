@@ -1,0 +1,56 @@
+name: Fix Go.mod Format
+
+on:
+  push:
+    branches: [ main, fix-databricks-tests, fix-go-mod-version, security-update-crypto ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  fix-go-mod:
+    name: Fix Go.mod Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+          cache: false
+      
+      - name: Fix go.mod file
+        run: |
+          echo "Fixing go.mod file format..."
+          
+          # Display original go.mod content
+          echo "Original go.mod content:"
+          cat go.mod | head -10
+          
+          # Fix the invalid Go version format
+          sed -i 's/go 1.23.0/go 1.20/' go.mod
+          
+          # Remove the toolchain directive
+          sed -i '/toolchain go1.24.3/d' go.mod
+          
+          # Display fixed go.mod content
+          echo "\nFixed go.mod content:"
+          cat go.mod | head -10
+          
+          # Run go mod tidy to ensure dependencies are properly updated
+          go mod tidy
+      
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add go.mod go.sum
+          git commit -m "Fix go.mod: Update Go version to 1.20 and remove toolchain directive" || echo "No changes to commit"
+      
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
