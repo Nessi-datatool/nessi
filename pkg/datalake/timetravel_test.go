@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestDeltaTimeTravel tests the time travel functionality with a stub implementation
-func TestDeltaTimeTravel(t *testing.T) {
+// TestDeltaTimeTravelUnit tests the time travel functionality with a stub implementation
+func TestDeltaTimeTravelUnit(t *testing.T) {
 	// Create a temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "timetravel_test")
 	require.NoError(t, err)

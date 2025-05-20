@@ -1,5 +1,17 @@
 # Nessi User Guide
 
+## Navigation
+
+- [Documentation Home](README.md)
+- [Installation & Quickstart](../QUICKSTART.md)
+- [Configuration](CONFIGURATION.md)
+- [CLI Reference](cli/README.md)
+- [Reporting](REPORTING.md)
+- [Quality Rules](QUALITY_RULES.md)
+- [Integrations](integration_guide.md)
+- [Developer Guide](developer_experience.md)
+- [FAQ](faq.md)
+
 ---
 
 ## Features
@@ -94,17 +106,17 @@ Nessi provides monitoring for:
 
 Nessi includes several security features:
 
-- JWT-based authentication
-- TLS encryption
-- API key management
-- Security headers
+- File-level access controls
+- Encrypted configuration storage
+- Secure credential management
+- Audit logging
 
 ## Reporting System
 
 Nessi provides a comprehensive reporting system with multiple output formats:
 
-- **HTML Reports**: Interactive reports with quality score cards and visualizations
-- **PDF Reports**: Static reports for sharing and documentation
+- **HTML Reports**: Static reports with quality score cards and visualizations for viewing in browsers
+- **PDF Reports**: Portable reports for sharing and documentation
 - **JSON/CSV**: Machine-readable formats for integration with other tools
 
 Generate reports using the CLI:
@@ -143,8 +155,60 @@ nessi validate --table path/to/table
 nessi profile --table path/to/table
 
 # View schema as ASCII tree
-nessi schema tree --table path/to/table
+nessi schema-tree --table path/to/table
 ```
+
+### Schema Visualization
+
+The `schema-tree` command displays the schema of a Delta Lake table as an ASCII tree, making it easy to understand the structure of your data:
+
+```bash
+# View table schema as a tree
+nessi schema-tree --table path/to/table
+```
+
+Example output:
+
+```
+├── id: integer (not null)
+├── name: string
+├── email: string
+├── signup_date: timestamp
+└── profile: struct
+    ├── age: integer
+    ├── country: string
+    └── preferences: array
+        └── string
+```
+
+### Data Visualization
+
+Nessi provides comprehensive visualization commands to help you understand your data quality metrics:
+
+```bash
+# Generate a heatmap visualization of data quality metrics
+nessi visualize heatmap --table path/to/table --metric completeness
+
+# Generate a bar chart visualization of data quality metrics
+nessi visualize barchart --table path/to/table
+
+# Show all available metrics in the bar chart
+nessi visualize barchart --table path/to/table --all-metrics
+
+# Generate a scatter plot comparing two metrics
+nessi visualize scatter --table path/to/table --x-metric completeness --y-metric accuracy
+
+# Other visualization options
+nessi visualize --help
+```
+
+#### Visualization Types
+
+1. **Heatmap**: Displays data quality metrics across different dimensions (e.g., time periods and data partitions) using color coding to indicate quality levels.
+
+2. **Bar Chart**: Shows comparative metrics for different quality dimensions in an easy-to-read bar format, with color coding to highlight good, medium, and poor quality areas.
+
+3. **Scatter Plot**: Allows comparison of two different metrics to identify correlations and patterns in your data quality measurements.
 
 ## Python API
 
@@ -202,14 +266,17 @@ Nessi collects metrics for:
 
 ### Alerting
 
-Configure email alerts:
+Configure alerts via the CLI:
 
-```yaml
-alerts:
-  - name: data_quality_alert
-    condition: "quality_score < 0.9"
-    recipients: ["team@example.com"]
-    severity: critical
+```bash
+# Create an alert configuration
+nessi alerts create --name data_quality_alert --condition "quality_score < 0.9" --output email --recipients team@example.com --severity critical
+
+# List configured alerts
+nessi alerts list
+
+# Test an alert configuration
+nessi alerts test --name data_quality_alert
 ```
 
 ## Integrations

@@ -8,9 +8,34 @@ import (
 	"fmt"
 )
 
+// SSLManager manages SSL/TLS configuration
+type SSLManager struct {
+	Config SSLConfig
+}
+
 // SecurityManager manages authentication and authorization
 type SecurityManager struct {
 	AuthManager *AuthManager
+	SSLManager  *SSLManager
+}
+
+// NewSecurityManager creates a new SecurityManager
+func NewSecurityManager(config SecurityConfig) (*SecurityManager, error) {
+	// Create auth manager
+	authManager, err := NewAuthManager(config.Auth)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create auth manager: %w", err)
+	}
+
+	// Create SSL manager
+	sslManager := &SSLManager{
+		Config: config.SSL,
+	}
+
+	return &SecurityManager{
+		AuthManager: authManager,
+		SSLManager:  sslManager,
+	}, nil
 }
 
 // New creates a new SecurityManager instance that wraps AuthManager

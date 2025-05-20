@@ -9,8 +9,53 @@ import (
 	"github.com/nessi-dev/nessi/pkg/security"
 )
 
+// MonitorConfig defines configuration for a monitor
+type MonitorConfig struct {
+	Enabled       bool          `json:"enabled"`
+	Interval      time.Duration `json:"interval"`
+	MetricsPrefix string        `json:"metrics_prefix"`
+	OutputPath    string        `json:"output_path"`
+}
+
+// MonitoringConfig defines the monitoring configuration (renamed to avoid redeclaration)
+type MonitoringConfig struct {
+	Alerts struct {
+		Enabled              bool
+		Thresholds           map[string]AlertThresholdConfig
+		SilencePeriod        time.Duration
+		CooldownPeriod       time.Duration
+		CheckInterval        time.Duration
+		NotificationChannels []string `json:"notification_channels"`
+	}
+	Metrics struct {
+		Enabled bool
+		Port    int
+	}
+	Notifications struct {
+		Slack   *SlackNotificationConfig
+		Email   *EmailNotificationConfig
+		Webhook *WebhookNotificationConfig
+	}
+	Retention struct {
+		Enabled          bool          `json:"enabled"`
+		StoragePath      string        `json:"storage_path"`
+		RetentionPeriod  time.Duration `json:"retention_period"`
+		SnapshotInterval time.Duration `json:"snapshot_interval"`
+	}
+	Security struct {
+		Auth security.AuthConfig `json:"auth"`
+		SSL  security.SSLConfig  `json:"ssl"`
+	}
+}
+
+// AlertThresholdConfig defines thresholds for alerts (renamed to avoid redeclaration)
+type AlertThresholdConfig struct {
+	Warning  float64 `json:"warning"`
+	Critical float64 `json:"critical"`
+}
+
 // loadConfig loads the monitoring configuration from a file
-func loadConfig(configPath string) (*Config, error) {
+func loadConfig(configPath string) (*MonitoringConfig, error) {
 	// Check if config file exists
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		// Return default config if file doesn't exist
@@ -24,7 +69,7 @@ func loadConfig(configPath string) (*Config, error) {
 	}
 
 	// Parse config
-	var config Config
+	var config MonitoringConfig
 	if err := json.Unmarshal(data, &config); err != nil {
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
@@ -33,18 +78,18 @@ func loadConfig(configPath string) (*Config, error) {
 }
 
 // defaultConfig returns the default monitoring configuration
-func defaultConfig() *Config {
-	return &Config{
+func defaultConfig() *MonitoringConfig {
+	return &MonitoringConfig{
 		Alerts: struct {
 			Enabled              bool
-			Thresholds           map[string]AlertThreshold
+			Thresholds           map[string]AlertThresholdConfig
 			SilencePeriod        time.Duration
 			CooldownPeriod       time.Duration
 			CheckInterval        time.Duration
 			NotificationChannels []string `json:"notification_channels"`
 		}{
 			Enabled:              true,
-			Thresholds:           make(map[string]AlertThreshold),
+			Thresholds:           make(map[string]AlertThresholdConfig),
 			SilencePeriod:        time.Hour * 24,
 			CooldownPeriod:       time.Minute * 30,
 			CheckInterval:        time.Minute * 5,
@@ -98,16 +143,13 @@ func defaultConfig() *Config {
 		}{
 			Auth: security.AuthConfig{
 				Enabled:      false,
-				JWTSecret:    "change-me-in-production",
 				UsersFile:    "./data/users.json",
-				TokenExpiry:  24, // hours
-				RequireHTTPS: false,
+				InMemoryOnly: false,
 			},
 			SSL: security.SSLConfig{
-				Enabled:      false,
-				CertFile:     "./certs/server.crt",
-				KeyFile:      "./certs/server.key",
-				AutoGenerate: true,
+				Enabled:  false,
+				CertFile: "./certs/server.crt",
+				KeyFile:  "./certs/server.key",
 			},
 		},
 	}

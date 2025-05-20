@@ -88,8 +88,14 @@ nessi catalog describe --type databricks --database main.default --table custome
 # Run quality checks on a Delta Lake table
 nessi quality check --catalog databricks --database main.default --table customers
 
-# Generate a quality report
-nessi reports generate --catalog databricks --database main.default --table customers
+# Generate a quality report in HTML format
+nessi report --catalog databricks --database main.default --table customers --format html --output ./reports/quality_report.html
+
+# Generate a quality report in PDF format
+nessi report --catalog databricks --database main.default --table customers --format pdf --output ./reports/quality_report.pdf
+
+# Export quality metrics as JSON for further processing
+nessi report --catalog databricks --database main.default --table customers --format json --output ./reports/quality_metrics.json
 ```
 
 ## Limitations

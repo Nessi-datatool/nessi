@@ -37,8 +37,8 @@ func TestDiffSchemas(t *testing.T) {
 	assert.Len(t, changes, 2)
 
 	// Find type change
-	var typeChange *SchemaChange
-	var addedField *SchemaChange
+	var typeChange *SchemaFieldChange
+	var addedField *SchemaFieldChange
 
 	for i := range changes {
 		if changes[i].Type == "type_changed" && changes[i].FieldName == "value" {
@@ -61,7 +61,7 @@ func TestDiffSchemas(t *testing.T) {
 }
 
 func TestFormatSchemaChanges(t *testing.T) {
-	changes := []SchemaChange{
+	changes := []SchemaFieldChange{
 		{
 			Type:      "added",
 			FieldName: "timestamp",

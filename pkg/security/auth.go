@@ -461,6 +461,61 @@ func (am *AuthManager) Login(username, password string) (string, error) {
 	return apiKey, nil
 }
 
+// ValidateToken validates a token (API key) and returns the username
+func (am *AuthManager) ValidateToken(token string) (bool, error) {
+	// Skip authentication if disabled
+	if !am.config.Enabled {
+		return true, nil
+	}
+
+	// Check for token
+	if token == "" {
+		return false, fmt.Errorf("token is required")
+	}
+
+	// Authenticate with token
+	_, err := am.AuthenticateWithAPIKey(token)
+	if err != nil {
+		return false, fmt.Errorf("invalid token: %w", err)
+	}
+
+	return true, nil
+}
+
+// AuthMiddleware is a stub for CLI-only compatibility
+func (am *AuthManager) AuthMiddleware() interface{} {
+	// This is a stub for CLI-only compatibility
+	return nil
+}
+
+// RoleMiddleware is a stub for CLI-only compatibility
+func (am *AuthManager) RoleMiddleware(roles ...string) interface{} {
+	// This is a stub for CLI-only compatibility
+	return nil
+}
+
+// RefreshToken refreshes a token (API key)
+func (am *AuthManager) RefreshToken(token string) (string, error) {
+	// Skip authentication if disabled
+	if !am.config.Enabled {
+		return "", fmt.Errorf("authentication is disabled")
+	}
+
+	// Check for token
+	if token == "" {
+		return "", fmt.Errorf("token is required")
+	}
+
+	// Authenticate with token
+	user, err := am.AuthenticateWithAPIKey(token)
+	if err != nil {
+		return "", fmt.Errorf("invalid token: %w", err)
+	}
+
+	// Regenerate API key
+	return am.RegenerateAPIKey(user.Username)
+}
+
 // hashPassword hashes a password using bcrypt
 func hashPassword(password string) string {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)

@@ -1,12 +1,26 @@
 # Nessi Reporting Capabilities
 
+## Navigation
+
+- [Documentation Home](README.md)
+- [User Guide](USER_GUIDE.md)
+- [Installation & Quickstart](../QUICKSTART.md)
+- [Configuration](CONFIGURATION.md)
+- [CLI Reference](cli/README.md)
+- [Quality Rules](QUALITY_RULES.md)
+- [Integrations](integration_guide.md)
+- [Developer Guide](developer_experience.md)
+- [FAQ](faq.md)
+
+---
+
 Nessi provides comprehensive reporting capabilities through its flexible CLI-based report generation system. This document outlines the available report formats and how to use them.
 
 ## Supported Report Formats
 
 Nessi supports the following report formats:
 
-1. **HTML Reports**: Interactive reports that can be viewed in a web browser
+1. **HTML Reports**: Static HTML files that can be viewed in any web browser
 2. **PDF Reports**: Static reports suitable for sharing and archiving
 3. **JSON Reports**: Machine-readable reports for integration with other systems
 4. **CSV Reports**: Tabular data exports for analysis in spreadsheet applications
@@ -133,8 +147,8 @@ The CLI-based reporting system is designed for easy integration with external sy
 
 - **Automation**: Reports can be generated automatically using cron jobs or CI/CD pipelines
 - **Data Pipelines**: Include report generation as a step in your data processing pipelines
-- **Monitoring Systems**: Generate reports on a schedule and send notifications when issues are detected
-- **Documentation**: Include reports in your data documentation systems
+- **File-Based Monitoring**: Generate reports on a schedule and use file watchers to trigger notifications
+- **Documentation**: Include reports in your data documentation systems by copying the generated files
 
 ## Examples
 

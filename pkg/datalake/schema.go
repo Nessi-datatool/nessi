@@ -32,8 +32,8 @@ func NewSchemaManager(tablePath string) *SchemaManager {
 	}
 }
 
-// SchemaChange represents a change between two schema versions
-type SchemaChange struct {
+// SchemaFieldChange represents a change between two schema versions
+type SchemaFieldChange struct {
 	Type      string         // "added", "removed", "type_changed"
 	FieldName string         // Name of the field that changed
 	OldType   arrow.DataType // Old data type (nil for added fields)
@@ -192,22 +192,22 @@ func (sm *SchemaManager) GetSchemaHistory() (*SchemaHistory, error) {
 }
 
 // DiffSchemas compares two schemas and returns the differences
-func DiffSchemas(oldSchema, newSchema *arrow.Schema) []SchemaChange {
+func DiffSchemas(oldSchema, newSchema *arrow.Schema) []SchemaFieldChange {
 	logger := logging.GetLogger()
 	logger.Debug("Comparing schemas for differences")
 
 	// Handle nil schemas
 	if oldSchema == nil && newSchema == nil {
 		logger.Warn("Both schemas are nil, no differences to report")
-		return []SchemaChange{}
+		return []SchemaFieldChange{}
 	}
 
 	if oldSchema == nil {
 		// All fields in new schema are additions
 		logger.Debug("Old schema is nil, all fields in new schema are additions")
-		changes := make([]SchemaChange, 0, newSchema.NumFields())
+		changes := make([]SchemaFieldChange, 0, newSchema.NumFields())
 		for _, field := range newSchema.Fields() {
-			changes = append(changes, SchemaChange{
+			changes = append(changes, SchemaFieldChange{
 				Type:      "added",
 				FieldName: field.Name,
 				NewType:   field.Type,
@@ -219,9 +219,9 @@ func DiffSchemas(oldSchema, newSchema *arrow.Schema) []SchemaChange {
 	if newSchema == nil {
 		// All fields in old schema are removals
 		logger.Debug("New schema is nil, all fields in old schema are removals")
-		changes := make([]SchemaChange, 0, oldSchema.NumFields())
+		changes := make([]SchemaFieldChange, 0, oldSchema.NumFields())
 		for _, field := range oldSchema.Fields() {
-			changes = append(changes, SchemaChange{
+			changes = append(changes, SchemaFieldChange{
 				Type:      "removed",
 				FieldName: field.Name,
 				OldType:   field.Type,
@@ -231,7 +231,7 @@ func DiffSchemas(oldSchema, newSchema *arrow.Schema) []SchemaChange {
 	}
 
 	// Pre-allocate capacity for changes
-	changes := make([]SchemaChange, 0, max(oldSchema.NumFields(), newSchema.NumFields()))
+	changes := make([]SchemaFieldChange, 0, max(oldSchema.NumFields(), newSchema.NumFields()))
 
 	// Create maps for quick lookup
 	oldFields := make(map[string]arrow.Field, oldSchema.NumFields())
@@ -250,9 +250,9 @@ func DiffSchemas(oldSchema, newSchema *arrow.Schema) []SchemaChange {
 		if !exists {
 			// Field was removed
 			logger.Debug("Field was removed", "field", name)
-			changes = append(changes, SchemaChange{
+			changes = append(changes, SchemaFieldChange{
 				Type:      "removed",
-				FieldName: name,
+				FieldName: oldField.Name,
 				OldType:   oldField.Type,
 			})
 		} else if !arrowTypesEqual(oldField.Type, newField.Type) {
@@ -260,9 +260,9 @@ func DiffSchemas(oldSchema, newSchema *arrow.Schema) []SchemaChange {
 			logger.Debug("Field type changed", "field", name,
 				"oldType", formatArrowType(oldField.Type),
 				"newType", formatArrowType(newField.Type))
-			changes = append(changes, SchemaChange{
+			changes = append(changes, SchemaFieldChange{
 				Type:      "type_changed",
-				FieldName: name,
+				FieldName: oldField.Name,
 				OldType:   oldField.Type,
 				NewType:   newField.Type,
 			})
@@ -274,9 +274,9 @@ func DiffSchemas(oldSchema, newSchema *arrow.Schema) []SchemaChange {
 		if _, exists := oldFields[name]; !exists {
 			// Field was added
 			logger.Debug("Field was added", "field", name)
-			changes = append(changes, SchemaChange{
+			changes = append(changes, SchemaFieldChange{
 				Type:      "added",
-				FieldName: name,
+				FieldName: newField.Name,
 				NewType:   newField.Type,
 			})
 		}
@@ -327,7 +327,7 @@ func arrowTypesEqual(a, b arrow.DataType) bool {
 }
 
 // FormatSchemaChanges returns a human-readable representation of schema changes
-func FormatSchemaChanges(changes []SchemaChange) string {
+func FormatSchemaChanges(changes []SchemaFieldChange) string {
 	logger := logging.GetLogger()
 	logger.Debug("Formatting schema changes", "changeCount", len(changes))
 
@@ -341,7 +341,7 @@ func FormatSchemaChanges(changes []SchemaChange) string {
 	sb.Grow(len(changes) * 50)
 
 	// Sort changes for consistent output
-	sortedChanges := make([]SchemaChange, len(changes))
+	sortedChanges := make([]SchemaFieldChange, len(changes))
 	copy(sortedChanges, changes)
 	sort.Slice(sortedChanges, func(i, j int) bool {
 		// First sort by type: added, removed, type_changed

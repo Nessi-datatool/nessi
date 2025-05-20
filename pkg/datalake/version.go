@@ -24,13 +24,13 @@ type VersionEntry struct {
 
 // VersionComparison represents the differences between two versions
 type VersionComparison struct {
-	OlderVersion   int64          `json:"olderVersion"`
-	NewerVersion   int64          `json:"newerVersion"`
-	SchemaChanges  []SchemaChange `json:"schemaChanges"`
-	FilesAdded     int            `json:"filesAdded"`
-	FilesRemoved   int            `json:"filesRemoved"`
-	RecordsAdded   int64          `json:"recordsAdded"`
-	RecordsRemoved int64          `json:"recordsRemoved"`
+	OlderVersion   int64               `json:"olderVersion"`
+	NewerVersion   int64               `json:"newerVersion"`
+	SchemaChanges  []SchemaFieldChange `json:"schemaChanges"`
+	FilesAdded     int                 `json:"filesAdded"`
+	FilesRemoved   int                 `json:"filesRemoved"`
+	RecordsAdded   int64               `json:"recordsAdded"`
+	RecordsRemoved int64               `json:"recordsRemoved"`
 }
 
 // GetVersionHistory returns the version history of a Delta table

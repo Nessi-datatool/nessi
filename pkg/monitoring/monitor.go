@@ -18,7 +18,7 @@ type Monitor struct {
 	metricStore     *MetricStore
 	authManager     *security.AuthManager
 	certManager     *security.CertManager
-	config          *Config
+	config          *MonitoringConfig
 	metricRetention *MetricRetention
 	stopCh          chan struct{}
 	running         bool

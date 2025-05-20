@@ -40,12 +40,13 @@ Nessi is an open-source data quality and Delta Lake management tool that helps o
   - Configurable alert thresholds
   - Alert history in log files
   
-- **Reporting**
+- **Reporting & Visualization**
   - CLI-generated reports
-  - Schema tree visualization
-  - Data quality metrics
+  - Schema tree visualization with detailed type information
+  - Data quality metrics with heatmap visualization
   - Trend analysis via report comparison
   - Quality scoring and metrics
+  - Interactive CLI visualizations for data quality assessment
   - **dbt Integration**: Seamless integration with dbt for validating and profiling models directly in your dbt workflow
 
 ## Installation
@@ -106,6 +107,24 @@ nessi timetravel s3://my-bucket/my-table --version 5
 
 # View schema evolution
 nessi schema s3://my-bucket/my-table --history
+
+# Display schema as ASCII tree
+nessi schema-tree --table s3://my-bucket/my-table
+
+# Generate a heatmap visualization for data quality metrics
+nessi visualize heatmap --table s3://my-bucket/my-table --metric completeness
+
+# Generate a bar chart visualization for all metrics
+nessi visualize barchart --table s3://my-bucket/my-table --all-metrics
+
+# Generate a scatter plot comparing two metrics
+nessi visualize scatter --table s3://my-bucket/my-table --x-metric completeness --y-metric accuracy
+
+# Generate a time series visualization for a metric over time
+nessi visualize timeseries --table s3://my-bucket/my-table --metric completeness --days 30
+
+# Generate a pie chart showing distribution of data quality issues
+nessi visualize piechart --table s3://my-bucket/my-table --category issue-types
 ```
 
 ### Configuration
@@ -166,13 +185,17 @@ func main() {
 
 ## Documentation
 
-For detailed documentation, visit our [User Guide](docs/USER_GUIDE.md).
+For detailed documentation, visit our [Documentation Home](docs/README.md).
 
-Additional documentation:
-- [CLI Reference](docs/cli/README.md)
-- [Configuration Options](docs/CONFIGURATION.md)
-- [Quality Rules](docs/QUALITY_RULES.md)
-- [Report Generation](docs/report_generation.md)
+### Key Documentation Pages:
+- [User Guide](docs/USER_GUIDE.md) - Comprehensive guide to using Nessi
+- [CLI Reference](docs/cli/README.md) - Command-line interface documentation
+- [Configuration Options](docs/CONFIGURATION.md) - Configure Nessi for your environment
+- [Quality Rules](docs/QUALITY_RULES.md) - Define and manage quality rules
+- [Reporting](docs/REPORTING.md) - Generate reports in various formats
+- [Advanced Features](docs/advanced_features.md) - Delta Lake features, monitoring, and more
+- [Integrations](docs/integration_guide.md) - Cloud, Databricks, and workflow integrations
+- [FAQ](docs/faq.md) - Frequently asked questions
 
 - **Monitoring and Alerting (OSS + Optional)**
   - CLI-based metrics reporting

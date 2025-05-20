@@ -164,7 +164,10 @@ nessi schema drift --path /path/to/delta/table
 nessi delta analyze --path /path/to/delta/table
 
 # Get optimization recommendations
-nessi delta optimize-recommend --path /path/to/delta/table
+nessi delta optimize-recommend --path /path/to/delta/table --output recommendations.json
+
+# Apply recommended optimizations
+nessi delta optimize-apply --path /path/to/delta/table --recommendations recommendations.json
 ```
 
 ## Configuration

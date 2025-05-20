@@ -20,8 +20,8 @@ type LegacyMonitor struct {
 	stopCh          chan struct{}
 	collector       *prometheus.Registry
 	configPath      string
-	config          *Config
-	alertThresholds map[string]AlertThreshold
+	config          *MonitoringConfig
+	alertThresholds map[string]AlertThresholdConfig
 	silencePeriod   time.Duration
 	cooldownPeriod  time.Duration
 	slackConfig     *SlackNotificationConfig

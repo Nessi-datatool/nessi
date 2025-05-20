@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"runtime"
 	"time"
 
@@ -43,7 +41,7 @@ func runDemo() {
 	titleColor.Println("║            NESSI QUICKSTART DEMO           ║")
 	titleColor.Println("╚════════════════════════════════════════════╝")
 	fmt.Println()
-	subtitleColor.Println("This interactive demo will showcase Nessi's core features:")
+	subtitleColor.Print("This interactive demo will showcase Nessi's core features:")
 	fmt.Println("• Delta Lake table management")
 	fmt.Println("• Data quality validation")
 	fmt.Println("• Schema evolution tracking")
@@ -68,7 +66,7 @@ func runDemo() {
 	successColor.Println("✓ Demo table created at ./demo_data/users")
 	fmt.Println()
 	fmt.Println("Table schema:")
-	fmt.Println(`
+	fmt.Print(`
 ├── id: integer
 ├── name: string
 ├── email: string
@@ -190,7 +188,7 @@ func clearScreen() {
 		fmt.Print("\033[H\033[2J")
 	default:
 		// Fallback for unsupported OS
-		fmt.Println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+		fmt.Print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
 	}
 }
 

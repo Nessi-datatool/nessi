@@ -41,8 +41,81 @@ func (c *DatabricksCatalog) GetType() string {
 	return "databricks"
 }
 
+// Connect implements the DataCatalog interface
+func (c *DatabricksCatalog) Connect(ctx context.Context, config map[string]interface{}) error {
+	// Already connected via the constructor
+	return nil
+}
+
+// Disconnect implements the DataCatalog interface
+func (c *DatabricksCatalog) Disconnect(ctx context.Context) error {
+	// Nothing to disconnect in the current implementation
+	return nil
+}
+
+// Name implements the DataCatalog interface
+func (c *DatabricksCatalog) Name() string {
+	return "databricks"
+}
+
+// GetTableMetadata implements the DataCatalog interface
+func (c *DatabricksCatalog) GetTableMetadata(ctx context.Context, database, table string) (*types.TableMetadata, error) {
+	details, err := c.GetTableDetails(ctx, database, table)
+	if err != nil {
+		return nil, err
+	}
+	return details.Metadata, nil
+}
+
+// UpdateTableMetadata implements the DataCatalog interface
+func (c *DatabricksCatalog) UpdateTableMetadata(ctx context.Context, database, table string, metadata *types.TableMetadata) error {
+	// Parse database name (catalog.schema)
+	catalogName, schemaName, err := c.parseDatabaseName(database)
+	if err != nil {
+		return err
+	}
+
+	// Get current table details
+	details, err := c.GetTableDetails(ctx, database, table)
+	if err != nil {
+		return err
+	}
+
+	// Update metadata
+	details.Metadata = metadata
+
+	// Update table details in Databricks
+	return c.client.UpdateTableDetails(ctx, c.workspaceID, catalogName, schemaName, table, details)
+}
+
+// GetTableLineage implements the DataCatalog interface
+func (c *DatabricksCatalog) GetTableLineage(ctx context.Context, database, table string) (*types.LineageInfo, error) {
+	// Databricks Unity Catalog doesn't expose lineage information via API yet
+	// Return empty lineage info
+	return &types.LineageInfo{}, nil
+}
+
+// UpdateTableLineage implements the DataCatalog interface
+func (c *DatabricksCatalog) UpdateTableLineage(ctx context.Context, database, table string, lineage *types.LineageInfo) error {
+	// Databricks Unity Catalog doesn't support updating lineage information via API yet
+	return fmt.Errorf("updating lineage information is not supported for Databricks tables")
+}
+
+// PublishQualityMetrics implements the DataCatalog interface
+func (c *DatabricksCatalog) PublishQualityMetrics(ctx context.Context, database, table string, metrics *types.QualityMetrics) error {
+	// Databricks Unity Catalog doesn't support quality metrics via API yet
+	return fmt.Errorf("publishing quality metrics is not supported for Databricks tables")
+}
+
+// GetQualityMetrics implements the DataCatalog interface
+func (c *DatabricksCatalog) GetQualityMetrics(ctx context.Context, database, table string) (*types.QualityMetrics, error) {
+	// Databricks Unity Catalog doesn't expose quality metrics via API yet
+	// Return empty quality metrics
+	return &types.QualityMetrics{}, nil
+}
+
 // ListDatabases returns a list of databases in the catalog
-func (c *DatabricksCatalog) ListDatabases(ctx context.Context) ([]string, error) {
+func (c *DatabricksCatalog) ListDatabases(ctx context.Context) ([]types.DatabaseInfo, error) {
 	// Get catalogs from Databricks
 	catalogs, err := c.client.GetCatalogs(ctx, c.workspaceID)
 	if err != nil {
@@ -50,7 +123,7 @@ func (c *DatabricksCatalog) ListDatabases(ctx context.Context) ([]string, error)
 	}
 
 	// Get schemas for each catalog
-	var databases []string
+	var databases []types.DatabaseInfo
 	for _, catalog := range catalogs {
 		schemas, err := c.client.GetSchemas(ctx, c.workspaceID, catalog.Name)
 		if err != nil {
@@ -59,7 +132,10 @@ func (c *DatabricksCatalog) ListDatabases(ctx context.Context) ([]string, error)
 
 		// Format database names as catalog.schema
 		for _, schema := range schemas {
-			databases = append(databases, fmt.Sprintf("%s.%s", catalog.Name, schema.Name))
+			databases = append(databases, types.DatabaseInfo{
+				Name:        fmt.Sprintf("%s.%s", catalog.Name, schema.Name),
+				Description: schema.Description,
+			})
 		}
 	}
 
@@ -67,7 +143,7 @@ func (c *DatabricksCatalog) ListDatabases(ctx context.Context) ([]string, error)
 }
 
 // ListTables returns a list of tables in the specified database
-func (c *DatabricksCatalog) ListTables(ctx context.Context, database string) ([]string, error) {
+func (c *DatabricksCatalog) ListTables(ctx context.Context, database string) ([]types.TableInfo, error) {
 	// Parse database name (catalog.schema)
 	catalogName, schemaName, err := c.parseDatabaseName(database)
 	if err != nil {
@@ -80,13 +156,17 @@ func (c *DatabricksCatalog) ListTables(ctx context.Context, database string) ([]
 		return nil, fmt.Errorf("failed to list tables: %w", err)
 	}
 
-	// Extract table names
-	tableNames := make([]string, 0, len(tables))
+	// Convert to TableInfo
+	tableInfos := make([]types.TableInfo, 0, len(tables))
 	for _, table := range tables {
-		tableNames = append(tableNames, table.Name)
+		tableInfos = append(tableInfos, types.TableInfo{
+			Name:        table.Name,
+			Description: table.Description,
+			Type:        table.Format,
+		})
 	}
 
-	return tableNames, nil
+	return tableInfos, nil
 }
 
 // GetTableDetails returns details of a specific table
@@ -142,7 +222,7 @@ func (c *DatabricksCatalog) GetTableLocation(ctx context.Context, database, tabl
 	if err != nil {
 		return "", err
 	}
-	return details.Location, nil
+	return details.Info.Location, nil
 }
 
 // GetTableFormat returns the format of a specific table
@@ -151,7 +231,10 @@ func (c *DatabricksCatalog) GetTableFormat(ctx context.Context, database, table 
 	if err != nil {
 		return "", err
 	}
-	return details.Format, nil
+	if details.Schema != nil {
+		return details.Schema.Format, nil
+	}
+	return details.Info.Type, nil
 }
 
 // IsTableExternal returns whether a specific table is external

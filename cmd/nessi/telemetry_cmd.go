@@ -22,7 +22,15 @@ var telemetryEnableCmd = &cobra.Command{
 	Short: "Enable anonymous telemetry",
 	Long:  `Enable anonymous telemetry to help improve Nessi. No sensitive data is collected.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := telemetry.Enable()
+		// Get user's home directory for telemetry data
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			fmt.Printf("Error getting home directory: %v\n", err)
+			os.Exit(1)
+		}
+		dataDir := filepath.Join(homeDir, ".nessi")
+
+		err = telemetry.Enable(dataDir)
 		if err != nil {
 			fmt.Printf("Error enabling telemetry: %v\n", err)
 			os.Exit(1)
@@ -38,7 +46,15 @@ var telemetryDisableCmd = &cobra.Command{
 	Short: "Disable anonymous telemetry",
 	Long:  `Disable anonymous telemetry collection.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := telemetry.Disable()
+		// Get user's home directory for telemetry data
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			fmt.Printf("Error getting home directory: %v\n", err)
+			os.Exit(1)
+		}
+		dataDir := filepath.Join(homeDir, ".nessi")
+
+		err = telemetry.Disable(dataDir)
 		if err != nil {
 			fmt.Printf("Error disabling telemetry: %v\n", err)
 			os.Exit(1)
@@ -53,7 +69,15 @@ var telemetryStatusCmd = &cobra.Command{
 	Short: "Show telemetry status",
 	Long:  `Display the current status of anonymous telemetry collection.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		status, err := telemetry.GetStatus()
+		// Get user's home directory for telemetry data
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			fmt.Printf("Error getting home directory: %v\n", err)
+			os.Exit(1)
+		}
+		dataDir := filepath.Join(homeDir, ".nessi")
+
+		status, err := telemetry.GetStatus(dataDir)
 		if err != nil {
 			fmt.Printf("Error getting telemetry status: %v\n", err)
 			os.Exit(1)

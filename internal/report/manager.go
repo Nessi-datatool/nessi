@@ -227,16 +227,17 @@ func (m *ReportManager) generateCSV(template ReportTemplate, parameters map[stri
 }
 
 // generateHTML generates an HTML report
-func (m *ReportManager) generateHTML(template ReportTemplate, parameters map[string]interface{}) (interface{}, error) {
+func (m *ReportManager) generateHTML(tmpl ReportTemplate, parameters map[string]interface{}) (interface{}, error) {
 	// Create a template from the template string
-	tmpl, err := template.New("report").Parse(template.Template)
+	t := template.New("report")
+	parsed, err := t.Parse(tmpl.Template)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse template: %w", err)
 	}
 
 	// Execute the template with the parameters
 	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, parameters); err != nil {
+	if err := parsed.Execute(&buf, parameters); err != nil {
 		return nil, fmt.Errorf("failed to execute template: %w", err)
 	}
 

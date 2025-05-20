@@ -149,3 +149,37 @@ func (m *MetricStore) TableSize() int {
 	// For simplicity, we'll just return the number of registered metrics
 	return len(m.gauges) + len(m.counters) + len(m.histograms)
 }
+
+// GetErrorCount returns the error count for a table
+func (m *MetricStore) GetErrorCount(tableName string) int64 {
+	// In a real implementation, this would query a metric store
+	// For simplicity, we'll just return a placeholder value
+	return 0
+}
+
+// GetTotalOperations returns the total operations for a table
+func (m *MetricStore) GetTotalOperations(tableName string) int64 {
+	// In a real implementation, this would query a metric store
+	// For simplicity, we'll just return a placeholder value
+	return 100
+}
+
+// RecordTableSize records the size of a table
+func (m *MetricStore) RecordTableSize(tableName string, size float64) {
+	m.RecordMetric("table_size", size, map[string]string{"table": tableName})
+}
+
+// RecordRecordCount records the number of records in a table
+func (m *MetricStore) RecordRecordCount(tableName string, count float64) {
+	m.RecordMetric("record_count", count, map[string]string{"table": tableName})
+}
+
+// RecordError records an error for a table
+func (m *MetricStore) RecordError(tableName, errorType string) {
+	m.RecordMetric("error_count", 1, map[string]string{"table": tableName, "error_type": errorType})
+}
+
+// RecordRuleViolation records a rule violation for a table
+func (m *MetricStore) RecordRuleViolation(tableName, ruleName string) {
+	m.RecordMetric("rule_violation", 1, map[string]string{"table": tableName, "rule": ruleName})
+}

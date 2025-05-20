@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
-
-	"github.com/nessi-dev/nessi/pkg/logging"
 )
 
 // TelemetryCollector collects telemetry data for CLI commands
