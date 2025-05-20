@@ -11,17 +11,13 @@ jobs:
     name: Test Databricks Integration
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        run: |
-          git clone https://github.com/nessi-dev/nessi.git .
-          git checkout $GITHUB_SHA
+      - uses: actions/checkout@v4
       
       - name: Set up Go
-        run: |
-          wget https://go.dev/dl/go1.24.3.linux-amd64.tar.gz
-          sudo tar -C /usr/local -xzf go1.24.3.linux-amd64.tar.gz
-          echo 'export PATH=$PATH:/usr/local/go/bin' >> $GITHUB_ENV
-          echo 'export GO111MODULE=on' >> $GITHUB_ENV
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+          cache: true
       
       - name: Install dependencies
         run: |

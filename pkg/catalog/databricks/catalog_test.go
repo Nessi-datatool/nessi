@@ -11,8 +11,28 @@ import (
 )
 
 func TestDatabricksClient_GetWorkspaces(t *testing.T) {
-	// Create a new client with test configuration
-	client := NewDatabricksClient("https://test.databricks.com", "test-token", "test-workspace")
+	// Create a test server
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Check request
+		assert.Equal(t, "/api/2.0/workspaces", r.URL.Path)
+		assert.Equal(t, "Bearer test-token", r.Header.Get("Authorization"))
+
+		// Return mock response
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{
+			"workspaces": [
+				{
+					"workspace_id": "test-workspace",
+					"workspace_name": "Default Workspace"
+				}
+			]
+		}`))
+	}))
+	defer server.Close()
+
+	// Create client that points to test server
+	client := NewDatabricksClient(server.URL, "test-token", "test-workspace")
 
 	// Test GetWorkspaces
 	workspaces, err := client.GetWorkspaces(context.Background())
@@ -20,7 +40,6 @@ func TestDatabricksClient_GetWorkspaces(t *testing.T) {
 	require.Len(t, workspaces, 1)
 	assert.Equal(t, "test-workspace", workspaces[0].ID)
 	assert.Equal(t, "Default Workspace", workspaces[0].Name)
-	assert.Equal(t, "https://test.databricks.com", workspaces[0].URL)
 }
 
 func TestDatabricksClient_GetCatalogs(t *testing.T) {

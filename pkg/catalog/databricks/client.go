@@ -15,9 +15,10 @@ import (
 
 // API endpoints for Databricks Unity Catalog
 const (
-	catalogsEndpoint = "/api/2.1/unity-catalog/catalogs"
-	schemasEndpoint  = "/api/2.1/unity-catalog/schemas"
-	tablesEndpoint   = "/api/2.1/unity-catalog/tables"
+	workspacesEndpoint = "/api/2.0/workspaces"
+	catalogsEndpoint   = "/api/2.1/unity-catalog/catalogs"
+	schemasEndpoint    = "/api/2.1/unity-catalog/schemas"
+	tablesEndpoint     = "/api/2.1/unity-catalog/tables"
 )
 
 // makeRequest makes an HTTP request to the Databricks API
