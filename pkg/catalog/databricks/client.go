@@ -16,9 +16,9 @@ import (
 // API endpoints for Databricks Unity Catalog
 const (
 	workspacesEndpoint = "/api/2.0/workspaces"
-	catalogsEndpoint = "/api/2.1/unity-catalog/catalogs"
-	schemasEndpoint  = "/api/2.1/unity-catalog/schemas"
-	tablesEndpoint   = "/api/2.1/unity-catalog/tables"
+	catalogsEndpoint   = "/api/2.1/unity-catalog/catalogs"
+	schemasEndpoint    = "/api/2.1/unity-catalog/schemas"
+	tablesEndpoint     = "/api/2.1/unity-catalog/tables"
 )
 
 // makeRequest makes an HTTP request to the Databricks API
@@ -71,8 +71,6 @@ func (c *DatabricksClient) makeRequest(ctx context.Context, method, endpoint str
 
 	return respBody, nil
 }
-
-
 
 // GetCatalogs returns a list of catalogs in the specified workspace
 func (c *DatabricksClient) GetCatalogs(ctx context.Context, workspaceID string) ([]Catalog, error) {
