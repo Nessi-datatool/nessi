@@ -110,21 +110,22 @@ Implementation details:
 
 ## Integration with Other Tools
 
-### Prometheus Integration
+### Metrics Export
 
-Nessi.dev integrates with Prometheus for metrics collection:
+Nessi provides flexible metrics export capabilities:
 
-- Exposes metrics endpoints for scraping
-- Provides custom metrics for data quality
-- Supports alerting based on metrics
-- Includes dashboards for visualizing metrics
+- Exports metrics in multiple formats (JSON, CSV)
+- Supports custom metrics collection
+- Enables integration with external monitoring tools
 
-### Grafana Integration
+### Reporting System
 
-The Grafana integration provides visualization capabilities:
+The reporting system provides comprehensive visualization capabilities:
 
-- Pre-built dashboards for monitoring
-- Custom visualization options
+- HTML reports with interactive elements
+- PDF reports for documentation and sharing
+- Customizable report templates
+- Scheduled report generations
 - Shareable insights with team members
 - Historical trend visualization
 

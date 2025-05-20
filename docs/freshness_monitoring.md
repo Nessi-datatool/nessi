@@ -51,7 +51,7 @@ When defining an SLA, you can specify the following parameters:
 
 Example:
 ```bash
-nessi sla --table customer_orders --define "frequency=1h,warning=150,critical=200,description='Customer orders table with hourly updates',tags=sales,core,production,grafana=https://grafana.example.com/d/abc123/customer-orders"
+nessi sla --table customer_orders --define "frequency=1h,warning=150,critical=200,description='Customer orders table with hourly updates',tags=sales,core,production,report_url=https://reports.example.com/customer-orders.html"
 ```
 
 ## Reporting
@@ -160,7 +160,7 @@ The freshness feature integrates with the Nessi.dev monitoring system to:
 
 - Record metrics about table freshness
 - Trigger alerts when SLAs are violated
-- Provide links to Grafana dashboards for detailed monitoring
+- Include report URLs for easy access to detailed monitoring reports
 
 ## Configuration File
 

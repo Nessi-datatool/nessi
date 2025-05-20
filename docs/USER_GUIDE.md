@@ -15,7 +15,7 @@
 - Freshness Monitoring
 - Workflow Integrations
 - Email Alerting
-- Monitoring Dashboards
+- Comprehensive Reporting
 
 ---
 

@@ -174,7 +174,7 @@ All endpoints return appropriate HTTP status codes and error messages:
 
 ## Monitoring
 
-The API exposes Prometheus metrics at `/metrics` and integrates with Alertmanager for alerting. Key metrics include:
+The API provides metrics that can be exported to various formats (JSON, CSV) for monitoring and analysis. Key metrics include:
 
 - Table metrics: size, count, etc.
 - Quality metrics: checks performed, violations

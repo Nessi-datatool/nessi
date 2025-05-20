@@ -188,7 +188,7 @@ Nessi includes several example plugins to help you get started:
 
 - **Email Validator**: A validation plugin that validates email addresses
 - **Slack Alerter**: An alert plugin that sends alerts to Slack
-- **Prometheus Metrics**: A metric plugin that exports metrics to Prometheus
+- **Metrics Export**: A plugin that exports metrics to various formats (JSON, CSV) for integration with external monitoring tools
 - **S3 Storage**: A storage plugin that stores data in Amazon S3
 - **Excel Export**: An export plugin that exports data to Excel format
 - **Chart Component**: A UI plugin that provides custom chart components

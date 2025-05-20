@@ -131,7 +131,7 @@ Audit events can trigger webhooks to notify external systems about important act
 
 ### Monitoring Integration
 
-The audit logging system provides metrics about system usage that can be monitored through Prometheus and visualized in Grafana.
+The audit logging system provides metrics about system usage that can be exported to various formats (JSON, CSV) for monitoring and analysis.
 
 ## Best Practices
 
