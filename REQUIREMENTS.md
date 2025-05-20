@@ -50,16 +50,16 @@ Nessi is an open-source data quality and Delta Lake management tool with a Go-fi
 - ✅ Rule execution history and impact analysis
 - ✅ Row-level rule validation with custom logic
 
-### Real-time Dashboard
-- ✅ Table health scores and trends
-- ✅ Quality metric tracking over time
-- ✅ Recent validation failures
-- ✅ Live metrics for table health and ingestion
+### CLI Monitoring
+- ✅ Table health scores and trends via CLI commands
+- ✅ Quality metric tracking over time with exportable data
+- ✅ Recent validation failures reporting
+- ✅ Table health and ingestion metrics via CLI
 
-### Monitoring Dashboard
-- ✅ Built-in dashboard for core monitoring functionality
-- ✅ Real-time metrics visualization
-- ✅ System health monitoring
+### Monitoring Capabilities
+- ✅ Core monitoring functionality via CLI commands
+- ✅ Metrics export for external visualization
+- ✅ System health status commands
 
 ### Alerting
 - ✅ Email notifications for critical issues
@@ -72,27 +72,26 @@ Nessi is an open-source data quality and Delta Lake management tool with a Go-fi
 - ✅ Trend visualization and comparison
 - ✅ Performance impact analysis
 
-### Interactive Reports
-- ✅ Quality score cards with drill-down
+### CLI Reports
+- ✅ Quality score summaries via CLI
 - ✅ Table and column level summaries
-- ✅ Trend charts and comparison views
-- ✅ Distribution histograms
-- ✅ Pattern frequency charts
-- ✅ Failure rate trends
-- ✅ HTML and PDF reports with summary cards, histograms, and partition heatmaps
-- ✅ Export to JSON/CSV for automation
-- ✅ Shareable links with expiration
+- ✅ Trend data for external visualization
+- ✅ Distribution data export
+- ✅ Pattern frequency analysis
+- ✅ Failure rate tracking
+- ✅ Export to JSON/CSV for automation and external reporting
+- ✅ Machine-readable output for integration with other tools
 
 ### Security
-- ✅ SSL/TLS encrypted interfaces
-- ✅ User authentication with JWT
-- ✅ API key management
-- ✅ Basic access controls
+- ✅ Secure local file operations
+- ✅ Environment variable-based authentication for cloud services
+- ✅ API key management for external services
+- ✅ Basic access controls for CLI commands
 
 ### Containerization
 - ✅ 100% Docker-native for easy installation
 - ✅ No JVM setup or Spark tuning required
-- ✅ Multi-service orchestration via Docker Compose
+- ✅ Single container deployment for CLI tools
 
 ### Enhanced Multi-format Support
 - ✅ Delta Lake (primary)
@@ -167,14 +166,13 @@ Nessi is an open-source data quality and Delta Lake management tool with a Go-fi
 ## Architecture Requirements
 
 ### Primary Go Components
-1. ✅ API Gateway
-2. ✅ Data Quality Engine
-3. ✅ Monitoring Service
-4. ✅ Report Generator
-5. ✅ Delta Lake Connector
-6. ✅ Security Manager
-7. ✅ CLI Interface
-8. ✅ Email Alerting System
+1. ✅ Data Quality Engine
+2. ✅ Monitoring Service
+3. ✅ Report Generator
+4. ✅ Delta Lake Connector
+5. ✅ Security Manager
+6. ✅ CLI Interface
+7. ✅ Email Alerting System
 
 ### Extension System
 - ✅ Plugin architecture for enabling/disabling features
