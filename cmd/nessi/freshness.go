@@ -13,44 +13,44 @@ import (
 var (
 	// freshnessEnabled is a flag to enable/disable freshness tracking
 	freshnessEnabled bool
-	
+
 	// slaOutputFormat is the output format for SLA commands
 	slaOutputFormat string
-	
+
 	// slaWarningThreshold is the warning threshold for SLA violations
 	slaWarningThreshold int
-	
+
 	// slaCriticalThreshold is the critical threshold for SLA violations
 	slaCriticalThreshold int
-	
+
 	// slaDescription is the description for the SLA
 	slaDescription string
-	
+
 	// slaTags are tags for the SLA
 	slaTags []string
-	
-	// slaGrafanaDashboardURL is the Grafana dashboard URL for the SLA
-	slaGrafanaDashboardURL string
+
+	// slaReportURL is the URL to the SLA report
+	slaReportURL string
 )
 
 // Simple placeholder types to make the code compile
 type FreshnessStatus struct {
-	TableName string
+	TableName  string
 	LastUpdate time.Time
-	Status string
-	SLAConfig *SLAConfig
+	Status     string
+	SLAConfig  *SLAConfig
 }
 
 type SLAConfig struct {
-	TableName string
-	TablePath string
+	TableName         string
+	TablePath         string
 	ExpectedFrequency time.Duration
-	WarningThreshold int
+	WarningThreshold  int
 	CriticalThreshold int
-	Enabled bool
-	Description string
-	Tags []string
-	GrafanaDashboardURL string
+	Enabled           bool
+	Description       string
+	Tags              []string
+	ReportURL         string
 }
 
 type SLAManager struct {
@@ -65,11 +65,11 @@ func NewSLAManager(configPath string, client interface{}) (*SLAManager, error) {
 // CheckFreshness checks freshness for a table
 func (m *SLAManager) CheckFreshness(tableName string) (*FreshnessStatus, error) {
 	return &FreshnessStatus{
-		TableName: tableName,
+		TableName:  tableName,
 		LastUpdate: time.Now().Add(-1 * time.Hour),
-		Status: "OK",
+		Status:     "OK",
 		SLAConfig: &SLAConfig{
-			TableName: tableName,
+			TableName:         tableName,
 			ExpectedFrequency: 24 * time.Hour,
 		},
 	}, nil
@@ -79,11 +79,11 @@ func (m *SLAManager) CheckFreshness(tableName string) (*FreshnessStatus, error) 
 func (m *SLAManager) CheckAllFreshness() ([]*FreshnessStatus, error) {
 	return []*FreshnessStatus{
 		{
-			TableName: "sample_table",
+			TableName:  "sample_table",
 			LastUpdate: time.Now().Add(-1 * time.Hour),
-			Status: "OK",
+			Status:     "OK",
 			SLAConfig: &SLAConfig{
-				TableName: "sample_table",
+				TableName:         "sample_table",
 				ExpectedFrequency: 24 * time.Hour,
 			},
 		},
@@ -94,12 +94,12 @@ func (m *SLAManager) CheckAllFreshness() ([]*FreshnessStatus, error) {
 func (m *SLAManager) GetAllSLAs() ([]*SLAConfig, error) {
 	return []*SLAConfig{
 		{
-			TableName: "sample_table",
-			TablePath: "/path/to/sample_table",
+			TableName:         "sample_table",
+			TablePath:         "/path/to/sample_table",
 			ExpectedFrequency: 24 * time.Hour,
-			WarningThreshold: 150,
+			WarningThreshold:  150,
 			CriticalThreshold: 200,
-			Enabled: true,
+			Enabled:           true,
 		},
 	}, nil
 }
@@ -107,12 +107,12 @@ func (m *SLAManager) GetAllSLAs() ([]*SLAConfig, error) {
 // GetSLA gets an SLA configuration
 func (m *SLAManager) GetSLA(tableName string) (*SLAConfig, error) {
 	return &SLAConfig{
-		TableName: tableName,
-		TablePath: "/path/to/" + tableName,
+		TableName:         tableName,
+		TablePath:         "/path/to/" + tableName,
 		ExpectedFrequency: 24 * time.Hour,
-		WarningThreshold: 150,
+		WarningThreshold:  150,
 		CriticalThreshold: 200,
-		Enabled: true,
+		Enabled:           true,
 	}, nil
 }
 
@@ -191,7 +191,7 @@ var freshnessCheckCmd = &cobra.Command{
 			fmt.Println("Freshness tracking is disabled. Use --enable-freshness-tracking to enable it.")
 			return
 		}
-		
+
 		// Create SLA manager
 		configPath := filepath.Join(appConfig.DataDir, "sla_config.json")
 		manager, err := NewSLAManager(configPath, nil)
@@ -200,9 +200,9 @@ var freshnessCheckCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		var statuses []*FreshnessStatus
-		
+
 		// Check freshness for a specific table or all tables
 		if len(args) > 0 {
 			tableName := args[0]
@@ -222,7 +222,7 @@ var freshnessCheckCmd = &cobra.Command{
 				return
 			}
 		}
-		
+
 		// Display freshness status
 		if slaOutputFormat == "json" {
 			// JSON output
@@ -239,29 +239,29 @@ var freshnessCheckCmd = &cobra.Command{
 			fmt.Println("----------------")
 			fmt.Printf("%-20s %-20s %-15s %-10s %-10s\n", "Table", "Last Updated", "Age", "Status", "SLA")
 			fmt.Printf("%-20s %-20s %-15s %-10s %-10s\n", "-----", "------------", "---", "------", "---")
-			
+
 			for _, status := range statuses {
 				// Format last updated
 				lastUpdated := "Never"
 				if !status.LastUpdate.IsZero() {
 					lastUpdated = status.LastUpdate.Format("2006-01-02 15:04:05")
 				}
-				
+
 				// Format age
 				age := "N/A"
 				if !status.LastUpdate.IsZero() {
 					age = FormatDuration(time.Since(status.LastUpdate))
 				}
-				
+
 				// Format status
 				statusStr := status.Status
-				
+
 				// Format SLA
 				sla := "N/A"
 				if status.SLAConfig != nil {
 					sla = FormatDuration(status.SLAConfig.ExpectedFrequency)
 				}
-				
+
 				fmt.Printf("%-20s %-20s %-15s %-10s %-10s\n", status.TableName, lastUpdated, age, statusStr, sla)
 			}
 			fmt.Println()
@@ -287,7 +287,7 @@ var slaListCmd = &cobra.Command{
 			fmt.Println("Freshness tracking is disabled. Use --enable-freshness-tracking to enable it.")
 			return
 		}
-		
+
 		// Create SLA manager
 		configPath := filepath.Join(appConfig.DataDir, "sla_config.json")
 		manager, err := NewSLAManager(configPath, nil)
@@ -296,7 +296,7 @@ var slaListCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Get all SLA configurations
 		configs, err := manager.GetAllSLAs()
 		if err != nil {
@@ -304,7 +304,7 @@ var slaListCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Display SLA configurations
 		if slaOutputFormat == "json" {
 			// JSON output
@@ -321,21 +321,21 @@ var slaListCmd = &cobra.Command{
 			fmt.Println("------------------")
 			fmt.Printf("%-20s %-15s %-10s %-10s %-8s\n", "Table", "Frequency", "Warning", "Critical", "Enabled")
 			fmt.Printf("%-20s %-15s %-10s %-10s %-8s\n", "-----", "---------", "-------", "--------", "-------")
-			
+
 			for _, config := range configs {
 				// Format frequency
 				frequency := FormatDuration(config.ExpectedFrequency)
-				
+
 				// Format thresholds
 				warning := fmt.Sprintf("%d%%", config.WarningThreshold)
 				critical := fmt.Sprintf("%d%%", config.CriticalThreshold)
-				
+
 				// Format enabled
 				enabled := "Yes"
 				if !config.Enabled {
 					enabled = "No"
 				}
-				
+
 				fmt.Printf("%-20s %-15s %-10s %-10s %-8s\n", config.TableName, frequency, warning, critical, enabled)
 			}
 			fmt.Println()
@@ -357,12 +357,12 @@ or using keywords like 'hourly', 'daily', 'weekly', or 'monthly'.`,
 			fmt.Println("Freshness tracking is disabled. Use --enable-freshness-tracking to enable it.")
 			return
 		}
-		
+
 		// Parse arguments
 		tableName := args[0]
 		tablePath := args[1]
 		frequencyStr := args[2]
-		
+
 		// Parse frequency
 		frequency, err := ParseDuration(frequencyStr)
 		if err != nil {
@@ -370,7 +370,7 @@ or using keywords like 'hourly', 'daily', 'weekly', or 'monthly'.`,
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Create SLA configuration
 		config := &SLAConfig{
 			TableName:         tableName,
@@ -381,9 +381,9 @@ or using keywords like 'hourly', 'daily', 'weekly', or 'monthly'.`,
 			Enabled:           true,
 			Description:       slaDescription,
 			Tags:              slaTags,
-			GrafanaDashboardURL: slaGrafanaDashboardURL,
+			ReportURL:         slaReportURL,
 		}
-		
+
 		// Validate configuration
 		if config.WarningThreshold <= 0 || config.CriticalThreshold <= 0 {
 			err := fmt.Errorf("warning and critical thresholds must be positive")
@@ -391,7 +391,7 @@ or using keywords like 'hourly', 'daily', 'weekly', or 'monthly'.`,
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Create SLA manager
 		configPath := filepath.Join(appConfig.DataDir, "sla_config.json")
 		manager, err := NewSLAManager(configPath, nil)
@@ -400,14 +400,14 @@ or using keywords like 'hourly', 'daily', 'weekly', or 'monthly'.`,
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Set SLA configuration
 		if err := manager.SetSLA(config); err != nil {
 			logging.Error(fmt.Sprintf("Failed to set SLA configuration for table %s", tableName), err)
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		fmt.Printf("SLA defined for table %s with frequency %s\n", tableName, FormatDuration(frequency))
 	},
 }
@@ -424,10 +424,10 @@ var slaDeleteCmd = &cobra.Command{
 			fmt.Println("Freshness tracking is disabled. Use --enable-freshness-tracking to enable it.")
 			return
 		}
-		
+
 		// Parse arguments
 		tableName := args[0]
-		
+
 		// Create SLA manager
 		configPath := filepath.Join(appConfig.DataDir, "sla_config.json")
 		manager, err := NewSLAManager(configPath, nil)
@@ -436,14 +436,14 @@ var slaDeleteCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Delete SLA configuration
 		if err := manager.DeleteSLA(tableName); err != nil {
 			logging.Error(fmt.Sprintf("Failed to delete SLA configuration for table %s", tableName), err)
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		fmt.Printf("SLA configuration deleted for table %s\n", tableName)
 	},
 }
@@ -460,10 +460,10 @@ var slaEnableCmd = &cobra.Command{
 			fmt.Println("Freshness tracking is disabled. Use --enable-freshness-tracking to enable it.")
 			return
 		}
-		
+
 		// Parse arguments
 		tableName := args[0]
-		
+
 		// Create SLA manager
 		configPath := filepath.Join(appConfig.DataDir, "sla_config.json")
 		manager, err := NewSLAManager(configPath, nil)
@@ -472,7 +472,7 @@ var slaEnableCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Get SLA configuration
 		config, err := manager.GetSLA(tableName)
 		if err != nil {
@@ -480,17 +480,17 @@ var slaEnableCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Enable SLA monitoring
 		config.Enabled = true
-		
+
 		// Update SLA configuration
 		if err := manager.SetSLA(config); err != nil {
 			logging.Error(fmt.Sprintf("Failed to update SLA configuration for table %s", tableName), err)
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		fmt.Printf("SLA monitoring enabled for table %s\n", tableName)
 	},
 }
@@ -507,10 +507,10 @@ var slaDisableCmd = &cobra.Command{
 			fmt.Println("Freshness tracking is disabled. Use --enable-freshness-tracking to enable it.")
 			return
 		}
-		
+
 		// Parse arguments
 		tableName := args[0]
-		
+
 		// Create SLA manager
 		configPath := filepath.Join(appConfig.DataDir, "sla_config.json")
 		manager, err := NewSLAManager(configPath, nil)
@@ -519,7 +519,7 @@ var slaDisableCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Get SLA configuration
 		config, err := manager.GetSLA(tableName)
 		if err != nil {
@@ -527,17 +527,17 @@ var slaDisableCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		// Disable SLA monitoring
 		config.Enabled = false
-		
+
 		// Update SLA configuration
 		if err := manager.SetSLA(config); err != nil {
 			logging.Error(fmt.Sprintf("Failed to update SLA configuration for table %s", tableName), err)
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		
+
 		fmt.Printf("SLA monitoring disabled for table %s\n", tableName)
 	},
 }
@@ -545,24 +545,24 @@ var slaDisableCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(freshnessCmd)
 	freshnessCmd.AddCommand(freshnessCheckCmd)
-	
+
 	rootCmd.AddCommand(slaCmd)
 	slaCmd.AddCommand(slaListCmd)
 	slaCmd.AddCommand(slaDefineCmd)
 	slaCmd.AddCommand(slaDeleteCmd)
 	slaCmd.AddCommand(slaEnableCmd)
 	slaCmd.AddCommand(slaDisableCmd)
-	
+
 	// Add flags
 	rootCmd.PersistentFlags().BoolVar(&freshnessEnabled, "enable-freshness-tracking", false, "Enable freshness tracking")
-	
+
 	freshnessCheckCmd.Flags().StringVar(&slaOutputFormat, "format", "table", "Output format (table or json)")
-	
+
 	slaListCmd.Flags().StringVar(&slaOutputFormat, "format", "table", "Output format (table or json)")
-	
+
 	slaDefineCmd.Flags().IntVar(&slaWarningThreshold, "warning", 150, "Warning threshold (percentage of expected frequency)")
 	slaDefineCmd.Flags().IntVar(&slaCriticalThreshold, "critical", 200, "Critical threshold (percentage of expected frequency)")
 	slaDefineCmd.Flags().StringVar(&slaDescription, "description", "", "Description of the SLA")
 	slaDefineCmd.Flags().StringSliceVar(&slaTags, "tags", []string{}, "Tags for the SLA (comma-separated)")
-	slaDefineCmd.Flags().StringVar(&slaGrafanaDashboardURL, "grafana-url", "", "Grafana dashboard URL")
+	slaDefineCmd.Flags().StringVar(&slaReportURL, "report-url", "", "URL to the SLA report")
 }

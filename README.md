@@ -272,8 +272,8 @@ Nessi is licensed under the [Apache License 2.0](LICENSE).
 
 - **Integration Capabilities**
   - File-based metrics collection
-  - CLI-based reporting
-  - Secure API key access
+  - CLI-based reporting with HTML and PDF output
+  - Comprehensive report generation system
   - Email notifications
   - Cloud provider integration (AWS, Azure, GCP)
   - **dbt Integration**: Opt-in plugin for executing data quality rules against dbt models and generating data profiles
@@ -350,15 +350,29 @@ See `config/config.yaml` for detailed configuration options.
 
 The application provides the following CLI commands:
 
-- `nessi tables list` - List Delta tables
-- `nessi tables info <n>` - Get table details
-- `nessi quality check <n>` - Run quality checks
-- `nessi quality metrics <n>` - Get quality metrics
-- `nessi reports list <n>` - List available reports
-- `nessi reports generate <n>` - Generate new report
-- `nessi catalog list --type <catalog_type>` - List available catalogs
-- `nessi catalog tables --type <catalog_type> --database <db>` - List tables in a catalog
-- `nessi catalog describe --type <catalog_type> --database <db> --table <table>` - Get table details from a catalog
+- **Table Management**
+  - `nessi tables list` - List Delta tables
+  - `nessi tables info <table_path>` - Get table details
+
+- **Quality Management**
+  - `nessi quality check <table_path>` - Run quality checks
+  - `nessi quality metrics <table_path>` - Get quality metrics
+  - `nessi quality profile <table_path>` - Generate data profile
+
+- **Reporting**
+  - `nessi report generate --table <table_path> --format <format>` - Generate a report (html, pdf, json, csv)
+  - `nessi report list` - List available reports
+  - `nessi report view <report_id>` - View a specific report
+  - `nessi report export <report_id> --output <path>` - Export a report to a file
+
+- **Catalog Integration**
+  - `nessi catalog list --type <catalog_type>` - List available catalogs
+  - `nessi catalog tables --type <catalog_type> --database <db>` - List tables in a catalog
+  - `nessi catalog describe --type <catalog_type> --database <db> --table <table>` - Get table details from a catalog
+
+- **Freshness Monitoring**
+  - `nessi freshness check <table_path>` - Check table freshness
+  - `nessi freshness report <table_path> --format <format>` - Generate freshness report
 
 ### Databricks Integration
 
@@ -429,31 +443,36 @@ nessi tables info /path/to/delta/table
 
 ### Authentication
 
-The application uses API keys for CLI authentication. Configure the API key settings in `config/config.yaml`:
+The application uses file-based configuration for CLI security. Configure the security settings in `config/config.yaml`:
 
 ```yaml
 security:
-  api_key:
+  credentials:
     enabled: true
-    key_file: "config/api_keys.yaml"
+    file: "config/credentials.yaml"
 ```
 
-Set the API key as an environment variable for CLI commands:
+You can also set credentials using environment variables for CLI commands:
 
 ```bash
-export NESSI_API_KEY="your-api-key"
+export NESSI_CREDENTIALS_FILE="path/to/credentials.yaml"
 nessi tables list
 ```
 
-## Monitoring and Metrics Export
+## Reporting and Metrics Export
 
-The application provides file-based metrics export for monitoring and observability. Configure the metrics export settings in `config/config.yaml`:
+Nessi provides a comprehensive reporting system with support for HTML, PDF, JSON, and CSV formats. Configure the reporting settings in `config/config.yaml`:
 
 ```yaml
-monitoring:
-  metrics:
+reporting:
+  enabled: true
+  output_path: "./data/reports"
+  default_format: "html"
+  templates_path: "./templates"
+  retention:
     enabled: true
-    collection_interval: 15s
+    days: 30
+  metrics:
     export_path: "./data/metrics"
     export_format: "json"
   logging:
@@ -461,6 +480,8 @@ monitoring:
     format: "json"
     level: "info"
 ```
+
+See the [Reporting Documentation](docs/REPORTING.md) for more details on the reporting capabilities.
 
 ### Error Handling and Retries
 
