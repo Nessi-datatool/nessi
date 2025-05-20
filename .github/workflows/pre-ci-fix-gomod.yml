@@ -1,0 +1,50 @@
+name: Pre-CI Go Module Check
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  pre-ci-check:
+    name: Pre-CI Go Module Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.20'
+          cache: false
+      
+      - name: Verify go.mod format
+        run: |
+          # Create a temporary copy of go.mod
+          cp go.mod go.mod.orig
+          
+          # Format go.mod
+          go mod edit -fmt
+          
+          # Check if formatting changed anything
+          if ! diff -q go.mod go.mod.orig > /dev/null; then
+            echo "Error: go.mod is not properly formatted"
+            echo "Run 'go mod edit -fmt' to fix"
+            exit 1
+          fi
+          
+          # Clean up
+          rm go.mod.orig
+      
+      - name: Verify Go version in go.mod
+        run: |
+          # Check if go.mod has the correct Go version
+          if grep -q "go 1.23.0" go.mod || grep -q "toolchain go" go.mod; then
+            echo "Error: go.mod has incorrect Go version or toolchain directive"
+            echo "Run './scripts/fix-go-mod.sh' to fix"
+            exit 1
+          fi
