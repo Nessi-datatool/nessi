@@ -8,7 +8,9 @@ import (
 
 	"github.com/apache/arrow/go/v15/arrow"
 	"github.com/apache/arrow/go/v15/arrow/ipc"
+	"github.com/nessi-dev/nessi/pkg/common"
 	"github.com/nessi-dev/nessi/pkg/datalake"
+	"github.com/nessi-dev/nessi/pkg/errors"
 	"github.com/nessi-dev/nessi/pkg/quality/engine"
 	"github.com/nessi-dev/nessi/pkg/report"
 	"github.com/nessi-dev/nessi/pkg/security"
@@ -151,7 +153,7 @@ func Init() {
 	RegisterErrorHandlers()
 
 	// Initialize error suggestions
-	common.InitDefaultSuggestions()
+	errors.InitDefaultSuggestions()
 
 	// Initialize CLI components
 	CLI.Config = viper.New()
@@ -160,8 +162,17 @@ func Init() {
 		Short: "Nessi - Delta Lake Data Quality Tool",
 		Long: `Nessi is a powerful tool for managing data quality in Delta Lake tables.
 It provides features for validation, profiling, monitoring, and reporting.`,
-		Version: "v0.10.3", // Update as needed
 	}
+
+	// Initialize plugins command
+	initPluginsCmd()
+
+	// Add plugins command to the root command
+	if pluginsCmd != nil {
+		CLI.RootCmd.AddCommand(pluginsCmd)
+	}
+
+	CLI.RootCmd.Version = "v0.10.3" // Update as needed
 
 	// Add error handling flags to the root command
 	AddErrorHandlingFlags(CLI.RootCmd)
@@ -225,6 +236,9 @@ It provides features for validation, profiling, monitoring, and reporting.`,
 	CLI.RootCmd.PersistentFlags().StringVar(&CLI.ConfigPath, "config", "", "Path to configuration file")
 	CLI.RootCmd.PersistentFlags().StringVar(&CLI.Token, "token", "", "Authentication token")
 	CLI.RootCmd.PersistentFlags().StringVar(&CLI.OutputFormat, "output", "json", "Output format (json|yaml|text)")
+
+	// Initialize plugins command
+	initPluginsCmd()
 }
 
 // initValidateCmd initializes the validate command

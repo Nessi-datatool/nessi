@@ -29,12 +29,47 @@ type PluginCommand struct {
 	Usage       string `json:"usage"`
 }
 
+// PluginMetadata represents the metadata of a plugin
+type PluginMetadata struct {
+	Name         string            `json:"name"`
+	Version      string            `json:"version"`
+	Description  string            `json:"description"`
+	Author       string            `json:"author"`
+	Commands     []PluginCommand   `json:"commands"`
+	Hooks        map[string]string `json:"hooks"`
+	Capabilities []string          `json:"capabilities,omitempty"`
+}
+
 // PluginManager handles plugin discovery, loading, and execution
 type PluginManager struct {
 	Plugins     map[string]*Plugin
 	PluginsDir  string
 	Enabled     bool
 	Initialized bool
+	debugMode   bool
+	verbose     bool
+}
+
+// PluginInterface defines the basic interface that all plugins must implement
+type PluginInterface interface {
+	Initialize() error
+}
+
+// CommandExecutor defines the interface for plugins that provide commands
+type CommandExecutor interface {
+	ExecuteCommand(cmd string, args []string) error
+}
+
+// QualityRuleProvider defines the interface for plugins that provide custom quality rules
+type QualityRuleProvider interface {
+	GetCustomRules() []Rule
+}
+
+// Rule represents a custom quality rule
+type Rule struct {
+	Name        string
+	Description string
+	Validator   func(interface{}, map[string]interface{}) (bool, string)
 }
 
 // NewPluginManager creates a new plugin manager
@@ -182,6 +217,48 @@ func (pm *PluginManager) ExecuteHook(hookName string, args ...interface{}) error
 	}
 
 	return nil
+}
+
+// SetDebugMode sets the debug mode
+func (pm *PluginManager) SetDebugMode(debug bool) {
+	pm.debugMode = debug
+}
+
+// SetVerbose sets the verbose mode
+func (pm *PluginManager) SetVerbose(verbose bool) {
+	pm.verbose = verbose
+}
+
+// ExecuteCommand executes a command on a plugin
+func (pm *PluginManager) ExecuteCommand(plugin *Plugin, cmd string, args []string) error {
+	// Check if the plugin implements the CommandExecutor interface
+	executor, ok := plugin.Instance.(CommandExecutor)
+	if !ok {
+		return fmt.Errorf("plugin does not implement CommandExecutor interface")
+	}
+
+	// Execute the command
+	return executor.ExecuteCommand(cmd, args)
+}
+
+// GetCustomRules returns all custom quality rules from all plugins
+func (pm *PluginManager) GetCustomRules() []Rule {
+	rules := []Rule{}
+
+	// Iterate through all plugins
+	for _, p := range pm.Plugins {
+		// Check if the plugin implements the QualityRuleProvider interface
+		provider, ok := p.Instance.(QualityRuleProvider)
+		if !ok {
+			continue
+		}
+
+		// Get the custom rules from the plugin
+		pluginRules := provider.GetCustomRules()
+		rules = append(rules, pluginRules...)
+	}
+
+	return rules
 }
 
 // callMethod calls a plugin method with the given arguments
