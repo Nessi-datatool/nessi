@@ -1,0 +1,145 @@
+name: Nessi Data Quality Check
+
+on:
+  workflow_call:
+    inputs:
+      table_path:
+        description: 'Path to the Delta Lake table to check'
+        required: true
+        type: string
+      quality_threshold:
+        description: 'Quality threshold percentage (0-100)'
+        required: false
+        default: '90'
+        type: string
+      report_format:
+        description: 'Format for the quality report (html, pdf, json)'
+        required: false
+        default: 'html'
+        type: string
+      fail_on_issues:
+        description: 'Whether to fail the workflow if quality issues are found'
+        required: false
+        default: 'true'
+        type: string
+  workflow_dispatch:
+    inputs:
+      table_path:
+        description: 'Path to the Delta Lake table to check'
+        required: true
+        type: string
+      quality_threshold:
+        description: 'Quality threshold percentage (0-100)'
+        required: false
+        default: '90'
+        type: string
+      report_format:
+        description: 'Format for the quality report (html, pdf, json)'
+        required: false
+        default: 'html'
+        type: string
+      fail_on_issues:
+        description: 'Whether to fail the workflow if quality issues are found'
+        required: false
+        default: 'true'
+        type: string
+
+jobs:
+  quality-check:
+    runs-on: ubuntu-latest
+    name: Run Data Quality Check
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+
+      - name: Install Nessi
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/nessi-dev/nessi/main/scripts/install.sh | bash
+          nessi version
+
+      - name: Run Quality Check
+        id: quality_check
+        run: |
+          mkdir -p reports
+          REPORT_PATH="reports/quality-report.${{ inputs.report_format }}"
+          
+          echo "Running quality check on ${{ inputs.table_path }} with threshold ${{ inputs.quality_threshold }}%"
+          
+          # Run the quality check and capture the output
+          OUTPUT=$(nessi check ${{ inputs.table_path }} --threshold ${{ inputs.quality_threshold }} --format ${{ inputs.report_format }} --output $REPORT_PATH)
+          RESULT=$?
+          
+          # Extract quality score from output
+          QUALITY_SCORE=$(echo "$OUTPUT" | grep -oP 'Quality Score: \K[0-9]+(\.[0-9]+)?')
+          ISSUES_COUNT=$(echo "$OUTPUT" | grep -oP 'Issues Found: \K[0-9]+')
+          
+          echo "quality_score=$QUALITY_SCORE" >> $GITHUB_OUTPUT
+          echo "issues_count=$ISSUES_COUNT" >> $GITHUB_OUTPUT
+          echo "report_path=$REPORT_PATH" >> $GITHUB_OUTPUT
+          
+          # Print summary
+          echo "Quality Score: $QUALITY_SCORE%"
+          echo "Issues Found: $ISSUES_COUNT"
+          echo "Report saved to: $REPORT_PATH"
+          
+          # Determine if we should fail the workflow
+          if [[ "${{ inputs.fail_on_issues }}" == "true" && $ISSUES_COUNT -gt 0 ]]; then
+            echo "::error::Found $ISSUES_COUNT quality issues. Check the report for details."
+            exit 1
+          fi
+          
+          if (( $(echo "$QUALITY_SCORE < ${{ inputs.quality_threshold }}" | bc -l) )); then
+            echo "::error::Quality score ($QUALITY_SCORE%) is below threshold (${{ inputs.quality_threshold }}%)."
+            exit 1
+          fi
+          
+          exit $RESULT
+
+      - name: Upload Quality Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: nessi-quality-report
+          path: ${{ steps.quality_check.outputs.report_path }}
+          retention-days: 14
+
+      - name: Add Quality Report to PR Comment
+        if: github.event_name == 'pull_request' && inputs.report_format == 'html'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const reportPath = '${{ steps.quality_check.outputs.report_path }}';
+            
+            // Create a summary with key metrics
+            const qualityScore = '${{ steps.quality_check.outputs.quality_score }}';
+            const issuesCount = '${{ steps.quality_check.outputs.issues_count }}';
+            
+            let statusEmoji = '✅';
+            if (issuesCount > 0 || parseFloat(qualityScore) < parseFloat('${{ inputs.quality_threshold }}')) {
+              statusEmoji = '⚠️';
+            }
+            
+            const comment = `## ${statusEmoji} Nessi Data Quality Report
+            
+            | Metric | Value |
+            | ------ | ----- |
+            | Quality Score | ${qualityScore}% |
+            | Issues Found | ${issuesCount} |
+            | Quality Threshold | ${{ inputs.quality_threshold }}% |
+            
+            [Download Full Report](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})
+            
+            *Generated by [Nessi](https://github.com/nessi-dev/nessi)*`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

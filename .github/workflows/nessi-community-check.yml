@@ -1,0 +1,156 @@
+name: Nessi Community Contribution Check
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  community-check:
+    runs-on: ubuntu-latest
+    name: Check Community Contribution Standards
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+
+      - name: Install dependencies
+        run: |
+          go mod download
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+      - name: Check code formatting
+        run: |
+          go fmt ./...
+          if [ -n "$(git diff)" ]; then
+            echo "::error::Code is not properly formatted. Please run 'go fmt ./...' locally."
+            git diff
+            exit 1
+          fi
+
+      - name: Check documentation
+        run: |
+          # Check if documentation exists for new code
+          CHANGED_GO_FILES=$(git diff --name-only --diff-filter=AM ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep "\.go$" || true)
+          
+          if [ -n "$CHANGED_GO_FILES" ]; then
+            echo "Checking documentation for changed Go files:"
+            for file in $CHANGED_GO_FILES; do
+              # Count exported functions/types without comments
+              MISSING_DOCS=$(grep -E "^func [A-Z]|^type [A-Z]" $file | grep -v -B1 "//" | grep -E "^func [A-Z]|^type [A-Z]" || true)
+              
+              if [ -n "$MISSING_DOCS" ]; then
+                echo "::warning::Missing documentation in $file for:\n$MISSING_DOCS"
+              fi
+            done
+          fi
+
+      - name: Check for tests
+        run: |
+          # Check if tests exist for new code
+          CHANGED_PKGS=$(git diff --name-only --diff-filter=AM ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep "\.go$" | xargs -I{} dirname {} | sort -u || true)
+          
+          if [ -n "$CHANGED_PKGS" ]; then
+            echo "Checking tests for changed packages:"
+            for pkg in $CHANGED_PKGS; do
+              # Skip cmd packages and test files
+              if [[ $pkg == *cmd* ]] || [[ $pkg == *_test* ]]; then
+                continue
+              fi
+              
+              # Check if test files exist
+              TEST_FILES=$(find $pkg -name "*_test.go" | wc -l)
+              
+              if [ "$TEST_FILES" -eq "0" ]; then
+                echo "::warning::No test files found for package $pkg"
+              fi
+            done
+          fi
+
+      - name: Run linters
+        run: golangci-lint run ./...
+
+      - name: Run tests
+        run: go test -v ./...
+
+      - name: Check plugin compatibility
+        run: |
+          # Check if plugin API has breaking changes
+          if git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep -q "pkg/plugins/"; then
+            echo "::warning::Changes detected in plugin API. Please ensure backward compatibility."
+            
+            # Check if plugin examples still compile
+            if [ -d "examples/plugins" ]; then
+              echo "Checking plugin examples compatibility..."
+              
+              for plugin_dir in examples/plugins/*/; do
+                if [ -f "$plugin_dir/main.go" ]; then
+                  echo "Checking $plugin_dir..."
+                  # Just check if it compiles, don't build the plugin
+                  if ! go build -o /dev/null $plugin_dir/main.go; then
+                    echo "::error::Plugin example $plugin_dir fails to compile with current API"
+                    exit 1
+                  fi
+                fi
+              done
+            fi
+          fi
+
+      - name: Generate contribution report
+        id: contribution_report
+        run: |
+          # Generate a report of the contribution
+          echo "## Contribution Quality Report" > report.md
+          echo "" >> report.md
+          echo "### Code Changes" >> report.md
+          echo "" >> report.md
+          echo "| Metric | Value |" >> report.md
+          echo "| ------ | ----- |" >> report.md
+          
+          # Count files changed
+          FILES_CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | wc -l)
+          echo "| Files Changed | $FILES_CHANGED |" >> report.md
+          
+          # Count lines added/removed
+          LINES_STATS=$(git diff --shortstat ${{ github.event.pull_request.base.sha }} ${{ github.sha }})
+          echo "| Changes | $LINES_STATS |" >> report.md
+          
+          # Test coverage if available
+          if go test -cover ./... 2>/dev/null | grep -q "coverage"; then
+            COVERAGE=$(go test -cover ./... | grep "coverage" | awk '{print $NF}')
+            echo "| Test Coverage | $COVERAGE |" >> report.md
+          fi
+          
+          echo "" >> report.md
+          echo "### Documentation Updates" >> report.md
+          echo "" >> report.md
+          
+          DOC_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep -E "\.md$|\.txt$|docs/" | wc -l)
+          if [ "$DOC_FILES" -gt "0" ]; then
+            echo "✅ Documentation has been updated" >> report.md
+          else
+            echo "⚠️ No documentation updates found" >> report.md
+          fi
+          
+          echo "report=$(cat report.md)" >> $GITHUB_OUTPUT
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `${{ steps.contribution_report.outputs.report }}`
+            });
