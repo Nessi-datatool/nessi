@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -48,6 +49,50 @@ func TestReportGenerator_GenerateHTMLReport(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(t, string(content), "<html>")
 	assert.Contains(t, string(content), "Test Report")
+}
+
+func TestReportGenerator_GeneratePDFReport(t *testing.T) {
+	// Create a temporary directory for the test
+	tempDir, err := os.MkdirTemp("", "report-generator-test")
+	require.NoError(t, err)
+	defer os.RemoveAll(tempDir)
+
+	// Create a report generator
+	generator, err := NewReportGenerator(tempDir, tempDir)
+	require.NoError(t, err)
+
+	// Create test data
+	data := map[string]interface{}{
+		"title":     "Test PDF Report",
+		"timestamp": time.Now().Format(time.RFC3339),
+		"metrics": map[string]interface{}{
+			"completeness": 0.95,
+			"accuracy":     0.98,
+			"consistency":  0.92,
+		},
+	}
+
+	// Test PDF generation (which may be skipped if wkhtmltopdf is not installed)
+	outputPath := filepath.Join(tempDir, "test-report.pdf")
+	resultPath, err := generator.GenerateReport(data, "test", PDF, outputPath)
+
+	// If wkhtmltopdf is not installed, this test will be skipped
+	if err != nil && (err.Error() == "wkhtmltopdf not found" || err.Error() == "failed to convert HTML to PDF") {
+		t.Skip("Skipping PDF test as wkhtmltopdf is not installed")
+	}
+
+	// Otherwise, check that PDF generation worked
+	require.NoError(t, err)
+	assert.Equal(t, outputPath, resultPath)
+
+	// Check that the file was created
+	_, err = os.Stat(outputPath)
+	require.NoError(t, err)
+
+	// Check the file size (should be non-zero)
+	fileInfo, err := os.Stat(outputPath)
+	require.NoError(t, err)
+	assert.Greater(t, fileInfo.Size(), int64(0))
 }
 
 func TestReportGenerator_GenerateJSONReport(t *testing.T) {
@@ -213,6 +258,55 @@ func TestReportGenerator_GenerateScanReport(t *testing.T) {
 	assert.Equal(t, "/path/to/table", jsonData["table_path"])
 	assert.NotNil(t, jsonData["quality_metrics"])
 	assert.NotNil(t, jsonData["performance_metrics"])
+}
+
+func TestReportGenerator_ErrorHandling(t *testing.T) {
+	// Create a temporary directory for the test
+	tempDir, err := os.MkdirTemp("", "report-generator-test")
+	require.NoError(t, err)
+	defer os.RemoveAll(tempDir)
+
+	// Create a report generator
+	generator, err := NewReportGenerator(tempDir, tempDir)
+	require.NoError(t, err)
+
+	// Test with invalid format
+	_, err = generator.GenerateReport(map[string]interface{}{"test": "data"}, "test", "invalid-format", "")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unsupported report format")
+
+	// Test with invalid output path (write-protected directory)
+	// This test is skipped on non-Unix systems or if running as root
+	if runtime.GOOS != "windows" {
+		// Create a read-only directory
+		readOnlyDir := filepath.Join(tempDir, "readonly")
+		err = os.MkdirAll(readOnlyDir, 0755)
+		require.NoError(t, err)
+
+		// Make it read-only
+		err = os.Chmod(readOnlyDir, 0500) // read + execute, no write
+		require.NoError(t, err)
+
+		// Try to create a file in the read-only directory
+		readOnlyFile := filepath.Join(readOnlyDir, "test.html")
+
+		// Skip if we're running as root (which can write to read-only dirs)
+		if os.Geteuid() != 0 {
+			_, err = os.OpenFile(readOnlyFile, os.O_WRONLY|os.O_CREATE, 0644)
+			if err != nil { // If we can't write to the directory, test will work
+				_, err = generator.GenerateReport(map[string]interface{}{"test": "data"}, "test", HTML, readOnlyFile)
+				assert.Error(t, err)
+			}
+		}
+
+		// Restore permissions for cleanup
+		os.Chmod(readOnlyDir, 0755)
+	}
+
+	// Test GenerateScanReport with nil scan result
+	_, err = generator.GenerateScanReport(nil, HTML, "")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "scan result is nil")
 }
 
 func TestValidateReportData(t *testing.T) {

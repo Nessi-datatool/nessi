@@ -11,6 +11,7 @@ Delta Lake is an open-source storage layer that brings ACID transactions to Apac
 - Version control and history
 - Data quality validation
 - Databricks Unity Catalog integration
+- Comprehensive error handling
 
 ## Schema Management
 
@@ -198,6 +199,61 @@ A: Check if the Delta Lake table has retention policies that remove older versio
 A: Ensure you have read permissions for the _delta_log directory.
 
 **Q: Performance is slow when analyzing large tables**  
+A: Consider using sampling or partitioning strategies for large tables.
+
+## Error Handling
+
+Nessi provides comprehensive error handling for Delta Lake operations:
+
+### Common Error Types
+
+#### Invalid Path Errors
+```bash
+# Error when path doesn't exist
+nessi schema show --path /nonexistent/path
+# Output: Error: Invalid path: /nonexistent/path does not exist or is not accessible
+```
+
+#### Not a Delta Table Errors
+```bash
+# Error when directory is not a Delta table
+nessi schema show --path /path/to/regular/directory
+# Output: Error: Not a Delta table: /path/to/regular/directory is not a Delta Lake table
+```
+
+#### Schema Validation Errors
+```bash
+# Error when writing data with incompatible schema
+nessi write --path /path/to/delta/table --data incompatible_data.json
+# Output: Error: Schema validation failed: Field 'age' expected type INT but got STRING
+```
+
+#### Corrupted Table Recovery
+
+Nessi can detect and attempt to recover from corrupted Delta tables:
+
+```bash
+# Attempt to recover a corrupted Delta table
+nessi delta repair --path /path/to/corrupted/table
+```
+
+### Error Handling Best Practices
+
+1. **Always check path validity** before operations
+2. **Validate schemas** before writing large datasets
+3. **Use try-catch blocks** when scripting with Nessi
+4. **Check error messages** for specific guidance on resolving issues
+5. **Consult logs** for detailed error information
+
+### Debugging Delta Lake Issues
+
+```bash
+# Enable verbose logging for detailed error information
+NESSI_LOG_LEVEL=debug nessi schema show --path /path/to/delta/table
+
+# Validate Delta table integrity
+nessi delta validate-integrity --path /path/to/delta/table
+```
 A: Use sampling with the `--sample-ratio` option to improve performance.
 
 ### Getting Help

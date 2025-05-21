@@ -46,6 +46,11 @@ func NewDatabricksCatalog(client DatabricksAPI) *DatabricksCatalog {
 
 // ListCatalogs returns a list of catalogs
 func (c *DatabricksCatalog) ListCatalogs(ctx context.Context) ([]string, error) {
+	// Check for empty workspace ID
+	if c.workspaceID == "" {
+		return nil, fmt.Errorf("workspace ID is required")
+	}
+
 	catalogs, err := c.client.GetCatalogs(ctx, c.workspaceID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list catalogs: %w", err)

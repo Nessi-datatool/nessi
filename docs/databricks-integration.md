@@ -18,7 +18,7 @@ To use the Databricks integration, you need to set the following environment var
 ```bash
 export DATABRICKS_HOST="https://your-workspace.cloud.databricks.com"
 export DATABRICKS_TOKEN="your-personal-access-token"
-export DATABRICKS_WORKSPACE_ID="your-workspace-id"  # Optional, defaults to "0"
+export DATABRICKS_WORKSPACE_ID="your-workspace-id"  # Required for multi-workspace environments
 export DATABRICKS_DEFAULT_SCHEMA="default"          # Optional, defaults to "default"
 export DATABRICKS_DEFAULT_CATALOG="hive_metastore"  # Optional, defaults to "hive_metastore"
 ```
@@ -96,6 +96,81 @@ nessi report --catalog databricks --database main.default --table customers --fo
 
 # Export quality metrics as JSON for further processing
 nessi report --catalog databricks --database main.default --table customers --format json --output ./reports/quality_metrics.json
+```
+
+## Error Handling
+
+Nessi provides robust error handling for Databricks integration:
+
+### Authentication Errors
+
+```bash
+# Error when token is invalid or expired
+nessi catalog list --type databricks
+# Output: Error: Authentication failed: Invalid or expired Databricks token
+```
+
+### Connection Errors
+
+```bash
+# Error when Databricks host is unreachable
+nessi catalog list --type databricks
+# Output: Error: Connection failed: Could not connect to Databricks host
+```
+
+### Resource Not Found Errors
+
+```bash
+# Error when catalog doesn't exist
+nessi catalog schemas --type databricks --catalog nonexistent_catalog
+# Output: Error: Resource not found: Catalog 'nonexistent_catalog' does not exist
+
+# Error when table doesn't exist
+nessi catalog describe --type databricks --database main.default --table nonexistent_table
+# Output: Error: Resource not found: Table 'main.default.nonexistent_table' does not exist
+```
+
+### Workspace ID Validation
+
+```bash
+# Error when workspace ID is not provided in a multi-workspace environment
+# DATABRICKS_WORKSPACE_ID not set
+nessi catalog list --type databricks
+# Output: Error: Configuration error: Workspace ID is required for multi-workspace environments
+```
+
+### Rate Limiting Errors
+
+```bash
+# Error when too many requests are made
+nessi catalog list --type databricks
+# Output: Error: Rate limit exceeded: Too many requests to Databricks API, please try again later
+```
+
+### Server Errors
+
+```bash
+# Error when Databricks server returns an error
+nessi catalog list --type databricks
+# Output: Error: Server error: Databricks API returned an error (500)
+```
+
+### Error Handling Best Practices
+
+1. **Always set required environment variables** before running commands
+2. **Validate resource existence** before performing operations
+3. **Check authentication** regularly as tokens expire
+4. **Implement retry logic** for transient errors
+5. **Monitor rate limits** to avoid throttling
+
+### Debugging Databricks Integration Issues
+
+```bash
+# Enable verbose logging for detailed error information
+NESSI_LOG_LEVEL=debug nessi catalog list --type databricks
+
+# Test connection to Databricks
+nessi test connection --type databricks
 ```
 
 ## Limitations

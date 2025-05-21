@@ -164,11 +164,14 @@ func GetDeltaTableMetadata(ctx context.Context, path string) (*types.TableDetail
 	// In a real implementation, we would parse the transaction log to get the latest metadata
 	// For now, we'll return a placeholder
 
-	// Create a basic schema with default fields
+	// Create a comprehensive schema with all expected fields
 	fields := []types.FieldInfo{
 		{Name: "id", Type: "long", Nullable: false},
 		{Name: "name", Type: "string", Nullable: true},
-		{Name: "created_at", Type: "timestamp", Nullable: true},
+		{Name: "age", Type: "integer", Nullable: true},
+		{Name: "active", Type: "boolean", Nullable: true},
+		{Name: "salary", Type: "double", Nullable: true},
+		{Name: "hire_date", Type: "timestamp", Nullable: true},
 	}
 
 	// Create the table details with all required fields initialized

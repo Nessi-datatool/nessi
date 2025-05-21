@@ -4,7 +4,7 @@
   <img src="docs/images/nessi-logo.png" alt="Nessi Logo" width="200"/>
 </p>
 
-Nessi is an open-source data quality and Delta Lake management tool that helps organizations maintain high-quality data and efficiently manage their Delta Lake tables.
+Nessi is an open-source CLI-only data quality and Delta Lake management tool that helps organizations maintain high-quality data and efficiently manage their Delta Lake tables through comprehensive HTML and PDF reporting.
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/nessi-dev/nessi)](https://goreportcard.com/report/github.com/nessi-dev/nessi)
 [![Build Status](https://github.com/nessi-dev/nessi/workflows/CI/badge.svg)](https://github.com/nessi-dev/nessi/actions)
@@ -29,6 +29,12 @@ Nessi is an open-source data quality and Delta Lake management tool that helps o
   - Custom quality rules
   - Data profiling and statistics
   - Anomaly detection
+
+- **Robust Error Handling**
+  - Comprehensive error messages
+  - Detailed troubleshooting guidance
+  - Recovery mechanisms for corrupted tables
+  - Authentication and connection error handling
   - Schema validation
   - Freshness monitoring
   - Consistency checks
@@ -41,12 +47,14 @@ Nessi is an open-source data quality and Delta Lake management tool that helps o
   - Alert history in log files
   
 - **Reporting & Visualization**
-  - CLI-generated reports
+  - CLI-generated HTML and PDF reports
+  - Comprehensive data quality dashboards in HTML format
+  - Exportable PDF reports for sharing with stakeholders
   - Schema tree visualization with detailed type information
   - Data quality metrics with heatmap visualization
   - Trend analysis via report comparison
   - Quality scoring and metrics
-  - Interactive CLI visualizations for data quality assessment
+  - JSON and CSV export for integration with other tools
   - **dbt Integration**: Seamless integration with dbt for validating and profiling models directly in your dbt workflow
 
 ## Installation
@@ -195,6 +203,7 @@ For detailed documentation, visit our [Documentation Home](docs/README.md).
 - [Reporting](docs/REPORTING.md) - Generate reports in various formats
 - [Advanced Features](docs/advanced_features.md) - Delta Lake features, monitoring, and more
 - [Integrations](docs/integration_guide.md) - Cloud, Databricks, and workflow integrations
+- [Error Handling](docs/ERROR_HANDLING.md) - Comprehensive error handling documentation
 - [FAQ](docs/faq.md) - Frequently asked questions
 
 - **Monitoring and Alerting (OSS + Optional)**

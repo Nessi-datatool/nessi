@@ -14,16 +14,16 @@
 
 ---
 
-Nessi provides comprehensive reporting capabilities through its flexible CLI-based report generation system. This document outlines the available report formats and how to use them.
+Nessi provides comprehensive reporting capabilities through its flexible CLI-only report generation system. This document outlines the available report formats and how to use them effectively without requiring any web interface.
 
 ## Supported Report Formats
 
-Nessi supports the following report formats:
+Nessi supports the following report formats through its CLI-only interface:
 
-1. **HTML Reports**: Static HTML files that can be viewed in any web browser
-2. **PDF Reports**: Static reports suitable for sharing and archiving
-3. **JSON Reports**: Machine-readable reports for integration with other systems
-4. **CSV Reports**: Tabular data exports for analysis in spreadsheet applications
+1. **HTML Reports**: Interactive HTML files with rich visualizations that can be viewed in any web browser
+2. **PDF Reports**: Professional-quality PDF documents suitable for sharing with stakeholders and archiving
+3. **JSON Reports**: Machine-readable reports for integration with other systems and data pipelines
+4. **CSV Reports**: Tabular data exports for analysis in spreadsheet applications and business intelligence tools
 
 ## Report Generation
 
@@ -89,49 +89,22 @@ HTML templates can use the following variables:
 - `{{.timestamp}}`: Timestamp when the report was generated
 - `{{.data}}`: The report data object containing metrics, columns, and other information
 
-## Programmatic Report Generation
+## CLI-Based Report Generation
 
-Reports can also be generated programmatically using the Nessi API:
+All reports in Nessi are generated through the command-line interface, making it easy to integrate with scripts, automation tools, and CI/CD pipelines:
 
-```go
-import "github.com/nessi-dev/nessi/internal/report"
+```bash
+# Basic report generation
+nessi report quality /path/to/delta/table --format html --output quality-report.html
 
-// Create a report manager
-manager, err := report.NewManager("./reports")
-if err != nil {
-    // Handle error
-}
+# Generate multiple report types in batch
+nessi batch-report --tables-file tables.txt --report-types quality,schema,freshness --format pdf --output-dir reports/
 
-// Register a template
-template := report.ReportTemplate{
-    ID:          "quality_report",
-    Name:        "Quality Report",
-    Description: "A comprehensive quality report",
-    Format:      report.HTML,
-    Template:    templateContent,
-    Parameters:  []string{"table_path", "timestamp"},
-}
-manager.AddTemplate(template)
-
-// Set up parameters
-params := map[string]interface{}{
-    "table_path": "path/to/table",
-    "timestamp":  time.Now().Format(time.RFC3339),
-    "data":       qualityData,
-}
-
-// Generate a report
-report, err := manager.GenerateReport(ctx, "quality_report", params)
-if err != nil {
-    // Handle error
-}
-
-// Save the report
-err = manager.SaveReport(report)
-if err != nil {
-    // Handle error
-}
+# Schedule regular reports using cron
+0 8 * * 1 /usr/local/bin/nessi report quality /path/to/delta/table --format pdf --output /reports/weekly/quality-$(date +"%Y%m%d").pdf
 ```
+
+The CLI-only approach ensures that Nessi can be used in environments without graphical interfaces, such as servers, containers, and CI/CD pipelines.
 
 ## Report Storage
 
