@@ -48,11 +48,11 @@ The report includes social media sharing buttons, QR codes, and embed options.`,
 		fmt.Printf("Using title: %s, description: %s, hashtags: %s\n", title, description, hashtags)
 
 		// Show progress indicator
-		ShowProgress("Generating shareable report...", 1*time.Second)
+		showProgress("Generating shareable report...", 1*time.Second)
 
 		// Mock report generation (in a real implementation, this could fail)
 		// Simulate success for demonstration purposes
-		ShowSuccess(fmt.Sprintf("Successfully generated shareable report for '%s'", tableName))
+		showSuccess(fmt.Sprintf("Successfully generated shareable report for '%s'", tableName))
 
 		// Show output details
 		if outputPath != "" {
@@ -91,7 +91,7 @@ and adoption while showing your support for the project.`,
 		}
 
 		// Show progress indicator
-		ShowProgress("Generating 'Powered by Nessi' badge...", 1*time.Second)
+		showProgress("Generating 'Powered by Nessi' badge...", 1*time.Second)
 
 		// In a real implementation, this would use the badge plugin
 		// For now, we'll just show a mock implementation
@@ -103,7 +103,7 @@ and adoption while showing your support for the project.`,
 		// Validate color format (simple validation for demonstration)
 		if !strings.HasPrefix(color, "#") && len(color) != 6 && color != "blue" && color != "green" && color != "red" && color != "yellow" {
 			// Show a warning but continue with default color
-			ShowWarning(fmt.Sprintf("Color '%s' may not be recognized. Using default color.", color))
+			showWarning(fmt.Sprintf("Color '%s' may not be recognized. Using default color.", color))
 			color = "blue"
 		}
 
@@ -125,7 +125,7 @@ and adoption while showing your support for the project.`,
 		}
 
 		// Show success message
-		ShowSuccess("Badge generated successfully!")
+		showSuccess("Badge generated successfully!")
 
 		fmt.Println("\nYour 'Powered by Nessi' badge:")
 		fmt.Println("----------------------------")
@@ -192,7 +192,7 @@ processed and may be used to guide future development.`,
 		}
 
 		// Show progress indicator
-		ShowProgress("Submitting feedback...", 1*time.Second)
+		showProgress("Submitting feedback...", 1*time.Second)
 
 		// In a real implementation, this would use the community engagement plugin
 		// For now, we'll just show a mock implementation
@@ -203,7 +203,7 @@ processed and may be used to guide future development.`,
 			"Feedback from "+userName+":\n\n"+feedbackText)
 
 		// Show success message
-		ShowSuccess("Feedback submitted successfully!")
+		showSuccess("Feedback submitted successfully!")
 
 		// Display mock result
 		fmt.Println("Thank you for your feedback!")

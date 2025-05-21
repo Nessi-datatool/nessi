@@ -148,8 +148,8 @@ func handleCommunityError(err *common.NessiError) {
 	fmt.Println("4. Run 'nessi viral community --help' for usage information")
 }
 
-// ShowProgress displays a progress indicator for viral feature operations
-func ShowProgress(message string, duration time.Duration) {
+// showProgress displays a progress indicator for viral feature operations
+func showProgress(message string, duration time.Duration) {
 	// Create a new spinner
 	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
 	s.Suffix = " " + message
@@ -165,14 +165,14 @@ func ShowProgress(message string, duration time.Duration) {
 	s.Stop()
 }
 
-// ShowSuccess displays a success message for viral feature operations
-func ShowSuccess(message string) {
+// showSuccess displays a success message for viral feature operations
+func showSuccess(message string) {
 	success := color.New(color.FgGreen, color.Bold)
 	success.Printf("\n✅ %s\n", message)
 }
 
-// ShowWarning displays a warning message for viral feature operations
-func ShowWarning(message string) {
+// showWarning displays a warning message for viral feature operations
+func showWarning(message string) {
 	warning := color.New(color.FgYellow, color.Bold)
 	warning.Printf("\n⚠️ %s\n", message)
 }

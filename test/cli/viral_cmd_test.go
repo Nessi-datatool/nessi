@@ -283,26 +283,44 @@ func TestViralCommandErrors(t *testing.T) {
 		name          string
 		args          []string
 		errorContains string
+		errorCodeContains string // New field for error codes
 	}{
 		{
 			name:          "Share with missing table",
 			args:          []string{"viral", "share"},
 			errorContains: "requires a table name",
+			errorCodeContains: "", // No specific error code expected
 		},
 		{
 			name:          "Badge with invalid format",
 			args:          []string{"viral", "badge", "--format", "invalid"},
-			errorContains: "invalid format",
+			errorContains: "Invalid badge format",
+			errorCodeContains: "V102", // Badge error code
 		},
 		{
 			name:          "Community feedback with missing text",
 			args:          []string{"viral", "community", "feedback", "--type", "feature"},
-			errorContains: "feedback text is required",
+			errorContains: "Feedback text cannot be empty",
+			errorCodeContains: "V103", // Community error code
 		},
 		{
 			name:          "Community contribute with invalid experience",
 			args:          []string{"viral", "community", "contribute", "--experience", "invalid"},
 			errorContains: "invalid experience level",
+			errorCodeContains: "", // No specific error code expected
+		},
+		// New test cases for error handling
+		{
+			name:          "Badge with invalid color",
+			args:          []string{"viral", "badge", "--color", "invalid-color"},
+			errorContains: "may not be recognized", // This is a warning, not an error
+			errorCodeContains: "",
+		},
+		{
+			name:          "Share with invalid output path",
+			args:          []string{"viral", "share", "test_table", "--output", "/invalid/path/report.html"},
+			errorContains: "output path",
+			errorCodeContains: "V101", // Share error code
 		},
 	}
 
@@ -314,11 +332,21 @@ func TestViralCommandErrors(t *testing.T) {
 			// Execute command and expect error
 			output := captureOutput(func() {
 				err := rootCmd.Execute()
-				assert.Error(t, err, "Command should fail")
+				// For the invalid color test, we expect a warning but not an error
+				if tc.name == "Badge with invalid color" {
+					assert.NoError(t, err, "Command should succeed with a warning")
+				} else {
+					assert.Error(t, err, "Command should fail")
+				}
 			})
 
 			// Check error message
 			assert.Contains(t, output, tc.errorContains, "Error message should contain %s", tc.errorContains)
+			
+			// Check error code if specified
+			if tc.errorCodeContains != "" {
+				assert.Contains(t, output, tc.errorCodeContains, "Error code should contain %s", tc.errorCodeContains)
+			}
 		})
 	}
 }
