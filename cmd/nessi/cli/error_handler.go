@@ -18,14 +18,20 @@ type ErrorHandler struct {
 	Interactive bool
 	Logger      logger.Logger
 	Resolver    *common.InteractiveErrorResolver
+	Telemetry   *common.ErrorTelemetry
 }
 
 // NewErrorHandler creates a new error handler
 func NewErrorHandler(interactive bool) *ErrorHandler {
+	// Create error telemetry
+	telemetryConfig := common.DefaultErrorTelemetryConfig()
+	telemetry := common.NewErrorTelemetry(telemetryConfig)
+	
 	return &ErrorHandler{
 		Interactive: interactive,
 		Logger:      logger.DefaultLogger,
 		Resolver:    common.NewInteractiveErrorResolver(),
+		Telemetry:   telemetry,
 	}
 }
 
@@ -37,6 +43,9 @@ func (h *ErrorHandler) HandleError(err error) error {
 
 	// Log the error
 	h.Logger.Error(err, "Command failed")
+	
+	// Record the error in telemetry
+	h.Telemetry.RecordError(err)
 
 	// Check if it's a NessiError
 	var nessiErr *common.NessiError
