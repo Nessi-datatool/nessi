@@ -214,6 +214,7 @@ For detailed documentation, visit our [Documentation Home](docs/README.md).
 - [Advanced Features](docs/advanced_features.md) - Delta Lake features, monitoring, and more
 - [Integrations](docs/integration_guide.md) - Cloud, Databricks, and workflow integrations
 - [Error Handling](docs/ERROR_HANDLING.md) - Comprehensive error handling documentation
+- [Usability Features](docs/USABILITY_FEATURES_SUMMARY.md) - Summary of all usability features
 - [FAQ](docs/faq.md) - Frequently asked questions
 
 - **Monitoring and Alerting (OSS + Optional)**
