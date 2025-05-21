@@ -50,22 +50,43 @@ func (h *ErrorHandler) HandleError(err error) error {
 	// Check if it's a NessiError
 	var nessiErr *common.NessiError
 	if errors.As(err, &nessiErr) {
-		// Print the error with color
-		printColoredError(nessiErr)
+		// Print the error message
+		fmt.Fprintf(os.Stderr, "❌ Error: %s\n", nessiErr.Message)
 
-		// Return the error without interactive resolution if not enabled
-		if !h.Interactive {
-			return fmt.Errorf("error: %w", err)
+		// Print the error details if available
+		if nessiErr.Details != "" {
+			fmt.Fprintf(os.Stderr, "Details: %s\n", nessiErr.Details)
 		}
 
-		// Check if it's a resolvable error
-		resolvableErr, ok := err.(common.ResolvableError)
-		if !ok {
-			return fmt.Errorf("error: %w", err)
+		// Print suggestions if available in the error
+		if len(nessiErr.Suggestions) > 0 {
+			fmt.Fprintf(os.Stderr, "\nSuggestions:\n")
+			for _, suggestion := range nessiErr.Suggestions {
+				fmt.Fprintf(os.Stderr, "  - %s\n", suggestion)
+			}
 		}
 
-		// Try to resolve the error interactively
-		return h.Resolver.ResolveError(resolvableErr)
+		// Print advanced suggestions from the suggestion system
+		suggestions := common.FormatSuggestions(nessiErr)
+		if suggestions != "" {
+			fmt.Fprintf(os.Stderr, "%s\n", suggestions)
+		}
+
+		// Try to resolve the error interactively if enabled
+		if h.Interactive {
+			resolved, err := h.Resolver.ResolveError(nessiErr)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to resolve error: %s\n", err)
+				return nessiErr
+			}
+
+			if resolved {
+				fmt.Fprintf(os.Stderr, "✅ Error resolved successfully!\n")
+				return nil
+			}
+		}
+
+		return nessiErr
 	}
 
 	// For non-NessiError, just print the error
