@@ -199,6 +199,7 @@ It provides features for validation, profiling, monitoring, and reporting.`,
 	initReportCmd()
 	initUserCmd()
 	initSchemaTreeCmd()
+	initTestErrorCmd()
 }
 
 // Execute runs the CLI

@@ -101,6 +101,52 @@ cat > $TEST_DIR/invalid_schema.json << EOF
 EOF
 nessi validate-schema --path $TEST_DIR/invalid_schema.json
 
+# ===== ERROR TELEMETRY TESTS =====
+print_header "ERROR TELEMETRY TESTS"
+
+# Test error telemetry recording
+print_test "Error telemetry recording" "nessi test-error N101 --telemetry"
+nessi test-error N101 --telemetry
+
+# Test error telemetry export
+print_test "Error telemetry export" "nessi test-error N201 --telemetry --export $TEST_DIR/error_telemetry.json"
+nessi test-error N201 --telemetry --export $TEST_DIR/error_telemetry.json
+
+# Check if telemetry file was created
+if [ -f "$TEST_DIR/error_telemetry.json" ]; then
+  echo "✅ Telemetry file created successfully"
+  echo "Telemetry file contents:"
+  cat "$TEST_DIR/error_telemetry.json"
+else
+  echo "❌ Telemetry file was not created"
+fi
+
+# ===== ERROR SUGGESTIONS TESTS =====
+print_header "ERROR SUGGESTIONS TESTS"
+
+# Test error suggestions for path errors
+print_test "Error suggestions for path errors" "nessi test-error N101"
+nessi test-error N101
+
+# Test error suggestions for configuration errors
+print_test "Error suggestions for configuration errors" "nessi test-error N201"
+nessi test-error N201
+
+# Test error suggestions for authentication errors
+print_test "Error suggestions for authentication errors" "nessi test-error N301"
+nessi test-error N301
+
+# ===== RESOLVABLE ERRORS TESTS =====
+print_header "RESOLVABLE ERRORS TESTS"
+
+# Test resolvable path error
+print_test "Resolvable path error" "nessi test-error N101 --resolvable"
+nessi test-error N101 --resolvable
+
+# Test resolvable configuration error
+print_test "Resolvable configuration error" "nessi test-error N201 --resolvable"
+nessi test-error N201 --resolvable
+
 # ===== RESTORE ENVIRONMENT =====
 print_header "TESTS COMPLETED"
 
