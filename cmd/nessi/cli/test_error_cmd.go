@@ -10,13 +10,17 @@ import (
 )
 
 // initTestErrorCmd initializes the test-error command
+func init() {
+	initTestErrorCmd()
+}
+
 func initTestErrorCmd() {
 	testErrorCmd := &cobra.Command{
 		Use:   "test-error [error-code]",
 		Short: "Test error handling system",
 		Long:  "Generate a test error to verify the error handling system",
 		Args:  cobra.MaximumNArgs(1),
-		RunE: WrapCobraCommand(func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			// Get error code
 			errorCode := common.ErrUnknown
 			if len(args) > 0 {
@@ -113,7 +117,7 @@ func initTestErrorCmd() {
 
 			// Return the error to trigger error handling
 			return err
-		}),
+		},
 	}
 
 	// Add flags
