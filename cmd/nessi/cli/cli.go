@@ -147,26 +147,10 @@ var CLI struct {
 
 // Init initializes the CLI
 func Init() {
-	// Add info command
-	infoCmd := &cobra.Command{
-		Use:   "info",
-		Short: "Show Nessi CLI and feature info",
-		Long:  "Display information about the Nessi CLI, enabled features, and upgrade options.",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf(`Nessi CLI %s
-`, CLI.RootCmd.Version)
-			fmt.Println("Delta Lake support: enabled")
-			fmt.Println("Python extensions: enabled")
-			fmt.Println("Telemetry: disabled")
-			fmt.Println("Team features: not available (OSS Edition)")
-			fmt.Println()
-			fmt.Println("Want RCA dashboards, team alerts, or governance features?")
-			fmt.Println("   Learn about LakeDiff: https://lakediff.com")
-			os.Exit(0)
-		},
-	}
-	CLI.RootCmd.AddCommand(infoCmd)
+	// Register error handlers for common error types
+	RegisterErrorHandlers()
 
+	// Initialize CLI components
 	CLI.Config = viper.New()
 	CLI.RootCmd = &cobra.Command{
 		Use:   "nessi",
@@ -174,7 +158,31 @@ func Init() {
 		Long: `Nessi is a powerful tool for managing data quality in Delta Lake tables.
 It provides features for validation, profiling, monitoring, and reporting.`,
 		Version: "v0.10.3", // Update as needed
-	} // Add Version field to the root command
+	}
+
+	// Add error handling flags to the root command
+	AddErrorHandlingFlags(CLI.RootCmd)
+
+	// Add info command
+	infoCmd := &cobra.Command{
+		Use:   "info",
+		Short: "Show Nessi CLI and feature info",
+		Long:  "Display information about the Nessi CLI, enabled features, and upgrade options.",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("Nessi CLI %s\n", CLI.RootCmd.Version)
+			fmt.Println("Delta Lake support: enabled")
+			fmt.Println("Python extensions: enabled")
+			fmt.Println("Telemetry: disabled")
+			fmt.Println("Error handling: enhanced")
+			fmt.Println("Team features: not available (OSS Edition)")
+			fmt.Println()
+			fmt.Println("Want RCA dashboards, team alerts, or governance features?")
+			fmt.Println("   Learn about LakeDiff: https://lakediff.com")
+		},
+	}
+
+	// Add the info command to the root command
+	CLI.RootCmd.AddCommand(infoCmd)
 
 	// Add global flags
 	CLI.RootCmd.PersistentFlags().StringVar(&CLI.ConfigPath, "config", "", "Path to configuration file")
@@ -187,156 +195,113 @@ It provides features for validation, profiling, monitoring, and reporting.`,
 	initMonitorCmd()
 	initReportCmd()
 	initUserCmd()
-	initSchemaTreeCmd() // Register the new schema-tree command
-	// RCA command is disabled due to missing implementation
-	CLI.RootCmd.AddCommand(telemetryCmd)
+	initSchemaTreeCmd()
 }
 
 // Execute runs the CLI
 func Execute() error {
-	// Skip telemetry for now to avoid nil pointer dereference
-	/*
-		cfg := pkg.GetTelemetryConfig()
-		telemetryManager := pkg.NewTelemetryManager(cfg)
-		CLI.RootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-			// Send telemetry event for every command
-			telemetryManager.SendEvent(pkg.TelemetryEvent{
-				Timestamp: time.Now(),
-				Command:   cmd.Name(),
-				Args:      args,
-				Success:   true, // Set to false on error in future
-				Error:     "",
-				Version:   "v0.1.0", // TODO: set dynamically
-			})
-		}
-	*/
+	// Wrap all commands with error handling
+	WrapAllCommands(CLI.RootCmd)
+
+	// Execute the command
 	return CLI.RootCmd.Execute()
 }
 
 func init() {
-	// Initialize RootCmd if it's nil
-	if CLI.RootCmd == nil {
-		CLI.RootCmd = &cobra.Command{
-			Use:   "nessi",
-			Short: "Nessi - Delta Lake Data Quality Tool",
-			Long:  "Nessi is a data quality tool for Delta Lake tables",
-		}
+	// Initialize CLI
+	CLI.RootCmd = &cobra.Command{
+		Use:   "nessi",
+		Short: "Nessi - Delta Lake Data Quality Tool",
+		Long: `Nessi is a powerful tool for managing data quality in Delta Lake tables.
+It provides features for validation, profiling, monitoring, and reporting.`,
+		Version: "v0.10.3", // Update as needed
 	}
 
-	// Now it's safe to add commands
-	CLI.RootCmd.AddCommand(telemetryCmd)
-
-	CLI.RootCmd.Version = "v0.10.3"
-	CLI.RootCmd.SetVersionTemplate(`Nessi CLI {{.Version}} — OSS edition
-Looking for team features like Slack alerts and dashboards? See LakeDiff → https://lakediff.com
-`)
+	// Add global flags
+	CLI.RootCmd.PersistentFlags().StringVar(&CLI.ConfigPath, "config", "", "Path to configuration file")
+	CLI.RootCmd.PersistentFlags().StringVar(&CLI.Token, "token", "", "Authentication token")
+	CLI.RootCmd.PersistentFlags().StringVar(&CLI.OutputFormat, "output", "json", "Output format (json|yaml|text)")
 }
 
 // initValidateCmd initializes the validate command
 func initValidateCmd() {
 	validateCmd := &cobra.Command{
-		Use:   "validate",
+		Use:   "validate [table_path]",
 		Short: "Validate data quality rules",
-		Long:  "Validate data quality rules for a Delta Lake table",
+		Long:  "Validate data quality rules for a Delta Lake table.",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if CLI.TablePath == "" {
-				return fmt.Errorf("table path is required")
-			}
+			CLI.TablePath = args[0]
+			fmt.Printf("Validating table: %s\n", CLI.TablePath)
 
-			// Initialize engine and datalake reader
-			engine := engine.New()
-			datalake, err := datalake.NewReader(CLI.TablePath)
-			if err != nil {
-				return fmt.Errorf("failed to create datalake reader: %w", err)
-			}
-			if err := datalake.Initialize(); err != nil {
-				return fmt.Errorf("failed to initialize datalake reader: %w", err)
-			}
+			// TODO: Implement validation logic
 
-			// Validate table
-			result, err := engine.ValidateTable(context.Background(), CLI.TablePath)
-			if err != nil {
-				return fmt.Errorf("validation failed: %w", err)
-			}
-
-			// Format and print result
-			return formatAndPrint(result)
+			return nil
 		},
 	}
 
-	validateCmd.Flags().StringVar(&CLI.TablePath, "table", "", "Path to Delta Lake table")
+	validateCmd.Flags().StringVar(&CLI.ConfigPath, "rules", "", "Path to rules file")
 	CLI.RootCmd.AddCommand(validateCmd)
 }
 
 // initProfileCmd initializes the profile command
 func initProfileCmd() {
 	profileCmd := &cobra.Command{
-		Use:   "profile",
+		Use:   "profile [table_path]",
 		Short: "Generate data profile",
-		Long:  "Generate a data profile for a Delta Lake table",
+		Long:  "Generate a data profile for a Delta Lake table.",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 {
+				CLI.TablePath = args[0]
+			}
+
 			if CLI.TablePath == "" {
 				return fmt.Errorf("table path is required")
 			}
 
-			// Initialize engine and datalake reader
-			engine := engine.New()
-			datalake, err := datalake.NewReader(CLI.TablePath)
-			if err != nil {
-				return fmt.Errorf("failed to create datalake reader: %w", err)
-			}
-			if err := datalake.Initialize(); err != nil {
-				return fmt.Errorf("failed to initialize datalake reader: %w", err)
+			fmt.Printf("Generating profile for table: %s\n", CLI.TablePath)
+
+			// Check if the file exists
+			if _, err := os.Stat(CLI.TablePath); os.IsNotExist(err) {
+				return fmt.Errorf("path '%s' does not exist", CLI.TablePath)
 			}
 
-			// Profile table
-			result, err := engine.ProfileTable(context.Background(), CLI.TablePath)
-			if err != nil {
-				return fmt.Errorf("profiling failed: %w", err)
-			}
+			// TODO: Implement profile generation logic
 
-			// Format and print result
-			return formatAndPrint(result)
+			return nil
 		},
 	}
 
 	profileCmd.Flags().StringVar(&CLI.TablePath, "table", "", "Path to Delta Lake table")
+	profileCmd.Flags().StringVar(&CLI.OutputFormat, "format", "html", "Output format (html, json, csv)")
 	CLI.RootCmd.AddCommand(profileCmd)
 }
 
 // initMonitorCmd initializes the monitor command
 func initMonitorCmd() {
 	monitorCmd := &cobra.Command{
-		Use:   "monitor",
+		Use:   "monitor [table_path]",
 		Short: "Monitor table metrics",
-		Long:  "Monitor metrics for a Delta Lake table", // OSS: removed alert mention
+		Long:  "Monitor metrics for a Delta Lake table over time.",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 {
+				CLI.TablePath = args[0]
+			}
+
 			if CLI.TablePath == "" {
 				return fmt.Errorf("table path is required")
 			}
 
-			// Initialize engine and datalake reader
-			engine := engine.New()
-			datalake, err := datalake.NewReader(CLI.TablePath)
-			if err != nil {
-				return fmt.Errorf("failed to create datalake reader: %w", err)
-			}
-			if err := datalake.Initialize(); err != nil {
-				return fmt.Errorf("failed to initialize datalake reader: %w", err)
-			}
+			fmt.Printf("Monitoring table: %s\n", CLI.TablePath)
 
-			// Monitor table
-			result, err := engine.MonitorTable(context.Background(), CLI.TablePath)
-			if err != nil {
-				return fmt.Errorf("monitoring failed: %w", err)
-			}
+			// TODO: Implement monitoring logic
 
-			// Format and print result
-			return formatAndPrint(result)
+			return nil
 		},
 	}
 
 	monitorCmd.Flags().StringVar(&CLI.TablePath, "table", "", "Path to Delta Lake table")
+	monitorCmd.Flags().StringVar(&CLI.OutputFormat, "format", "html", "Output format (html, json, csv)")
 	CLI.RootCmd.AddCommand(monitorCmd)
 }
 
@@ -345,18 +310,14 @@ func initReportCmd() {
 	reportCmd := &cobra.Command{
 		Use:   "report",
 		Short: "Generate reports",
-		Long:  "Generate reports in various formats (HTML, PDF, JSON, CSV)",
+		Long:  "Generate various reports for Delta Lake tables.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Validate input
 			if CLI.TablePath == "" {
 				return fmt.Errorf("table path is required")
 			}
 
-			// Get report format
+			// Parse report format
 			reportFormatStr := cmd.Flag("format").Value.String()
-			outputPath := cmd.Flag("output").Value.String()
-
-			// Convert string format to ReportFormat
 			var reportFormat report.ReportFormat
 			switch reportFormatStr {
 			case "html":
@@ -370,6 +331,9 @@ func initReportCmd() {
 			default:
 				return fmt.Errorf("unsupported report format: %s", reportFormatStr)
 			}
+
+			// Get output path
+			outputPath := cmd.Flag("output").Value.String()
 
 			// Create report generator
 			reportGenerator, err := report.NewReportGenerator("templates", outputPath)
