@@ -267,6 +267,8 @@ func init() {
 	cli.CLI.RootCmd.AddCommand(checkCmd)
 	cli.CLI.RootCmd.AddCommand(profileCmd)
 	cli.CLI.RootCmd.AddCommand(extensionsCmd)
+	cli.CLI.RootCmd.AddCommand(cli.GetViralCommand())
+	cli.CLI.RootCmd.AddCommand(cli.GetProgressDemoCommand())
 
 	// Add extension subcommands
 	extensionsCmd.AddCommand(listExtensionsCmd)

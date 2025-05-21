@@ -420,6 +420,55 @@ security:
 - Configure alerts for critical metrics
 - Use version control for rule definitions
 
+## Progress Visualization
+
+Nessi provides robust progress visualization for long-running operations, helping users understand what's happening during command execution.
+
+### Progress Indicators
+
+Progress indicators show the status of operations that don't have a measurable percentage completion:
+
+```bash
+# Example of a command with progress indicator
+nessi viral share my_table --output report.html
+```
+
+This will display a spinner with a message like:
+
+```
+⠋ Generating shareable report...
+```
+
+When the operation completes, you'll see a success message:
+
+```
+✅ Successfully generated shareable report
+```
+
+### Progress Bars
+
+For operations with measurable progress, Nessi displays a progress bar:
+
+```bash
+# Example of a command with progress bar
+nessi profile large_table --with-progress
+```
+
+This will display a progress bar like:
+
+```
+[████████████████████░░░░░░░░░░] 67% (ETA: 45s)
+```
+
+### Progress Demo
+
+To see examples of the progress visualization features, run the progress demo command:
+
+```bash
+# Run the progress visualization demo
+nessi progress-demo
+```
+
 ## Error Handling & Troubleshooting
 
 ### Error Handling System

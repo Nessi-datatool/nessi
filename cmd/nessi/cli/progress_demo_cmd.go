@@ -113,3 +113,10 @@ func InitProgressDemoCmd() {
 	progressDemoCmd.Flags().Bool("bar", false, "Demo progress bar only")
 	progressDemoCmd.Flags().Bool("spinner", false, "Demo spinner only")
 }
+
+// GetProgressDemoCommand returns the progress demo command for use in main.go
+func GetProgressDemoCommand() *cobra.Command {
+	// Make a copy of the command to avoid modifying the original
+	cmd := *progressDemoCmd
+	return &cmd
+}

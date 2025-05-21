@@ -30,6 +30,18 @@ Nessi's enhanced report templates are designed to be shared with stakeholders, t
 nessi viral share my_table --title "My Quality Report" --hashtags "dataquality,datalake"
 ```
 
+During report generation, you'll see a progress indicator with a spinner:
+
+```
+⠋ Generating shareable report...
+```
+
+When complete, you'll see a success message:
+
+```
+✅ Successfully generated shareable report
+```
+
 The generated report includes:
 
 - Social media sharing buttons for Twitter, LinkedIn, and more
@@ -58,6 +70,18 @@ nessi viral badge --format markdown
 nessi viral badge --quality-score 95
 ```
 
+During badge generation, you'll see a progress indicator with a spinner:
+
+```
+⠋ Generating 'Powered by Nessi' badge...
+```
+
+When complete, you'll see a success message:
+
+```
+✅ Badge generated successfully
+```
+
 #### Where to Add Badges
 
 - **GitHub READMEs**: Add a badge to your project's README.md file
@@ -78,6 +102,18 @@ nessi viral community contribute --experience beginner
 
 # Submit feedback
 nessi viral community feedback --type feature --text "It would be great to have..."
+```
+
+When submitting feedback, you'll see a progress indicator with a spinner:
+
+```
+⠋ Submitting feedback...
+```
+
+When complete, you'll see a success message:
+
+```
+✅ Feedback submitted successfully
 ```
 
 #### Ways to Contribute
@@ -179,9 +215,49 @@ By leveraging Nessi's viral growth features, you can help increase its adoption 
 
 Remember that the most effective viral growth comes from genuine enthusiasm and real value. Share your authentic experiences with Nessi and how it has helped improve your data quality practices.
 
+## Progress Visualization
+
+All viral growth features in Nessi include progress visualization to provide real-time feedback during operations. This enhances the user experience by showing what's happening during long-running tasks.
+
+### Progress Demo
+
+To see examples of all the progress visualization features in action, run the progress demo command:
+
+```bash
+# Run the progress visualization demo
+nessi progress-demo
+```
+
+This will demonstrate:
+
+1. **Spinner-style progress indicators** - For operations without measurable progress
+2. **Progress bars** - For operations with measurable percentage completion
+3. **Success messages** - Shown when operations complete successfully
+4. **Warning messages** - Displayed when operations complete with warnings
+5. **Error messages** - Shown when operations fail
+
+### Error Handling
+
+When errors occur during viral growth operations, you'll receive clear, actionable error messages with error codes:
+
+```
+❌ Error: Invalid path: /nonexistent/path does not exist [Error Code: V101]
+
+🔍 Suggested solutions:
+
+📝 The specified output path does not exist
+🔧 Solution: Check the path and ensure the directory exists
+```
+
+Error codes for viral growth features use the `VXX` format:
+- `V101` - Share command errors
+- `V102` - Badge command errors
+- `V103` - Community command errors
+
 ## Next Steps
 
 1. Generate your first shareable report with `nessi viral share`
 2. Add a "Powered by Nessi" badge to your project with `nessi viral badge`
 3. Explore contribution opportunities with `nessi viral community contribute`
-4. Join the Nessi community on [GitHub](https://github.com/nessi-dev/nessi) and [Slack](https://join.slack.com/t/nessi-community/shared_invite/...)
+4. Try the progress demo with `nessi progress-demo`
+5. Join the Nessi community on [GitHub](https://github.com/nessi-dev/nessi) and [Slack](https://join.slack.com/t/nessi-community/shared_invite/...)

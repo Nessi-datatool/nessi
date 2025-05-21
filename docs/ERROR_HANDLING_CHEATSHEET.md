@@ -13,6 +13,7 @@
 | Schema Errors | N7XX | Check schema compatibility and data types |
 | Validation Errors | N8XX | Verify data meets quality and constraint requirements |
 | Internal Errors | N9XX | Check logs and report issue if persistent |
+| Viral Growth Features | VXX | Verify input parameters and output paths |
 
 ## Common Error Codes and Solutions
 
@@ -65,6 +66,36 @@
 - Check for _delta_log directory
 - Ensure you have read permissions
 - Try using `nessi repair` command
+
+### V101: Share Command Error
+```
+❌ Error: Invalid path: /nonexistent/path does not exist [Error Code: V101]
+```
+**Solutions:**
+- Check if the output directory exists
+- Verify the table name is correct
+- Ensure you have permissions to write to the output directory
+- Run with `--interactive` flag for guided resolution
+
+### V102: Badge Command Error
+```
+❌ Error: Invalid badge format: invalid [Error Code: V102]
+```
+**Solutions:**
+- Use a supported format (markdown, html, rst)
+- Check if the quality score is between 0-100
+- Verify the color value is valid
+- Run `nessi viral badge --help` for usage information
+
+### V103: Community Command Error
+```
+❌ Error: Feedback text cannot be empty [Error Code: V103]
+```
+**Solutions:**
+- Provide feedback text with `--text` flag
+- Check your internet connection
+- Verify you have the latest version of Nessi
+- Run `nessi viral community --help` for usage information
 
 ## Interactive Error Resolution
 

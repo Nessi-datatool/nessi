@@ -116,7 +116,7 @@ This script tests various error scenarios for both Delta Lake and Databricks int
 
 ## Error Codes System
 
-Nessi uses a standardized error code system to categorize errors. Each error code follows the format `NXXX` where:
+All errors in Nessi have a unique error code in the format `NXXX`, where:
 
 - `N` is the prefix for Nessi errors
 - `X` is a digit representing the error category
@@ -130,11 +130,15 @@ Nessi uses a standardized error code system to categorize errors. Each error cod
   - `7XX` - Schema errors
   - `8XX` - Validation errors
   - `9XX` - Internal errors
+  - `VXX` - Viral growth feature errors
 
 Examples:
 - `N101` - Invalid path error
 - `N201` - Invalid configuration error
 - `N301` - Authentication failed error
+- `V101` - Share command error
+- `V102` - Badge command error
+- `V103` - Community command error
 
 ### NessiError Structure
 

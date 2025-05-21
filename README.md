@@ -67,6 +67,13 @@ Nessi is an open-source CLI-only data quality and Delta Lake management tool tha
   - JSON and CSV export for integration with other tools
   - **dbt Integration**: Seamless integration with dbt for validating and profiling models directly in your dbt workflow
 
+- **Progress Visualization**
+  - Real-time feedback during long-running operations
+  - Spinner-style indicators for operations without measurable progress
+  - Progress bars for operations with measurable percentage completion
+  - Success, warning, and error messages with clear status indicators
+  - Demo command to showcase progress visualization features
+
 ## Installation
 
 ### Prerequisites
