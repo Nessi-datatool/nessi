@@ -43,6 +43,7 @@ The report includes social media sharing buttons, QR codes, and embed options.`,
 		// In a real implementation, this would use the social sharing plugin
 		// For now, we'll just show a mock implementation
 		fmt.Printf("Generating shareable report for table '%s'...\n", tableName)
+		fmt.Printf("Using title: %s, description: %s, hashtags: %s\n", title, description, hashtags)
 
 		// Mock report generation
 		fmt.Printf("Successfully generated shareable report for '%s'\n", tableName)
@@ -75,6 +76,11 @@ and adoption while showing your support for the project.`,
 		color, _ := cmd.Flags().GetString("color")
 		style, _ := cmd.Flags().GetString("style")
 		qualityScore, _ := cmd.Flags().GetInt("quality-score")
+		
+		// Log quality score for debugging
+		if qualityScore > 0 {
+			fmt.Printf("Including quality score: %d\n", qualityScore)
+		}
 
 		// In a real implementation, this would use the badge plugin
 		// For now, we'll just show a mock implementation
@@ -130,6 +136,11 @@ processed and may be used to guide future development.`,
 		feedbackText, _ := cmd.Flags().GetString("text")
 		userName, _ := cmd.Flags().GetString("name")
 		userEmail, _ := cmd.Flags().GetString("email")
+		
+		// Log user email for debugging
+		if userEmail != "" {
+			fmt.Printf("Contact email provided: %s\n", userEmail)
+		}
 
 		// If no feedback text is provided, prompt the user
 		if feedbackText == "" {
@@ -165,6 +176,11 @@ Nessi's adoption.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		experience, _ := cmd.Flags().GetString("experience")
 		githubProfile, _ := cmd.Flags().GetString("github-profile")
+		
+		// Log GitHub profile for debugging
+		if githubProfile != "" {
+			fmt.Printf("GitHub profile provided: %s\n", githubProfile)
+		}
 
 		// In a real implementation, this would use the community engagement plugin
 		// For now, we'll just show a mock implementation
@@ -208,7 +224,8 @@ Nessi's adoption.`,
 }
 
 func init() {
-	rootCmd.AddCommand(viralCmd)
+	// Add the viral command to the root command
+	CLI.RootCmd.AddCommand(viralCmd)
 	viralCmd.AddCommand(shareCmd)
 	viralCmd.AddCommand(badgeCmd)
 	viralCmd.AddCommand(communityCmd)

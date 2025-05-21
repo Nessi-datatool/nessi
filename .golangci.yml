@@ -56,6 +56,7 @@ linters-settings:
 linters:
   disable-all: true
   enable:
+    # Default linters
     - errcheck
     - gosimple
     - govet
@@ -64,6 +65,23 @@ linters:
     - typecheck
     - unused
     - gofmt
+    
+    # Additional linters for better code quality
+    - gocyclo        # Detect complex functions
+    - dupl           # Detect code duplication
+    - goconst        # Find repeated strings that could be constants
+    - goimports      # Check import formatting
+    - gosec          # Security checks
+    - misspell       # Find commonly misspelled words
+    - revive         # Drop-in replacement for golint
+    - unconvert      # Remove unnecessary type conversions
+    - unparam        # Find unused function parameters
+    - whitespace     # Check for trailing whitespace
+    
+    # Linters specifically useful for the viral growth features
+    - exportloopref  # Check for pointers to enclosing loop variables
+    - prealloc       # Find slice declarations that could use make()
+    - bodyclose      # Check for unclosed response bodies
 
 # Issues configuration
 issues:

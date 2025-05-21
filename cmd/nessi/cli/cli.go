@@ -149,7 +149,7 @@ var CLI struct {
 func Init() {
 	// Register error handlers for common error types
 	RegisterErrorHandlers()
-	
+
 	// Initialize error suggestions
 	common.InitDefaultSuggestions()
 

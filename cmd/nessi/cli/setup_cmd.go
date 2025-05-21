@@ -25,10 +25,10 @@ helping you configure essential settings and validate your environment.
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Check if non-interactive mode is enabled
 		nonInteractive, _ := cmd.Flags().GetBool("non-interactive")
-		
+
 		// Get config directory if specified
 		configDir, _ := cmd.Flags().GetString("config-dir")
-		
+
 		if nonInteractive {
 			return runNonInteractiveSetup(configDir)
 		} else {
@@ -39,7 +39,7 @@ helping you configure essential settings and validate your environment.
 
 func init() {
 	CLI.RootCmd.AddCommand(setupCmd)
-	
+
 	// Add flags
 	setupCmd.Flags().Bool("non-interactive", false, "Run setup in non-interactive mode with default values")
 	setupCmd.Flags().String("config-dir", "", "Directory to store configuration files")
@@ -239,7 +239,7 @@ logging:
 	if err := viper.ReadInConfig(); err != nil {
 		fmt.Println("Warning: Could not read config file:", err)
 	}
-	
+
 	return nil
 }
 

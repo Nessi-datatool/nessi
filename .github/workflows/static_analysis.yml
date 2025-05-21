@@ -1,0 +1,84 @@
+name: Static Analysis
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '**.go'
+      - '.golangci.yml'
+      - '.github/workflows/static_analysis.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '**.go'
+      - '.golangci.yml'
+      - '.github/workflows/static_analysis.yml'
+
+jobs:
+  golangci-lint:
+    name: Run golangci-lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+          cache: true
+
+      - name: Install golangci-lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.54.2
+          golangci-lint --version
+
+      - name: Run golangci-lint on viral growth features
+        run: |
+          golangci-lint run ./examples/plugins/badge_plugin/main.go
+          golangci-lint run ./examples/plugins/social_sharing_plugin/main.go
+          golangci-lint run ./examples/plugins/community_engagement_plugin/main.go
+          golangci-lint run ./cmd/nessi/cli/viral_cmd.go
+
+  go-vet:
+    name: Run go vet
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+          cache: true
+
+      - name: Run go vet on viral growth features
+        run: |
+          go vet ./examples/plugins/badge_plugin/
+          go vet ./examples/plugins/social_sharing_plugin/
+          go vet ./examples/plugins/community_engagement_plugin/
+          go vet ./cmd/nessi/cli/viral_cmd.go
+
+  staticcheck:
+    name: Run staticcheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+          cache: true
+
+      - name: Install staticcheck
+        run: go install honnef.co/go/tools/cmd/staticcheck@latest
+
+      - name: Run staticcheck on viral growth features
+        run: |
+          staticcheck ./examples/plugins/badge_plugin/
+          staticcheck ./examples/plugins/social_sharing_plugin/
+          staticcheck ./examples/plugins/community_engagement_plugin/
+          staticcheck ./cmd/nessi/cli/viral_cmd.go

@@ -50,29 +50,29 @@ var telemetryStatusCmd = &cobra.Command{
 		} else {
 			fmt.Println("❌ General Telemetry: disabled")
 		}
-		
+
 		// Error telemetry status
 		errorTelemetryConfig := common.DefaultErrorTelemetryConfig()
 		errorTelemetry := common.NewErrorTelemetry(errorTelemetryConfig)
 		stats := errorTelemetry.GetErrorStats()
-		
+
 		fmt.Println()
 		if errorTelemetry.Enabled {
 			fmt.Println("✅ Error Telemetry: enabled")
 		} else {
 			fmt.Println("❌ Error Telemetry: disabled")
 		}
-		
+
 		// Show anonymity status
 		if errorTelemetry.Anonymous {
 			fmt.Println("✅ Error Telemetry is anonymous")
 		} else {
 			fmt.Println("❌ Error Telemetry is not anonymous")
 		}
-		
+
 		// Show error stats
 		fmt.Println("Total errors recorded:", stats["total_errors"])
-		
+
 		// Show storage path
 		fmt.Println("Error telemetry storage path:", errorTelemetry.StoragePath)
 	},
@@ -85,17 +85,17 @@ var errorTelemetryEnableCmd = &cobra.Command{
 		// Get error telemetry
 		errorTelemetryConfig := common.DefaultErrorTelemetryConfig()
 		errorTelemetry := common.NewErrorTelemetry(errorTelemetryConfig)
-		
+
 		// Enable error telemetry
 		errorTelemetry.EnableTelemetry()
-		
+
 		// Save telemetry data
 		err := errorTelemetry.Save()
 		if err != nil {
 			fmt.Println("❌ Failed to save error telemetry settings:", err)
 			return
 		}
-		
+
 		fmt.Println("✅ Error telemetry enabled.")
 		fmt.Println("Anonymous error statistics will be collected to help improve Nessi.")
 		fmt.Println("No personal data or table contents will be collected.")
@@ -109,17 +109,17 @@ var errorTelemetryDisableCmd = &cobra.Command{
 		// Get error telemetry
 		errorTelemetryConfig := common.DefaultErrorTelemetryConfig()
 		errorTelemetry := common.NewErrorTelemetry(errorTelemetryConfig)
-		
+
 		// Disable error telemetry
 		errorTelemetry.DisableTelemetry()
-		
+
 		// Save telemetry data
 		err := errorTelemetry.Save()
 		if err != nil {
 			fmt.Println("❌ Failed to save error telemetry settings:", err)
 			return
 		}
-		
+
 		fmt.Println("✅ Error telemetry disabled.")
 	},
 }
@@ -131,28 +131,26 @@ var errorTelemetryReportCmd = &cobra.Command{
 		// Get error telemetry
 		errorTelemetryConfig := common.DefaultErrorTelemetryConfig()
 		errorTelemetry := common.NewErrorTelemetry(errorTelemetryConfig)
-		
+
 		// Report telemetry data
 		err := errorTelemetry.ReportTelemetry()
 		if err != nil {
 			fmt.Println("❌ Failed to report error telemetry:", err)
 			return
 		}
-		
+
 		fmt.Println("✅ Error telemetry reported successfully.")
-		
+
 		// Show error stats
 		stats := errorTelemetry.GetErrorStats()
 		fmt.Println("Total errors recorded:", stats["total_errors"])
-		
+
 		// Show error counts by error code if available
 		errorCounts, ok := stats["error_counts"].(map[common.ErrorCode]int)
 		if ok && len(errorCounts) > 0 {
-			fmt.Println("
-Error counts by error code:")
+			fmt.Println("\nError counts by error code:")
 			for code, count := range errorCounts {
-				fmt.Printf("  %s (%s): %d
-", code, common.GetErrorDescription(code), count)
+				fmt.Printf("  %s (%s): %d\n", code, common.GetErrorDescription(code), count)
 			}
 		}
 	},
@@ -165,20 +163,20 @@ var errorTelemetryExportCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// Get file path
 		filePath := args[0]
-		
+
 		// Get error telemetry
 		errorTelemetryConfig := common.DefaultErrorTelemetryConfig()
 		errorTelemetry := common.NewErrorTelemetry(errorTelemetryConfig)
-		
+
 		// Export telemetry data to file
 		err := errorTelemetry.ExportTelemetryToFile(filePath)
 		if err != nil {
 			fmt.Println("❌ Failed to export error telemetry:", err)
 			return
 		}
-		
+
 		fmt.Println("✅ Error telemetry exported successfully to", filePath)
-		
+
 		// Show error stats
 		stats := errorTelemetry.GetErrorStats()
 		fmt.Println("Total errors recorded:", stats["total_errors"])

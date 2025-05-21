@@ -1,0 +1,119 @@
+name: Viral Features Quality Assurance
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'examples/plugins/**'
+      - 'cmd/nessi/cli/viral_cmd.go'
+      - 'test/plugins/**'
+      - 'test/plugin_*_test.go'
+      - '.github/workflows/viral_features_qa.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'examples/plugins/**'
+      - 'cmd/nessi/cli/viral_cmd.go'
+      - 'test/plugins/**'
+      - 'test/plugin_*_test.go'
+      - '.github/workflows/viral_features_qa.yml'
+  workflow_dispatch:
+    # Allow manual triggering
+
+jobs:
+  unit-tests:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+          cache: true
+
+      - name: Run plugin tests
+        run: go test -v ./test/plugin_integration_test.go ./test/plugin_test_harness.go
+
+  benchmarks:
+    name: Run Performance Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+          cache: true
+
+      - name: Run benchmarks
+        run: go test -bench=. ./test/plugin_benchmark_test.go ./test/plugin_test_harness.go
+
+  static-analysis:
+    name: Run Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+          cache: true
+
+      - name: Install golangci-lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.54.2
+          golangci-lint --version
+
+      - name: Run golangci-lint on viral growth features
+        run: |
+          golangci-lint run ./examples/plugins/badge_plugin/main.go
+          golangci-lint run ./examples/plugins/social_sharing_plugin/main.go
+          golangci-lint run ./examples/plugins/community_engagement_plugin/main.go
+          golangci-lint run ./cmd/nessi/cli/viral_cmd.go
+
+  documentation:
+    name: Verify Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+          cache: true
+
+      - name: Run documentation verification
+        run: |
+          chmod +x ./scripts/verify_docs.sh
+          ./scripts/verify_docs.sh
+
+  build-test:
+    name: Build Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+          cache: true
+
+      - name: Build viral plugins
+        run: |
+          cd examples/plugins/social_sharing_plugin && go build -o social_sharing_plugin.so -buildmode=plugin
+          cd ../badge_plugin && go build -o badge_plugin.so -buildmode=plugin
+          cd ../community_engagement_plugin && go build -o community_engagement_plugin.so -buildmode=plugin
+
+      - name: Build Nessi CLI
+        run: go build -o nessi ./cmd/nessi

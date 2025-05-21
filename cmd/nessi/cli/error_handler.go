@@ -27,7 +27,7 @@ func NewErrorHandler(interactive bool) *ErrorHandler {
 	// Create error telemetry
 	telemetryConfig := common.DefaultErrorTelemetryConfig()
 	telemetry := common.NewErrorTelemetry(telemetryConfig)
-	
+
 	return &ErrorHandler{
 		Interactive: interactive,
 		Logger:      logger.DefaultLogger,

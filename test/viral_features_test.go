@@ -1,9 +1,7 @@
 package test
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"

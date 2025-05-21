@@ -13,6 +13,10 @@ This guide explains how to integrate Nessi with external systems such as Apache 
 - [Custom Script Integration](#custom-script-integration)
   - [Python Scripts](#python-scripts)
   - [Shell Scripts](#shell-scripts)
+- [Viral Growth Features Integration](#viral-growth-features-integration)
+  - [Social Sharing Integration](#social-sharing-integration)
+  - [Badge Integration](#badge-integration)
+  - [Community Engagement Integration](#community-engagement-integration)
 - [Integration Best Practices](#integration-best-practices)
 - [Troubleshooting](#troubleshooting)
 
@@ -575,6 +579,153 @@ When integrating Nessi with external systems, follow these best practices:
 8. **Automate report generation**: Generate reports automatically after validation for easy sharing and analysis.
 9. **Implement observability**: Add metrics collection and structured logging for better monitoring and debugging.
 10. **Use resource constraints**: Set appropriate resource requests and limits for Kubernetes jobs.
+
+## Viral Growth Features Integration
+
+Nessi provides several viral growth features that can be integrated into your existing workflows to increase visibility, drive adoption, and foster community engagement. These features are implemented as plugins and can be accessed through the `nessi viral` command group.
+
+### Social Sharing Integration
+
+The social sharing plugin enhances Nessi reports with advanced sharing capabilities, making it easy to share quality reports with stakeholders and the broader data community.
+
+#### Integrating with CI/CD Pipelines
+
+You can automatically generate and share reports as part of your CI/CD pipeline:
+
+```yaml
+# Example GitHub Actions workflow
+name: Data Quality Check and Share
+
+on:
+  schedule:
+    - cron: '0 8 * * 1' # Weekly on Monday at 8am
+
+jobs:
+  quality_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Nessi
+        run: pip install nessi
+      - name: Run Nessi quality check and generate shareable report
+        run: |
+          nessi quality check --table my_table
+          nessi viral share my_table --output report.html
+      - name: Upload report
+        uses: actions/upload-artifact@v2
+        with:
+          name: quality-report
+          path: report.html
+```
+
+#### Integrating with Slack
+
+Automatically share reports with your team via Slack:
+
+```bash
+#!/bin/bash
+
+# Generate shareable report
+nessi viral share my_table --output report.html
+
+# Share link to Slack
+curl -X POST -H 'Content-type: application/json' \
+  --data '{"text":"New data quality report available: https://example.com/reports/report.html"}' \
+  $SLACK_WEBHOOK_URL
+```
+
+### Badge Integration
+
+The badge plugin generates embeddable "Powered by Nessi" badges that can be added to your project's README, documentation, or website.
+
+#### Integrating with GitHub READMEs
+
+Add a badge to your project's README.md file:
+
+```bash
+# Generate a badge in markdown format
+badge=$(nessi viral badge --format markdown)
+
+# Add the badge to the README.md file
+sed -i "1s/^/$badge\n\n/" README.md
+```
+
+#### Integrating with Documentation Sites
+
+Add badges to your documentation site:
+
+```python
+import subprocess
+import re
+
+# Generate a badge in HTML format
+result = subprocess.run(["nessi", "viral", "badge", "--format", "html"], capture_output=True, text=True)
+badge_html = result.stdout.strip()
+
+# Add the badge to your documentation site
+with open('docs/index.html', 'r') as file:
+    content = file.read()
+
+# Insert the badge after the opening body tag
+content = re.sub(r'<body>', f'<body>\n{badge_html}', content)
+
+with open('docs/index.html', 'w') as file:
+    file.write(content)
+```
+
+### Community Engagement Integration
+
+The community engagement plugin facilitates feedback collection and contribution suggestions, helping to foster community contributions.
+
+#### Integrating with Issue Tracking Systems
+
+Automatically create GitHub issues from user feedback:
+
+```python
+import subprocess
+import json
+import requests
+
+# Collect feedback using Nessi
+result = subprocess.run(
+    ["nessi", "viral", "community", "feedback", "--type", "feature", "--text", "It would be great to have..."],
+    capture_output=True, text=True
+)
+
+# Extract the GitHub issue URL from the output
+output_lines = result.stdout.strip().split('\n')
+for line in output_lines:
+    if line.startswith('https://github.com/'):
+        issue_url = line.strip()
+        break
+
+# Create the issue using the GitHub API
+if issue_url:
+    # Extract the repo and issue details from the URL
+    parts = issue_url.replace('https://github.com/', '').split('/')
+    repo_owner = parts[0]
+    repo_name = parts[1]
+    
+    # Create the issue
+    github_token = 'your_github_token'
+    headers = {
+        'Authorization': f'token {github_token}',
+        'Accept': 'application/vnd.github.v3+json'
+    }
+    
+    issue_data = {
+        'title': 'Feature Request from Nessi',
+        'body': 'It would be great to have...'
+    }
+    
+    response = requests.post(
+        f'https://api.github.com/repos/{repo_owner}/{repo_name}/issues',
+        headers=headers,
+        json=issue_data
+    )
+```
+
+For more information on Nessi's viral growth features, see the [Viral Growth Guide](./VIRAL_GROWTH.md) and the [Plugin API Documentation](./PLUGIN_API.md).
 
 ## Troubleshooting
 

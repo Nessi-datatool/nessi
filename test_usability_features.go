@@ -13,10 +13,10 @@ import (
 type ErrorCode string
 
 const (
-	ErrInvalidPath      ErrorCode = "N101"
-	ErrInvalidConfig    ErrorCode = "N201"
-	ErrAuthFailed       ErrorCode = "N301"
-	ErrConnectionFailed ErrorCode = "N401"
+	ErrInvalidPath       ErrorCode = "N101"
+	ErrInvalidConfig     ErrorCode = "N201"
+	ErrAuthFailed        ErrorCode = "N301"
+	ErrConnectionFailed  ErrorCode = "N401"
 	ErrInvalidDeltaTable ErrorCode = "N501"
 )
 
