@@ -35,7 +35,7 @@ func IsRetryableError(err error) bool {
 	if err == nil {
 		return false
 	}
-	
+
 	// Check if it's a NessiError
 	var nessiErr *NessiError
 	if errors.As(err, &nessiErr) {
@@ -46,21 +46,21 @@ func IsRetryableError(err error) bool {
 			ErrServerError,
 			ErrTimeout,
 		}
-		
+
 		for _, code := range retryableCodes {
 			if nessiErr.Code == code {
 				return true
 			}
 		}
-		
+
 		return false
 	}
-	
+
 	// For non-NessiError, retry on common transient errors
 	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
 		return true
 	}
-	
+
 	// Check error string for common network errors
 	errStr := err.Error()
 	networkErrors := []string{
@@ -74,13 +74,13 @@ func IsRetryableError(err error) bool {
 		"broken pipe",
 		"too many open files",
 	}
-	
+
 	for _, netErr := range networkErrors {
 		if errors.Is(err, fmt.Errorf(netErr)) || (errStr != "" && contains(errStr, netErr)) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -88,36 +88,36 @@ func IsRetryableError(err error) bool {
 func WithRetry(fn RetryableFunc, config RetryConfig) error {
 	var err error
 	backoff := config.InitialBackoff
-	
+
 	for attempt := 0; attempt <= config.MaxRetries; attempt++ {
 		// Execute the function
 		err = fn()
-		
+
 		// If no error or not retryable, return immediately
 		if err == nil || !IsRetryableError(err) {
 			return err
 		}
-		
+
 		// If this was the last attempt, return the error
 		if attempt == config.MaxRetries {
 			return fmt.Errorf("failed after %d retries: %w", config.MaxRetries, err)
 		}
-		
+
 		// Apply jitter to backoff
 		jitterRange := backoff.Seconds() * config.Jitter
 		jitterSeconds := (rand.Float64() * jitterRange * 2) - jitterRange
 		jitteredBackoff := backoff + time.Duration(jitterSeconds*float64(time.Second))
-		
+
 		// Sleep before the next attempt
 		time.Sleep(jitteredBackoff)
-		
+
 		// Increase backoff for the next attempt
 		backoff = time.Duration(float64(backoff) * config.BackoffFactor)
 		if backoff > config.MaxBackoff {
 			backoff = config.MaxBackoff
 		}
 	}
-	
+
 	return err
 }
 

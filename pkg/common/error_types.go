@@ -6,25 +6,25 @@ import (
 
 // NessiError represents a structured error in Nessi
 type NessiError struct {
-	Code        ErrorCode // Error code
-	Message     string    // Error message
-	Details     string    // Additional details about the error
-	Suggestion  string    // Suggestion for fixing the error
-	WrappedErr  error     // Original error that was wrapped
+	Code       ErrorCode // Error code
+	Message    string    // Error message
+	Details    string    // Additional details about the error
+	Suggestion string    // Suggestion for fixing the error
+	WrappedErr error     // Original error that was wrapped
 }
 
 // Error implements the error interface
 func (e *NessiError) Error() string {
 	baseMsg := fmt.Sprintf("[%s] %s: %s", e.Code, GetErrorDescription(e.Code), e.Message)
-	
+
 	if e.Details != "" {
 		baseMsg = fmt.Sprintf("%s (%s)", baseMsg, e.Details)
 	}
-	
+
 	if e.Suggestion != "" {
 		baseMsg = fmt.Sprintf("%s. Suggestion: %s", baseMsg, e.Suggestion)
 	}
-	
+
 	return baseMsg
 }
 
