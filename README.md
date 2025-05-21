@@ -41,6 +41,15 @@ Nessi is an open-source CLI-only data quality and Delta Lake management tool tha
   - Authentication and connection error handling
   - Test tools for verifying error handling
   
+- **Advanced Usability Features**
+  - Input validation and auto-correction for paths and configuration values
+  - Interactive setup wizard for first-time users
+  - Dry run mode to preview operations without making changes
+  - Smart defaults based on context
+  - Comprehensive configuration system with clear precedence
+  - Detailed debugging and logging capabilities
+  - Consistent error messages with actionable suggestions
+  
 - **Monitoring & Alerting**
   - File-based metrics collection
   - Email alerting for failed checks
@@ -522,18 +531,25 @@ Nessi includes a comprehensive error handling system with standardized error cod
 
 ```yaml
 error_handling:
-  interactive: true  # Enable interactive error resolution
+  interactive_resolution: true  # Enable interactive error resolution
   telemetry:
     enabled: true     # Enable error telemetry
     anonymous: true   # Collect only anonymous data
-  retries:
+    max_errors: 100   # Maximum number of errors to store
+  retry:
+    enabled: true     # Enable automatic retries
     max_attempts: 3
     initial_backoff: 1s
     max_backoff: 30s
     backoff_factor: 2.0
+    jitter: true      # Add jitter to backoff
+  suggestions:
+    enabled: true     # Enable error suggestions
+    max_suggestions: 3
+    show_documentation: true
   logging:
     level: info       # Log level for errors (debug, info, warn, error)
-    structured: true  # Use structured logging for errors
+    colored: true     # Use colored output for errors
 ```
 
 #### Testing Error Handling
@@ -555,6 +571,60 @@ nessi test-error N301 --telemetry
 
 # Run comprehensive error handling tests
 ./scripts/test_error_handling.sh
+```
+
+### Usability Features
+
+Nessi includes several usability features to make it more error-free and easier to use:
+
+#### Setup Wizard
+
+First-time users can use the setup wizard to configure Nessi:
+
+```bash
+# Run the interactive setup wizard
+nessi setup
+
+# Run in non-interactive mode with default values
+nessi setup --non-interactive --config-dir ~/.nessi
+```
+
+#### Dry Run Mode
+
+Preview operations without making changes:
+
+```bash
+# Show what would happen without making changes
+nessi schema create --path /path/to/table --dry-run
+
+# Preview repair operations
+nessi repair --table /path/to/table --dry-run
+```
+
+#### Input Validation
+
+Nessi validates and normalizes input before executing commands:
+
+- Path validation (expansion of `~`, relative to absolute conversion)
+- Configuration validation (required fields, type checking)
+- Output format validation (html, pdf, json, csv, text)
+
+#### Command Line Flags
+
+Common flags available for all commands:
+
+```bash
+# Enable interactive mode
+nessi <command> --interactive
+
+# Preview operations without making changes
+nessi <command> --dry-run
+
+# Specify configuration file
+nessi <command> --config /path/to/config.yaml
+
+# Enable verbose output
+nessi <command> --verbose
 ```
 
 ## Test Strategy
