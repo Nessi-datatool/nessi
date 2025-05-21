@@ -2,6 +2,16 @@
 
 This guide provides best practices and standards for implementing error handling in the Nessi project. Following these guidelines ensures a consistent and user-friendly error handling experience across the codebase.
 
+## Error Handling Components
+
+The Nessi error handling system consists of several components that work together:
+
+1. **Error Codes System** - Standardized error codes with structured error types
+2. **Interactive Error Resolution** - Guided resolution for common errors
+3. **Error Suggestions** - Contextual suggestions for fixing errors
+4. **Error Telemetry** - Anonymous collection of error statistics
+5. **Retry Mechanism** - Automatic retry for transient failures
+
 ## Error Handling Principles
 
 1. **Be specific and actionable**: Error messages should clearly describe what went wrong and suggest how to fix it.
@@ -42,43 +52,55 @@ Use these standard error categories:
 
 ## Implementation Guidelines
 
-### Go Implementation
+### Using the Error Codes System
 
-1. **Use structured errors**: Define error types with appropriate fields.
+1. **Use NessiError**: Always use the structured NessiError type for errors.
 
 ```go
-type PathError struct {
-    Path string
-    Err  error
-}
+import "github.com/nessi-dev/nessi/pkg/common"
 
-func (e *PathError) Error() string {
-    return fmt.Sprintf("Error: Invalid path: %s does not exist or is not accessible", e.Path)
-}
+// Create a new error with error code
+err := common.NewError(common.ErrInvalidPath, fmt.Sprintf("Path %s does not exist", path))
+
+// Add details if needed
+err.Details = "Additional context about the error"
+
+// Add suggestions
+err.Suggestions = []string{"Check if the path exists", "Verify you have the correct permissions"}
 ```
 
-2. **Wrap errors with context**: Use `fmt.Errorf` with `%w` to wrap errors with context.
+2. **Use helper functions**: Use the provided helper functions for common error types.
 
 ```go
-if err != nil {
-    return fmt.Errorf("failed to read Delta table: %w", err)
-}
+// For path errors
+err := common.NewPathError(path)
+
+// For configuration errors
+err := common.NewConfigError("database.host", "invalid hostname")
+
+// For authentication errors
+err := common.NewAuthenticationError("Invalid token")
 ```
 
-3. **Error handling in functions**: Return meaningful errors from functions.
+3. **Register error suggestions**: Add suggestions for error codes.
 
 ```go
-func ReadDeltaTable(path string) ([]Row, error) {
-    if !fileExists(path) {
-        return nil, &PathError{Path: path, Err: errors.New("path does not exist")}
-    }
-    
-    if !isDeltaTable(path) {
-        return nil, fmt.Errorf("Error: Not a Delta table: %s is not a Delta Lake table", path)
-    }
-    
-    // Implementation...
-}
+common.RegisterErrorSuggestion(common.ErrorSuggestion{
+    ErrorCode:   common.ErrInvalidPath,
+    Description: "The specified path does not exist",
+    Solution:    "Check that the path exists and you have permissions",
+    DocumentURL: "https://github.com/nessi-dev/nessi/blob/main/docs/ERROR_HANDLING.md#path-errors",
+})
+```
+
+4. **Create resolvable errors**: For errors that can be resolved interactively.
+
+```go
+// Create a resolvable path error
+err := common.NewResolvablePathError(path)
+
+// Create a resolvable configuration error
+err := common.NewResolvableConfigError("database.host", "invalid-host")
 ```
 
 ## Testing Error Handling
@@ -88,13 +110,61 @@ func ReadDeltaTable(path string) ([]Row, error) {
 ```go
 func TestReadDeltaTableNonExistentPath(t *testing.T) {
     _, err := ReadDeltaTable("/nonexistent/path")
-    assert.Error(t, err)
-    assert.Contains(t, err.Error(), "Invalid path")
-    assert.Contains(t, err.Error(), "/nonexistent/path")
+    
+    // Check if it's a NessiError
+    var nessiErr *common.NessiError
+    assert.True(t, errors.As(err, &nessiErr))
+    
+    // Check error code
+    assert.Equal(t, common.ErrInvalidPath, nessiErr.Code)
+    
+    // Check message content
+    assert.Contains(t, nessiErr.Message, "/nonexistent/path")
 }
 ```
 
-2. **Use the test script**: Use the `test_error_handling.sh` script to verify error handling.
+2. **Test error suggestions**: Test that appropriate suggestions are provided.
+
+```go
+func TestErrorSuggestions(t *testing.T) {
+    err := common.NewError(common.ErrInvalidPath, "test error")
+    suggestions := common.GetSuggestionsForError(err)
+    assert.NotEmpty(t, suggestions)
+}
+```
+
+3. **Test error telemetry**: Verify telemetry recording works.
+
+```go
+func TestErrorTelemetry(t *testing.T) {
+    // Create telemetry with test config
+    config := common.ErrorTelemetryConfig{
+        Enabled: true,
+        StoragePath: "test_telemetry.json",
+    }
+    telemetry := common.NewErrorTelemetry(config)
+    
+    // Record an error
+    err := common.NewError(common.ErrInvalidPath, "test error")
+    telemetry.RecordError(err)
+    
+    // Check stats
+    stats := telemetry.GetErrorStats()
+    assert.Equal(t, 1, stats["total_errors"])
+}
+```
+
+4. **Use the test command**: Use the `test-error` command to test error handling.
+
+```bash
+# Test a specific error code
+nessi test-error N101
+
+# Test with telemetry
+nessi test-error N201 --telemetry
+```
+
+5. **Use the test script**: Use the `test_error_handling.sh` script to verify error handling.
 
 ```bash
 ./scripts/test_error_handling.sh
@@ -111,9 +181,12 @@ func TestReadDeltaTableNonExistentPath(t *testing.T) {
 Before submitting a PR with error handling changes, ensure:
 
 - [ ] Error messages are clear, specific, and actionable
-- [ ] Error handling follows the standard format and categories
-- [ ] Tests cover error scenarios
-- [ ] Documentation is updated
+- [ ] Error handling uses the NessiError type with appropriate error codes
+- [ ] Error suggestions are registered for new error codes
+- [ ] Interactive resolution is implemented for resolvable errors
+- [ ] Error telemetry is properly integrated
+- [ ] Tests cover error scenarios, suggestions, and telemetry
+- [ ] Documentation is updated in ERROR_HANDLING.md
 - [ ] No sensitive information is exposed in error messages
 - [ ] Errors are properly propagated and wrapped with context
 

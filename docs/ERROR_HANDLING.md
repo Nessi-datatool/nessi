@@ -2,7 +2,15 @@
 
 ## Overview
 
-This document describes the comprehensive error handling implementation in the Nessi project, focusing on the Delta Lake and Databricks components. Proper error handling is critical for providing a good user experience, especially in a CLI-only application where clear error messages help users diagnose and fix issues quickly.
+This document describes the comprehensive error handling implementation in the Nessi project. Proper error handling is critical for providing a good user experience, especially in a CLI-only application where clear error messages help users diagnose and fix issues quickly.
+
+The Nessi error handling system consists of several key components:
+
+1. **Error Codes System** - Standardized error codes with structured error types
+2. **Interactive Error Resolution** - Guided resolution for common errors
+3. **Error Suggestions** - Contextual suggestions for fixing errors
+4. **Error Telemetry** - Anonymous collection of error statistics
+5. **Retry Mechanism** - Automatic retry for transient failures
 
 ## Delta Lake Error Handling
 
@@ -106,10 +114,147 @@ This script tests various error scenarios for both Delta Lake and Databricks int
 4. **Document error messages** - Ensure all possible error messages are documented
 5. **Consider user experience** - Format error messages for readability in CLI output
 
-## Future Improvements
+## Error Codes System
 
-1. **Error codes** - Add numeric error codes for easier reference
-2. **Interactive error resolution** - Guide users through fixing common errors
-3. **Extended logging** - Provide more detailed logs for debugging complex issues
-4. **Retry mechanisms** - Automatically retry operations for transient errors
-5. **Error telemetry** - Collect anonymous error statistics to improve the product
+Nessi uses a standardized error code system to categorize errors. Each error code follows the format `NXXX` where:
+
+- `N` is the prefix for Nessi errors
+- `X` is a digit representing the error category
+- The first digit indicates the general category:
+  - `1XX` - Path and file errors
+  - `2XX` - Configuration errors
+  - `3XX` - Authentication errors
+  - `4XX` - Connection errors
+  - `5XX` - Delta Lake errors
+  - `6XX` - Databricks errors
+  - `7XX` - Schema errors
+  - `8XX` - Validation errors
+  - `9XX` - Internal errors
+
+Examples:
+- `N101` - Invalid path error
+- `N201` - Invalid configuration error
+- `N301` - Authentication failed error
+
+### NessiError Structure
+
+All errors in Nessi are structured using the `NessiError` type, which includes:
+
+- `Code` - The error code (e.g., `N101`)
+- `Message` - A user-friendly error message
+- `Details` - Additional details about the error (optional)
+- `Suggestions` - List of suggestions to fix the error (optional)
+
+## Interactive Error Resolution
+
+For common errors, Nessi provides an interactive resolution mechanism that guides users through fixing the issue. This feature is enabled by default and can be controlled with the `--interactive` flag.
+
+Example:
+```
+nessi schema show --path /nonexistent/path
+❌ Error: Invalid path: /nonexistent/path does not exist or is not accessible
+
+Would you like to create this directory? [y/N]: y
+Creating directory /nonexistent/path...
+✅ Directory created successfully!
+```
+
+### Resolvable Errors
+
+The following error types support interactive resolution:
+
+1. **Path Errors** - Offers to create missing directories
+2. **Configuration Errors** - Helps set correct configuration values
+3. **Delta Table Errors** - Assists with table creation or repair
+
+## Error Suggestions System
+
+Even when interactive resolution is not possible, Nessi provides contextual suggestions to help users fix errors. These suggestions include:
+
+- Description of the problem
+- Suggested solution
+- Link to relevant documentation
+
+Example:
+```
+❌ Error: Authentication failed: Invalid Databricks token
+
+🔍 Suggested solutions:
+
+📝 Authentication failed due to invalid credentials
+🔧 Solution: Check your credentials and ensure they are correctly configured
+📚 Documentation: https://github.com/nessi-dev/nessi/blob/main/docs/ERROR_HANDLING.md#authentication-errors
+
+📝 Token may have expired
+🔧 Solution: Try regenerating your authentication token
+```
+
+## Error Telemetry
+
+Nessi includes an error telemetry system that anonymously collects error statistics to help improve the product. This feature:
+
+- Is enabled by default but can be disabled
+- Collects only error codes and counts, no personal data
+- Stores data locally, not sent to any server
+
+### Telemetry Commands
+
+```bash
+# View telemetry status
+nessi telemetry status
+
+# Enable error telemetry
+nessi telemetry enable-error
+
+# Disable error telemetry
+nessi telemetry disable-error
+
+# View error statistics
+nessi telemetry report-errors
+
+# Export error statistics to a file
+nessi telemetry export-errors /path/to/export.json
+```
+
+## Retry Mechanism
+
+For transient errors (like network issues or rate limiting), Nessi implements an automatic retry mechanism with:
+
+- Exponential backoff - Increasing delay between retries
+- Jitter - Random variation in retry timing to prevent thundering herd problems
+- Configurable policies - Customizable retry counts and delays
+
+## Testing Error Handling
+
+Nessi provides tools to test the error handling system:
+
+### Test Error Command
+
+```bash
+# List all available error codes
+nessi test-error --list
+
+# Generate a specific error
+nessi test-error N101
+
+# Test with custom details and suggestion
+nessi test-error N201 --details "Custom details" --suggestion "Try this solution"
+
+# Test resolvable errors
+nessi test-error N101 --resolvable
+
+# Test error telemetry
+nessi test-error N301 --telemetry
+
+# Export telemetry data
+nessi test-error N401 --telemetry --export /path/to/export.json
+```
+
+### Test Script
+
+A comprehensive test script is available to verify all aspects of error handling:
+
+```bash
+# Run the error handling test script
+./scripts/test_error_handling.sh
+```
