@@ -120,8 +120,8 @@ func BenchmarkCommunityEngagementPlugin(b *testing.B) {
 		testData := map[string]interface{}{
 			"feedback_type": "feature",
 			"feedback_text": "I would like to see more visualization options",
-			"user_name":    "Test User",
-			"user_email":   "test@example.com",
+			"user_name":     "Test User",
+			"user_email":    "test@example.com",
 		}
 
 		b.ResetTimer()
@@ -138,7 +138,7 @@ func BenchmarkCommunityEngagementPlugin(b *testing.B) {
 		// Prepare test data
 		testData := map[string]interface{}{
 			"experience_level": "beginner",
-			"github_profile":  "testuser",
+			"github_profile":   "testuser",
 		}
 
 		b.ResetTimer()
@@ -155,7 +155,7 @@ func BenchmarkCommunityEngagementPlugin(b *testing.B) {
 		// Prepare test data
 		testData := map[string]interface{}{
 			"experience_level": "advanced",
-			"github_profile":  "testuser",
+			"github_profile":   "testuser",
 		}
 
 		b.ResetTimer()

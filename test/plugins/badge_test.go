@@ -195,9 +195,9 @@ func TestBadgePlugin_EnhanceReportWithBadge(t *testing.T) {
 	// Create test data
 	testData := map[string]interface{}{
 		"report_html": "<html><body><div id=\"report-content\">Test Report</div></body></html>",
-		"label":      "powered by",
-		"message":    "nessi",
-		"color":      "blue",
+		"label":       "powered by",
+		"message":     "nessi",
+		"color":       "blue",
 	}
 
 	// Convert to JSON and back to simulate how it would be passed in real usage

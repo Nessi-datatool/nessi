@@ -1,6 +1,8 @@
 module github.com/nessi-dev/nessi
 
-go 1.21
+go 1.23.0
+
+toolchain go1.24.3
 
 require (
 	cloud.google.com/go/datacatalog v1.26.0

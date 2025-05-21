@@ -10,7 +10,7 @@ import (
 
 // PluginTestHarness provides utilities for testing plugins
 type PluginTestHarness struct {
-	t        testing.TB
+	t          testing.TB
 	PluginsDir string
 	TempDir    string
 }
@@ -97,7 +97,7 @@ func NewPluginTestHarness(t testing.TB) *PluginTestHarness {
 	pluginDir := filepath.Join(wd, "examples", "plugins")
 
 	return &PluginTestHarness{
-		t:         t,
+		t:          t,
 		PluginsDir: pluginDir,
 		TempDir:    tempDir,
 	}
@@ -124,7 +124,7 @@ func (h *PluginTestHarness) BuildPlugin(t *testing.T, pluginName string) string 
 func (h *PluginTestHarness) LoadPlugin(t *testing.T, pluginPath string) (interface{}, error) {
 	// This is a mock implementation since we can't directly load plugins in tests
 	// In a real implementation, this would use plugin.Open and plugin.Lookup
-	
+
 	// Instead, we'll execute a helper program that loads and interacts with the plugin
 	// For now, we'll just return a mock plugin interface
 	return &MockPlugin{PluginPath: pluginPath}, nil
@@ -156,7 +156,7 @@ func (p *MockPlugin) Execute(t *testing.T, command string, data map[string]inter
 		}, nil
 	case "generate_qr_code":
 		return map[string]interface{}{
-			"qr_code_data":  "mock_qr_code_data",
+			"qr_code_data": "mock_qr_code_data",
 			"qr_code_html": "<img src=\"data:image/png;base64,mock_data\">",
 		}, nil
 	case "generate_badge":
@@ -173,14 +173,14 @@ func (p *MockPlugin) Execute(t *testing.T, command string, data map[string]inter
 	case "suggest_contributions":
 		suggestions := []interface{}{
 			map[string]interface{}{
-				"text":        "Improve documentation",
+				"text":       "Improve documentation",
 				"difficulty": "beginner",
 				"url":        "https://github.com/nessi-dev/nessi/issues?q=is%3Aissue+is%3Aopen+label%3Adocumentation",
 			},
 		}
 		if data["experience"] == "advanced" {
 			suggestions = append(suggestions, map[string]interface{}{
-				"text":        "Implement core features",
+				"text":       "Implement core features",
 				"difficulty": "advanced",
 				"url":        "https://github.com/nessi-dev/nessi/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement",
 			})

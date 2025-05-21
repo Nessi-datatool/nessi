@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/nessi-dev/nessi/pkg/common"
 	"github.com/spf13/cobra"
 )
 
@@ -45,8 +47,14 @@ The report includes social media sharing buttons, QR codes, and embed options.`,
 		fmt.Printf("Generating shareable report for table '%s'...\n", tableName)
 		fmt.Printf("Using title: %s, description: %s, hashtags: %s\n", title, description, hashtags)
 
-		// Mock report generation
-		fmt.Printf("Successfully generated shareable report for '%s'\n", tableName)
+		// Show progress indicator
+		ShowProgress("Generating shareable report...", 1*time.Second)
+
+		// Mock report generation (in a real implementation, this could fail)
+		// Simulate success for demonstration purposes
+		ShowSuccess(fmt.Sprintf("Successfully generated shareable report for '%s'", tableName))
+
+		// Show output details
 		if outputPath != "" {
 			fmt.Printf("Report saved to: %s\n", outputPath)
 		} else {
@@ -76,26 +84,48 @@ and adoption while showing your support for the project.`,
 		color, _ := cmd.Flags().GetString("color")
 		style, _ := cmd.Flags().GetString("style")
 		qualityScore, _ := cmd.Flags().GetInt("quality-score")
-		
+
 		// Log quality score for debugging
 		if qualityScore > 0 {
 			fmt.Printf("Including quality score: %d\n", qualityScore)
 		}
 
+		// Show progress indicator
+		ShowProgress("Generating 'Powered by Nessi' badge...", 1*time.Second)
+
 		// In a real implementation, this would use the badge plugin
 		// For now, we'll just show a mock implementation
-		fmt.Println("Generating 'Powered by Nessi' badge...")
 
 		// Generate mock badge code based on format
 		var badgeCode string
+		var err error
+
+		// Validate color format (simple validation for demonstration)
+		if !strings.HasPrefix(color, "#") && len(color) != 6 && color != "blue" && color != "green" && color != "red" && color != "yellow" {
+			// Show a warning but continue with default color
+			ShowWarning(fmt.Sprintf("Color '%s' may not be recognized. Using default color.", color))
+			color = "blue"
+		}
+
+		// Generate badge based on format
 		switch format {
 		case "markdown":
 			badgeCode = "[![Powered by Nessi](https://img.shields.io/badge/" + label + "-" + message + "-" + color + "?style=" + style + ")](https://github.com/nessi-dev/nessi)"
 		case "html":
 			badgeCode = "<a href=\"https://github.com/nessi-dev/nessi\"><img src=\"https://img.shields.io/badge/" + label + "-" + message + "-" + color + "?style=" + style + "\" alt=\"Powered by Nessi\"></a>"
 		default:
-			badgeCode = "[![Powered by Nessi](https://img.shields.io/badge/" + label + "-" + message + "-" + color + "?style=" + style + ")](https://github.com/nessi-dev/nessi)"
+			// Handle invalid format error
+			err = &common.NessiError{
+				Code:    ErrViralBadgeFailed,
+				Message: fmt.Sprintf("Invalid badge format: %s", format),
+				Details: "Supported formats are: markdown, html",
+			}
+			handleBadgeError(err.(*common.NessiError))
+			return
 		}
+
+		// Show success message
+		ShowSuccess("Badge generated successfully!")
 
 		fmt.Println("\nYour 'Powered by Nessi' badge:")
 		fmt.Println("----------------------------")
@@ -136,7 +166,7 @@ processed and may be used to guide future development.`,
 		feedbackText, _ := cmd.Flags().GetString("text")
 		userName, _ := cmd.Flags().GetString("name")
 		userEmail, _ := cmd.Flags().GetString("email")
-		
+
 		// Log user email for debugging
 		if userEmail != "" {
 			fmt.Printf("Contact email provided: %s\n", userEmail)
@@ -147,16 +177,33 @@ processed and may be used to guide future development.`,
 			fmt.Print("Please enter your feedback: ")
 			feedbackBytes, _ := os.ReadFile("/dev/stdin")
 			feedbackText = strings.TrimSpace(string(feedbackBytes))
+
+			// Validate feedback text
+			if feedbackText == "" {
+				// Handle empty feedback error
+				err := &common.NessiError{
+					Code:    ErrViralCommunityFailed,
+					Message: "Feedback text cannot be empty",
+					Details: "Please provide some feedback text to submit",
+				}
+				handleCommunityError(err)
+				return
+			}
 		}
+
+		// Show progress indicator
+		ShowProgress("Submitting feedback...", 1*time.Second)
 
 		// In a real implementation, this would use the community engagement plugin
 		// For now, we'll just show a mock implementation
-		fmt.Println("Submitting feedback...")
 
 		// Generate a mock GitHub issue URL
 		githubIssueURL := fmt.Sprintf("https://github.com/nessi-dev/nessi/issues/new?title=%s&body=%s",
 			"Feedback: "+feedbackType,
 			"Feedback from "+userName+":\n\n"+feedbackText)
+
+		// Show success message
+		ShowSuccess("Feedback submitted successfully!")
 
 		// Display mock result
 		fmt.Println("Thank you for your feedback!")
@@ -176,7 +223,7 @@ Nessi's adoption.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		experience, _ := cmd.Flags().GetString("experience")
 		githubProfile, _ := cmd.Flags().GetString("github-profile")
-		
+
 		// Log GitHub profile for debugging
 		if githubProfile != "" {
 			fmt.Printf("GitHub profile provided: %s\n", githubProfile)
