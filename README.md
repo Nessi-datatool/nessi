@@ -30,15 +30,16 @@ Nessi is an open-source CLI-only data quality and Delta Lake management tool tha
   - Data profiling and statistics
   - Anomaly detection
 
-- **Robust Error Handling**
-  - Comprehensive error messages
-  - Detailed troubleshooting guidance
+- **Comprehensive Error Handling System**
+  - Standardized error codes (N1XX-N9XX) for different error categories
+  - Interactive error resolution for common errors
+  - Contextual error suggestions with actionable guidance
+  - Error telemetry for tracking error statistics
+  - Automatic retry with exponential backoff for transient failures
+  - Detailed troubleshooting documentation
   - Recovery mechanisms for corrupted tables
   - Authentication and connection error handling
-  - Schema validation
-  - Freshness monitoring
-  - Consistency checks
-  - Quality reporting
+  - Test tools for verifying error handling
   
 - **Monitoring & Alerting**
   - File-based metrics collection
@@ -515,20 +516,45 @@ reporting:
 
 See the [Reporting Documentation](docs/REPORTING.md) for more details on the reporting capabilities.
 
-### Error Handling and Retries
+### Error Handling System
 
-The application includes configurable retry mechanisms for API failures and external service interactions. Configure the retry settings in `config/config.yaml`:
+Nessi includes a comprehensive error handling system with standardized error codes, interactive resolution, and telemetry. Configure the error handling settings in `config/config.yaml`:
 
 ```yaml
-api:
+error_handling:
+  interactive: true  # Enable interactive error resolution
+  telemetry:
+    enabled: true     # Enable error telemetry
+    anonymous: true   # Collect only anonymous data
   retries:
     max_attempts: 3
     initial_backoff: 1s
     max_backoff: 30s
     backoff_factor: 2.0
-  error_handling:
-    categorize: true
-    detailed_logging: true
+  logging:
+    level: info       # Log level for errors (debug, info, warn, error)
+    structured: true  # Use structured logging for errors
+```
+
+#### Testing Error Handling
+
+Nessi provides a command to test the error handling system:
+
+```bash
+# List all available error codes
+nessi test-error --list
+
+# Generate a specific error to test handling
+nessi test-error N101  # Path error
+
+# Test interactive resolution
+nessi test-error N201 --resolvable
+
+# Test error telemetry
+nessi test-error N301 --telemetry
+
+# Run comprehensive error handling tests
+./scripts/test_error_handling.sh
 ```
 
 ## Test Strategy
