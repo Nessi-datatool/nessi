@@ -212,7 +212,7 @@ func TestExportTelemetryToFile(t *testing.T) {
 	exportPath2 := filepath.Join(tempDir, "export_disabled_telemetry.json")
 	err = telemetry.ExportTelemetryToFile(exportPath2)
 	assert.Error(t, err)
-	
+
 	// Check that the file wasn't created
 	_, err = os.Stat(exportPath2)
 	assert.True(t, os.IsNotExist(err))

@@ -2,7 +2,7 @@ package logger
 
 import (
 	"context"
-	"errors"
+	stderrors "errors"
 	"fmt"
 	"io"
 	"os"
@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nessi-dev/nessi/pkg/common"
+	"github.com/nessi-dev/nessi/pkg/errorcode"
 	"github.com/rs/zerolog"
 )
 
@@ -24,10 +24,14 @@ const (
 )
 
 // Logger is a wrapper around zerolog.Logger with additional methods
+// It implements the errorcode.Logger interface
 type Logger struct {
 	zerolog.Logger
 	ctx context.Context
 }
+
+// Ensure Logger implements errorcode.Logger interface
+var _ errorcode.Logger = (*Logger)(nil)
 
 // contextKey is the type used for context values
 type contextKey string
@@ -143,13 +147,27 @@ func (l Logger) Error(err error, msg string) {
 	file = parts[len(parts)-1]
 
 	// Check if it's a NessiError
-	var nessiErr *common.NessiError
-	if err != nil && errors.As(err, &nessiErr) {
+	var nessiErr interface {
+		Error() string
+		Unwrap() error
+	}
+	if err != nil && stderrors.As(err, &nessiErr) {
+		// Extract error code using reflection to avoid import cycles
+		errStr := nessiErr.Error()
+		// Extract error code from the error string (format: [CODE] Description: Message)
+		errCode := ""
+		if len(errStr) > 2 && strings.HasPrefix(errStr, "[") {
+			endBracket := strings.Index(errStr, "]")
+			if endBracket > 0 {
+				errCode = errStr[1:endBracket]
+			}
+		}
+
 		// Log with error code and details
 		l.Logger.Error().
-			Str("error_code", string(nessiErr.Code)).
-			Str("error_type", common.GetErrorDescription(nessiErr.Code)).
-			Str("error", nessiErr.Error()).
+			Str("error_code", errCode).
+			Str("error_type", errorcode.GetErrorDescription(errorcode.ErrorCode(errCode))).
+			Str("error", errStr).
 			Str("file", file).
 			Int("line", line).
 			Msg(msg)
@@ -170,7 +188,7 @@ func (l Logger) Error(err error, msg string) {
 }
 
 // ErrorCode logs an error with a specific error code
-func (l Logger) ErrorCode(code common.ErrorCode, msg string, details ...string) {
+func (l Logger) ErrorCode(code errorcode.ErrorCode, msg string, details ...string) {
 	// Get caller information
 	_, file, line, ok := runtime.Caller(1)
 	if !ok {
@@ -185,7 +203,7 @@ func (l Logger) ErrorCode(code common.ErrorCode, msg string, details ...string) 
 	// Create error event
 	event := l.Logger.Error().
 		Str("error_code", string(code)).
-		Str("error_type", common.GetErrorDescription(code)).
+		Str("error_type", errorcode.GetErrorDescription(code)).
 		Str("file", file).
 		Int("line", line)
 

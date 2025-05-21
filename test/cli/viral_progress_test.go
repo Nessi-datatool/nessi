@@ -16,26 +16,26 @@ func TestProgressIndicators(t *testing.T) {
 
 	// Test cases
 	tests := []struct {
-		name            string
-		args            []string
+		name             string
+		args             []string
 		progressContains string
 		successContains  string
 	}{
 		{
-			name:            "Share command progress",
-			args:            []string{"viral", "share", "test_table"},
+			name:             "Share command progress",
+			args:             []string{"viral", "share", "test_table"},
 			progressContains: "Generating shareable report",
 			successContains:  "Successfully generated",
 		},
 		{
-			name:            "Badge command progress",
-			args:            []string{"viral", "badge"},
+			name:             "Badge command progress",
+			args:             []string{"viral", "badge"},
 			progressContains: "Generating 'Powered by Nessi' badge",
 			successContains:  "Badge generated successfully",
 		},
 		{
-			name:            "Community feedback progress",
-			args:            []string{"viral", "community", "feedback", "--text", "This is a test feedback"},
+			name:             "Community feedback progress",
+			args:             []string{"viral", "community", "feedback", "--text", "This is a test feedback"},
 			progressContains: "Submitting feedback",
 			successContains:  "Feedback submitted successfully",
 		},
@@ -59,10 +59,10 @@ func TestProgressIndicators(t *testing.T) {
 			assert.Contains(t, output, tc.successContains, "Output should contain success message: %s", tc.successContains)
 
 			// Check for spinner characters (this is a basic check since the actual spinner is hard to test)
-			assert.True(t, strings.Contains(output, "⠋") || strings.Contains(output, "⠙") || 
-				strings.Contains(output, "⠹") || strings.Contains(output, "⠸") || 
-				strings.Contains(output, "⠼") || strings.Contains(output, "⠴") || 
-				strings.Contains(output, "⠦") || strings.Contains(output, "⠧") || 
+			assert.True(t, strings.Contains(output, "⠋") || strings.Contains(output, "⠙") ||
+				strings.Contains(output, "⠹") || strings.Contains(output, "⠸") ||
+				strings.Contains(output, "⠼") || strings.Contains(output, "⠴") ||
+				strings.Contains(output, "⠦") || strings.Contains(output, "⠧") ||
 				strings.Contains(output, "⠇") || strings.Contains(output, "⠏"),
 				"Output should contain spinner characters")
 		})
@@ -128,7 +128,7 @@ func TestShowSuccess(t *testing.T) {
 
 			// Check that output contains the message
 			assert.Contains(t, output, tc.message, "Output should contain the success message")
-			
+
 			// Check for checkmark symbol
 			assert.Contains(t, output, "✅", "Output should contain checkmark symbol")
 		})
@@ -161,7 +161,7 @@ func TestShowWarning(t *testing.T) {
 
 			// Check that output contains the message
 			assert.Contains(t, output, tc.message, "Output should contain the warning message")
-			
+
 			// Check for warning symbol
 			assert.Contains(t, output, "⚠️", "Output should contain warning symbol")
 		})

@@ -2,50 +2,61 @@ package cli
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
+	stderrors "errors"
 	"github.com/fatih/color"
-	"github.com/nessi-dev/nessi/pkg/common"
+	"github.com/nessi-dev/nessi/pkg/errorcode"
+	"github.com/nessi-dev/nessi/pkg/errors"
 	"github.com/nessi-dev/nessi/pkg/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
+// ResolvableError defines an error that can be resolved interactively
+type ResolvableError interface {
+	ResolveError() error
+}
+
 // ErrorHandler handles errors in the CLI
 type ErrorHandler struct {
 	Interactive bool
 	Logger      logger.Logger
-	Resolver    *common.InteractiveErrorResolver
-	Telemetry   *common.ErrorTelemetry
+	Resolver    *errors.InteractiveErrorResolver
+	Telemetry   *errors.ErrorTelemetry
 }
 
 // NewErrorHandler creates a new error handler
 func NewErrorHandler(interactive bool) *ErrorHandler {
 	// Create error telemetry
-	telemetryConfig := common.DefaultErrorTelemetryConfig()
-	telemetry := common.NewErrorTelemetry(telemetryConfig)
+	telemetryConfig := errors.DefaultErrorTelemetryConfig()
+	telemetry := errors.NewErrorTelemetry(telemetryConfig)
 
 	return &ErrorHandler{
 		Interactive: interactive,
 		Logger:      logger.DefaultLogger,
-		Resolver:    common.NewInteractiveErrorResolver(),
+		Resolver:    errors.NewInteractiveErrorResolver(),
 		Telemetry:   telemetry,
 	}
 }
 
 // HandleError handles an error in the CLI
-func HandleError(err error) {
+func (h *ErrorHandler) HandleError(err error) error {
 	// Check if it's a NessiError
-	var nessiErr *common.NessiError
-	if errors.As(err, &nessiErr) {
+	var nessiErr *errors.NessiError
+	if err == nil {
+		return nil
+	}
+
+	if stderrors.As(err, &nessiErr) {
 		// Get suggestions for this error
-		suggestions := common.GetSuggestionsForError(nessiErr)
+		suggestions := errors.GetSuggestionsForError(nessiErr)
 
 		// Record error in telemetry if enabled
-		recordErrorInTelemetry(nessiErr)
+		h.recordErrorInTelemetry(nessiErr)
 
 		// Print error with code
 		error := color.New(color.FgRed, color.Bold)
@@ -75,8 +86,8 @@ func HandleError(err error) {
 		}
 
 		// Check if it's a resolvable error
-		var resolvableErr common.ResolvableError
-		if errors.As(err, &resolvableErr) {
+		var resolvableErr ResolvableError
+		if stderrors.As(err, &resolvableErr) {
 			// Check if interactive mode is enabled
 			if isInteractiveModeEnabled() {
 				fmt.Println("\nThis error can be resolved interactively.")
@@ -90,8 +101,9 @@ func HandleError(err error) {
 				// If user wants to resolve the error
 				if input == "" || input == "y" || input == "yes" {
 					// Resolve the error
-					if err := resolvableErr.Resolve(); err != nil {
-						fmt.Printf("Failed to resolve the error: %s\n", err)
+					resolutionErr := resolvableErr.ResolveError()
+					if resolutionErr != nil {
+						fmt.Printf("Failed to resolve the error: %s\n", resolutionErr)
 					} else {
 						success := color.New(color.FgGreen, color.Bold)
 						success.Println("\n✅ Error resolved successfully!")
@@ -113,10 +125,13 @@ func HandleError(err error) {
 		error := color.New(color.FgRed, color.Bold)
 		error.Printf("\n❌ Error: %s\n", err)
 	}
+
+	// Return nil to prevent Cobra from printing the error again
+	return nil
 }
 
 // printColoredError prints a NessiError with color
-func printColoredError(err *common.NessiError) {
+func printColoredError(err *errors.NessiError) {
 	// Create color printers
 	error := color.New(color.FgRed, color.Bold)
 	detail := color.New(color.FgYellow)
@@ -153,28 +168,32 @@ func isInteractiveModeEnabled() bool {
 }
 
 // recordErrorInTelemetry records an error in telemetry if enabled
-func recordErrorInTelemetry(err *common.NessiError) {
-	// Check if telemetry is enabled in config
-	if viper.IsSet("error_handling.telemetry.enabled") && viper.GetBool("error_handling.telemetry.enabled") {
-		// Get telemetry instance
-		telemetryConfig := common.DefaultErrorTelemetryConfig()
-		telemetry := common.NewErrorTelemetry(telemetryConfig)
-
-		// Record the error
-		telemetry.RecordError(err)
+func (h *ErrorHandler) recordErrorInTelemetry(err *errors.NessiError) {
+	// Check if telemetry is enabled
+	if !h.Telemetry.Enabled {
+		return
 	}
+
+	// Record error in telemetry
+	h.Telemetry.RecordError(err)
+
+	// Log telemetry recording
+	h.Logger.Debug(fmt.Sprintf("Error recorded in telemetry: %s", string(err.Code)))
 }
 
 // shouldRetryError checks if an error should be automatically retried
-func shouldRetryError(err *common.NessiError) bool {
-	// Check if retry is enabled in config
-	if !viper.IsSet("error_handling.retry.enabled") || !viper.GetBool("error_handling.retry.enabled") {
+func shouldRetryError(err *errors.NessiError) bool {
+	// Check if error is retriable
+	switch err.Code {
+	case errorcode.ErrConnectionFailed:
+		return true
+	case errorcode.ErrRateLimitExceeded:
+		return true
+	case errorcode.ErrInvalidArgument:
+		return true
+	default:
 		return false
 	}
-
-	// Check if the error is retryable
-	// For now, we'll consider connection errors (N4XX) as retryable
-	return strings.HasPrefix(string(err.Code), "N4")
 }
 
 // AddErrorHandlingFlags adds error handling flags to a command
@@ -182,9 +201,10 @@ func AddErrorHandlingFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().Bool("interactive", true, "Enable interactive error resolution")
 }
 
-// WrapAllCommands wraps all commands with error handling
-func WrapAllCommands(cmd *cobra.Command) {
-	// Add common flags to all commands
+// WrapCommandsWithErrorHandling wraps all commands with error handling
+func WrapCommandsWithErrorHandling(cmd *cobra.Command) {
+	// Add error handling flags
+	AddErrorHandlingFlags(cmd)
 	cmd.PersistentFlags().Bool("interactive", false, "Enable interactive mode")
 	cmd.PersistentFlags().Bool("dry-run", false, "Show what would be done without making changes")
 
@@ -210,8 +230,11 @@ func WrapAllCommands(cmd *cobra.Command) {
 			err := originalRunE(cmd, args)
 			if err != nil {
 				// Handle the error
-				HandleError(err)
-				return nil // Return nil to prevent Cobra from printing the error
+				handler := NewErrorHandler(interactive)
+				err = handler.HandleError(err)
+				if err != nil {
+					return err
+				}
 			}
 
 			// If this was a dry run, print a message
@@ -252,7 +275,7 @@ func WrapAllCommands(cmd *cobra.Command) {
 
 	// Recursively wrap all subcommands
 	for _, subCmd := range cmd.Commands() {
-		WrapAllCommands(subCmd)
+		WrapCommandsWithErrorHandling(subCmd)
 	}
 }
 
@@ -267,7 +290,7 @@ func ConvertToResolvableError(err error) error {
 		// Extract path from error message
 		path := extractPathFromError(err.Error())
 		if path != "" {
-			return common.NewResolvablePathError(path)
+			return errors.NewResolvablePathError(path)
 		}
 	}
 
@@ -276,7 +299,7 @@ func ConvertToResolvableError(err error) error {
 		// Extract path from error message
 		path := extractPathFromError(err.Error())
 		if path != "" {
-			return common.NewResolvableDeltaTableError(path)
+			return errors.NewResolvableDeltaTableError(path)
 		}
 	}
 
@@ -285,7 +308,7 @@ func ConvertToResolvableError(err error) error {
 		// Try to extract key and value from error message
 		key, value := extractConfigFromError(err.Error())
 		if key != "" {
-			return common.NewResolvableConfigError(key, value)
+			return errors.NewResolvableConfigError(key, value)
 		}
 	}
 

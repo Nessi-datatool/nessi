@@ -8,7 +8,6 @@ import (
 
 	"github.com/apache/arrow/go/v15/arrow"
 	"github.com/apache/arrow/go/v15/arrow/ipc"
-	"github.com/nessi-dev/nessi/pkg/common"
 	"github.com/nessi-dev/nessi/pkg/datalake"
 	"github.com/nessi-dev/nessi/pkg/errors"
 	"github.com/nessi-dev/nessi/pkg/quality/engine"
@@ -239,6 +238,9 @@ It provides features for validation, profiling, monitoring, and reporting.`,
 
 	// Initialize plugins command
 	initPluginsCmd()
+
+	// Initialize progress demo command
+	InitProgressDemoCmd()
 }
 
 // initValidateCmd initializes the validate command

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -67,7 +68,7 @@ func runSetupWizard(configDirFlag string) error {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		fmt.Println("Error getting home directory:", err)
-		return
+		return common.NewError(common.ErrInternalError, fmt.Sprintf("Error getting home directory: %s", err))
 	}
 
 	defaultConfigDir := filepath.Join(homeDir, ".nessi")
@@ -90,7 +91,7 @@ func runSetupWizard(configDirFlag string) error {
 		configDir, err = validator.ValidatePath(configDir)
 		if err != nil {
 			fmt.Println("Error validating path:", err)
-			return
+			return common.NewError(common.ErrInvalidPath, fmt.Sprintf("Error validating path: %s", err))
 		}
 	}
 
@@ -99,7 +100,7 @@ func runSetupWizard(configDirFlag string) error {
 		fmt.Printf("Creating configuration directory: %s\n", configDir)
 		if err := os.MkdirAll(configDir, 0755); err != nil {
 			fmt.Println("Error creating directory:", err)
-			return
+			return common.NewError(common.ErrInvalidPath, fmt.Sprintf("Failed to create directory: %s", err))
 		}
 	}
 
@@ -202,7 +203,7 @@ logging:
 	// Check Java installation
 	fmt.Println("Checking Java installation...")
 	javaCmd := "java -version"
-	javaOutput, err := common.RunCommand(javaCmd)
+	javaOutput, err := runCommand(javaCmd)
 	if err != nil {
 		info.Println("⚠ Java not found or not in PATH")
 		fmt.Println("Java is required for some Delta Lake operations.")
@@ -215,7 +216,7 @@ logging:
 	// Check Python installation
 	fmt.Println("\nChecking Python installation...")
 	pythonCmd := "python --version || python3 --version"
-	pythonOutput, err := common.RunCommand(pythonCmd)
+	pythonOutput, err := runCommand(pythonCmd)
 	if err != nil {
 		info.Println("⚠ Python not found or not in PATH")
 		fmt.Println("Python is required for some data processing operations.")
@@ -241,6 +242,13 @@ logging:
 	}
 
 	return nil
+}
+
+// runCommand runs a shell command and returns the output
+func runCommand(command string) (string, error) {
+	cmd := exec.Command("sh", "-c", command)
+	output, err := cmd.CombinedOutput()
+	return string(output), err
 }
 
 // runNonInteractiveSetup runs the setup wizard in non-interactive mode

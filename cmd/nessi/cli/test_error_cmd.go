@@ -22,9 +22,9 @@ func initTestErrorCmd() {
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Get error code
-			errorCode := common.ErrUnknown
+			errorCode := string(common.ErrUnknown)
 			if len(args) > 0 {
-				errorCode = common.ErrorCode(args[0])
+				errorCode = args[0]
 			}
 
 			// Get flags
@@ -53,29 +53,30 @@ func initTestErrorCmd() {
 			if resolvable {
 				// Create a resolvable error
 				switch errorCode {
-				case common.ErrInvalidPath:
+				case string(common.ErrInvalidPath):
 					// Create a non-existent path
 					testPath := "/tmp/nessi-test-path-that-does-not-exist"
 					err = common.NewResolvablePathError(testPath)
-				case common.ErrInvalidConfig:
+				case string(common.ErrInvalidConfig):
 					// Create a config error
 					err = common.NewResolvableConfigError("test.config.key", "invalid-value")
-				case common.ErrInvalidDeltaTable:
+				case string(common.ErrInvalidDeltaTable):
 					// Create a delta table error
 					testPath := "/tmp/nessi-test-delta-table-that-does-not-exist"
 					err = common.NewResolvableDeltaTableError(testPath)
 				default:
 					// Create a generic resolvable error
-					err = common.NewResolvableError(errorCode, message, details, []string{suggestion})
+					err = common.NewResolvableError(common.ErrorCode(errorCode), message, details, []string{suggestion})
 				}
 			} else {
 				// Create a standard NessiError
-				nessiErr := common.NewError(errorCode, message)
+				nessiErr := common.NewError(common.ErrorCode(errorCode), message)
 				if details != "" {
 					nessiErr.Details = details
 				}
 				if suggestion != "" {
-					nessiErr.Suggestions = []string{suggestion}
+					// Add suggestion directly to the error message since Suggestions field doesn't exist
+					nessiErr.Details += fmt.Sprintf(" (Suggestion: %s)", suggestion)
 				}
 				err = nessiErr
 			}

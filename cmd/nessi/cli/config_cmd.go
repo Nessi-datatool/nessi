@@ -6,8 +6,8 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/nessi-dev/nessi/pkg/common"
+	"github.com/nessi-dev/nessi/pkg/errorcode"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 )
 
@@ -47,13 +47,13 @@ var configValidateCmd = &cobra.Command{
 			// Read the file
 			fileData, err := os.ReadFile(filePath)
 			if err != nil {
-				return common.NewError(common.ErrInvalidPath, fmt.Sprintf("Failed to read file: %s", err))
+				return common.NewError(errorcode.ErrInvalidArgument, fmt.Sprintf("Failed to read file: %s", err))
 			}
 
 			// Parse the YAML
 			var config map[string]interface{}
 			if err := yaml.Unmarshal(fileData, &config); err != nil {
-				return common.NewError(common.ErrInvalidFormat, fmt.Sprintf("Invalid YAML format: %s", err))
+				return common.NewError(errorcode.ErrInvalidArgument, fmt.Sprintf("Invalid YAML format: %s", err))
 			}
 
 			// Validate the configuration
@@ -81,7 +81,7 @@ func validateConfig(config map[string]interface{}) error {
 		// Check interactive resolution
 		if interactiveResolution, ok := errorHandling["interactive_resolution"]; ok {
 			if _, ok := interactiveResolution.(bool); !ok {
-				return common.NewError(common.ErrInvalidConfig, "error_handling.interactive_resolution must be a boolean")
+				return common.NewError(errorcode.ErrInvalidConfig, "error_handling.interactive_resolution must be a boolean")
 			}
 		}
 
@@ -90,14 +90,14 @@ func validateConfig(config map[string]interface{}) error {
 			// Check enabled
 			if enabled, ok := telemetry["enabled"]; ok {
 				if _, ok := enabled.(bool); !ok {
-					return common.NewError(common.ErrInvalidConfig, "error_handling.telemetry.enabled must be a boolean")
+					return common.NewError(errorcode.ErrInvalidConfig, "error_handling.telemetry.enabled must be a boolean")
 				}
 			}
 
 			// Check max_errors
 			if maxErrors, ok := telemetry["max_errors"]; ok {
 				if _, ok := maxErrors.(int); !ok {
-					return common.NewError(common.ErrInvalidConfig, "error_handling.telemetry.max_errors must be an integer")
+					return common.NewError(errorcode.ErrInvalidConfig, "error_handling.telemetry.max_errors must be an integer")
 				}
 			}
 		}
@@ -107,14 +107,14 @@ func validateConfig(config map[string]interface{}) error {
 			// Check enabled
 			if enabled, ok := retry["enabled"]; ok {
 				if _, ok := enabled.(bool); !ok {
-					return common.NewError(common.ErrInvalidConfig, "error_handling.retry.enabled must be a boolean")
+					return common.NewError(errorcode.ErrInvalidConfig, "error_handling.retry.enabled must be a boolean")
 				}
 			}
 
 			// Check max_attempts
 			if maxAttempts, ok := retry["max_attempts"]; ok {
 				if _, ok := maxAttempts.(int); !ok {
-					return common.NewError(common.ErrInvalidConfig, "error_handling.retry.max_attempts must be an integer")
+					return common.NewError(errorcode.ErrInvalidConfig, "error_handling.retry.max_attempts must be an integer")
 				}
 			}
 		}
@@ -131,14 +131,14 @@ func validateConfig(config map[string]interface{}) error {
 				"error": true,
 			}
 			if !validLevels[level] {
-				return common.NewError(common.ErrInvalidConfig, "logging.level must be one of: debug, info, warn, error")
+				return common.NewError(errorcode.ErrInvalidConfig, "logging.level must be one of: debug, info, warn, error")
 			}
 		}
 
 		// Check colored
 		if colored, ok := logging["colored"]; ok {
 			if _, ok := colored.(bool); !ok {
-				return common.NewError(common.ErrInvalidConfig, "logging.colored must be a boolean")
+				return common.NewError(errorcode.ErrInvalidConfig, "logging.colored must be a boolean")
 			}
 		}
 	}

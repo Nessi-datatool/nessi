@@ -219,11 +219,11 @@ func TestConfigValidator(t *testing.T) {
 
 func TestValidateOutputFormat(t *testing.T) {
 	tests := []struct {
-		name      string
-		format    string
+		name       string
+		format     string
 		wantFormat string
-		wantErr   bool
-		errCode   ErrorCode
+		wantErr    bool
+		errCode    ErrorCode
 	}{
 		{
 			name:       "Valid format - html",
@@ -238,10 +238,10 @@ func TestValidateOutputFormat(t *testing.T) {
 			wantErr:    false,
 		},
 		{
-			name:     "Invalid format",
-			format:   "invalid",
-			wantErr:  true,
-			errCode:  ErrInvalidFormat,
+			name:    "Invalid format",
+			format:  "invalid",
+			wantErr: true,
+			errCode: ErrInvalidFormat,
 		},
 	}
 

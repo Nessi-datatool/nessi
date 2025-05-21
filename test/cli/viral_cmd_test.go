@@ -280,46 +280,46 @@ func TestViralCommandErrors(t *testing.T) {
 
 	// Test cases
 	tests := []struct {
-		name          string
-		args          []string
-		errorContains string
+		name              string
+		args              []string
+		errorContains     string
 		errorCodeContains string // New field for error codes
 	}{
 		{
-			name:          "Share with missing table",
-			args:          []string{"viral", "share"},
-			errorContains: "requires a table name",
+			name:              "Share with missing table",
+			args:              []string{"viral", "share"},
+			errorContains:     "requires a table name",
 			errorCodeContains: "", // No specific error code expected
 		},
 		{
-			name:          "Badge with invalid format",
-			args:          []string{"viral", "badge", "--format", "invalid"},
-			errorContains: "Invalid badge format",
+			name:              "Badge with invalid format",
+			args:              []string{"viral", "badge", "--format", "invalid"},
+			errorContains:     "Invalid badge format",
 			errorCodeContains: "V102", // Badge error code
 		},
 		{
-			name:          "Community feedback with missing text",
-			args:          []string{"viral", "community", "feedback", "--type", "feature"},
-			errorContains: "Feedback text cannot be empty",
+			name:              "Community feedback with missing text",
+			args:              []string{"viral", "community", "feedback", "--type", "feature"},
+			errorContains:     "Feedback text cannot be empty",
 			errorCodeContains: "V103", // Community error code
 		},
 		{
-			name:          "Community contribute with invalid experience",
-			args:          []string{"viral", "community", "contribute", "--experience", "invalid"},
-			errorContains: "invalid experience level",
+			name:              "Community contribute with invalid experience",
+			args:              []string{"viral", "community", "contribute", "--experience", "invalid"},
+			errorContains:     "invalid experience level",
 			errorCodeContains: "", // No specific error code expected
 		},
 		// New test cases for error handling
 		{
-			name:          "Badge with invalid color",
-			args:          []string{"viral", "badge", "--color", "invalid-color"},
-			errorContains: "may not be recognized", // This is a warning, not an error
+			name:              "Badge with invalid color",
+			args:              []string{"viral", "badge", "--color", "invalid-color"},
+			errorContains:     "may not be recognized", // This is a warning, not an error
 			errorCodeContains: "",
 		},
 		{
-			name:          "Share with invalid output path",
-			args:          []string{"viral", "share", "test_table", "--output", "/invalid/path/report.html"},
-			errorContains: "output path",
+			name:              "Share with invalid output path",
+			args:              []string{"viral", "share", "test_table", "--output", "/invalid/path/report.html"},
+			errorContains:     "output path",
 			errorCodeContains: "V101", // Share error code
 		},
 	}
@@ -342,7 +342,7 @@ func TestViralCommandErrors(t *testing.T) {
 
 			// Check error message
 			assert.Contains(t, output, tc.errorContains, "Error message should contain %s", tc.errorContains)
-			
+
 			// Check error code if specified
 			if tc.errorCodeContains != "" {
 				assert.Contains(t, output, tc.errorCodeContains, "Error code should contain %s", tc.errorCodeContains)

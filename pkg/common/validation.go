@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/nessi-dev/nessi/pkg/errorcode"
 )
 
 // PathValidator validates and normalizes file paths
@@ -28,7 +30,7 @@ func NewPathValidator() *PathValidator {
 func (v *PathValidator) ValidatePath(path string) (string, error) {
 	// Check if path is empty
 	if path == "" {
-		return "", NewError(ErrInvalidPath, "Path cannot be empty")
+		return "", NewError(errorcode.ErrInvalidPath, "Path cannot be empty")
 	}
 
 	// Expand home directory if path starts with ~
@@ -56,17 +58,17 @@ func (v *PathValidator) ValidatePath(path string) (string, error) {
 	info, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) && !v.AllowNonExistent {
-			return "", NewError(ErrInvalidPath, fmt.Sprintf("Path %s does not exist", path))
+			return "", NewError(errorcode.ErrInvalidPath, fmt.Sprintf("Path %s does not exist", path))
 		} else if !os.IsNotExist(err) {
 			return "", fmt.Errorf("failed to access path: %w", err)
 		}
 	} else {
 		// Path exists, check if it's a directory or file as required
 		if v.RequireDirectory && !info.IsDir() {
-			return "", NewError(ErrNotADirectory, fmt.Sprintf("%s is not a directory", path))
+			return "", NewError(errorcode.ErrInvalidArgument, fmt.Sprintf("%s is not a directory", path))
 		}
 		if v.RequireFile && info.IsDir() {
-			return "", NewError(ErrNotAFile, fmt.Sprintf("%s is not a file", path))
+			return "", NewError(errorcode.ErrInvalidArgument, fmt.Sprintf("%s is not a file", path))
 		}
 	}
 
@@ -88,7 +90,7 @@ func ValidateTablePath(path string) (string, error) {
 	// Check if it's a Delta table (has _delta_log directory)
 	deltaLogPath := filepath.Join(normalizedPath, "_delta_log")
 	if _, err := os.Stat(deltaLogPath); os.IsNotExist(err) {
-		return "", NewError(ErrInvalidDeltaTable, fmt.Sprintf("%s is not a Delta Lake table (missing _delta_log directory)", path))
+		return "", NewError(errorcode.ErrNotDeltaTable, fmt.Sprintf("%s is not a Delta Lake table (missing _delta_log directory)", path))
 	} else if err != nil {
 		return "", fmt.Errorf("failed to access _delta_log directory: %w", err)
 	}
@@ -112,7 +114,7 @@ func NewConfigValidator() *ConfigValidator {
 func (v *ConfigValidator) ValidateConfig(key string, value string) error {
 	// Check if value is empty
 	if value == "" && v.Required {
-		return NewError(ErrMissingConfig, fmt.Sprintf("Configuration %s is required", key))
+		return NewError(errorcode.ErrConfigNotFound, fmt.Sprintf("Configuration %s is required", key))
 	}
 
 	return nil
@@ -133,7 +135,7 @@ func ValidateOutputFormat(format string) (string, error) {
 	}
 
 	if !validFormats[format] {
-		return "", NewError(ErrInvalidFormat, fmt.Sprintf("Invalid output format: %s. Valid formats are: html, pdf, json, csv, text", format))
+		return "", NewError(errorcode.ErrInvalidArgument, fmt.Sprintf("Invalid output format: %s. Valid formats are: html, pdf, json, csv, text", format))
 	}
 
 	return format, nil

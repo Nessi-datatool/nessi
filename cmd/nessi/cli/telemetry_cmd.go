@@ -133,9 +133,9 @@ var errorTelemetryReportCmd = &cobra.Command{
 		errorTelemetry := common.NewErrorTelemetry(errorTelemetryConfig)
 
 		// Report telemetry data
-		err := errorTelemetry.ReportTelemetry()
-		if err != nil {
-			fmt.Println("❌ Failed to report error telemetry:", err)
+		report := errorTelemetry.GenerateTelemetryReport()
+		if report == nil {
+			fmt.Println("❌ Failed to generate error telemetry report")
 			return
 		}
 

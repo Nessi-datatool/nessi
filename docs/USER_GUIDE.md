@@ -420,13 +420,60 @@ security:
 - Configure alerts for critical metrics
 - Use version control for rule definitions
 
-## Troubleshooting
+## Error Handling & Troubleshooting
+
+### Error Handling System
+
+Nessi includes a robust error handling system that provides clear, actionable error messages and automatic recovery from transient failures. Key features include:
+
+- **Standardized Error Codes**: All errors have unique codes (e.g., N101, N201) that help identify the issue
+- **Interactive Resolution**: Many common errors can be resolved interactively
+- **Helpful Suggestions**: Error messages include suggestions for resolving the issue
+- **Error Telemetry**: Optional collection of error statistics to improve the product
+- **Automatic Retry**: Transient errors are automatically retried with exponential backoff
+
+For detailed information, see the [ERROR_HANDLING.md](ERROR_HANDLING.md) documentation.
+
+### Testing Error Handling
+
+You can test the error handling system using the `test-error` command:
+
+```bash
+# List all available error codes
+nessi test-error --list
+
+# Generate a specific error
+nessi test-error N101
+
+# Test with custom details and suggestion
+nessi test-error N201 --details "Custom details" --suggestion "Try this solution"
+```
+
+### Error Telemetry
+
+Nessi includes an error telemetry system that anonymously collects error statistics to help improve the product:
+
+```bash
+# View telemetry status
+nessi telemetry status
+
+# Enable error telemetry
+nessi telemetry enable-error
+
+# Disable error telemetry
+nessi telemetry disable-error
+
+# View error statistics
+nessi telemetry report-errors
+```
 
 ### Common Issues
 
 - **Connection errors**: Check network and credentials
 - **Validation failures**: Examine data quality issues
 - **Performance problems**: Review resource allocation
+- **Path errors**: Verify that file paths exist and are accessible
+- **Delta table errors**: Ensure tables are valid Delta Lake tables
 
 ### Logs
 

@@ -89,7 +89,7 @@ type FileOperation struct {
 	Type        string // "create", "update", "delete", etc.
 	Path        string // File path
 	Description string // Description of the operation
-	DryRun      bool   // Whether this is a dry run
+	IsDryRun    bool   // Whether this is a dry run
 }
 
 // NewCreateFileOperation creates a new file creation operation
@@ -98,7 +98,7 @@ func NewCreateFileOperation(path string, dryRun bool) *FileOperation {
 		Type:        "create",
 		Path:        path,
 		Description: fmt.Sprintf("Create file: %s", path),
-		DryRun:      dryRun,
+		IsDryRun:    dryRun,
 	}
 }
 
@@ -108,7 +108,7 @@ func NewUpdateFileOperation(path string, dryRun bool) *FileOperation {
 		Type:        "update",
 		Path:        path,
 		Description: fmt.Sprintf("Update file: %s", path),
-		DryRun:      dryRun,
+		IsDryRun:    dryRun,
 	}
 }
 
@@ -118,7 +118,7 @@ func NewDeleteFileOperation(path string, dryRun bool) *FileOperation {
 		Type:        "delete",
 		Path:        path,
 		Description: fmt.Sprintf("Delete file: %s", path),
-		DryRun:      dryRun,
+		IsDryRun:    dryRun,
 	}
 }
 
@@ -150,7 +150,7 @@ func (f *FileOperation) DryRun() error {
 // Execute performs the actual file operation
 func (f *FileOperation) Execute() error {
 	// If this is a dry run, just return
-	if f.DryRun {
+	if f.IsDryRun {
 		return f.DryRun()
 	}
 
