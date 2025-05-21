@@ -19,6 +19,11 @@
 - Data Quality Checks
 - System Metrics
 - CLI Interface
+- Plugin System
+- Viral Growth Features
+  - Social Sharing
+  - Community Engagement
+  - 'Powered by Nessi' Badges
 - Python API
 - Reporting System
 - Alerting System
@@ -292,6 +297,89 @@ dbt run --nessi-validate
 ```
 
 ### Airflow Integration
+
+```python
+# Import Nessi Airflow operators
+from nessi_airflow.operators import NessiQualityOperator
+
+# Add a Nessi quality check to your DAG
+quality_check = NessiQualityOperator(
+    task_id='quality_check',
+    table='my_table',
+    rules='rules.yaml',
+    dag=dag
+)
+```
+
+## Plugin System
+
+Nessi provides a flexible plugin system that allows you to extend its functionality. Plugins can add new commands, quality rules, report extensions, format handlers, and more.
+
+```bash
+# List available plugins
+nessi plugins list
+
+# Install a plugin
+nessi plugins install plugin_name
+
+# Use a plugin
+nessi report generate --table my_table --plugin report_extensions_plugin
+```
+
+For more information on developing plugins, see the [Plugin API Documentation](PLUGIN_API.md).
+
+## Viral Growth Features
+
+Nessi includes several features designed to increase its visibility, drive adoption, and foster community engagement.
+
+### Social Sharing
+
+The social sharing plugin enhances Nessi reports with advanced sharing capabilities:
+
+```bash
+# Generate a shareable report
+nessi viral share my_table --output report.html
+```
+
+Shareable reports include:
+
+- Social media sharing buttons for Twitter, LinkedIn, and more
+- QR codes for easy access from mobile devices
+- Embed codes for including reports in websites and documentation
+- Pre-formatted messages optimized for different platforms
+
+### 'Powered by Nessi' Badges
+
+The badge plugin generates embeddable badges that can be added to your project's README, documentation, or website:
+
+```bash
+# Generate a badge in markdown format
+nessi viral badge --format markdown
+
+# Generate a badge with custom text
+nessi viral badge --label "verified by" --message "nessi" --color blue
+
+# Generate a quality score badge
+nessi viral badge --quality-score 95
+```
+
+Badges can be generated in multiple formats (Markdown, HTML, RST) and customized with different styles, colors, and text.
+
+### Community Engagement
+
+The community engagement plugin facilitates feedback collection and contribution suggestions:
+
+```bash
+# Submit feedback
+nessi viral community feedback --type feature --text "It would be great to have..."
+
+# Get contribution suggestions
+nessi viral community contribute --experience beginner
+```
+
+These features help foster community contributions and increase Nessi's adoption.
+
+For more information on leveraging these features, see the [Viral Growth Guide](VIRAL_GROWTH.md).
 
 ```python
 from airflow import DAG

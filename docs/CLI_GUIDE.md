@@ -240,3 +240,143 @@ Nessi returns the following exit codes:
 - [Quality Rules Reference](QUALITY_RULES.md)
 - [Delta Lake Operations](DELTA_OPERATIONS.md)
 - [Databricks Integration](DATABRICKS.md)
+- [Plugin System Commands](#plugin-system-commands)
+- [Viral Growth Commands](#viral-growth-commands)
+
+## Plugin System Commands
+
+Manage and use Nessi plugins:
+
+```bash
+nessi plugins [subcommand] [options]
+```
+
+Subcommands:
+- `list` - List installed plugins
+- `install` - Install a plugin
+- `remove` - Remove a plugin
+- `info` - Display information about a plugin
+
+Options:
+- `--path, -p` - Path to plugin (for install)
+- `--name, -n` - Name of plugin (for remove, info)
+
+Examples:
+
+```bash
+# List installed plugins
+nessi plugins list
+
+# Install a plugin from a local path
+nessi plugins install --path=/path/to/plugin
+
+# Install a plugin from a GitHub repository
+nessi plugins install github.com/username/nessi-plugin
+
+# Remove a plugin
+nessi plugins remove --name=plugin_name
+
+# Get information about a plugin
+nessi plugins info --name=plugin_name
+```
+
+## Viral Growth Commands
+
+Enhance Nessi's visibility and foster community engagement:
+
+```bash
+nessi viral [subcommand] [options]
+```
+
+Subcommands:
+- `share` - Generate shareable reports
+- `badge` - Create 'Powered by Nessi' badges
+- `community` - Engage with the Nessi community
+
+### Share Command
+
+Generate shareable reports with social sharing features:
+
+```bash
+nessi viral share [table_name] [options]
+```
+
+Options:
+- `--output, -o` - Output path for the shareable report
+- `--title, -t` - Title for the shareable report
+- `--description, -d` - Description for the shareable report
+- `--hashtags` - Comma-separated hashtags for social media sharing
+
+Examples:
+
+```bash
+# Generate a shareable report
+nessi viral share my_table --output=report.html
+
+# Generate a report with custom title and description
+nessi viral share my_table --title="Quality Report" --description="Monthly quality check"
+
+# Specify hashtags for social media sharing
+nessi viral share my_table --hashtags="dataquality,datalake,opensource"
+```
+
+### Badge Command
+
+Generate 'Powered by Nessi' badges for embedding in projects:
+
+```bash
+nessi viral badge [options]
+```
+
+Options:
+- `--format, -f` - Badge format (markdown, html, rst)
+- `--label, -l` - Text on the left side of the badge
+- `--message, -m` - Text on the right side of the badge
+- `--color, -c` - Color of the right side (hex or named color)
+- `--style, -s` - Badge style (flat, flat-square, plastic, etc.)
+- `--quality-score, -q` - Quality score to include in the badge (0-100)
+
+Examples:
+
+```bash
+# Generate a badge in markdown format
+nessi viral badge --format=markdown
+
+# Generate a badge with custom text
+nessi viral badge --label="verified by" --message="nessi" --color=blue
+
+# Generate a quality score badge
+nessi viral badge --quality-score=95
+```
+
+### Community Command
+
+Engage with the Nessi community:
+
+```bash
+nessi viral community [subcommand] [options]
+```
+
+Subcommands:
+- `feedback` - Provide feedback on Nessi
+- `contribute` - Get suggestions for contributing to Nessi
+
+Feedback options:
+- `--type, -t` - Type of feedback (general, bug, feature)
+- `--text` - Feedback text
+- `--name, -n` - Your name (optional)
+- `--email, -e` - Your email (optional)
+
+Contribute options:
+- `--experience, -e` - Your experience level (beginner, intermediate, advanced)
+- `--github-profile, -g` - Your GitHub profile (optional)
+
+Examples:
+
+```bash
+# Submit feedback
+nessi viral community feedback --type=feature --text="It would be great to have..."
+
+# Get contribution suggestions for beginners
+nessi viral community contribute --experience=beginner
+```

@@ -54,6 +54,13 @@ Welcome to the Nessi documentation! This guide will help you navigate through th
 - [Python Extensions](python_extensions.md) - Use Nessi with Python
 - [Test Strategy](test_strategy.md) - Testing methodology
 
+### Viral Growth & Community
+
+- [Viral Growth Features](VIRAL_GROWTH.md) - Share, badge, and community engagement features
+- [Social Sharing](VIRAL_GROWTH.md#social-sharing) - Share reports with social media integration
+- [Badges](VIRAL_GROWTH.md#badges) - 'Powered by Nessi' badges for your projects
+- [Community Engagement](VIRAL_GROWTH.md#community-engagement) - Feedback and contribution tools
+
 ## Additional Resources
 
 - [FAQ](faq.md) - Frequently asked questions
