@@ -158,6 +158,33 @@ Error counts by error code:")
 	},
 }
 
+var errorTelemetryExportCmd = &cobra.Command{
+	Use:   "export-errors [file]",
+	Short: "Export error telemetry to a file",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		// Get file path
+		filePath := args[0]
+		
+		// Get error telemetry
+		errorTelemetryConfig := common.DefaultErrorTelemetryConfig()
+		errorTelemetry := common.NewErrorTelemetry(errorTelemetryConfig)
+		
+		// Export telemetry data to file
+		err := errorTelemetry.ExportTelemetryToFile(filePath)
+		if err != nil {
+			fmt.Println("❌ Failed to export error telemetry:", err)
+			return
+		}
+		
+		fmt.Println("✅ Error telemetry exported successfully to", filePath)
+		
+		// Show error stats
+		stats := errorTelemetry.GetErrorStats()
+		fmt.Println("Total errors recorded:", stats["total_errors"])
+	},
+}
+
 func init() {
 	telemetryCmd.AddCommand(telemetryEnableCmd)
 	telemetryCmd.AddCommand(telemetryDisableCmd)
@@ -165,4 +192,5 @@ func init() {
 	telemetryCmd.AddCommand(errorTelemetryEnableCmd)
 	telemetryCmd.AddCommand(errorTelemetryDisableCmd)
 	telemetryCmd.AddCommand(errorTelemetryReportCmd)
+	telemetryCmd.AddCommand(errorTelemetryExportCmd)
 }

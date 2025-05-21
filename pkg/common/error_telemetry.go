@@ -183,20 +183,13 @@ func (t *ErrorTelemetry) Load() error {
 	return nil
 }
 
-// ReportTelemetry reports the telemetry data to the server
+// ReportTelemetry reports telemetry data
 func (t *ErrorTelemetry) ReportTelemetry() error {
 	if !t.Enabled {
-		return nil
+		return fmt.Errorf("telemetry is disabled")
 	}
 
-	// For now, just log the telemetry data
-	t.Logger.Info("Error telemetry report", "stats", t.GetErrorStats())
-
-	// Update last reported time
-	t.mu.Lock()
-	t.LastReported = time.Now()
-	t.mu.Unlock()
-
+	// For now, just save the telemetry data
 	// Save telemetry data
 	return t.Save()
 }
@@ -226,4 +219,41 @@ func (t *ErrorTelemetry) SetAnonymous(anonymous bool) {
 
 	t.Anonymous = anonymous
 	t.Logger.Info("Error telemetry anonymity updated", "anonymous", anonymous)
+}
+
+// ExportTelemetryToFile exports error telemetry data to a file
+func (t *ErrorTelemetry) ExportTelemetryToFile(filePath string) error {
+	if !t.Enabled {
+		return fmt.Errorf("telemetry is disabled")
+	}
+
+	// Get error stats
+	stats := t.GetErrorStats()
+
+	// Create a report structure
+	report := map[string]interface{}{
+		"timestamp": time.Now().Format(time.RFC3339),
+		"anonymous": t.Anonymous,
+		"total_errors": stats["total_errors"],
+		"error_counts": stats["error_counts"],
+	}
+
+	// Marshal to JSON
+	jsonData, err := json.MarshalIndent(report, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal telemetry data: %w", err)
+	}
+
+	// Create directory if it doesn't exist
+	dir := filepath.Dir(filePath)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("failed to create directory: %w", err)
+	}
+
+	// Write to file
+	if err := os.WriteFile(filePath, jsonData, 0644); err != nil {
+		return fmt.Errorf("failed to write telemetry data to file: %w", err)
+	}
+
+	return nil
 }

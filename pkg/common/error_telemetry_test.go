@@ -151,3 +151,69 @@ func TestErrorTelemetryWithInvalidPath(t *testing.T) {
 	// Disable telemetry to avoid side effects
 	telemetry.DisableTelemetry()
 }
+
+func TestExportTelemetryToFile(t *testing.T) {
+	// Create a temporary directory for telemetry data
+	tempDir, err := os.MkdirTemp("", "nessi-telemetry-export-test")
+	assert.NoError(t, err)
+	defer os.RemoveAll(tempDir)
+
+	// Create telemetry config with test storage path
+	config := ErrorTelemetryConfig{
+		Enabled:     true,
+		Anonymous:   true,
+		StoragePath: filepath.Join(tempDir, "error_telemetry.json"),
+	}
+
+	// Create telemetry system
+	telemetry := NewErrorTelemetry(config)
+
+	// Record some errors
+	nessiErr1 := NewError(ErrInvalidPath, "test path is invalid")
+	telemetry.RecordError(nessiErr1)
+
+	nessiErr2 := NewError(ErrInvalidConfig, "config is invalid")
+	telemetry.RecordError(nessiErr2)
+
+	// Export telemetry to file
+	exportPath := filepath.Join(tempDir, "export_telemetry.json")
+	err = telemetry.ExportTelemetryToFile(exportPath)
+	assert.NoError(t, err)
+
+	// Check if export file exists
+	_, err = os.Stat(exportPath)
+	assert.NoError(t, err)
+
+	// Read the exported file
+	jsonData, err := os.ReadFile(exportPath)
+	assert.NoError(t, err)
+
+	// Parse JSON data
+	var data map[string]interface{}
+	err = json.Unmarshal(jsonData, &data)
+	assert.NoError(t, err)
+
+	// Check total errors
+	totalErrors, ok := data["total_errors"].(float64)
+	assert.True(t, ok)
+	assert.Equal(t, float64(2), totalErrors)
+
+	// Check timestamp exists
+	_, ok = data["timestamp"].(string)
+	assert.True(t, ok)
+
+	// Check anonymity flag
+	anonymous, ok := data["anonymous"].(bool)
+	assert.True(t, ok)
+	assert.Equal(t, true, anonymous)
+
+	// Test exporting when telemetry is disabled
+	telemetry.DisableTelemetry()
+	exportPath2 := filepath.Join(tempDir, "export_disabled_telemetry.json")
+	err = telemetry.ExportTelemetryToFile(exportPath2)
+	assert.Error(t, err)
+	
+	// Check that the file wasn't created
+	_, err = os.Stat(exportPath2)
+	assert.True(t, os.IsNotExist(err))
+}
