@@ -26,9 +26,14 @@
 <!-- If your PR involves error handling, please answer these questions -->
 
 - Does this PR add or modify error messages? Yes/No
-- If yes, are the error messages clear and actionable? Yes/No
-- Have you added tests for error scenarios? Yes/No
-- Have you updated relevant documentation? Yes/No
+- If yes, have you used the NessiError type with appropriate error codes? Yes/No
+- Have you registered error suggestions for any new error codes? Yes/No
+- Have you implemented interactive resolution for resolvable errors (if applicable)? Yes/No
+- Have you integrated with the error telemetry system? Yes/No
+- Have you added tests for error scenarios, suggestions, and telemetry? Yes/No
+- Have you updated ERROR_HANDLING.md and CONTRIBUTING_ERROR_HANDLING.md? Yes/No
+
+<!-- For significant error handling changes, consider using the specialized error_handling.md template -->
 
 ## Testing
 
