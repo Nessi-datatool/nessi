@@ -1,0 +1,108 @@
+# Nessi Error Handling Configuration
+# This is a sample configuration file for the Nessi error handling system
+
+error_handling:
+  # Enable interactive error resolution
+  # When enabled, Nessi will attempt to interactively resolve common errors
+  interactive: true
+  
+  # Telemetry configuration
+  telemetry:
+    # Enable error telemetry collection
+    enabled: true
+    
+    # Collect only anonymous data (no personal information)
+    anonymous: true
+    
+    # Path to store telemetry data
+    # If not specified, defaults to ~/.nessi/error_telemetry.json
+    storage_path: "~/.nessi/error_telemetry.json"
+  
+  # Retry configuration for transient errors
+  retries:
+    # Maximum number of retry attempts
+    max_attempts: 3
+    
+    # Initial backoff duration
+    initial_backoff: 1s
+    
+    # Maximum backoff duration
+    max_backoff: 30s
+    
+    # Backoff factor (for exponential backoff)
+    backoff_factor: 2.0
+    
+    # Add jitter to prevent thundering herd problem
+    jitter: true
+  
+  # Logging configuration
+  logging:
+    # Log level for errors (debug, info, warn, error)
+    level: "info"
+    
+    # Use structured logging for errors
+    structured: true
+    
+    # Include error code in logs
+    include_code: true
+    
+    # Include suggestions in logs
+    include_suggestions: true
+
+# Error code categories
+# These are the standard error code categories used by Nessi
+error_codes:
+  # Path and file errors (N1XX)
+  path:
+    invalid_path: "N101"  # Path does not exist or is not accessible
+    permission_denied: "N102"  # Permission denied for path
+    not_a_directory: "N103"  # Path is not a directory
+    not_a_file: "N104"  # Path is not a file
+  
+  # Configuration errors (N2XX)
+  config:
+    invalid_config: "N201"  # Invalid configuration value
+    missing_config: "N202"  # Missing required configuration
+    invalid_format: "N203"  # Invalid configuration format
+  
+  # Authentication errors (N3XX)
+  auth:
+    authentication_failed: "N301"  # Authentication failed
+    invalid_token: "N302"  # Invalid token
+    expired_token: "N303"  # Expired token
+  
+  # Connection errors (N4XX)
+  connection:
+    connection_failed: "N401"  # Connection failed
+    timeout: "N402"  # Connection timeout
+    network_error: "N403"  # Network error
+  
+  # Delta Lake errors (N5XX)
+  delta:
+    invalid_delta_table: "N501"  # Not a valid Delta Lake table
+    corrupted_delta_table: "N502"  # Corrupted Delta Lake table
+    schema_mismatch: "N503"  # Schema mismatch
+  
+  # Databricks errors (N6XX)
+  databricks:
+    databricks_api_error: "N601"  # Databricks API error
+    workspace_not_found: "N602"  # Workspace not found
+    catalog_not_found: "N603"  # Catalog not found
+  
+  # Schema errors (N7XX)
+  schema:
+    invalid_schema: "N701"  # Invalid schema
+    schema_validation_failed: "N702"  # Schema validation failed
+    incompatible_schema: "N703"  # Incompatible schema
+  
+  # Validation errors (N8XX)
+  validation:
+    validation_failed: "N801"  # Validation failed
+    quality_check_failed: "N802"  # Quality check failed
+    constraint_violation: "N803"  # Constraint violation
+  
+  # Internal errors (N9XX)
+  internal:
+    internal_error: "N901"  # Internal error
+    unexpected_error: "N902"  # Unexpected error
+    not_implemented: "N903"  # Feature not implemented
