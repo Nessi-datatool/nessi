@@ -1,0 +1,95 @@
+# Nessi Configuration Example
+# This file demonstrates all available configuration options
+
+# Error handling configuration
+error_handling:
+  # Whether to enable interactive error resolution
+  interactive_resolution: true
+
+  # Error telemetry configuration
+  telemetry:
+    # Whether to enable error telemetry
+    enabled: true
+    # Maximum number of errors to store
+    max_errors: 100
+    # Whether to include stack traces (may contain sensitive information)
+    include_stack_traces: false
+    # Directory to store telemetry data
+    storage_dir: "~/.nessi/telemetry"
+
+  # Automatic retry configuration
+  retry:
+    # Whether to enable automatic retries
+    enabled: true
+    # Maximum number of retry attempts
+    max_attempts: 3
+    # Initial backoff duration in seconds
+    initial_backoff: 1
+    # Maximum backoff duration in seconds
+    max_backoff: 30
+    # Backoff multiplier
+    backoff_factor: 2.0
+    # Whether to add jitter to backoff
+    jitter: true
+    # Error codes to retry (N4XX = connection errors, N5XX = Delta Lake errors)
+    retryable_error_codes: ["N4XX", "N5XX"]
+
+  # Error suggestion configuration
+  suggestions:
+    # Whether to show suggestions for errors
+    enabled: true
+    # Maximum number of suggestions to show
+    max_suggestions: 3
+    # Whether to show documentation links
+    show_documentation: true
+
+# Logging configuration
+logging:
+  # Log level (debug, info, warn, error)
+  level: "info"
+  # Whether to use colored output
+  colored: true
+  # Log file path (leave empty to log to stderr only)
+  file: ""
+  # Maximum log file size in MB before rotation
+  max_size: 10
+  # Maximum number of log files to keep
+  max_files: 5
+  # Whether to compress rotated log files
+  compress: true
+
+# Validation configuration
+validation:
+  # Whether to validate paths before operations
+  validate_paths: true
+  # Whether to validate configuration values
+  validate_config: true
+  # Whether to normalize paths (convert relative to absolute, expand ~)
+  normalize_paths: true
+
+# Delta Lake configuration
+delta:
+  # Java options for Delta Lake operations
+  java_opts: "-Xmx2g"
+  # Whether to use local Delta Lake library
+  use_local_library: true
+  # Path to local Delta Lake library
+  library_path: "~/.nessi/lib/delta-core_2.12-1.0.0.jar"
+
+# Command aliases
+aliases:
+  # Define command aliases for frequently used commands
+  "st": "schema-tree"
+  "sc": "schema-check"
+  "dp": "delta-properties"
+
+# User preferences
+preferences:
+  # Default output format
+  output_format: "html"
+  # Whether to show progress bars
+  show_progress: true
+  # Whether to confirm destructive operations
+  confirm_destructive: true
+  # Default editor for editing files
+  editor: "vim"

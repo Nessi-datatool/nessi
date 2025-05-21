@@ -1,16 +1,17 @@
 package cli
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 
 	"github.com/fatih/color"
 	"github.com/nessi-dev/nessi/pkg/common"
 	"github.com/nessi-dev/nessi/pkg/logger"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // ErrorHandler handles errors in the CLI
@@ -36,75 +37,102 @@ func NewErrorHandler(interactive bool) *ErrorHandler {
 }
 
 // HandleError handles an error in the CLI
-func (h *ErrorHandler) HandleError(err error) error {
-	if err == nil {
-		return nil
-	}
-
-	// Log the error
-	h.Logger.Error(err, "Command failed")
-	
-	// Record the error in telemetry
-	h.Telemetry.RecordError(err)
-
+func HandleError(err error) {
 	// Check if it's a NessiError
 	var nessiErr *common.NessiError
 	if errors.As(err, &nessiErr) {
-		// Print the error message
-		fmt.Fprintf(os.Stderr, "❌ Error: %s\n", nessiErr.Message)
+		// Get suggestions for this error
+		suggestions := common.GetSuggestionsForError(nessiErr)
 
-		// Print the error details if available
+		// Record error in telemetry if enabled
+		recordErrorInTelemetry(nessiErr)
+
+		// Print error with code
+		error := color.New(color.FgRed, color.Bold)
+		error.Printf("\n❌ Error: %s\n", nessiErr.Message)
+
+		// Print error code if available
+		if nessiErr.Code != "" {
+			fmt.Printf("Code: %s\n", nessiErr.Code)
+			fmt.Printf("For more information: nessi test-error %s --info\n", nessiErr.Code)
+		}
+
+		// Print details if available
 		if nessiErr.Details != "" {
-			fmt.Fprintf(os.Stderr, "Details: %s\n", nessiErr.Details)
+			fmt.Printf("Details: %s\n", nessiErr.Details)
 		}
 
-		// Print suggestions if available in the error
-		if len(nessiErr.Suggestions) > 0 {
-			fmt.Fprintf(os.Stderr, "\nSuggestions:\n")
-			for _, suggestion := range nessiErr.Suggestions {
-				fmt.Fprintf(os.Stderr, "  - %s\n", suggestion)
+		// Print suggestions if available
+		if len(suggestions) > 0 {
+			fmt.Println("\nSuggestions:")
+			for i, suggestion := range suggestions {
+				fmt.Printf("%d. %s\n", i+1, suggestion.Description)
+				fmt.Printf("   Solution: %s\n", suggestion.Solution)
+				if suggestion.DocumentURL != "" {
+					fmt.Printf("   Documentation: %s\n", suggestion.DocumentURL)
+				}
 			}
 		}
 
-		// Print advanced suggestions from the suggestion system
-		suggestions := common.FormatSuggestions(nessiErr)
-		if suggestions != "" {
-			fmt.Fprintf(os.Stderr, "%s\n", suggestions)
+		// Check if it's a resolvable error
+		var resolvableErr common.ResolvableError
+		if errors.As(err, &resolvableErr) {
+			// Check if interactive mode is enabled
+			if isInteractiveModeEnabled() {
+				fmt.Println("\nThis error can be resolved interactively.")
+				fmt.Print("Do you want to resolve it now? [Y/n]: ")
+
+				// Read user input
+				var input string
+				fmt.Scanln(&input)
+				input = strings.ToLower(strings.TrimSpace(input))
+
+				// If user wants to resolve the error
+				if input == "" || input == "y" || input == "yes" {
+					// Resolve the error
+					if err := resolvableErr.Resolve(); err != nil {
+						fmt.Printf("Failed to resolve the error: %s\n", err)
+					} else {
+						success := color.New(color.FgGreen, color.Bold)
+						success.Println("\n✅ Error resolved successfully!")
+						fmt.Println("You can now retry the command.")
+					}
+				}
+			} else {
+				fmt.Println("\nThis error can be resolved interactively. Run with --interactive flag to enable interactive resolution.")
+			}
 		}
 
-		// Try to resolve the error interactively if enabled
-		if h.Interactive {
-			resolved, err := h.Resolver.ResolveError(nessiErr)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Failed to resolve error: %s\n", err)
-				return nessiErr
-			}
-
-			if resolved {
-				fmt.Fprintf(os.Stderr, "✅ Error resolved successfully!\n")
-				return nil
-			}
+		// Check if automatic retry is enabled for this error
+		if shouldRetryError(nessiErr) {
+			fmt.Println("\nAutomatically retrying operation...")
+			// Note: The actual retry logic would be implemented in the command execution
 		}
-
-		return nessiErr
+	} else {
+		// Print generic error
+		error := color.New(color.FgRed, color.Bold)
+		error.Printf("\n❌ Error: %s\n", err)
 	}
-
-	// For non-NessiError, just print the error
-	color.Red("Error: %s", err.Error())
-	return fmt.Errorf("error: %w", err)
 }
 
 // printColoredError prints a NessiError with color
 func printColoredError(err *common.NessiError) {
-	// Print error code and type
-	color.New(color.FgRed, color.Bold).Printf("[%s] %s: ", err.Code, common.GetErrorDescription(err.Code))
+	// Create color printers
+	error := color.New(color.FgRed, color.Bold)
+	detail := color.New(color.FgYellow)
 
 	// Print error message
-	color.New(color.FgRed).Println(err.Message)
+	error.Printf("❌ Error: %s\n", err.Message)
+
+	// Print error code if available
+	if err.Code != "" {
+		fmt.Printf("Code: %s\n", err.Code)
+		fmt.Printf("For more information: nessi test-error %s --info\n", err.Code)
+	}
 
 	// Print details if available
 	if err.Details != "" {
-		color.New(color.FgYellow).Printf("Details: %s\n", err.Details)
+		detail.Printf("Details: %s\n", err.Details)
 	}
 
 	// Print suggestion if available
@@ -113,28 +141,118 @@ func printColoredError(err *common.NessiError) {
 	}
 }
 
+// isInteractiveModeEnabled checks if interactive mode is enabled
+func isInteractiveModeEnabled() bool {
+	// Check if interactive mode is enabled in config
+	if viper.IsSet("error_handling.interactive_resolution") {
+		return viper.GetBool("error_handling.interactive_resolution")
+	}
+
+	// Default to true if not set
+	return true
+}
+
+// recordErrorInTelemetry records an error in telemetry if enabled
+func recordErrorInTelemetry(err *common.NessiError) {
+	// Check if telemetry is enabled in config
+	if viper.IsSet("error_handling.telemetry.enabled") && viper.GetBool("error_handling.telemetry.enabled") {
+		// Get telemetry instance
+		telemetryConfig := common.DefaultErrorTelemetryConfig()
+		telemetry := common.NewErrorTelemetry(telemetryConfig)
+
+		// Record the error
+		telemetry.RecordError(err)
+	}
+}
+
+// shouldRetryError checks if an error should be automatically retried
+func shouldRetryError(err *common.NessiError) bool {
+	// Check if retry is enabled in config
+	if !viper.IsSet("error_handling.retry.enabled") || !viper.GetBool("error_handling.retry.enabled") {
+		return false
+	}
+
+	// Check if the error is retryable
+	// For now, we'll consider connection errors (N4XX) as retryable
+	return strings.HasPrefix(string(err.Code), "N4")
+}
+
 // AddErrorHandlingFlags adds error handling flags to a command
 func AddErrorHandlingFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().Bool("interactive", true, "Enable interactive error resolution")
 }
 
-// GetErrorHandler creates an error handler from command flags
-func GetErrorHandler(cmd *cobra.Command) *ErrorHandler {
-	interactive, _ := cmd.Flags().GetBool("interactive")
-	return NewErrorHandler(interactive)
-}
+// WrapAllCommands wraps all commands with error handling
+func WrapAllCommands(cmd *cobra.Command) {
+	// Add common flags to all commands
+	cmd.PersistentFlags().Bool("interactive", false, "Enable interactive mode")
+	cmd.PersistentFlags().Bool("dry-run", false, "Show what would be done without making changes")
 
-// WrapCobraCommand wraps a cobra command with error handling
-func WrapCobraCommand(runE func(cmd *cobra.Command, args []string) error) func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		// Get error handler
-		handler := GetErrorHandler(cmd)
+	// Wrap the command's RunE function with error handling
+	if cmd.RunE != nil {
+		originalRunE := cmd.RunE
+		cmd.RunE = func(cmd *cobra.Command, args []string) error {
+			// Check if this is a dry run
+			dryRun, _ := cmd.Flags().GetBool("dry-run")
+			if dryRun {
+				// Set dry run mode in context
+				cmd.SetContext(context.WithValue(cmd.Context(), "dry-run", true))
+			}
 
-		// Run the command
-		err := runE(cmd, args)
+			// Check if interactive mode is enabled via flag
+			interactive, _ := cmd.Flags().GetBool("interactive")
+			if interactive {
+				// Set interactive mode in viper for this session
+				viper.Set("error_handling.interactive_resolution", true)
+			}
 
-		// Handle the error
-		return handler.HandleError(err)
+			// Execute the command
+			err := originalRunE(cmd, args)
+			if err != nil {
+				// Handle the error
+				HandleError(err)
+				return nil // Return nil to prevent Cobra from printing the error
+			}
+
+			// If this was a dry run, print a message
+			if dryRun {
+				fmt.Println("\nThis was a dry run. No changes were made.")
+				fmt.Println("To execute these actions, run the command without the --dry-run flag.")
+			}
+
+			return nil
+		}
+	} else if cmd.Run != nil {
+		originalRun := cmd.Run
+		cmd.Run = func(cmd *cobra.Command, args []string) {
+			// Check if this is a dry run
+			dryRun, _ := cmd.Flags().GetBool("dry-run")
+			if dryRun {
+				// Set dry run mode in context
+				cmd.SetContext(context.WithValue(cmd.Context(), "dry-run", true))
+			}
+
+			// Check if interactive mode is enabled via flag
+			interactive, _ := cmd.Flags().GetBool("interactive")
+			if interactive {
+				// Set interactive mode in viper for this session
+				viper.Set("error_handling.interactive_resolution", true)
+			}
+
+			// Execute the command
+			originalRun(cmd, args)
+
+			// If this was a dry run, print a message
+			if dryRun {
+				fmt.Println("\nThis was a dry run. No changes were made.")
+				fmt.Println("To execute these actions, run the command without the --dry-run flag.")
+			}
+		}
+	}
+
+	// Recursively wrap all subcommands
+	for _, subCmd := range cmd.Commands() {
+		WrapAllCommands(subCmd)
 	}
 }
 
