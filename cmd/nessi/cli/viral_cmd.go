@@ -56,6 +56,28 @@ The report includes social media sharing buttons, QR codes, and embed options.`,
 		description, _ := cmd.Flags().GetString("description")
 		hashtags, _ := cmd.Flags().GetString("hashtags")
 
+		// Validate the output path if provided
+		if outputPath != "" {
+			// Check if the directory exists
+			outputDir := outputPath
+			if !strings.HasSuffix(outputPath, "/") {
+				// Extract the directory part
+				lastSlash := strings.LastIndex(outputPath, "/")
+				if lastSlash != -1 {
+					outputDir = outputPath[:lastSlash]
+				} else {
+					outputDir = "."
+				}
+			}
+
+			// Check if the directory exists
+			if _, err := os.Stat(outputDir); os.IsNotExist(err) {
+				err := fmt.Errorf("output path directory does not exist: %s [Error Code: V101]", outputDir)
+				HandleViralError(err, "share")
+				return
+			}
+		}
+
 		// In a real implementation, this would use the social sharing plugin
 		// For now, we'll just show a mock implementation
 		fmt.Printf("Generating shareable report for table '%s'...\n", tableName)
@@ -101,6 +123,42 @@ and adoption while showing your support for the project.`,
 		color, _ := cmd.Flags().GetString("color")
 		style, _ := cmd.Flags().GetString("style")
 		qualityScore, _ := cmd.Flags().GetInt("quality-score")
+
+		// Validate color format
+		validColor := false
+		// Check if it's a valid hex color
+		if len(color) > 0 {
+			if strings.HasPrefix(color, "#") {
+				if len(color) == 7 || len(color) == 4 {
+					validColor = true
+				}
+			} else if len(color) == 6 || len(color) == 3 {
+				// Check if all characters are hex digits
+				validColor = true
+				for _, c := range color {
+					if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+						validColor = false
+						break
+					}
+				}
+			} else {
+				// Check if it's a named color (simplified check)
+				namedColors := []string{"red", "blue", "green", "yellow", "orange", "purple", "black", "white", "gray", "pink"}
+				for _, named := range namedColors {
+					if strings.ToLower(color) == named {
+						validColor = true
+						break
+					}
+				}
+			}
+		} else {
+			validColor = true // Empty color is valid (will use default)
+		}
+
+		if !validColor {
+			fmt.Printf("Warning: Color '%s' may not be recognized. Using default color instead. [Error Code: V102]\n", color)
+			color = "3498db" // Default blue color
+		}
 
 		// Log quality score for debugging
 		if qualityScore > 0 {
