@@ -11,12 +11,12 @@ import (
 
 func TestPluginTypes(t *testing.T) {
 	// Test plugin types
-	assert.Equal(t, plugin.ValidationPlugin, "validation")
-	assert.Equal(t, plugin.AlertPlugin, "alert")
-	assert.Equal(t, plugin.MetricPlugin, "metric")
-	assert.Equal(t, plugin.StoragePlugin, "storage")
-	assert.Equal(t, plugin.ExportPlugin, "export")
-	assert.Equal(t, plugin.UIPlugin, "ui")
+	assert.Equal(t, string(plugin.ValidationPlugin), "validation")
+	assert.Equal(t, string(plugin.AlertPlugin), "alert")
+	assert.Equal(t, string(plugin.MetricPlugin), "metric")
+	assert.Equal(t, string(plugin.StoragePlugin), "storage")
+	assert.Equal(t, string(plugin.ExportPlugin), "export")
+	assert.Equal(t, string(plugin.UIPlugin), "ui")
 }
 
 func TestPluginManager(t *testing.T) {
