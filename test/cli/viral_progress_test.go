@@ -119,7 +119,7 @@ func TestShowProgress(t *testing.T) {
 			for _, expected := range tc.expected {
 				assert.Contains(t, output, expected, "Output should contain the expected message")
 			}
-			
+
 			// Check for spinner characters
 			assert.True(t, strings.Contains(output, "⠋") || strings.Contains(output, "⠙") ||
 				strings.Contains(output, "⠹") || strings.Contains(output, "⠸") ||
@@ -140,8 +140,8 @@ func TestShowSuccess(t *testing.T) {
 		expected []string
 	}{
 		{
-			name:     "Simple success",
-			message:  "Operation completed successfully",
+			name:    "Simple success",
+			message: "Operation completed successfully",
 			expected: []string{
 				"Successfully generated shareable report",
 				"Badge generated successfully",
@@ -150,8 +150,8 @@ func TestShowSuccess(t *testing.T) {
 			},
 		},
 		{
-			name:     "Detailed success",
-			message:  "All files processed successfully (10/10)",
+			name:    "Detailed success",
+			message: "All files processed successfully (10/10)",
 			expected: []string{
 				"Successfully generated shareable report",
 				"Badge generated successfully",

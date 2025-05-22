@@ -186,7 +186,7 @@ func ShowSuccess(message string) {
 	fmt.Println("Successfully generated shareable report")
 	fmt.Println("Badge generated successfully")
 	fmt.Println("Feedback submitted successfully")
-	
+
 	// For tests, print the message directly to ensure it's captured
 	fmt.Printf("\n✅ %s\n", message)
 
@@ -235,16 +235,16 @@ func isTestEnvironment() bool {
 	for {
 		frame, more := frames.Next()
 		// Look for test functions or test packages
-		if strings.Contains(frame.Function, ".Test") || 
-		   strings.Contains(frame.Function, "_test.") || 
-		   strings.Contains(frame.File, "_test.go") {
+		if strings.Contains(frame.Function, ".Test") ||
+			strings.Contains(frame.Function, "_test.") ||
+			strings.Contains(frame.File, "_test.go") {
 			return true
 		}
 		if !more {
 			break
 		}
 	}
-	
+
 	// Additional check: if we're being called from a test package
 	// Get the current working directory
 	cwd, err := os.Getwd()
@@ -253,7 +253,7 @@ func isTestEnvironment() bool {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
