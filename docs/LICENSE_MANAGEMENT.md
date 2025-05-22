@@ -6,18 +6,87 @@ Nessi includes a robust license management system that controls access to premiu
 
 Nessi offers the following license tiers:
 
-### Feature Distribution
+### Community Edition (Open Source)
 
-| Feature Category | Community (Open Source) | Pro (Commercial) |
-|------------------|-------------------------|------------------|
-| **Delta Lake Support** | Schema evolution, Transaction log parsing, Version control, Time travel | Same + Cloud storage integration |
-| **Data Quality** | Basic checks, Profiling, Anomaly detection, Pattern recognition | Same + Advanced validation |
-| **Reporting** | HTML/PDF for local tables | Same + Enhanced visualization |
-| **Integrations** | Local file systems | AWS S3, Azure, GCP, Databricks, dbt, Data catalogs |
-| **Workflow** | Basic CLI commands | Workflow orchestration with Airflow, Prefect, Dagster |
-| **Monitoring** | Basic metrics collection | Same + Advanced alerting |
+The Community Edition is free and open-source under the Apache License 2.0. It includes all the core functionality needed for local Delta Lake management and basic data quality checks.
 
-> **Note**: For Enterprise-level support and custom features, please visit the [Nessi website](https://nessi.dev) for contact information.
+### Pro Edition (Commercial)
+
+The Pro Edition requires a paid license and includes all Community features plus additional enterprise capabilities. A 1-month free trial is available.
+
+### Enterprise Edition (Contact Only)
+
+For enterprise-level support and custom features, please visit the [Nessi website](https://nessi.dev) for contact information.
+
+## Feature Breakdown
+
+### Core Features (Community Edition)
+
+The following features are available in the free, open-source Community Edition:
+
+- **Delta Lake Support**
+  - Schema evolution tracking
+  - Transaction log parsing and analysis
+  - Version control with commit history
+  - Time travel capabilities (up to 30 days)
+
+- **Data Quality**
+  - Basic validation checks
+  - Data profiling and statistics
+  - Anomaly detection
+  - Pattern recognition
+
+- **Reporting**
+  - HTML/PDF reports for local tables
+  - Basic visualizations
+  - Export capabilities
+
+- **Integrations**
+  - Local file systems
+  - SQLite support
+  - CSV/JSON imports
+
+- **Workflow**
+  - Basic CLI commands
+  - Simple automation scripts
+
+- **Monitoring**
+  - Basic metrics collection
+  - CLI-based reporting
+
+### Premium Features (Pro Edition)
+
+The following additional features require a Pro license or active trial:
+
+- **Delta Lake Support**
+  - Cloud storage integration
+  - Enhanced performance for large tables
+
+- **Data Quality**
+  - Advanced validation rules
+  - Custom rule engines
+  - Cross-table validation
+
+- **Reporting**
+  - Scheduled reporting
+
+- **Integrations**
+  - AWS S3 cloud storage
+  - Azure Blob Storage
+  - Google Cloud Storage
+  - Databricks integration
+  - dbt integration
+  - Data catalog integration
+
+- **Workflow**
+  - Airflow integration
+  - Prefect integration
+  - Dagster integration
+
+- **Support**
+  - Priority support
+  - SLA guarantees
+  - Direct assistance
 
 ## Open-Source vs. Commercial Features
 

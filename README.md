@@ -299,35 +299,82 @@ Nessi includes a robust license management system that provides the following fe
 - **Trial Limitations**: Maximum of 2 trials per machine
 - **Security**: All license and trial data is cryptographically signed to prevent tampering
 
-### License Tiers
+## License Tiers
 
 Nessi offers both open-source and commercial features:
 
-### Community Edition (Open Source)
+### Core Features (Community Edition)
 
-The free, open-source edition includes all core functionality:
+The following features are available in the free, open-source Community Edition without requiring any license:
 
-| Category | Included Features |
-|----------|-------------------|
-| **Delta Lake** | Schema evolution tracking, Transaction history, Time travel, Version control |
-| **Data Quality** | Basic validation rules, Profiling, Anomaly detection, Pattern matching |
-| **Reporting** | HTML/PDF reports, Basic visualizations, Export capabilities |
-| **Integrations** | Local file systems, SQLite support, CSV/JSON imports |
-| **Workflow** | CLI commands, Basic automation |
-| **Support** | Community forums, Documentation, Issue tracker |
+- **Delta Lake Support**
+  - Schema evolution tracking
+  - Transaction log parsing and analysis
+  - Version control with commit history
+  - Time travel capabilities (up to 30 days)
 
-### Pro Edition (Commercial)
+- **Data Quality**
+  - Basic validation checks
+  - Data profiling and statistics
+  - Anomaly detection
+  - Pattern recognition
 
-Builds on the Community Edition with enterprise features. To start a free 1-month trial, run `nessi license start-trial`.
+- **Reporting**
+  - HTML/PDF reports for local tables
+  - Basic visualizations
+  - Export capabilities
 
-| Category | Additional Features |
-|----------|---------------------|
-| **Delta Lake** | Cloud storage integration, Enhanced performance for large tables |
-| **Data Quality** | Advanced validation, Custom rule engines, Cross-table validation |
-| **Reporting** | Scheduled reporting |
-| **Integrations** | AWS S3, Azure, GCP, Databricks, dbt, Data catalogs |
-| **Workflow** | Airflow integration, Prefect integration, Dagster integration |
-| **Support** | Priority support, SLA guarantees, Direct assistance |
+- **Integrations**
+  - Local file systems
+  - SQLite support
+  - CSV/JSON imports
+
+- **Workflow**
+  - Basic CLI commands
+  - Simple automation scripts
+
+- **Monitoring**
+  - Basic metrics collection
+  - CLI-based reporting
+
+- **Support**
+  - Community forums
+  - Documentation
+  - Issue tracker
+
+### Premium Features (Pro Edition)
+
+The following additional features require a Pro license or active trial. To start a free 1-month trial, run `nessi license start-trial`.
+
+- **Delta Lake Support**
+  - Cloud storage integration
+  - Enhanced performance for large tables
+
+- **Data Quality**
+  - Advanced validation rules
+  - Custom rule engines
+  - Cross-table validation
+
+- **Reporting**
+  - Scheduled reporting
+
+- **Integrations**
+  - AWS S3 cloud storage
+  - Azure Blob Storage
+  - Google Cloud Storage
+  - Databricks integration
+  - dbt integration
+  - Data catalog integration
+
+- **Workflow**
+  - Airflow integration
+  - Prefect integration
+  - Dagster integration
+
+- **Support**
+  - Priority support
+  - SLA guarantees
+  - Direct assistance
 
 > **Enterprise Tier**: For enterprise-level support and custom features, please visit [nessi.dev](https://nessi.dev) for contact information.
 
