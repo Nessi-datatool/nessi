@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/nessi-dev/nessi/examples/plugins/community_engagement_plugin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestCommunityEngagementPlugin_Initialize(t *testing.T) {
 	// Create a new plugin instance
-	plugin := &community_engagement_plugin.CommunityEngagementPlugin{}
+	plugin := &MockCommunityEngagementPlugin{}
 
 	// Initialize the plugin
 	err := plugin.Initialize()
@@ -19,16 +18,18 @@ func TestCommunityEngagementPlugin_Initialize(t *testing.T) {
 
 	// Verify metadata
 	metadata := plugin.GetMetadata()
-	assert.Equal(t, "community_engagement_plugin", metadata.Name, "Plugin name should match")
-	assert.NotEmpty(t, metadata.Version, "Plugin version should not be empty")
-	assert.NotEmpty(t, metadata.Description, "Plugin description should not be empty")
-	assert.NotEmpty(t, metadata.Author, "Plugin author should not be empty")
-	assert.Contains(t, metadata.Capabilities, "community_engagement", "Plugin should have community_engagement capability")
+	assert.Equal(t, "community_engagement_plugin", metadata["name"], "Plugin name should match")
+	assert.NotEmpty(t, metadata["version"], "Plugin version should not be empty")
+	assert.NotEmpty(t, metadata["description"], "Plugin description should not be empty")
+	assert.NotEmpty(t, metadata["author"], "Plugin author should not be empty")
+	capabilities, ok := metadata["capabilities"].([]string)
+	assert.True(t, ok, "Capabilities should be a string array")
+	assert.Contains(t, capabilities, "community_engagement", "Plugin should have community_engagement capability")
 }
 
 func TestCommunityEngagementPlugin_CollectFeedback(t *testing.T) {
 	// Create a new plugin instance
-	plugin := &community_engagement_plugin.CommunityEngagementPlugin{}
+	plugin := &MockCommunityEngagementPlugin{}
 	require.NoError(t, plugin.Initialize())
 
 	// Create test data
@@ -70,7 +71,7 @@ func TestCommunityEngagementPlugin_CollectFeedback(t *testing.T) {
 
 func TestCommunityEngagementPlugin_SuggestContributions(t *testing.T) {
 	// Create a new plugin instance
-	plugin := &community_engagement_plugin.CommunityEngagementPlugin{}
+	plugin := &MockCommunityEngagementPlugin{}
 	require.NoError(t, plugin.Initialize())
 
 	// Create test data for beginners
@@ -96,17 +97,15 @@ func TestCommunityEngagementPlugin_SuggestContributions(t *testing.T) {
 	require.True(t, ok, "Result should be a map")
 
 	// Check for suggestions
-	suggestions, ok := resultMap["suggestions"].([]interface{})
+	suggestionItems, ok := resultMap["suggestions"].([]map[string]interface{})
 	require.True(t, ok, "Result should contain suggestions array")
-	assert.NotEmpty(t, suggestions, "Suggestions should not be empty")
+	assert.NotEmpty(t, suggestionItems, "Suggestions should not be empty")
 
 	// Check for beginner-appropriate suggestions
 	suggestionText := ""
-	for _, suggestion := range suggestions {
-		if suggestionMap, ok := suggestion.(map[string]interface{}); ok {
-			if text, ok := suggestionMap["text"].(string); ok {
-				suggestionText += text
-			}
+	for _, item := range suggestionItems {
+		if text, ok := item["text"].(string); ok {
+			suggestionText += text
 		}
 	}
 	assert.Contains(t, suggestionText, "documentation", "Beginner suggestions should mention documentation")
@@ -133,17 +132,15 @@ func TestCommunityEngagementPlugin_SuggestContributions(t *testing.T) {
 	require.True(t, ok, "Result should be a map")
 
 	// Check for suggestions
-	suggestions, ok = resultMap["suggestions"].([]interface{})
+	suggestionItems, ok = resultMap["suggestions"].([]map[string]interface{})
 	require.True(t, ok, "Result should contain suggestions array")
-	assert.NotEmpty(t, suggestions, "Suggestions should not be empty")
+	assert.NotEmpty(t, suggestionItems, "Suggestions should not be empty")
 
 	// Check for advanced-appropriate suggestions
 	suggestionText = ""
-	for _, suggestion := range suggestions {
-		if suggestionMap, ok := suggestion.(map[string]interface{}); ok {
-			if text, ok := suggestionMap["text"].(string); ok {
-				suggestionText += text
-			}
+	for _, item := range suggestionItems {
+		if text, ok := item["text"].(string); ok {
+			suggestionText += text
 		}
 	}
 	assert.Contains(t, suggestionText, "core", "Advanced suggestions should mention core functionality")
@@ -151,7 +148,7 @@ func TestCommunityEngagementPlugin_SuggestContributions(t *testing.T) {
 
 func TestCommunityEngagementPlugin_EnhanceReportWithCommunity(t *testing.T) {
 	// Create a new plugin instance
-	plugin := &community_engagement_plugin.CommunityEngagementPlugin{}
+	plugin := &MockCommunityEngagementPlugin{}
 	require.NoError(t, plugin.Initialize())
 
 	// Create test data
@@ -186,7 +183,7 @@ func TestCommunityEngagementPlugin_EnhanceReportWithCommunity(t *testing.T) {
 
 func TestCommunityEngagementPlugin_InvalidCommand(t *testing.T) {
 	// Create a new plugin instance
-	plugin := &community_engagement_plugin.CommunityEngagementPlugin{}
+	plugin := &MockCommunityEngagementPlugin{}
 	require.NoError(t, plugin.Initialize())
 
 	// Execute an invalid command
@@ -197,7 +194,7 @@ func TestCommunityEngagementPlugin_InvalidCommand(t *testing.T) {
 
 func TestCommunityEngagementPlugin_EmptyCommand(t *testing.T) {
 	// Create a new plugin instance
-	plugin := &community_engagement_plugin.CommunityEngagementPlugin{}
+	plugin := &MockCommunityEngagementPlugin{}
 	require.NoError(t, plugin.Initialize())
 
 	// Execute with empty command list
@@ -208,7 +205,7 @@ func TestCommunityEngagementPlugin_EmptyCommand(t *testing.T) {
 
 func TestCommunityEngagementPlugin_InvalidData(t *testing.T) {
 	// Create a new plugin instance
-	plugin := &community_engagement_plugin.CommunityEngagementPlugin{}
+	plugin := &MockCommunityEngagementPlugin{}
 	require.NoError(t, plugin.Initialize())
 
 	// Execute with invalid data

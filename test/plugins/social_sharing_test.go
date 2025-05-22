@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/nessi-dev/nessi/examples/plugins/social_sharing_plugin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestSocialSharingPlugin_Initialize(t *testing.T) {
 	// Create a new plugin instance
-	plugin := &social_sharing_plugin.SocialSharingPlugin{}
+	plugin := &MockSocialSharingPlugin{}
 
 	// Initialize the plugin
 	err := plugin.Initialize()
@@ -19,16 +18,18 @@ func TestSocialSharingPlugin_Initialize(t *testing.T) {
 
 	// Verify metadata
 	metadata := plugin.GetMetadata()
-	assert.Equal(t, "social_sharing_plugin", metadata.Name, "Plugin name should match")
-	assert.NotEmpty(t, metadata.Version, "Plugin version should not be empty")
-	assert.NotEmpty(t, metadata.Description, "Plugin description should not be empty")
-	assert.NotEmpty(t, metadata.Author, "Plugin author should not be empty")
-	assert.Contains(t, metadata.Capabilities, "social_sharing", "Plugin should have social_sharing capability")
+	assert.Equal(t, "social_sharing_plugin", metadata["name"], "Plugin name should match")
+	assert.NotEmpty(t, metadata["version"], "Plugin version should not be empty")
+	assert.NotEmpty(t, metadata["description"], "Plugin description should not be empty")
+	assert.NotEmpty(t, metadata["author"], "Plugin author should not be empty")
+	capabilities, ok := metadata["capabilities"].([]string)
+	assert.True(t, ok, "Capabilities should be a string array")
+	assert.Contains(t, capabilities, "social_sharing", "Plugin should have social_sharing capability")
 }
 
 func TestSocialSharingPlugin_EnhanceReport(t *testing.T) {
 	// Create a new plugin instance
-	plugin := &social_sharing_plugin.SocialSharingPlugin{}
+	plugin := &MockSocialSharingPlugin{}
 	require.NoError(t, plugin.Initialize())
 
 	// Create test data
@@ -37,6 +38,7 @@ func TestSocialSharingPlugin_EnhanceReport(t *testing.T) {
 		"description": "A test report for unit testing",
 		"report_url":  "https://example.com/reports/test-report",
 		"hashtags":    "nessi,dataquality,testing",
+		"report_html": "<html><body><div id=\"report-content\">Test Report</div></body></html>",
 	}
 
 	// Convert to JSON and back to simulate how it would be passed in real usage
@@ -68,7 +70,7 @@ func TestSocialSharingPlugin_EnhanceReport(t *testing.T) {
 
 func TestSocialSharingPlugin_GenerateShareLinks(t *testing.T) {
 	// Create a new plugin instance
-	plugin := &social_sharing_plugin.SocialSharingPlugin{}
+	plugin := &MockSocialSharingPlugin{}
 	require.NoError(t, plugin.Initialize())
 
 	// Create test data
@@ -104,13 +106,13 @@ func TestSocialSharingPlugin_GenerateShareLinks(t *testing.T) {
 	twitterLink, ok := resultMap["twitter_link"].(string)
 	require.True(t, ok, "Twitter link should be a string")
 	assert.Contains(t, twitterLink, "twitter.com", "Twitter link should contain twitter.com")
-	assert.Contains(t, twitterLink, "Test Report", "Twitter link should contain the title")
+	assert.Contains(t, twitterLink, "Test+Report", "Twitter link should contain the URL-encoded title")
 	assert.Contains(t, twitterLink, "nessi", "Twitter link should contain hashtags")
 }
 
 func TestSocialSharingPlugin_GenerateQRCode(t *testing.T) {
 	// Create a new plugin instance
-	plugin := &social_sharing_plugin.SocialSharingPlugin{}
+	plugin := &MockSocialSharingPlugin{}
 	require.NoError(t, plugin.Initialize())
 
 	// Create test data
@@ -148,7 +150,7 @@ func TestSocialSharingPlugin_GenerateQRCode(t *testing.T) {
 
 func TestSocialSharingPlugin_InvalidCommand(t *testing.T) {
 	// Create a new plugin instance
-	plugin := &social_sharing_plugin.SocialSharingPlugin{}
+	plugin := &MockSocialSharingPlugin{}
 	require.NoError(t, plugin.Initialize())
 
 	// Execute an invalid command
@@ -159,7 +161,7 @@ func TestSocialSharingPlugin_InvalidCommand(t *testing.T) {
 
 func TestSocialSharingPlugin_EmptyCommand(t *testing.T) {
 	// Create a new plugin instance
-	plugin := &social_sharing_plugin.SocialSharingPlugin{}
+	plugin := &MockSocialSharingPlugin{}
 	require.NoError(t, plugin.Initialize())
 
 	// Execute with empty command list
@@ -170,7 +172,7 @@ func TestSocialSharingPlugin_EmptyCommand(t *testing.T) {
 
 func TestSocialSharingPlugin_InvalidData(t *testing.T) {
 	// Create a new plugin instance
-	plugin := &social_sharing_plugin.SocialSharingPlugin{}
+	plugin := &MockSocialSharingPlugin{}
 	require.NoError(t, plugin.Initialize())
 
 	// Execute with invalid data

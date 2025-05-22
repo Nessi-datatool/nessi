@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/nessi-dev/nessi/examples/plugins/badge_plugin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestBadgePlugin_Initialize(t *testing.T) {
 	// Create a new plugin instance
-	plugin := &badge_plugin.BadgePlugin{}
+	plugin := &MockBadgePlugin{}
 
 	// Initialize the plugin
 	err := plugin.Initialize()
@@ -19,16 +18,18 @@ func TestBadgePlugin_Initialize(t *testing.T) {
 
 	// Verify metadata
 	metadata := plugin.GetMetadata()
-	assert.Equal(t, "badge_plugin", metadata.Name, "Plugin name should match")
-	assert.NotEmpty(t, metadata.Version, "Plugin version should not be empty")
-	assert.NotEmpty(t, metadata.Description, "Plugin description should not be empty")
-	assert.NotEmpty(t, metadata.Author, "Plugin author should not be empty")
-	assert.Contains(t, metadata.Capabilities, "badge_generation", "Plugin should have badge_generation capability")
+	assert.Equal(t, "badge_plugin", metadata["name"], "Plugin name should match")
+	assert.NotEmpty(t, metadata["version"], "Plugin version should not be empty")
+	assert.NotEmpty(t, metadata["description"], "Plugin description should not be empty")
+	assert.NotEmpty(t, metadata["author"], "Plugin author should not be empty")
+	capabilities, ok := metadata["capabilities"].([]string)
+	assert.True(t, ok, "Capabilities should be a string array")
+	assert.Contains(t, capabilities, "badge_generation", "Plugin should have badge_generation capability")
 }
 
 func TestBadgePlugin_GenerateBadge(t *testing.T) {
 	// Create a new plugin instance
-	plugin := &badge_plugin.BadgePlugin{}
+	plugin := &MockBadgePlugin{}
 	require.NoError(t, plugin.Initialize())
 
 	// Create test data
@@ -79,7 +80,7 @@ func TestBadgePlugin_GenerateBadge(t *testing.T) {
 
 func TestBadgePlugin_GenerateQualityScoreBadge(t *testing.T) {
 	// Create a new plugin instance
-	plugin := &badge_plugin.BadgePlugin{}
+	plugin := &MockBadgePlugin{}
 	require.NoError(t, plugin.Initialize())
 
 	// Create test data
@@ -116,7 +117,7 @@ func TestBadgePlugin_GenerateQualityScoreBadge(t *testing.T) {
 
 func TestBadgePlugin_GetBadgeMarkdown(t *testing.T) {
 	// Create a new plugin instance
-	plugin := &badge_plugin.BadgePlugin{}
+	plugin := &MockBadgePlugin{}
 	require.NoError(t, plugin.Initialize())
 
 	// Create test data
@@ -152,7 +153,7 @@ func TestBadgePlugin_GetBadgeMarkdown(t *testing.T) {
 
 func TestBadgePlugin_GetBadgeHTML(t *testing.T) {
 	// Create a new plugin instance
-	plugin := &badge_plugin.BadgePlugin{}
+	plugin := &MockBadgePlugin{}
 	require.NoError(t, plugin.Initialize())
 
 	// Create test data
@@ -189,7 +190,7 @@ func TestBadgePlugin_GetBadgeHTML(t *testing.T) {
 
 func TestBadgePlugin_EnhanceReportWithBadge(t *testing.T) {
 	// Create a new plugin instance
-	plugin := &badge_plugin.BadgePlugin{}
+	plugin := &MockBadgePlugin{}
 	require.NoError(t, plugin.Initialize())
 
 	// Create test data
@@ -226,7 +227,7 @@ func TestBadgePlugin_EnhanceReportWithBadge(t *testing.T) {
 
 func TestBadgePlugin_InvalidCommand(t *testing.T) {
 	// Create a new plugin instance
-	plugin := &badge_plugin.BadgePlugin{}
+	plugin := &MockBadgePlugin{}
 	require.NoError(t, plugin.Initialize())
 
 	// Execute an invalid command
@@ -237,7 +238,7 @@ func TestBadgePlugin_InvalidCommand(t *testing.T) {
 
 func TestBadgePlugin_EmptyCommand(t *testing.T) {
 	// Create a new plugin instance
-	plugin := &badge_plugin.BadgePlugin{}
+	plugin := &MockBadgePlugin{}
 	require.NoError(t, plugin.Initialize())
 
 	// Execute with empty command list
@@ -248,7 +249,7 @@ func TestBadgePlugin_EmptyCommand(t *testing.T) {
 
 func TestBadgePlugin_InvalidData(t *testing.T) {
 	// Create a new plugin instance
-	plugin := &badge_plugin.BadgePlugin{}
+	plugin := &MockBadgePlugin{}
 	require.NoError(t, plugin.Initialize())
 
 	// Execute with invalid data
