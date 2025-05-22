@@ -1,0 +1,700 @@
+openapi: 3.0.3
+info:
+  title: Nessi API
+  description: |
+    Nessi provides a RESTful API for managing and analyzing Delta Lake tables.
+    
+    This API allows you to:
+    - List and get details of Delta Lake tables
+    - Profile and analyze table data
+    - Run quality checks against validation rules
+    - Access table versions and history
+    
+    For more information, visit [nessi.dev](https://nessi.dev).
+  version: 1.0.0
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  contact:
+    name: Nessi Support
+    url: https://nessi.dev/support
+    email: support@nessi.dev
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+  - url: https://api.nessi.dev/v1
+    description: Production API server
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Tables
+    description: Operations for managing Delta Lake tables
+  - name: Quality
+    description: Operations for data quality checks
+  - name: Metrics
+    description: Operations for metrics and monitoring
+  - name: Validation
+    description: Operations for validation rules
+
+paths:
+  /tables:
+    get:
+      summary: List all tables
+      description: Returns a list of all available Delta Lake tables
+      operationId: listTables
+      tags:
+        - Tables
+      parameters:
+        - name: path
+          in: query
+          description: Root path to search for tables
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /tables/{tableName}:
+    get:
+      summary: Get table details
+      description: Returns details for a specific Delta Lake table
+      operationId: getTable
+      tags:
+        - Tables
+      parameters:
+        - name: tableName
+          in: path
+          description: Name of the table
+          required: true
+          schema:
+            type: string
+        - name: version
+          in: query
+          description: Specific version of the table to retrieve
+          required: false
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Table'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /tables/{tableName}/profile:
+    get:
+      summary: Get table profile
+      description: Returns profile information for a table
+      operationId: getTableProfile
+      tags:
+        - Tables
+      parameters:
+        - name: tableName
+          in: path
+          description: Name of the table
+          required: true
+          schema:
+            type: string
+        - name: sample
+          in: query
+          description: Sampling percentage (0-100)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 100
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /tables/{tableName}/check:
+    post:
+      summary: Check table quality
+      description: Runs quality checks against a table using the provided rules
+      operationId: checkTableQuality
+      tags:
+        - Quality
+      parameters:
+        - name: tableName
+          in: path
+          description: Name of the table
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Quality check rules
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QualityCheckRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QualityCheckResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /tables/{tableName}/versions:
+    get:
+      summary: List table versions
+      description: Returns a list of all versions for a specific table
+      operationId: listTableVersions
+      tags:
+        - Tables
+      parameters:
+        - name: tableName
+          in: path
+          description: Name of the table
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /rules:
+    get:
+      summary: List validation rules
+      description: Returns a list of all validation rules
+      operationId: listRules
+      tags:
+        - Validation
+      parameters:
+        - name: tableName
+          in: query
+          description: Filter rules by table name
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuleList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      summary: Create validation rule
+      description: Creates a new validation rule
+      operationId: createRule
+      tags:
+        - Validation
+      requestBody:
+        description: Validation rule to create
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidationRule'
+      responses:
+        '201':
+          description: Rule created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationRule'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /rules/{ruleId}:
+    get:
+      summary: Get validation rule
+      description: Returns a specific validation rule
+      operationId: getRule
+      tags:
+        - Validation
+      parameters:
+        - name: ruleId
+          in: path
+          description: ID of the rule
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationRule'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    put:
+      summary: Update validation rule
+      description: Updates an existing validation rule
+      operationId: updateRule
+      tags:
+        - Validation
+      parameters:
+        - name: ruleId
+          in: path
+          description: ID of the rule
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Updated validation rule
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidationRule'
+      responses:
+        '200':
+          description: Rule updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationRule'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      summary: Delete validation rule
+      description: Deletes a validation rule
+      operationId: deleteRule
+      tags:
+        - Validation
+      parameters:
+        - name: ruleId
+          in: path
+          description: ID of the rule
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Rule deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /metrics:
+    get:
+      summary: Get metrics
+      description: Returns metrics for tables, quality, and performance
+      operationId: getMetrics
+      tags:
+        - Metrics
+      parameters:
+        - name: tableName
+          in: query
+          description: Filter metrics by table name
+          required: false
+          schema:
+            type: string
+        - name: metricType
+          in: query
+          description: Filter metrics by type
+          required: false
+          schema:
+            type: string
+            enum: [quality, performance, table]
+        - name: startTime
+          in: query
+          description: Start time for metrics (ISO 8601 format)
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: endTime
+          in: query
+          description: End time for metrics (ISO 8601 format)
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Table:
+      type: object
+      properties:
+        name:
+          type: string
+          example: customers
+        path:
+          type: string
+          example: /data/customers
+        version:
+          type: integer
+          format: int64
+          example: 3
+        columns:
+          type: array
+          items:
+            type: string
+          example: [id, name, email, age]
+        metadata:
+          $ref: '#/components/schemas/TableMetadata'
+      required:
+        - name
+        - path
+        - version
+        - columns
+        - metadata
+
+    TableMetadata:
+      type: object
+      properties:
+        createdTime:
+          type: integer
+          format: int64
+          example: 1620000000000
+        location:
+          type: string
+          example: s3://data-lake/customers
+        partitionColumns:
+          type: array
+          items:
+            type: string
+          example: [date, region]
+      required:
+        - createdTime
+        - location
+        - partitionColumns
+
+    TableList:
+      type: object
+      properties:
+        tables:
+          type: array
+          items:
+            $ref: '#/components/schemas/Table'
+      required:
+        - tables
+
+    TableProfile:
+      type: object
+      properties:
+        columns:
+          type: array
+          items:
+            $ref: '#/components/schemas/ColumnProfile'
+      required:
+        - columns
+
+    ColumnProfile:
+      type: object
+      properties:
+        name:
+          type: string
+          example: email
+        type:
+          type: string
+          example: string
+        metrics:
+          $ref: '#/components/schemas/ColumnMetrics'
+      required:
+        - name
+        - type
+        - metrics
+
+    ColumnMetrics:
+      type: object
+      properties:
+        count:
+          type: integer
+          format: int64
+          example: 1000
+        distinctCount:
+          type: integer
+          format: int64
+          example: 950
+        nullCount:
+          type: integer
+          format: int64
+          example: 10
+        min:
+          type: string
+          example: a@example.com
+        max:
+          type: string
+          example: z@example.com
+        mean:
+          type: number
+          format: double
+          example: 35.5
+        stddev:
+          type: number
+          format: double
+          example: 12.3
+      required:
+        - count
+        - distinctCount
+        - nullCount
+
+    ValidationRule:
+      type: object
+      properties:
+        id:
+          type: string
+          example: rule-123
+        name:
+          type: string
+          example: email_validation
+        description:
+          type: string
+          example: Validates email format
+        type:
+          type: string
+          enum: [completeness, uniqueness, pattern, range]
+          example: pattern
+        column:
+          type: string
+          example: email
+        threshold:
+          type: number
+          format: double
+          example: 0.95
+        severity:
+          type: string
+          enum: [critical, high, medium, low]
+          example: high
+        pattern:
+          type: string
+          example: '@'
+        min:
+          type: number
+          format: double
+          example: 0
+        max:
+          type: number
+          format: double
+          example: 120
+      required:
+        - name
+        - type
+        - column
+        - severity
+
+    RuleList:
+      type: object
+      properties:
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationRule'
+      required:
+        - rules
+
+    QualityCheckRequest:
+      type: object
+      properties:
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationRule'
+      required:
+        - rules
+
+    QualityCheckResult:
+      type: object
+      properties:
+        tableName:
+          type: string
+          example: customers
+        timestamp:
+          type: string
+          format: date-time
+          example: '2023-05-01T12:00:00Z'
+        version:
+          type: integer
+          format: int64
+          example: 3
+        metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Metric'
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/RuleResult'
+      required:
+        - tableName
+        - timestamp
+        - version
+        - metrics
+        - rules
+
+    Metric:
+      type: object
+      properties:
+        name:
+          type: string
+          example: completeness
+        value:
+          type: number
+          format: double
+          example: 0.98
+        status:
+          type: string
+          enum: [pass, fail]
+          example: pass
+      required:
+        - name
+        - value
+        - status
+
+    RuleResult:
+      type: object
+      properties:
+        name:
+          type: string
+          example: email_validation
+        status:
+          type: string
+          enum: [pass, fail]
+          example: pass
+        violations:
+          type: integer
+          format: int64
+          example: 5
+      required:
+        - name
+        - status
+        - violations
+
+    VersionList:
+      type: object
+      properties:
+        versions:
+          type: array
+          items:
+            type: integer
+            format: int64
+          example: [1, 2, 3]
+      required:
+        - versions
+
+    MetricList:
+      type: object
+      properties:
+        metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Metric'
+      required:
+        - metrics
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Table not found
+      required:
+        - error
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
