@@ -39,11 +39,35 @@ nessi/
 ### Phase 1: Core Infrastructure (2 weeks)
 - [x] Basic project structure
 - [x] Security implementation
+  - [x] License management system
+  - [x] Trial activation and verification
+  - [x] Premium feature gating
 - [x] Monitoring setup
 - [x] Go-Python integration layer
   - Implementation: Use `os/exec` to call Python scripts
   - Data exchange via JSON/Arrow
   - Error handling and logging
+
+### License Management System Implementation
+
+#### License Tiers
+- Community: Free, open-source edition with core functionality
+- Pro: Premium tier with advanced features
+  - Includes Starter plan features (Databricks Integration, AWS S3 Storage)
+  - Additional features: Azure/GCP Storage, Data Catalog Integration, dbt Integration, Workflow Orchestration
+- Enterprise: Contact-only tier for custom features and dedicated support (available through nessi.dev)
+
+#### Trial System
+- 1-month free trial for premium features
+- Machine ID tracking to limit trials to 2 per machine
+- Cryptographic signature verification to prevent tampering
+- Anti-tampering measures to protect license validation
+
+#### Implementation Details
+- HMAC-SHA256 for signing trial and registry data
+- Function integrity verification to detect binary modification
+- Multiple redundant checks for trial validation
+- Secure storage of license information
 
 ### Phase 2: Full Schema Management & Version Control (2 weeks)
 

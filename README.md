@@ -4,7 +4,7 @@
   <img src="docs/images/nessi-logo.png" alt="Nessi Logo" width="200"/>
 </p>
 
-Nessi is an open-source CLI-only data quality and Delta Lake management tool that helps organizations maintain high-quality data and efficiently manage their Delta Lake tables through comprehensive HTML and PDF reporting.
+Nessi is an open-source CLI-only data quality and Delta Lake management tool that helps organizations maintain high-quality data and efficiently manage their Delta Lake tables through comprehensive HTML and PDF reporting. Nessi offers both community and premium features with a flexible licensing system.
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/nessi-dev/nessi)](https://goreportcard.com/report/github.com/nessi-dev/nessi)
 [![Build Status](https://github.com/nessi-dev/nessi/workflows/CI/badge.svg)](https://github.com/nessi-dev/nessi/actions)
@@ -287,6 +287,45 @@ See our [project roadmap](https://github.com/nessi-dev/nessi/projects/1) for upc
 ## License
 
 Nessi is licensed under the [Apache License 2.0](LICENSE).
+
+## License Management System
+
+Nessi includes a robust license management system that provides the following features:
+
+- **Community Edition**: Free and open-source with core functionality
+- **Premium Features**: Advanced features available with a valid license or during a free trial
+- **Free Trial**: 1-month free trial of all premium features
+- **Machine-Based Licensing**: Licenses are tied to specific machines
+- **Trial Limitations**: Maximum of 2 trials per machine
+- **Security**: All license and trial data is cryptographically signed to prevent tampering
+
+### Premium Features
+
+The following features require a premium license or active trial:
+
+**Starter Plan Features** (included in Pro):
+- Databricks Integration
+- AWS S3 Storage
+
+**Pro Plan Features**:
+- All Starter Plan features
+- Azure Blob Storage
+- Google Cloud Storage
+- Data Catalog Integration
+- dbt Integration
+- Workflow Orchestration
+
+> **Enterprise Tier**: For enterprise-level support and custom features, please visit [nessi.dev](https://nessi.dev) for contact information.
+
+### Starting a Trial
+
+```bash
+# Start a free trial to access premium features
+nessi license start-trial
+
+# Check your license status
+nessi license info
+```
 
 ## Acknowledgments
 

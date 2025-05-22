@@ -46,6 +46,8 @@ Welcome to the Nessi documentation! This guide will help you navigate through th
 - [TLS Configuration](security/README.md#tls-configuration) - Configure TLS for secure communication
 - [RBAC System](rbac_system.md) - Role-based access control
 - [Audit Logging](audit_logging.md) - Track user actions
+- [License Management](LICENSE_MANAGEMENT.md) - Premium features and licensing
+- [License User Guide](LICENSE_USER_GUIDE.md) - How to use the license system
 
 ### Developer Resources
 

@@ -96,6 +96,8 @@ Nessi is an open-source data quality and Delta Lake management tool with a Go-fi
 - ✅ Environment variable-based authentication for cloud services
 - ✅ API key management for external services
 - ✅ Basic access controls for CLI commands
+- ✅ License management system with cryptographic verification
+- ✅ Anti-tampering protection for license validation
 
 ### Containerization
 - ✅ 100% Docker-native for easy installation
@@ -171,6 +173,17 @@ Nessi is an open-source data quality and Delta Lake management tool with a Go-fi
 - ✅ Pipeline-aware data quality checks
 ### Collaboration & Governance
 - ✅ Shared rule libraries and configurations
+
+### License Management System
+- ✅ Tiered licensing model (Community and Pro)
+- ✅ Starter plan features included in Pro tier
+- ✅ 1-month free trial for premium features
+- ✅ Machine ID tracking to limit trials per machine
+- ✅ Cryptographic signature verification to prevent tampering
+- ✅ Feature-based access control based on license tier
+- ✅ License status reporting via CLI
+- ✅ Anti-tampering measures to protect license validation
+- ✅ Secure storage of license and trial information
 
 ## Architecture Requirements
 

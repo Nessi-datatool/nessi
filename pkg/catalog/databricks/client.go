@@ -11,6 +11,7 @@ import (
 	"path"
 
 	"github.com/nessi-dev/nessi/pkg/api/types"
+	"github.com/nessi-dev/nessi/pkg/security"
 )
 
 // API endpoints for Databricks Unity Catalog
@@ -73,6 +74,11 @@ func (c *DatabricksClient) makeRequest(ctx context.Context, method, endpoint str
 
 // GetCatalogs returns a list of catalogs in the specified workspace
 func (c *DatabricksClient) GetCatalogs(ctx context.Context, workspaceID string) ([]Catalog, error) {
+	// Check for Databricks integration license
+	if err := security.RequireFeature(security.FeatureDatabricksIntegration); err != nil {
+		return nil, err
+	}
+
 	respBody, err := c.makeRequest(ctx, http.MethodGet, catalogsEndpoint, nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get catalogs: %w", err)
@@ -90,6 +96,11 @@ func (c *DatabricksClient) GetCatalogs(ctx context.Context, workspaceID string) 
 
 // GetSchemas returns a list of schemas in the specified catalog
 func (c *DatabricksClient) GetSchemas(ctx context.Context, workspaceID, catalogName string) ([]Schema, error) {
+	// Check for Databricks integration license
+	if err := security.RequireFeature(security.FeatureDatabricksIntegration); err != nil {
+		return nil, err
+	}
+
 	queryParams := map[string]string{
 		"catalog_name": catalogName,
 	}
@@ -111,6 +122,11 @@ func (c *DatabricksClient) GetSchemas(ctx context.Context, workspaceID, catalogN
 
 // GetTables returns a list of tables in the specified schema
 func (c *DatabricksClient) GetTables(ctx context.Context, workspaceID, catalogName, schemaName string) ([]Table, error) {
+	// Check for Databricks integration license
+	if err := security.RequireFeature(security.FeatureDatabricksIntegration); err != nil {
+		return nil, err
+	}
+
 	queryParams := map[string]string{
 		"catalog_name": catalogName,
 		"schema_name":  schemaName,

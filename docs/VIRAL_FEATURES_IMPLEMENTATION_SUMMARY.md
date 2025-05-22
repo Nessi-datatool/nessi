@@ -4,7 +4,7 @@
 
 This document summarizes the implementation of viral growth features in Nessi, including the quality assurance measures put in place to ensure reliability and robustness. The viral growth features are designed to increase Nessi's visibility and adoption in the data engineering community through social sharing, embeddable badges, and community engagement tools.
 
-**Important Note**: These viral growth features are completely separate from LakeDiff enterprise functionality. While LakeDiff focuses on advanced data lake comparison and monitoring capabilities, the viral growth features focus solely on community engagement and project visibility. There is no overlap in functionality between these features.
+**Important Note**: These viral growth features are completely separate from Nessi's premium features. While premium features focus on advanced capabilities like cloud integration and workflow orchestration, the viral growth features focus solely on community engagement and project visibility. There is no overlap in functionality between these features.
 
 ## Features Implemented
 
@@ -112,14 +112,14 @@ The viral growth features have been designed to integrate seamlessly with Nessi'
 - **Error Handling**: Builds on Nessi's robust error handling system, using the same standardized error code format but with a distinct 'V' prefix
 - **CLI Commands**: Follows the same command structure as other Nessi commands under a dedicated 'viral' namespace
 
-### Separation from LakeDiff
+### Separation from Premium Features
 
-It's important to note that these viral growth features are completely separate from LakeDiff enterprise functionality:
+It's important to note that these viral growth features are completely separate from Nessi's premium features:
 
-- **Different Focus**: Viral growth features focus on community engagement and project visibility, while LakeDiff focuses on advanced data lake comparison and monitoring
-- **No Shared Code**: The viral growth features do not use or depend on any LakeDiff code
-- **Independent Operation**: The viral growth features can operate independently without any LakeDiff components
-- **Open Source**: All viral growth features are fully open source, unlike LakeDiff's enterprise features
+- **Different Focus**: Viral growth features focus on community engagement and project visibility, while premium features focus on advanced capabilities like cloud integration and workflow orchestration
+- **No Shared Code**: The viral growth features do not use or depend on any premium feature code
+- **Independent Operation**: The viral growth features can operate independently without any premium components
+- **Open Source**: All viral growth features are fully open source, while premium features require a valid license or active trial
 
 ## Future Enhancements
 
