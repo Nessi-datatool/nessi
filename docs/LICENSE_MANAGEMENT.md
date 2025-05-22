@@ -45,7 +45,7 @@ The table below provides a detailed comparison of what's included in each tier:
 |----------|-------------------|------------------------|
 | **Delta Lake** | Schema evolution tracking<br>Transaction history<br>Time travel<br>Version control | Cloud storage integration<br>Enhanced performance for large tables |
 | **Data Quality** | Basic validation rules<br>Profiling<br>Anomaly detection<br>Pattern matching | Advanced validation<br>Custom rule engines<br>Cross-table validation |
-| **Reporting** | HTML/PDF reports<br>Basic visualizations<br>Export capabilities | Enhanced visualizations<br>Custom branding<br>Scheduled reporting |
+| **Reporting** | HTML/PDF reports<br>Basic visualizations<br>Export capabilities | Scheduled reporting |
 | **Integrations** | Local file systems<br>SQLite support<br>CSV/JSON imports | AWS S3, Azure, GCP<br>Databricks<br>dbt<br>Data catalogs |
 | **Workflow** | CLI commands<br>Basic automation | Airflow integration<br>Prefect integration<br>Dagster integration |
 | **Support** | Community forums<br>Documentation<br>Issue tracker | Priority support<br>SLA guarantees<br>Direct assistance |

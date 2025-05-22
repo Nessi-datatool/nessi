@@ -197,10 +197,10 @@ The following existing features are distributed across tiers:
 |------------------|-------------------------|------------------|
 | **Delta Lake Support** | Schema evolution, Transaction log parsing, Version control, Time travel | Same + Cloud storage integration |
 | **Data Quality** | Basic checks, Profiling, Anomaly detection, Pattern recognition | Same + Advanced validation |
-| **Reporting** | HTML/PDF for local tables | Same + Enhanced visualization |
+| **Reporting** | HTML/PDF for local tables | Same |
 | **Integrations** | Local file systems | AWS S3, Azure, GCP, Databricks, dbt, Data catalogs |
 | **Workflow** | Basic CLI commands | Workflow orchestration with Airflow, Prefect, Dagster |
-| **Monitoring** | Basic metrics collection | Same + Advanced alerting |
+| **Monitoring** | Basic metrics collection | Same |
 
 #### License System Implementation
 - ✅ Tiered licensing model (Community and Pro)

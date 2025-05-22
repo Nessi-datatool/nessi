@@ -324,7 +324,7 @@ Builds on the Community Edition with enterprise features. To start a free 1-mont
 |----------|---------------------|
 | **Delta Lake** | Cloud storage integration, Enhanced performance for large tables |
 | **Data Quality** | Advanced validation, Custom rule engines, Cross-table validation |
-| **Reporting** | Enhanced visualizations, Custom branding, Scheduled reporting |
+| **Reporting** | Scheduled reporting |
 | **Integrations** | AWS S3, Azure, GCP, Databricks, dbt, Data catalogs |
 | **Workflow** | Airflow integration, Prefect integration, Dagster integration |
 | **Support** | Priority support, SLA guarantees, Direct assistance |
