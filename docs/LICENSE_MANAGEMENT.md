@@ -6,21 +6,58 @@ Nessi includes a robust license management system that controls access to premiu
 
 Nessi offers the following license tiers:
 
-| Feature | Community | Pro |
-|---------|-----------|-----|
-| Core Delta Lake Management | ✅ | ✅ |
-| Data Quality Checks | ✅ | ✅ |
-| HTML/PDF Reporting | ✅ | ✅ |
-| CLI Monitoring | ✅ | ✅ |
-| Databricks Integration | ❌ | ✅ |
-| AWS S3 Storage | ❌ | ✅ |
-| Azure Blob Storage | ❌ | ✅ |
-| Google Cloud Storage | ❌ | ✅ |
-| Data Catalog Integration | ❌ | ✅ |
-| dbt Integration | ❌ | ✅ |
-| Workflow Orchestration | ❌ | ✅ |
+### Feature Distribution
+
+| Feature Category | Community (Open Source) | Pro (Commercial) |
+|------------------|-------------------------|------------------|
+| **Delta Lake Support** | Schema evolution, Transaction log parsing, Version control, Time travel | Same + Cloud storage integration |
+| **Data Quality** | Basic checks, Profiling, Anomaly detection, Pattern recognition | Same + Advanced validation |
+| **Reporting** | HTML/PDF for local tables | Same + Enhanced visualization |
+| **Integrations** | Local file systems | AWS S3, Azure, GCP, Databricks, dbt, Data catalogs |
+| **Workflow** | Basic CLI commands | Workflow orchestration with Airflow, Prefect, Dagster |
+| **Monitoring** | Basic metrics collection | Same + Advanced alerting |
 
 > **Note**: For Enterprise-level support and custom features, please visit the [Nessi website](https://nessi.dev) for contact information.
+
+## Open-Source vs. Commercial Features
+
+### Value Proposition
+
+Nessi's licensing model is designed to provide significant value in both the open-source Community Edition and the commercial Pro tier:
+
+**Community Edition (Open Source)**
+* Free and open-source under the Apache License 2.0
+* Complete functionality for local Delta Lake management
+* Suitable for individual users, small teams, and educational purposes
+* Full access to all core features and documentation
+
+**Pro Tier (Commercial)**
+* Built on top of the Community Edition
+* Adds enterprise integrations and advanced capabilities
+* Designed for production environments and larger teams
+* Includes priority support and enterprise-grade features
+
+### Feature Comparison
+
+The table below provides a detailed comparison of what's included in each tier:
+
+| Category | Community Features | Additional Pro Features |
+|----------|-------------------|------------------------|
+| **Delta Lake** | Schema evolution tracking<br>Transaction history<br>Time travel<br>Version control | Cloud storage integration<br>Enhanced performance for large tables |
+| **Data Quality** | Basic validation rules<br>Profiling<br>Anomaly detection<br>Pattern matching | Advanced validation<br>Custom rule engines<br>Cross-table validation |
+| **Reporting** | HTML/PDF reports<br>Basic visualizations<br>Export capabilities | Enhanced visualizations<br>Custom branding<br>Scheduled reporting |
+| **Integrations** | Local file systems<br>SQLite support<br>CSV/JSON imports | AWS S3, Azure, GCP<br>Databricks<br>dbt<br>Data catalogs |
+| **Workflow** | CLI commands<br>Basic automation | Airflow integration<br>Prefect integration<br>Dagster integration |
+| **Support** | Community forums<br>Documentation<br>Issue tracker | Priority support<br>SLA guarantees<br>Direct assistance |
+
+### Transparency in Licensing
+
+The license management system itself is open-source and transparent, allowing for community review and contributions. The anti-tampering measures only restrict access to premium features but do not obscure the implementation. This approach ensures that:
+
+1. Users can fully understand how the licensing system works
+2. The community can contribute to all aspects of the codebase
+3. Premium features are clearly separated from open-source functionality
+4. The integrity of the licensing system is maintained
 
 ## Free Trial
 

@@ -53,8 +53,17 @@ Nessi is an open-source data quality and Delta Lake management tool with a Go-fi
 ### CLI Monitoring
 - ✅ Table health scores and trends via CLI commands
 - ✅ Quality metric tracking over time with exportable data
+  - Data validation execution time and throughput
+  - Memory usage during processing operations
+  - Storage efficiency metrics (compression ratios, file sizes)
+  - Query performance statistics for Delta tables
+  - Processing latency for different data volumes
 - ✅ Recent validation failures reporting
 - ✅ Table health and ingestion metrics via CLI
+  - Schema evolution frequency and impact
+  - Write operation performance
+  - Partition optimization effectiveness
+  - Delta log transaction history analysis
 
 ### Monitoring Capabilities
 - ✅ Core monitoring functionality via CLI commands
@@ -96,6 +105,10 @@ Nessi is an open-source data quality and Delta Lake management tool with a Go-fi
 - ✅ Environment variable-based authentication for cloud services
 - ✅ API key management for external services
 - ✅ Basic access controls for CLI commands
+  - Command-level permissions (read-only vs. write operations)
+  - Feature-based access restrictions (community vs. premium features)
+  - Local configuration for command allowlists
+  - No external IAM integration in Community edition
 - ✅ License management system with cryptographic verification
 - ✅ Anti-tampering protection for license validation
 
@@ -175,6 +188,21 @@ Nessi is an open-source data quality and Delta Lake management tool with a Go-fi
 - ✅ Shared rule libraries and configurations
 
 ### License Management System
+
+#### Feature Distribution
+
+The following existing features are distributed across tiers:
+
+| Feature Category | Community (Open Source) | Pro (Commercial) |
+|------------------|-------------------------|------------------|
+| **Delta Lake Support** | Schema evolution, Transaction log parsing, Version control, Time travel | Same + Cloud storage integration |
+| **Data Quality** | Basic checks, Profiling, Anomaly detection, Pattern recognition | Same + Advanced validation |
+| **Reporting** | HTML/PDF for local tables | Same + Enhanced visualization |
+| **Integrations** | Local file systems | AWS S3, Azure, GCP, Databricks, dbt, Data catalogs |
+| **Workflow** | Basic CLI commands | Workflow orchestration with Airflow, Prefect, Dagster |
+| **Monitoring** | Basic metrics collection | Same + Advanced alerting |
+
+#### License System Implementation
 - ✅ Tiered licensing model (Community and Pro)
 - ✅ Starter plan features included in Pro tier
 - ✅ 1-month free trial for premium features
@@ -184,6 +212,36 @@ Nessi is an open-source data quality and Delta Lake management tool with a Go-fi
 - ✅ License status reporting via CLI
 - ✅ Anti-tampering measures to protect license validation
 - ✅ Secure storage of license and trial information
+
+> **Note**: The license management code itself is open-source and transparent, allowing for community review and contributions. The anti-tampering measures only restrict access to premium features but do not obscure the implementation.
+
+## User Personas
+
+Nessi is designed to meet the needs of the following primary user personas:
+
+### Data Engineers
+- **Primary Use Cases**: Delta Lake management, schema evolution tracking, data quality validation
+- **Key Features**: Transaction history, time travel, schema management, quality rules
+- **Technical Level**: High (comfortable with CLI tools and data infrastructure)
+- **Typical Environment**: Data pipelines, ETL processes, data warehousing
+
+### Data Analysts
+- **Primary Use Cases**: Data quality assessment, profiling, reporting
+- **Key Features**: Statistical summaries, quality metrics, HTML/PDF reports
+- **Technical Level**: Medium (SQL knowledge, basic scripting)
+- **Typical Environment**: Business intelligence tools, dashboards
+
+### Platform Engineers
+- **Primary Use Cases**: Integration with cloud platforms, workflow orchestration
+- **Key Features**: Cloud storage integration, workflow tools integration, monitoring
+- **Technical Level**: High (infrastructure expertise, automation)
+- **Typical Environment**: Cloud environments, CI/CD pipelines
+
+### Data Architects
+- **Primary Use Cases**: Data governance, catalog integration, lineage tracking
+- **Key Features**: Data catalog integration, lineage visualization, metadata management
+- **Technical Level**: High (data modeling, architecture design)
+- **Typical Environment**: Enterprise data platforms, governance frameworks
 
 ## Architecture Requirements
 

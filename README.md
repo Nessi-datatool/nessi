@@ -299,21 +299,35 @@ Nessi includes a robust license management system that provides the following fe
 - **Trial Limitations**: Maximum of 2 trials per machine
 - **Security**: All license and trial data is cryptographically signed to prevent tampering
 
-### Premium Features
+### License Tiers
 
-The following features require a premium license or active trial:
+Nessi offers both open-source and commercial features:
 
-**Starter Plan Features** (included in Pro):
-- Databricks Integration
-- AWS S3 Storage
+### Community Edition (Open Source)
 
-**Pro Plan Features**:
-- All Starter Plan features
-- Azure Blob Storage
-- Google Cloud Storage
-- Data Catalog Integration
-- dbt Integration
-- Workflow Orchestration
+The free, open-source edition includes all core functionality:
+
+| Category | Included Features |
+|----------|-------------------|
+| **Delta Lake** | Schema evolution tracking, Transaction history, Time travel, Version control |
+| **Data Quality** | Basic validation rules, Profiling, Anomaly detection, Pattern matching |
+| **Reporting** | HTML/PDF reports, Basic visualizations, Export capabilities |
+| **Integrations** | Local file systems, SQLite support, CSV/JSON imports |
+| **Workflow** | CLI commands, Basic automation |
+| **Support** | Community forums, Documentation, Issue tracker |
+
+### Pro Edition (Commercial)
+
+Builds on the Community Edition with enterprise features. To start a free 1-month trial, run `nessi license start-trial`.
+
+| Category | Additional Features |
+|----------|---------------------|
+| **Delta Lake** | Cloud storage integration, Enhanced performance for large tables |
+| **Data Quality** | Advanced validation, Custom rule engines, Cross-table validation |
+| **Reporting** | Enhanced visualizations, Custom branding, Scheduled reporting |
+| **Integrations** | AWS S3, Azure, GCP, Databricks, dbt, Data catalogs |
+| **Workflow** | Airflow integration, Prefect integration, Dagster integration |
+| **Support** | Priority support, SLA guarantees, Direct assistance |
 
 > **Enterprise Tier**: For enterprise-level support and custom features, please visit [nessi.dev](https://nessi.dev) for contact information.
 

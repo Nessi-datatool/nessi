@@ -4,16 +4,37 @@ This guide provides detailed information on how to use Nessi's license managemen
 
 ## License Tiers Overview
 
-Nessi offers two license tiers to meet different needs:
+Nessi offers the following license tiers:
 
-| Tier | Description | Key Features |
-|------|-------------|-------------|
-| Community | Free, open-source edition | Core Delta Lake management, data quality checks, HTML/PDF reporting |
-| Pro | Premium tier | Includes Community features + Databricks integration, AWS S3 storage, Azure/GCP storage, data catalog integration, dbt integration, workflow orchestration |
+### Community Edition (Open Source)
 
-Note: Databricks integration and AWS S3 storage are considered Starter plan features but are included in the Pro tier.
+The free, open-source edition includes all core functionality:
 
-**Enterprise Tier**: For enterprise-level support, custom features, and dedicated assistance, please visit [nessi.dev](https://nessi.dev) for contact information.
+| Category | Included Features |
+|----------|-------------------|
+| **Delta Lake** | Schema evolution tracking, Transaction history, Time travel, Version control |
+| **Data Quality** | Basic validation rules, Profiling, Anomaly detection, Pattern matching |
+| **Reporting** | HTML/PDF reports, Basic visualizations, Export capabilities |
+| **Integrations** | Local file systems, SQLite support, CSV/JSON imports |
+| **Workflow** | CLI commands, Basic automation |
+| **Support** | Community forums, Documentation, Issue tracker |
+
+### Pro Edition (Commercial)
+
+Builds on the Community Edition with enterprise features:
+
+| Category | Additional Features |
+|----------|---------------------|
+| **Delta Lake** | Cloud storage integration, Enhanced performance for large tables |
+| **Data Quality** | Advanced validation, Custom rule engines, Cross-table validation |
+| **Reporting** | Enhanced visualizations, Custom branding, Scheduled reporting |
+| **Integrations** | AWS S3, Azure, GCP, Databricks, dbt, Data catalogs |
+| **Workflow** | Airflow integration, Prefect integration, Dagster integration |
+| **Support** | Priority support, SLA guarantees, Direct assistance |
+
+### Enterprise Edition
+
+Contact-only tier for custom features and dedicated support (available through [nessi.dev](https://nessi.dev)).
 
 ## Command Reference
 
