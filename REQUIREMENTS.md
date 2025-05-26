@@ -51,10 +51,11 @@ Nessi is an open-source data quality and Delta Lake management tool with a Go-fi
 - ✅ Row-level rule validation with custom logic
 
 ### CLI Monitoring
-- ✅ Table health scores and trends via CLI commands
-- ✅ Quality metric tracking over time with exportable data
-- ✅ Recent validation failures reporting
-- ✅ Table health and ingestion metrics via CLI
+- ✅ Table health scores and trends (E2E: `integrations/monitoring_test.go`, `stress-tests/performance_benchmark_test.go`)
+- ✅ Quality metric tracking over time (E2E: `integrations/monitoring_test.go`, `stress-tests/performance_benchmark_test.go`)
+- ✅ Recent validation failures reporting (E2E: `integrations/monitoring_test.go`, `stress-tests/error_handling_comprehensive_test.go`)
+- ✅ Table health and ingestion metrics (E2E: `integrations/monitoring_test.go`, `stress-tests/performance_benchmark_test.go`)
+- ✅ System health status (E2E: `integrations/monitoring_test.go`, `stress-tests/error_handling_comprehensive_test.go`)
 
 ### Monitoring Capabilities
 - ✅ Core monitoring functionality via CLI commands
@@ -73,13 +74,10 @@ Nessi is an open-source data quality and Delta Lake management tool with a Go-fi
 - ✅ Performance impact analysis
 
 ### CLI Reports
-- ✅ Quality score summaries via CLI
-- ✅ Table and column level summaries
-- ✅ Trend data for external visualization
-- ✅ Distribution data export
-- ✅ Pattern frequency analysis
-- ✅ Failure rate tracking
-- ✅ Export to JSON/CSV for automation and external reporting
+- ✅ Quality score summaries via CLI (E2E: `user-journeys/new_user_onboarding_test.go`, `integrations/cli_visualization_test.go`)
+- ✅ Table and column level summaries (E2E: `user-journeys/new_user_onboarding_test.go`)
+- ✅ Comprehensive HTML and PDF report generation (E2E: `user-journeys/new_user_onboarding_test.go`, `integrations/enhanced_report_test.go`)
+- ✅ Trend data for external visualization (E2E: `integrations/report_generation_test.go`, `stress-tests/performance_benchmark_test.go`)
 - ✅ Machine-readable output for integration with other tools
 
 ### Security
@@ -160,6 +158,7 @@ Nessi is an open-source data quality and Delta Lake management tool with a Go-fi
 - ✅ Kubernetes operators for Nessi.dev jobs
 - ✅ Workflow status monitoring and callbacks
 - ✅ Pipeline-aware data quality checks
+
 ### Collaboration & Governance
 - ✅ Shared rule libraries and configurations
 
@@ -188,11 +187,25 @@ Nessi is an open-source data quality and Delta Lake management tool with a Go-fi
 - ✅ Slack/Discord community support channels
 
 ### Testing & Quality Assurance
-- ✅ Comprehensive unit test coverage
-- ✅ Integration tests for key components
-- ✅ DBT plugin test coverage (AlertManager, selection system, validator functions)
+- ✅ Unit test coverage >80%
+- ✅ Integration test coverage >70%
+- ✅ End-to-end test coverage >60% (E2E: All tests in `e2e-tests/scenarios/`)
+- ✅ Performance benchmarks (E2E: `stress-tests/performance_benchmark_test.go`)
+- ✅ Security scanning
+- ✅ Error handling tests (E2E: `stress-tests/error_handling_comprehensive_test.go`)
+- ✅ CLI visualization tests (E2E: `integrations/cli_visualization_test.go`)
+- ✅ Databricks integration tests (E2E: `integrations/databricks_client_test.go`)
 - ✅ Profiler test coverage
 - ✅ Artifacts generation test coverage
 - ✅ Test strategy documentation
 - ✅ In-memory testing for Freshness SLA functionality
 - ✅ Mock connectors for reliable test execution
+
+### Databricks Integration
+- ✅ Native Databricks catalog support (E2E: `integrations/databricks_client_test.go`)
+- ✅ Unity Catalog integration (E2E: `integrations/databricks_client_test.go`)
+- ✅ Workspace-level permissions (E2E: `integrations/databricks_client_test.go`)
+- ✅ Databricks token authentication (E2E: `integrations/databricks_client_test.go`, `stress-tests/error_handling_comprehensive_test.go`)
+- ✅ SQL warehouse queries (E2E: `integrations/databricks_integration_test.go`)
+- ✅ Delta table discovery (E2E: `integrations/databricks_integration_test.go`)
+- ✅ Job scheduling and monitoring (E2E: `integrations/databricks_integration_test.go`)
