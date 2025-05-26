@@ -149,7 +149,7 @@ func promptString(reader *bufio.Reader, prompt, defaultValue string) string {
 		fmt.Printf("Error reading input: %v\n", err)
 		return defaultValue
 	}
-	
+
 	input = strings.TrimSpace(input)
 	if input == "" {
 		return defaultValue
@@ -163,14 +163,14 @@ func promptBool(reader *bufio.Reader, prompt string, defaultValue bool) bool {
 	if !defaultValue {
 		defaultStr = "n"
 	}
-	
+
 	fmt.Printf("%s (y/n) [%s]: ", prompt, defaultStr)
 	input, err := reader.ReadString('\n')
 	if err != nil {
 		fmt.Printf("Error reading input: %v\n", err)
 		return defaultValue
 	}
-	
+
 	input = strings.TrimSpace(strings.ToLower(input))
 	if input == "" {
 		return defaultValue
@@ -186,12 +186,12 @@ func promptFloat(reader *bufio.Reader, prompt string, defaultValue float64) floa
 		fmt.Printf("Error reading input: %v\n", err)
 		return defaultValue
 	}
-	
+
 	input = strings.TrimSpace(input)
 	if input == "" {
 		return defaultValue
 	}
-	
+
 	value, err := fmt.Sscanf(input, "%f", &defaultValue)
 	if err != nil || value == 0 {
 		fmt.Printf("Invalid input, using default: %.2f\n", defaultValue)
