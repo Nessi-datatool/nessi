@@ -1,0 +1,132 @@
+name: Docker Image Testing
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - '.github/workflows/docker-test.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - '.github/workflows/docker-test.yml'
+  workflow_dispatch:  # Allow manual triggering
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  build-and-test:
+    name: Build and Test Docker Image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          load: true
+          tags: nessi:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Test Docker image
+        run: |
+          # Create test config
+          mkdir -p test-config
+          cat > test-config/config.yaml << EOF
+          storage:
+            type: local
+            path: /app/data
+          logging:
+            level: info
+            file: /app/logs/nessi.log
+          EOF
+          
+          # Create test data directory
+          mkdir -p test-data
+          
+          # Run container with version check
+          docker run --rm -v $PWD/test-config:/app/config nessi:test version
+          
+          # Test help command
+          docker run --rm -v $PWD/test-config:/app/config nessi:test help
+          
+          # Test with sample data
+          docker run --rm \
+            -v $PWD/test-config:/app/config \
+            -v $PWD/test-data:/app/data \
+            nessi:test info
+      
+      - name: Test Docker Compose
+        run: |
+          # Create test directories
+          mkdir -p config data logs certs
+          
+          # Create test config
+          cat > config/config.yaml << EOF
+          storage:
+            type: local
+            path: /app/data
+          logging:
+            level: info
+            file: /app/logs/nessi.log
+          EOF
+          
+          # Start with Docker Compose
+          docker-compose up -d
+          
+          # Wait for container to be healthy
+          timeout=60
+          while [ $timeout -gt 0 ]; do
+            if docker ps | grep -q "nessi.*healthy"; then
+              echo "Container is healthy!"
+              break
+            fi
+            echo "Waiting for container to be healthy... ($timeout seconds left)"
+            sleep 5
+            timeout=$((timeout-5))
+          done
+          
+          if [ $timeout -le 0 ]; then
+            echo "Container did not become healthy within timeout"
+            docker-compose logs
+            docker-compose down
+            exit 1
+          fi
+          
+          # Run some basic commands
+          docker exec nessi nessi version
+          docker exec nessi nessi info
+          
+          # Shut down
+          docker-compose down
+      
+      - name: Test multi-architecture build
+        run: |
+          # Test that we can build for multiple architectures
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --tag nessi:multiarch-test \
+            --output type=image,push=false \
+            .
+      
+      - name: Scan for vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: nessi:test
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+          timeout: '10m0s'

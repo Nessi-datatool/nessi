@@ -1,0 +1,119 @@
+{
+  "type": "struct",
+  "fields": [
+    {
+      "name": "transaction_id",
+      "type": "string",
+      "nullable": false,
+      "metadata": {
+        "description": "Unique identifier for the transaction",
+        "constraints": {
+          "pattern": "^TX-\\d{5}$"
+        }
+      }
+    },
+    {
+      "name": "customer_id",
+      "type": "integer",
+      "nullable": true,
+      "metadata": {
+        "description": "Customer identifier, references user.id",
+        "constraints": {
+          "min": 1000,
+          "max": 2000
+        }
+      }
+    },
+    {
+      "name": "product_id",
+      "type": "string",
+      "nullable": true,
+      "metadata": {
+        "description": "Product identifier",
+        "constraints": {
+          "pattern": "^P-\\d{5}$"
+        }
+      }
+    },
+    {
+      "name": "amount",
+      "type": "double",
+      "nullable": true,
+      "metadata": {
+        "description": "Transaction amount",
+        "constraints": {
+          "min": 0.01,
+          "max": 10000.00
+        }
+      }
+    },
+    {
+      "name": "transaction_date",
+      "type": "timestamp",
+      "nullable": true,
+      "metadata": {
+        "description": "Date and time of the transaction",
+        "constraints": {
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        }
+      }
+    },
+    {
+      "name": "payment_method",
+      "type": "string",
+      "nullable": true,
+      "metadata": {
+        "description": "Payment method used",
+        "constraints": {
+          "enum": ["credit_card", "paypal", "bank_transfer", "crypto"]
+        }
+      }
+    },
+    {
+      "name": "status",
+      "type": "string",
+      "nullable": true,
+      "metadata": {
+        "description": "Transaction status",
+        "constraints": {
+          "enum": ["pending", "completed", "failed", "refunded"]
+        }
+      }
+    },
+    {
+      "name": "country",
+      "type": "string",
+      "nullable": true,
+      "metadata": {
+        "description": "Country where the transaction was processed",
+        "constraints": {
+          "maxLength": 2
+        }
+      }
+    },
+    {
+      "name": "year",
+      "type": "integer",
+      "nullable": true,
+      "metadata": {
+        "description": "Year of the transaction",
+        "constraints": {
+          "min": 2020,
+          "max": 2030
+        }
+      }
+    },
+    {
+      "name": "month",
+      "type": "integer",
+      "nullable": true,
+      "metadata": {
+        "description": "Month of the transaction",
+        "constraints": {
+          "min": 1,
+          "max": 12
+        }
+      }
+    }
+  ]
+}

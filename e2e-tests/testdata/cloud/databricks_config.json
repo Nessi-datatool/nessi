@@ -1,0 +1,22 @@
+{
+  "host": "${DATABRICKS_HOST}",
+  "token": "${DATABRICKS_TOKEN}",
+  "catalog": "nessi_test_catalog",
+  "schema": "nessi_test_schema",
+  "tables": [
+    {
+      "name": "users",
+      "path": "/mnt/delta-tables/users",
+      "format": "delta"
+    },
+    {
+      "name": "transactions",
+      "path": "/mnt/delta-tables/transactions",
+      "format": "delta",
+      "partitioned_by": ["country", "year"]
+    }
+  ],
+  "warehouse_id": "warehouse_id_123456789",
+  "cluster_id": "cluster_id_987654321",
+  "sql_endpoint_id": "sql_endpoint_id_abcdef123456"
+}

@@ -1,0 +1,46 @@
+# Nessi Configuration File
+version: 1.0
+
+# General settings
+general:
+  log_level: info
+  data_dir: /path/to/data
+  temp_dir: /tmp/nessi
+
+# Delta Lake settings
+delta:
+  default_path: /path/to/delta/tables
+  time_travel_enabled: true
+  schema_validation: true
+
+# Databricks settings
+databricks:
+  host: databricks.example.com
+  token: ${DATABRICKS_TOKEN}
+  workspace_id: 1234567890
+  catalog: main
+  schema: default
+
+# Cloud storage settings
+cloud:
+  provider: aws
+  region: us-west-2
+  bucket: nessi-data
+  credentials:
+    access_key: ${AWS_ACCESS_KEY}
+    secret_key: ${AWS_SECRET_KEY}
+
+# Quality check settings
+quality:
+  completeness_threshold: 0.95
+  accuracy_threshold: 0.98
+  consistency_threshold: 0.90
+  uniqueness_threshold: 1.0
+  timeliness_threshold: 0.85
+
+# Report settings
+report:
+  default_format: html
+  output_dir: /path/to/reports
+  include_charts: true
+  include_recommendations: true

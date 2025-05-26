@@ -1,0 +1,67 @@
+name: Documentation Updates
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '**/*.go'
+      - 'docs/**'
+      - 'README.md'
+  workflow_dispatch:  # Allow manual triggering
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-docs:
+    name: Update Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+      
+      - name: Install go-doc-gen
+        run: go install github.com/princjef/gomarkdoc/cmd/gomarkdoc@latest
+      
+      - name: Generate API documentation
+        run: |
+          mkdir -p docs/api
+          gomarkdoc --output docs/api/README.md ./pkg/...
+      
+      - name: Update CLI documentation
+        run: |
+          mkdir -p docs/cli
+          go run ./cmd/nessi doc > docs/cli/README.md
+      
+      - name: Check for changes
+        id: git-check
+        run: |
+          git diff --exit-code docs/ || echo "changes=true" >> $GITHUB_OUTPUT
+      
+      - name: Create Pull Request
+        if: steps.git-check.outputs.changes == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "docs: update auto-generated documentation"
+          title: "docs: update auto-generated documentation"
+          body: |
+            This PR updates the auto-generated documentation based on the latest code changes.
+            
+            Changes include:
+            - Updated API documentation
+            - Updated CLI documentation
+            
+            This is an automated PR created by the documentation workflow.
+          branch: docs/auto-update
+          base: main
+          labels: documentation,automated
+          delete-branch: true

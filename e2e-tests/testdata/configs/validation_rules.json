@@ -1,0 +1,79 @@
+{
+  "rules": [
+    {
+      "name": "email_format",
+      "description": "Validates that email addresses follow the correct format",
+      "table": "users",
+      "column": "email",
+      "type": "pattern",
+      "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+      "severity": "error"
+    },
+    {
+      "name": "age_range",
+      "description": "Validates that user age is within acceptable range",
+      "table": "users",
+      "column": "age",
+      "type": "range",
+      "min": 13,
+      "max": 120,
+      "severity": "warning"
+    },
+    {
+      "name": "subscription_tier_values",
+      "description": "Validates that subscription tier is one of the allowed values",
+      "table": "users",
+      "column": "subscription_tier",
+      "type": "enum",
+      "values": ["basic", "premium", "enterprise"],
+      "severity": "error"
+    },
+    {
+      "name": "transaction_id_format",
+      "description": "Validates that transaction IDs follow the correct format",
+      "table": "transactions",
+      "column": "transaction_id",
+      "type": "pattern",
+      "pattern": "^TX-\\d{5}$",
+      "severity": "error"
+    },
+    {
+      "name": "transaction_amount_range",
+      "description": "Validates that transaction amounts are within acceptable range",
+      "table": "transactions",
+      "column": "amount",
+      "type": "range",
+      "min": 0.01,
+      "max": 10000.00,
+      "severity": "warning"
+    },
+    {
+      "name": "transaction_status_values",
+      "description": "Validates that transaction status is one of the allowed values",
+      "table": "transactions",
+      "column": "status",
+      "type": "enum",
+      "values": ["pending", "completed", "failed", "refunded"],
+      "severity": "error"
+    },
+    {
+      "name": "customer_id_exists",
+      "description": "Validates that customer IDs in transactions exist in the users table",
+      "type": "cross_table",
+      "source_table": "transactions",
+      "source_column": "customer_id",
+      "target_table": "users",
+      "target_column": "id",
+      "severity": "error"
+    },
+    {
+      "name": "transaction_date_not_future",
+      "description": "Validates that transaction dates are not in the future",
+      "table": "transactions",
+      "column": "transaction_date",
+      "type": "custom",
+      "expression": "transaction_date <= CURRENT_TIMESTAMP()",
+      "severity": "error"
+    }
+  ]
+}

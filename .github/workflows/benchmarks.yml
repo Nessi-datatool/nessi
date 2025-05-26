@@ -1,0 +1,70 @@
+name: Performance Benchmarks
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * 2'  # Run every Tuesday at midnight
+  workflow_dispatch:  # Allow manual triggering
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  benchmark:
+    name: Run Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+      
+      - name: Install benchstat
+        run: go install golang.org/x/perf/cmd/benchstat@latest
+      
+      - name: Run current benchmarks
+        run: |
+          go test -bench=. -benchmem ./... > current.txt
+      
+      - name: Checkout previous commit
+        run: |
+          git checkout HEAD~1
+          go test -bench=. -benchmem ./... > previous.txt
+          git checkout -
+      
+      - name: Compare benchmarks
+        id: compare
+        run: |
+          benchstat previous.txt current.txt > benchstat.txt
+          cat benchstat.txt
+          
+          # Check if there's a significant regression (>10% slower)
+          if grep -q "\+[1-9][0-9]\.[0-9]%" benchstat.txt; then
+            echo "regression=true" >> $GITHUB_OUTPUT
+            echo "Significant performance regression detected!"
+          fi
+      
+      - name: Create issue for regression
+        if: steps.compare.outputs.regression == 'true'
+        uses: peter-evans/create-issue-from-file@v4
+        with:
+          title: Performance Regression Detected
+          content-filepath: benchstat.txt
+          labels: performance,regression
+      
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: |
+            previous.txt
+            current.txt
+            benchstat.txt

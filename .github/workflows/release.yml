@@ -1,0 +1,164 @@
+name: Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  GO_VERSION: '1.21'
+
+jobs:
+  build:
+    name: Build Release Binaries
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [linux, darwin, windows]
+        arch: [amd64, arm64]
+        exclude:
+          - os: windows
+            arch: arm64
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+      
+      - name: Build for ${{ matrix.os }}-${{ matrix.arch }}
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          GIT_COMMIT=$(git rev-parse HEAD)
+          GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          
+          OUTPUT="bin/nessi"
+          if [ "${{ matrix.os }}" = "windows" ]; then
+            OUTPUT="bin/nessi.exe"
+          fi
+          
+          go build -ldflags "-s -w -X github.com/nessi-dev/nessi/pkg/version.Version=${VERSION} -X github.com/nessi-dev/nessi/pkg/version.BuildDate=${BUILD_DATE} -X github.com/nessi-dev/nessi/pkg/version.GitCommit=${GIT_COMMIT} -X github.com/nessi-dev/nessi/pkg/version.GitBranch=${GIT_BRANCH}" -o ${OUTPUT} ./cmd/nessi
+      
+      - name: Create archive
+        run: |
+          ARCHIVE_NAME="nessi-${{ matrix.os }}-${{ matrix.arch }}"
+          if [ "${{ matrix.os }}" = "windows" ]; then
+            zip -j "${ARCHIVE_NAME}.zip" bin/nessi.exe LICENSE README.md
+          else
+            tar -czf "${ARCHIVE_NAME}.tar.gz" -C bin nessi -C .. LICENSE README.md
+          fi
+      
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nessi-${{ matrix.os }}-${{ matrix.arch }}
+          path: |
+            *.tar.gz
+            *.zip
+
+  docker:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/nessi-dev/nessi
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+      
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${GITHUB_REF#refs/tags/}
+            BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+            GIT_COMMIT=$(git rev-parse HEAD)
+            GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [build, docker]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -z "$PREVIOUS_TAG" ]; then
+            git log --pretty=format:"* %s (%h)" > CHANGELOG.md
+          else
+            git log --pretty=format:"* %s (%h)" $PREVIOUS_TAG..HEAD > CHANGELOG.md
+          fi
+          echo "changelog=$(cat CHANGELOG.md)" >> $GITHUB_OUTPUT
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/nessi-linux-amd64/*.tar.gz
+            artifacts/nessi-linux-arm64/*.tar.gz
+            artifacts/nessi-darwin-amd64/*.tar.gz
+            artifacts/nessi-darwin-arm64/*.tar.gz
+            artifacts/nessi-windows-amd64/*.zip
+          body: |
+            ## Nessi ${{ github.ref_name }} Release
+            
+            ### Changes
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ### Installation
+            
+            #### Binary Installation
+            Download the appropriate binary for your platform from the assets below.
+            
+            #### Docker Installation
+            ```bash
+            docker pull ghcr.io/nessi-dev/nessi:${{ github.ref_name }}
+            ```
+            
+            ### Documentation
+            For full documentation, visit the [Nessi Documentation](https://github.com/nessi-dev/nessi/tree/main/docs).
+          draft: false
+          prerelease: ${{ contains(github.ref, '-rc') || contains(github.ref, '-beta') || contains(github.ref, '-alpha') }}

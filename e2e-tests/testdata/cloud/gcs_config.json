@@ -1,0 +1,18 @@
+{
+  "bucket": "nessi-test-bucket",
+  "prefix": "delta-tables/",
+  "credentials_file": "${GOOGLE_APPLICATION_CREDENTIALS}",
+  "tables": [
+    {
+      "name": "users",
+      "path": "delta-tables/users",
+      "format": "delta"
+    },
+    {
+      "name": "transactions",
+      "path": "delta-tables/transactions",
+      "format": "delta",
+      "partitioned_by": ["country", "year"]
+    }
+  ]
+}

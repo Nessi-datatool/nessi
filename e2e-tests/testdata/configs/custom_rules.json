@@ -1,0 +1,54 @@
+{
+  "custom_rules": [
+    {
+      "name": "email_domain_whitelist",
+      "description": "Validates that email domains are from approved providers",
+      "table": "users",
+      "column": "email",
+      "type": "custom",
+      "expression": "REGEXP_EXTRACT(email, '@([a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})$') IN ('example.com', 'gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com')",
+      "severity": "warning"
+    },
+    {
+      "name": "payment_method_by_country",
+      "description": "Validates that certain payment methods are only used in supported countries",
+      "table": "transactions",
+      "type": "custom",
+      "expression": "NOT (payment_method = 'crypto' AND country NOT IN ('US', 'CA', 'UK', 'DE'))",
+      "severity": "error"
+    },
+    {
+      "name": "premium_user_validation",
+      "description": "Validates that premium users have valid payment methods",
+      "table": "users",
+      "type": "custom",
+      "expression": "NOT (subscription_tier = 'premium' AND (payment_method IS NULL OR payment_method = ''))",
+      "severity": "error"
+    },
+    {
+      "name": "transaction_amount_by_tier",
+      "description": "Validates that transaction amounts are appropriate for user subscription tier",
+      "type": "cross_table",
+      "expression": "NOT EXISTS (SELECT 1 FROM transactions t JOIN users u ON t.customer_id = u.id WHERE u.subscription_tier = 'basic' AND t.amount > 500.00)",
+      "severity": "warning"
+    },
+    {
+      "name": "recent_login_check",
+      "description": "Validates that active users have logged in within the last 90 days",
+      "table": "users",
+      "type": "custom",
+      "expression": "NOT (active = true AND DATEDIFF(CURRENT_DATE(), last_login) > 90)",
+      "severity": "warning"
+    },
+    {
+      "name": "transaction_frequency_check",
+      "description": "Validates that users don't have too many transactions in a short period (potential fraud)",
+      "type": "aggregate",
+      "table": "transactions",
+      "group_by": ["customer_id"],
+      "having": "COUNT(*) <= 20 AND SUM(amount) <= 5000.00",
+      "window": "1 day",
+      "severity": "error"
+    }
+  ]
+}

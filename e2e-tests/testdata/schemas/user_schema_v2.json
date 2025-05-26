@@ -1,0 +1,167 @@
+{
+  "type": "struct",
+  "fields": [
+    {
+      "name": "id",
+      "type": "integer",
+      "nullable": false,
+      "metadata": {
+        "description": "Unique identifier for the user",
+        "constraints": {
+          "min": 1,
+          "max": 1000000
+        }
+      }
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "nullable": true,
+      "metadata": {
+        "description": "User's full name",
+        "constraints": {
+          "maxLength": 100
+        }
+      }
+    },
+    {
+      "name": "email",
+      "type": "string",
+      "nullable": true,
+      "metadata": {
+        "description": "User's email address",
+        "constraints": {
+          "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+        }
+      }
+    },
+    {
+      "name": "signup_date",
+      "type": "timestamp",
+      "nullable": true,
+      "metadata": {
+        "description": "Date and time when the user signed up",
+        "constraints": {
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        }
+      }
+    },
+    {
+      "name": "last_login",
+      "type": "timestamp",
+      "nullable": true,
+      "metadata": {
+        "description": "Date and time of the user's last login",
+        "constraints": {
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        }
+      }
+    },
+    {
+      "name": "active",
+      "type": "boolean",
+      "nullable": true,
+      "metadata": {
+        "description": "Whether the user is active or not"
+      }
+    },
+    {
+      "name": "age",
+      "type": "integer",
+      "nullable": true,
+      "metadata": {
+        "description": "User's age in years",
+        "constraints": {
+          "min": 13,
+          "max": 120
+        }
+      }
+    },
+    {
+      "name": "subscription_tier",
+      "type": "string",
+      "nullable": true,
+      "metadata": {
+        "description": "User's subscription tier",
+        "constraints": {
+          "enum": ["basic", "premium", "enterprise", "trial"]
+        }
+      }
+    },
+    {
+      "name": "payment_method",
+      "type": "string",
+      "nullable": true,
+      "metadata": {
+        "description": "User's payment method",
+        "constraints": {
+          "enum": ["credit_card", "paypal", "bank_transfer", "crypto", "apple_pay", "google_pay"]
+        }
+      }
+    },
+    {
+      "name": "country",
+      "type": "string",
+      "nullable": true,
+      "metadata": {
+        "description": "User's country of residence",
+        "constraints": {
+          "maxLength": 2
+        }
+      }
+    },
+    {
+      "name": "preferences",
+      "type": {
+        "type": "struct",
+        "fields": [
+          {
+            "name": "theme",
+            "type": "string",
+            "nullable": true,
+            "metadata": {
+              "description": "User's preferred UI theme",
+              "constraints": {
+                "enum": ["light", "dark", "system"]
+              }
+            }
+          },
+          {
+            "name": "notifications",
+            "type": "boolean",
+            "nullable": true,
+            "metadata": {
+              "description": "Whether the user has enabled notifications"
+            }
+          },
+          {
+            "name": "language",
+            "type": "string",
+            "nullable": true,
+            "metadata": {
+              "description": "User's preferred language",
+              "constraints": {
+                "maxLength": 5
+              }
+            }
+          }
+        ]
+      },
+      "nullable": true,
+      "metadata": {
+        "description": "User's preferences"
+      }
+    },
+    {
+      "name": "last_modified",
+      "type": "timestamp",
+      "nullable": true,
+      "metadata": {
+        "description": "Date and time when the user record was last modified",
+        "constraints": {
+          "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+version: 2
+
+models:
+  - name: users
+    description: "User information table"
+    columns:
+      - name: id
+        description: "Unique identifier for the user"
+        tests:
+          - not_null
+          - unique
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1
+              max_value: 1000000
+      - name: name
+        description: "User's full name"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_value_lengths_to_be_between:
+              min_value: 2
+              max_value: 100
+      - name: email
+        description: "User's email address"
+        tests:
+          - dbt_expectations.expect_column_values_to_match_regex:
+              regex: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+      - name: signup_date
+        description: "Date and time when the user signed up"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: "'2020-01-01'"
+              max_value: "current_timestamp()"
+      - name: active
+        description: "Whether the user is active or not"
+        tests:
+          - not_null
+      - name: subscription_tier
+        description: "User's subscription tier"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_in_set:
+              value_set: ['basic', 'premium', 'enterprise']
+
+  - name: transactions
+    description: "Transaction records table"
+    columns:
+      - name: transaction_id
+        description: "Unique identifier for the transaction"
+        tests:
+          - not_null
+          - unique
+          - dbt_expectations.expect_column_values_to_match_regex:
+              regex: '^TX-\d{5}$'
+      - name: customer_id
+        description: "Customer identifier, references user.id"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('users')
+              field: id
+      - name: amount
+        description: "Transaction amount"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0.01
+              max_value: 10000.00
+      - name: transaction_date
+        description: "Date and time of the transaction"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: "'2020-01-01'"
+              max_value: "current_timestamp()"
+      - name: status
+        description: "Transaction status"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_in_set:
+              value_set: ['pending', 'completed', 'failed', 'refunded']

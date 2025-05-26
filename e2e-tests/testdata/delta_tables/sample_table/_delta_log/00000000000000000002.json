@@ -1,0 +1,44 @@
+{
+  "commitInfo": {
+    "timestamp": 1621609600000,
+    "operation": "MERGE",
+    "operationParameters": {
+      "predicate": "id > 800",
+      "matchedPredicates": "[{\"actionType\":\"update\"}]",
+      "notMatchedPredicates": "[{\"actionType\":\"insert\"}]"
+    },
+    "isBlindAppend": false,
+    "operationMetrics": {
+      "numTargetFilesAdded": "1",
+      "numTargetFilesRemoved": "1",
+      "numOutputRows": "200"
+    }
+  }
+}
+{
+  "remove": {
+    "path": "part-00007-d6159c63-9c0e-48f5-a53d-fb6d7c3bf19a-c000.snappy.parquet",
+    "deletionTimestamp": 1621609600000,
+    "dataChange": true
+  }
+}
+{
+  "add": {
+    "path": "part-00008-e7259c63-9c0e-48f5-a53d-fb6d7c3bf19a-c000.snappy.parquet",
+    "partitionValues": {},
+    "size": 2500,
+    "modificationTime": 1621609600000,
+    "dataChange": true,
+    "stats": "{\"numRecords\":150,\"minValues\":{\"id\":751,\"name\":\"David\",\"email\":\"david@example.com\",\"signup_date\":\"2023-01-01T00:00:00.000Z\",\"last_login\":\"2023-05-20T10:30:00.000Z\",\"active\":true,\"age\":18,\"subscription_tier\":\"premium\",\"payment_method\":\"credit_card\",\"country\":\"BR\"},\"maxValues\":{\"id\":900,\"name\":\"William\",\"email\":\"william@example.com\",\"signup_date\":\"2023-05-20T00:00:00.000Z\",\"last_login\":\"2023-05-26T09:15:00.000Z\",\"active\":true,\"age\":65,\"subscription_tier\":\"premium\",\"payment_method\":\"paypal\",\"country\":\"IN\"},\"nullCount\":{\"id\":0,\"name\":0,\"email\":2,\"signup_date\":0,\"last_login\":3,\"active\":0,\"age\":0,\"subscription_tier\":0,\"payment_method\":4,\"country\":0}}"
+  }
+}
+{
+  "add": {
+    "path": "part-00009-e7259c63-9c0e-48f5-a53d-fb6d7c3bf19a-c000.snappy.parquet",
+    "partitionValues": {},
+    "size": 1250,
+    "modificationTime": 1621609600000,
+    "dataChange": true,
+    "stats": "{\"numRecords\":50,\"minValues\":{\"id\":901,\"name\":\"Emma\",\"email\":\"emma@example.com\",\"signup_date\":\"2023-05-20T00:00:00.000Z\",\"last_login\":\"2023-05-20T10:30:00.000Z\",\"active\":true,\"age\":22,\"subscription_tier\":\"premium\",\"payment_method\":\"credit_card\",\"country\":\"FR\"},\"maxValues\":{\"id\":950,\"name\":\"Zack\",\"email\":\"zack@example.com\",\"signup_date\":\"2023-05-20T00:00:00.000Z\",\"last_login\":\"2023-05-26T09:15:00.000Z\",\"active\":true,\"age\":58,\"subscription_tier\":\"premium\",\"payment_method\":\"paypal\",\"country\":\"ES\"},\"nullCount\":{\"id\":0,\"name\":0,\"email\":0,\"signup_date\":0,\"last_login\":0,\"active\":0,\"age\":0,\"subscription_tier\":0,\"payment_method\":0,\"country\":0}}"
+  }
+}

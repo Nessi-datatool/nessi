@@ -1,0 +1,94 @@
+name: Security Scan
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Run every Sunday at midnight
+  workflow_dispatch:  # Allow manual triggering
+
+permissions:
+  contents: read
+  security-events: write
+  issues: write
+
+jobs:
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+      
+      - name: Install security tools
+        run: |
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          go install github.com/sonatype-nexus-community/nancy@latest
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+      
+      # Run Gosec with SARIF output for GitHub Security tab
+      - name: Run gosec with SARIF output
+        run: |
+          gosec -fmt=sarif -out=gosec-results.sarif ./...
+      
+      # Upload Gosec SARIF report to GitHub Security tab
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: gosec-results.sarif
+          category: gosec
+      
+      # Run govulncheck for Go vulnerability scanning
+      - name: Run govulncheck
+        run: |
+          govulncheck -json ./... > govulncheck-results.json
+      
+      # Check dependencies with nancy
+      - name: Check dependencies with nancy
+        run: |
+          go list -json -deps ./... | nancy sleuth -o nancy-results.json
+      
+      # Generate a security report
+      - name: Generate security report
+        run: |
+          echo "# Security Scan Report" > security-report.md
+          echo "## Gosec Results" >> security-report.md
+          gosec -fmt=text ./... >> security-report.md || true
+          
+          echo -e "\n## Vulnerability Check Results" >> security-report.md
+          echo "See govulncheck-results.json for details" >> security-report.md
+          
+          echo -e "\n## Dependency Vulnerability Results" >> security-report.md
+          echo "See nancy-results.json for details" >> security-report.md
+      
+      # Create an issue if vulnerabilities are found
+      - name: Check for vulnerabilities
+        id: check-vulnerabilities
+        run: |
+          if grep -q "Severity: HIGH\|Severity: CRITICAL" security-report.md; then
+            echo "vulnerabilities=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Create issue for vulnerabilities
+        if: steps.check-vulnerabilities.outputs.vulnerabilities == 'true'
+        uses: peter-evans/create-issue-from-file@v4
+        with:
+          title: Security Vulnerabilities Detected
+          content-filepath: security-report.md
+          labels: security,vulnerability
+      
+      # Upload all security reports as artifacts
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: |
+            gosec-results.sarif
+            govulncheck-results.json
+            nancy-results.json
+            security-report.md

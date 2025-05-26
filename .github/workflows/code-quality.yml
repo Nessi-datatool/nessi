@@ -1,0 +1,137 @@
+name: Code Quality Analysis
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+  schedule:
+    - cron: '0 0 * * 4'  # Run every Thursday at midnight
+  workflow_dispatch:  # Allow manual triggering
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  sonarcloud:
+    name: SonarCloud Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for better relevancy of analysis
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+      
+      - name: Run tests with coverage
+        run: |
+          go test -coverprofile=coverage.out -json ./... > test-report.json
+      
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    # Generate a token on SonarCloud.io, add it to the secrets of this repo
+        with:
+          args: >
+            -Dsonar.projectKey=nessi-dev_nessi
+            -Dsonar.organization=nessi-dev
+            -Dsonar.go.coverage.reportPaths=coverage.out
+            -Dsonar.go.tests.reportPaths=test-report.json
+            -Dsonar.sources=.
+            -Dsonar.exclusions=**/*_test.go,**/vendor/**,**/testdata/**
+            -Dsonar.tests=.
+            -Dsonar.test.inclusions=**/*_test.go
+      
+      - name: Comment PR with Quality Gate Results
+        uses: sonarsource/sonarcloud-github-action-pr-analysis@master
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  
+  golangci:
+    name: GolangCI-Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+      
+      - name: Run GolangCI-Lint with reviewdog
+        uses: reviewdog/action-golangci-lint@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          level: warning
+          golangci-lint-flags: "--timeout=5m"
+  
+  gofmt:
+    name: Go Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+      
+      - name: Check formatting
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "The following files are not formatted correctly:"
+            echo "$unformatted"
+            exit 1
+          fi
+  
+  cyclomatic-complexity:
+    name: Cyclomatic Complexity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+      
+      - name: Install gocyclo
+        run: go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
+      
+      - name: Run gocyclo
+        run: |
+          gocyclo -over 15 -avg . > complexity.txt || true
+          cat complexity.txt
+          
+          # Fail if any function has complexity over 20
+          if grep -q " [2-9][0-9] " complexity.txt; then
+            echo "Functions with very high cyclomatic complexity detected!"
+            grep " [2-9][0-9] " complexity.txt
+            exit 1
+          fi
+      
+      - name: Upload complexity report
+        uses: actions/upload-artifact@v4
+        with:
+          name: complexity-report
+          path: complexity.txt

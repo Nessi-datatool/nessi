@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Nessi Community Discussions
+    url: https://github.com/nessi-dev/nessi/discussions
+    about: Please ask and answer questions here.
+  - name: Nessi Documentation
+    url: https://nessi.dev/docs
+    about: Check the documentation for answers to common questions.
+  - name: Nessi Pro Support
+    url: https://nessi.dev/support
+    about: Contact Pro support for issues related to the Pro edition.

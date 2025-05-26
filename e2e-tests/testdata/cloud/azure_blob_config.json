@@ -1,0 +1,19 @@
+{
+  "account_name": "nessitestaccount",
+  "container": "nessi-test-container",
+  "prefix": "delta-tables/",
+  "connection_string": "${AZURE_STORAGE_CONNECTION_STRING}",
+  "tables": [
+    {
+      "name": "users",
+      "path": "delta-tables/users",
+      "format": "delta"
+    },
+    {
+      "name": "transactions",
+      "path": "delta-tables/transactions",
+      "format": "delta",
+      "partitioned_by": ["country", "year"]
+    }
+  ]
+}

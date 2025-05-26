@@ -1,0 +1,179 @@
+name: API Testing
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'pkg/api/**'
+      - 'internal/api/**'
+      - '.github/workflows/api-test.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'pkg/api/**'
+      - 'internal/api/**'
+      - '.github/workflows/api-test.yml'
+  schedule:
+    - cron: '0 0 * * 5'  # Run every Friday at midnight
+  workflow_dispatch:  # Allow manual triggering
+
+permissions:
+  contents: read
+
+jobs:
+  api-test:
+    name: API Integration Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: nessi
+          POSTGRES_PASSWORD: nessi
+          POSTGRES_DB: nessi_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      minio:
+        image: minio/minio:latest
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: minioadmin
+        ports:
+          - 9000:9000
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
+          --health-interval 30s
+          --health-timeout 10s
+          --health-retries 3
+          --health-start-period 10s
+        volumes:
+          - /tmp/minio-data:/data
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+      
+      - name: Install test dependencies
+        run: |
+          go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
+          go install github.com/ktr0731/evans@latest
+          go install github.com/cucumber/godog/cmd/godog@latest
+      
+      - name: Setup MinIO bucket
+        run: |
+          # Install MinIO client
+          curl -LO https://dl.min.io/client/mc/release/linux-amd64/mc
+          chmod +x mc
+          
+          # Configure MinIO client
+          ./mc config host add myminio http://localhost:9000 minioadmin minioadmin
+          
+          # Create test bucket
+          ./mc mb myminio/nessi-test
+          ./mc policy set public myminio/nessi-test
+      
+      - name: Build API server
+        run: |
+          go build -o ./bin/nessi-api ./cmd/api
+      
+      - name: Start API server
+        run: |
+          # Create test config
+          mkdir -p config
+          cat > config/api-test.yaml << EOF
+          api:
+            host: 127.0.0.1
+            port: 8080
+            enable_swagger: true
+          storage:
+            type: postgres
+            postgres:
+              host: localhost
+              port: 5432
+              user: nessi
+              password: nessi
+              database: nessi_test
+          s3:
+            endpoint: http://localhost:9000
+            access_key: minioadmin
+            secret_key: minioadmin
+            bucket: nessi-test
+            region: us-east-1
+          EOF
+          
+          # Start API server in background
+          ./bin/nessi-api --config config/api-test.yaml &
+          
+          # Wait for API server to start
+          timeout=30
+          while [ $timeout -gt 0 ]; do
+            if curl -s http://localhost:8080/health | grep -q "ok"; then
+              echo "API server is running!"
+              break
+            fi
+            echo "Waiting for API server to start... ($timeout seconds left)"
+            sleep 2
+            timeout=$((timeout-2))
+          done
+          
+          if [ $timeout -le 0 ]; then
+            echo "API server did not start within timeout"
+            exit 1
+          fi
+      
+      - name: Run API tests
+        run: |
+          # Run REST API tests
+          go test -v -tags=integration ./pkg/api/rest/...
+          
+          # Run gRPC API tests
+          go test -v -tags=integration ./pkg/api/grpc/...
+          
+          # Run GraphQL API tests
+          go test -v -tags=integration ./pkg/api/graphql/...
+      
+      - name: Run API contract tests
+        run: |
+          # Run REST API contract tests
+          go test -v -tags=contract ./test/api/rest/...
+          
+          # Run gRPC API contract tests
+          go test -v -tags=contract ./test/api/grpc/...
+          
+          # Run GraphQL API contract tests
+          go test -v -tags=contract ./test/api/graphql/...
+      
+      - name: Run API performance tests
+        run: |
+          # Install k6 for performance testing
+          curl -LO https://github.com/grafana/k6/releases/download/v0.42.0/k6-v0.42.0-linux-amd64.tar.gz
+          tar -xzf k6-v0.42.0-linux-amd64.tar.gz
+          
+          # Run performance tests
+          ./k6 run ./test/performance/api_load_test.js --summary-export=performance-results.json
+      
+      - name: Generate API test report
+        run: |
+          # Generate test report
+          go run ./cmd/tools/generate_api_report.go > api-test-report.md
+      
+      - name: Upload API test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-test-results
+          path: |
+            api-test-report.md
+            performance-results.json

@@ -1,0 +1,235 @@
+{
+  "catalog": {
+    "name": "Nessi Test Data Catalog",
+    "description": "Test data catalog for Nessi E2E tests",
+    "owner": "Nessi Test Team",
+    "version": "1.0.0",
+    "created_at": "2023-05-26T12:00:00Z",
+    "updated_at": "2023-05-26T12:00:00Z"
+  },
+  "domains": [
+    {
+      "name": "user_data",
+      "description": "User-related data domain",
+      "owner": "User Data Team",
+      "tables": ["users"]
+    },
+    {
+      "name": "transaction_data",
+      "description": "Transaction-related data domain",
+      "owner": "Transaction Data Team",
+      "tables": ["transactions"]
+    }
+  ],
+  "tables": [
+    {
+      "name": "users",
+      "description": "User information table",
+      "domain": "user_data",
+      "owner": "User Data Team",
+      "format": "delta",
+      "location": "delta-tables/users",
+      "tags": ["core", "user", "profile"],
+      "update_frequency": "daily",
+      "last_updated": "2023-05-26T10:00:00Z",
+      "columns": [
+        {
+          "name": "id",
+          "description": "Unique identifier for the user",
+          "type": "integer",
+          "nullable": false,
+          "pii": false,
+          "tags": ["primary_key"]
+        },
+        {
+          "name": "name",
+          "description": "User's full name",
+          "type": "string",
+          "nullable": true,
+          "pii": true,
+          "tags": ["personal_info"]
+        },
+        {
+          "name": "email",
+          "description": "User's email address",
+          "type": "string",
+          "nullable": true,
+          "pii": true,
+          "tags": ["personal_info", "contact"]
+        },
+        {
+          "name": "signup_date",
+          "description": "Date and time when the user signed up",
+          "type": "timestamp",
+          "nullable": true,
+          "pii": false,
+          "tags": ["date"]
+        },
+        {
+          "name": "last_login",
+          "description": "Date and time of the user's last login",
+          "type": "timestamp",
+          "nullable": true,
+          "pii": false,
+          "tags": ["date", "activity"]
+        },
+        {
+          "name": "active",
+          "description": "Whether the user is active or not",
+          "type": "boolean",
+          "nullable": true,
+          "pii": false,
+          "tags": ["status"]
+        },
+        {
+          "name": "age",
+          "description": "User's age in years",
+          "type": "integer",
+          "nullable": true,
+          "pii": true,
+          "tags": ["personal_info", "demographic"]
+        },
+        {
+          "name": "subscription_tier",
+          "description": "User's subscription tier",
+          "type": "string",
+          "nullable": true,
+          "pii": false,
+          "tags": ["business", "subscription"]
+        },
+        {
+          "name": "payment_method",
+          "description": "User's payment method",
+          "type": "string",
+          "nullable": true,
+          "pii": false,
+          "tags": ["business", "payment"]
+        },
+        {
+          "name": "country",
+          "description": "User's country of residence",
+          "type": "string",
+          "nullable": true,
+          "pii": false,
+          "tags": ["demographic", "location"]
+        }
+      ],
+      "quality_metrics": {
+        "completeness": 0.98,
+        "accuracy": 0.95,
+        "consistency": 0.97,
+        "uniqueness": 1.0,
+        "timeliness": 0.99
+      },
+      "lineage": {
+        "upstream": [],
+        "downstream": ["transactions"]
+      }
+    },
+    {
+      "name": "transactions",
+      "description": "Transaction records table",
+      "domain": "transaction_data",
+      "owner": "Transaction Data Team",
+      "format": "delta",
+      "location": "delta-tables/transactions",
+      "tags": ["core", "transaction", "financial"],
+      "update_frequency": "hourly",
+      "last_updated": "2023-05-26T11:00:00Z",
+      "partitioned_by": ["country", "year"],
+      "columns": [
+        {
+          "name": "transaction_id",
+          "description": "Unique identifier for the transaction",
+          "type": "string",
+          "nullable": false,
+          "pii": false,
+          "tags": ["primary_key"]
+        },
+        {
+          "name": "customer_id",
+          "description": "Customer identifier, references user.id",
+          "type": "integer",
+          "nullable": true,
+          "pii": false,
+          "tags": ["foreign_key"]
+        },
+        {
+          "name": "product_id",
+          "description": "Product identifier",
+          "type": "string",
+          "nullable": true,
+          "pii": false,
+          "tags": ["product"]
+        },
+        {
+          "name": "amount",
+          "description": "Transaction amount",
+          "type": "double",
+          "nullable": true,
+          "pii": false,
+          "tags": ["financial", "metric"]
+        },
+        {
+          "name": "transaction_date",
+          "description": "Date and time of the transaction",
+          "type": "timestamp",
+          "nullable": true,
+          "pii": false,
+          "tags": ["date"]
+        },
+        {
+          "name": "payment_method",
+          "description": "Payment method used",
+          "type": "string",
+          "nullable": true,
+          "pii": false,
+          "tags": ["payment"]
+        },
+        {
+          "name": "status",
+          "description": "Transaction status",
+          "type": "string",
+          "nullable": true,
+          "pii": false,
+          "tags": ["status"]
+        },
+        {
+          "name": "country",
+          "description": "Country where the transaction was processed",
+          "type": "string",
+          "nullable": true,
+          "pii": false,
+          "tags": ["location", "partition"]
+        },
+        {
+          "name": "year",
+          "description": "Year of the transaction",
+          "type": "integer",
+          "nullable": true,
+          "pii": false,
+          "tags": ["date", "partition"]
+        },
+        {
+          "name": "month",
+          "description": "Month of the transaction",
+          "type": "integer",
+          "nullable": true,
+          "pii": false,
+          "tags": ["date"]
+        }
+      ],
+      "quality_metrics": {
+        "completeness": 0.99,
+        "accuracy": 0.97,
+        "consistency": 0.98,
+        "uniqueness": 1.0,
+        "timeliness": 1.0
+      },
+      "lineage": {
+        "upstream": ["users"],
+        "downstream": []
+      }
+    }
+  ]
+}

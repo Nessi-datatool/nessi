@@ -1,0 +1,22 @@
+{
+  "bucket": "nessi-test-bucket",
+  "region": "us-west-2",
+  "prefix": "delta-tables/",
+  "credentials": {
+    "access_key_id": "${AWS_ACCESS_KEY_ID}",
+    "secret_access_key": "${AWS_SECRET_ACCESS_KEY}"
+  },
+  "tables": [
+    {
+      "name": "users",
+      "path": "delta-tables/users",
+      "format": "delta"
+    },
+    {
+      "name": "transactions",
+      "path": "delta-tables/transactions",
+      "format": "delta",
+      "partitioned_by": ["country", "year"]
+    }
+  ]
+}

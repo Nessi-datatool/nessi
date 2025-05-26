@@ -1,0 +1,17 @@
+{
+  "type": "invalid_type",
+  "fields": [
+    {
+      "name": "id",
+      "type": "unknown_type",
+      "nullable": "not_a_boolean"
+    },
+    {
+      "missing_name_field": true,
+      "type": "string"
+    }
+  ],
+  "extra_invalid_field": {
+    "this_should_not_be_here": true
+  }
+}

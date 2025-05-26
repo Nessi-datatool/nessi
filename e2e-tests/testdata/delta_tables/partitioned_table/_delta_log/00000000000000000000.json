@@ -1,0 +1,115 @@
+{
+  "commitInfo": {
+    "timestamp": 1621436800000,
+    "operation": "WRITE",
+    "operationParameters": {
+      "mode": "Overwrite",
+      "partitionBy": "[\"country\",\"year\"]"
+    },
+    "isBlindAppend": false,
+    "operationMetrics": {
+      "numFiles": "8",
+      "numOutputBytes": "24680",
+      "numOutputRows": "2000"
+    }
+  }
+}
+{
+  "protocol": {
+    "minReaderVersion": 1,
+    "minWriterVersion": 2
+  }
+}
+{
+  "metaData": {
+    "id": "7a3f9c82-5b1d-42e7-b5e9-1c4ac1a1c4c8",
+    "format": {
+      "provider": "parquet",
+      "options": {}
+    },
+    "schemaString": "{\"type\":\"struct\",\"fields\":[{\"name\":\"transaction_id\",\"type\":\"string\",\"nullable\":false,\"metadata\":{}},{\"name\":\"customer_id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}},{\"name\":\"product_id\",\"type\":\"string\",\"nullable\":true,\"metadata\":{}},{\"name\":\"amount\",\"type\":\"double\",\"nullable\":true,\"metadata\":{}},{\"name\":\"transaction_date\",\"type\":\"timestamp\",\"nullable\":true,\"metadata\":{}},{\"name\":\"payment_method\",\"type\":\"string\",\"nullable\":true,\"metadata\":{}},{\"name\":\"status\",\"type\":\"string\",\"nullable\":true,\"metadata\":{}},{\"name\":\"country\",\"type\":\"string\",\"nullable\":true,\"metadata\":{}},{\"name\":\"year\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}},{\"name\":\"month\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}]}",
+    "partitionColumns": ["country", "year"],
+    "configuration": {},
+    "createdTime": 1621436800000
+  }
+}
+{
+  "add": {
+    "path": "country=US/year=2023/part-00000-c5059c63-9c0e-48f5-a53d-fb6d7c3bf19a-c000.snappy.parquet",
+    "partitionValues": {"country": "US", "year": "2023"},
+    "size": 3500,
+    "modificationTime": 1621436800000,
+    "dataChange": true,
+    "stats": "{\"numRecords\":250,\"minValues\":{\"transaction_id\":\"TX-00001\",\"customer_id\":1001,\"product_id\":\"P-10001\",\"amount\":5.99,\"transaction_date\":\"2023-01-01T00:00:00.000Z\",\"payment_method\":\"credit_card\",\"status\":\"completed\",\"month\":1},\"maxValues\":{\"transaction_id\":\"TX-00250\",\"customer_id\":1250,\"product_id\":\"P-10150\",\"amount\":999.99,\"transaction_date\":\"2023-12-31T23:59:59.000Z\",\"payment_method\":\"paypal\",\"status\":\"refunded\",\"month\":12},\"nullCount\":{\"transaction_id\":0,\"customer_id\":0,\"product_id\":0,\"amount\":0,\"transaction_date\":0,\"payment_method\":5,\"status\":0,\"month\":0}}"
+  }
+}
+{
+  "add": {
+    "path": "country=US/year=2022/part-00000-c5059c63-9c0e-48f5-a53d-fb6d7c3bf19a-c000.snappy.parquet",
+    "partitionValues": {"country": "US", "year": "2022"},
+    "size": 3500,
+    "modificationTime": 1621436800000,
+    "dataChange": true,
+    "stats": "{\"numRecords\":250,\"minValues\":{\"transaction_id\":\"TX-00251\",\"customer_id\":1001,\"product_id\":\"P-10001\",\"amount\":5.99,\"transaction_date\":\"2022-01-01T00:00:00.000Z\",\"payment_method\":\"credit_card\",\"status\":\"completed\",\"month\":1},\"maxValues\":{\"transaction_id\":\"TX-00500\",\"customer_id\":1250,\"product_id\":\"P-10150\",\"amount\":999.99,\"transaction_date\":\"2022-12-31T23:59:59.000Z\",\"payment_method\":\"paypal\",\"status\":\"refunded\",\"month\":12},\"nullCount\":{\"transaction_id\":0,\"customer_id\":0,\"product_id\":0,\"amount\":0,\"transaction_date\":0,\"payment_method\":7,\"status\":0,\"month\":0}}"
+  }
+}
+{
+  "add": {
+    "path": "country=CA/year=2023/part-00000-c5059c63-9c0e-48f5-a53d-fb6d7c3bf19a-c000.snappy.parquet",
+    "partitionValues": {"country": "CA", "year": "2023"},
+    "size": 3500,
+    "modificationTime": 1621436800000,
+    "dataChange": true,
+    "stats": "{\"numRecords\":250,\"minValues\":{\"transaction_id\":\"TX-00501\",\"customer_id\":1251,\"product_id\":\"P-10151\",\"amount\":5.99,\"transaction_date\":\"2023-01-01T00:00:00.000Z\",\"payment_method\":\"credit_card\",\"status\":\"completed\",\"month\":1},\"maxValues\":{\"transaction_id\":\"TX-00750\",\"customer_id\":1500,\"product_id\":\"P-10300\",\"amount\":999.99,\"transaction_date\":\"2023-12-31T23:59:59.000Z\",\"payment_method\":\"paypal\",\"status\":\"refunded\",\"month\":12},\"nullCount\":{\"transaction_id\":0,\"customer_id\":0,\"product_id\":0,\"amount\":0,\"transaction_date\":0,\"payment_method\":6,\"status\":0,\"month\":0}}"
+  }
+}
+{
+  "add": {
+    "path": "country=CA/year=2022/part-00000-c5059c63-9c0e-48f5-a53d-fb6d7c3bf19a-c000.snappy.parquet",
+    "partitionValues": {"country": "CA", "year": "2022"},
+    "size": 3500,
+    "modificationTime": 1621436800000,
+    "dataChange": true,
+    "stats": "{\"numRecords\":250,\"minValues\":{\"transaction_id\":\"TX-00751\",\"customer_id\":1251,\"product_id\":\"P-10151\",\"amount\":5.99,\"transaction_date\":\"2022-01-01T00:00:00.000Z\",\"payment_method\":\"credit_card\",\"status\":\"completed\",\"month\":1},\"maxValues\":{\"transaction_id\":\"TX-01000\",\"customer_id\":1500,\"product_id\":\"P-10300\",\"amount\":999.99,\"transaction_date\":\"2022-12-31T23:59:59.000Z\",\"payment_method\":\"paypal\",\"status\":\"refunded\",\"month\":12},\"nullCount\":{\"transaction_id\":0,\"customer_id\":0,\"product_id\":0,\"amount\":0,\"transaction_date\":0,\"payment_method\":8,\"status\":0,\"month\":0}}"
+  }
+}
+{
+  "add": {
+    "path": "country=UK/year=2023/part-00000-c5059c63-9c0e-48f5-a53d-fb6d7c3bf19a-c000.snappy.parquet",
+    "partitionValues": {"country": "UK", "year": "2023"},
+    "size": 3500,
+    "modificationTime": 1621436800000,
+    "dataChange": true,
+    "stats": "{\"numRecords\":250,\"minValues\":{\"transaction_id\":\"TX-01001\",\"customer_id\":1501,\"product_id\":\"P-10301\",\"amount\":5.99,\"transaction_date\":\"2023-01-01T00:00:00.000Z\",\"payment_method\":\"credit_card\",\"status\":\"completed\",\"month\":1},\"maxValues\":{\"transaction_id\":\"TX-01250\",\"customer_id\":1750,\"product_id\":\"P-10450\",\"amount\":999.99,\"transaction_date\":\"2023-12-31T23:59:59.000Z\",\"payment_method\":\"paypal\",\"status\":\"refunded\",\"month\":12},\"nullCount\":{\"transaction_id\":0,\"customer_id\":0,\"product_id\":0,\"amount\":0,\"transaction_date\":0,\"payment_method\":4,\"status\":0,\"month\":0}}"
+  }
+}
+{
+  "add": {
+    "path": "country=UK/year=2022/part-00000-c5059c63-9c0e-48f5-a53d-fb6d7c3bf19a-c000.snappy.parquet",
+    "partitionValues": {"country": "UK", "year": "2022"},
+    "size": 3500,
+    "modificationTime": 1621436800000,
+    "dataChange": true,
+    "stats": "{\"numRecords\":250,\"minValues\":{\"transaction_id\":\"TX-01251\",\"customer_id\":1501,\"product_id\":\"P-10301\",\"amount\":5.99,\"transaction_date\":\"2022-01-01T00:00:00.000Z\",\"payment_method\":\"credit_card\",\"status\":\"completed\",\"month\":1},\"maxValues\":{\"transaction_id\":\"TX-01500\",\"customer_id\":1750,\"product_id\":\"P-10450\",\"amount\":999.99,\"transaction_date\":\"2022-12-31T23:59:59.000Z\",\"payment_method\":\"paypal\",\"status\":\"refunded\",\"month\":12},\"nullCount\":{\"transaction_id\":0,\"customer_id\":0,\"product_id\":0,\"amount\":0,\"transaction_date\":0,\"payment_method\":9,\"status\":0,\"month\":0}}"
+  }
+}
+{
+  "add": {
+    "path": "country=DE/year=2023/part-00000-c5059c63-9c0e-48f5-a53d-fb6d7c3bf19a-c000.snappy.parquet",
+    "partitionValues": {"country": "DE", "year": "2023"},
+    "size": 3500,
+    "modificationTime": 1621436800000,
+    "dataChange": true,
+    "stats": "{\"numRecords\":250,\"minValues\":{\"transaction_id\":\"TX-01501\",\"customer_id\":1751,\"product_id\":\"P-10451\",\"amount\":5.99,\"transaction_date\":\"2023-01-01T00:00:00.000Z\",\"payment_method\":\"credit_card\",\"status\":\"completed\",\"month\":1},\"maxValues\":{\"transaction_id\":\"TX-01750\",\"customer_id\":2000,\"product_id\":\"P-10600\",\"amount\":999.99,\"transaction_date\":\"2023-12-31T23:59:59.000Z\",\"payment_method\":\"paypal\",\"status\":\"refunded\",\"month\":12},\"nullCount\":{\"transaction_id\":0,\"customer_id\":0,\"product_id\":0,\"amount\":0,\"transaction_date\":0,\"payment_method\":3,\"status\":0,\"month\":0}}"
+  }
+}
+{
+  "add": {
+    "path": "country=DE/year=2022/part-00000-c5059c63-9c0e-48f5-a53d-fb6d7c3bf19a-c000.snappy.parquet",
+    "partitionValues": {"country": "DE", "year": "2022"},
+    "size": 3500,
+    "modificationTime": 1621436800000,
+    "dataChange": true,
+    "stats": "{\"numRecords\":250,\"minValues\":{\"transaction_id\":\"TX-01751\",\"customer_id\":1751,\"product_id\":\"P-10451\",\"amount\":5.99,\"transaction_date\":\"2022-01-01T00:00:00.000Z\",\"payment_method\":\"credit_card\",\"status\":\"completed\",\"month\":1},\"maxValues\":{\"transaction_id\":\"TX-02000\",\"customer_id\":2000,\"product_id\":\"P-10600\",\"amount\":999.99,\"transaction_date\":\"2022-12-31T23:59:59.000Z\",\"payment_method\":\"paypal\",\"status\":\"refunded\",\"month\":12},\"nullCount\":{\"transaction_id\":0,\"customer_id\":0,\"product_id\":0,\"amount\":0,\"transaction_date\":0,\"payment_method\":5,\"status\":0,\"month\":0}}"
+  }
+}

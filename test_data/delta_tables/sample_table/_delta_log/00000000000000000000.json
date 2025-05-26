@@ -1,0 +1,11 @@
+{
+  "commitInfo": {
+    "timestamp": 1622548800000,
+    "operation": "CREATE TABLE",
+    "operationParameters": {
+      "mode": "ErrorIfExists",
+      "partitionBy": ["date"]
+    },
+    "isBlindAppend": true
+  }
+}
